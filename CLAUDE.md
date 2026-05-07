@@ -53,6 +53,11 @@ conflicts with one of these, refuse and explain. If unclear, ask.
 8. **SEBI personal-use boundary.** Anything in this repo is personal use as
    defined by SEBI's Feb 2025 circular: under 10 orders/sec, only the operator's
    own account. Do not add features that share signals with third parties.
+9. **SCOPE LOCK** — When the operator gives a chunk-scoped task, do ONLY that
+   chunk. Do not refactor unrelated files. Do not add features not requested.
+   Do not "improve" adjacent systems while you're there. If you see something
+   worth changing outside scope, write it to AGENTS.md as a follow-up note and
+   STOP. The operator approves scope changes explicitly.
 
 ---
 
@@ -115,6 +120,15 @@ Bloomberg, Mint, BS, ET, Moneycontrol (corporate filings section).
 Tier B: Moneycontrol news, ET Markets, BS Markets, CNBC-TV18.
 Tier C (use with skepticism, weight 0.3×): Telegram channels, anonymous blogs,
 unverified Twitter — only if cross-confirmed by Tier A/B.
+
+### Backtesting integrity
+
+- Backtest queries against `index_constituents` MUST filter by
+  `effective_from <= trade_date < effective_to`.
+- Never use today's universe to evaluate past periods — survivorship bias makes
+  every strategy look better than it really was.
+- Every backtest report must declare its as-of date and cite the constituent
+  snapshot used.
 
 ---
 
