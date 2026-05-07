@@ -469,6 +469,7 @@ Operator decides whether to action each. Format: date · chunk · description ·
 - **2026-05-07 · Phase 1 Chunk 1.1 commit 7 · Dockerfile does not copy `alembic/` or `alembic.ini` into the backend image.** Required for `docker compose exec backend alembic ...` (used in commit 8 of the implementation prompt). Three options: patch Dockerfile, bind-mount via docker-compose, or run alembic from host. Recommendation: patch Dockerfile. Status: awaiting operator authorization.
 - **2026-05-07 · Phase 0 commit 1 · `AGENTS.md` got tracked by `git add .`.** Operator stated "leave it alone" but did not specify "untrack". One-line `git rm --cached AGENTS.md` if untrack desired. Status: open.
 - **2026-05-07 · Phase 1 Chunk 1.1 commit 7 · `pyproject.toml` gained `alembic>=1.13` and `psycopg[binary]>=3.2`.** Implicit in Alembic configuration (the env.py adapter swap to `postgresql+psycopg` requires psycopg). Surfacing for record; operator-acknowledged via the commit-7 authorization. Status: applied.
+- **2026-05-07 · Phase 1 Chunk 1.2 commit 10 · `backend/cli.py` `version` shows wrong schema_version row when ties exist.** When multiple `schema_version` rows share the same `applied_at` second (e.g., 0002 + 0003 applied in one `alembic upgrade head`), `ORDER BY applied_at DESC LIMIT 1` picks arbitrarily — observed: showed `0002_seed_indices` instead of `0003_seed_trading_calendar`. Fix: change ORDER BY to `applied_at DESC, version_label DESC` for deterministic tie-break. Status: open.
 
 ---
 
