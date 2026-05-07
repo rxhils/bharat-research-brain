@@ -6,6 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
 
 from backend.config import settings
+from backend.db.base import Base  # noqa: F401  re-export
 
 engine: AsyncEngine = create_async_engine(settings.postgres_url, pool_pre_ping=True)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
