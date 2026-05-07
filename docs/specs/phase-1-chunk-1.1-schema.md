@@ -1,8 +1,8 @@
 # Phase 1 — Chunk 1.1: Database schema spec
 
-> Status: **review pending**. No code, no migrations, no models until the operator approves the open questions in §3.
+> Status: **operator-approved with amendments**. Spec only. No code, no migrations, no models in this commit.
 >
-> Scope: 9 tables + Alembic setup + seed data for `indices` and `trading_calendar`. Nothing else.
+> Scope: 10 tables + Alembic setup + seed data for `indices` and `trading_calendar`. Nothing else.
 
 ---
 
@@ -16,6 +16,8 @@
 - **Ingestion provenance:** every ingestion writes one row to `data_ingestion_runs` with `source_url`, `source_name`, `downloaded_at_utc`, `file_sha256`, `row_count`, `source_trade_date`. Every `prices_eod` row references that run.
 - **Backtest integrity:** queries against `index_constituents` MUST filter `effective_from <= trade_date < effective_to`. Enforced in repository layer, codified in CLAUDE.md §4.
 - **Soft-delete:** not used anywhere. Delisted stocks carry `delisted_on`. Index constituents end-date via `effective_to`. No `deleted_at` columns.
+- **`updated_at` maintenance:** SQLAlchemy `onupdate=func.now()` on the column. **All updates must flow through the ORM.** No Postgres triggers. Each model docstring restates this contract.
+- **Required Postgres extensions:** `pgcrypto` (for `gen_random_uuid()`), `pg_trgm` (for fuzzy company-name search). Installed in the initial migration.
 
 ---
 
@@ -23,7 +25,7 @@
 
 ### 1.1 `stocks` — universe master
 
-**Purpose.** Static-ish record per tradeable equity. One row per ISIN. Mutable fields (sector, mcap, fno flag) updated in place; identity changes (rename, sector reclassification) trigger an append to `stock_identifiers`.
+**Purpose.** Static-ish record per tradeable equity. One row per ISIN. Mutable fields (sector, mcap, fno flag) updated in place; identity changes (rename, sector reclassification) trigger an SCD Type 2 close-out + insert in `stock_identifiers`.
 
 | Column | Type | Null | Default | Description |
 |---|---|---|---|---|
@@ -42,7 +44,7 @@
 | `lot_size_fno` | `INTEGER` | YES | — | Refreshed quarterly. |
 | `last_refreshed_at` | `TIMESTAMPTZ` | NO | `now()` | Last time Universe Agent touched this row. |
 | `created_at` | `TIMESTAMPTZ` | NO | `now()` | |
-| `updated_at` | `TIMESTAMPTZ` | NO | `now()` | Maintained per Open Question 1. |
+| `updated_at` | `TIMESTAMPTZ` | NO | `now()` | Maintained by SQLAlchemy `onupdate=func.now()`; all updates must flow through the ORM. |
 
 **Primary key.** `isin`.
 **Foreign keys.** None outbound.
@@ -51,6 +53,7 @@
 - `idx_stocks_bse_symbol_active` — partial unique on `(bse_symbol)` `WHERE delisted_on IS NULL`.
 - `idx_stocks_sector` — btree on `(sector)`. Sector-scoped scans.
 - `idx_stocks_active` — partial btree on `(delisted_on)` `WHERE delisted_on IS NULL`. Cheap "all active stocks" enumeration.
+- `idx_stocks_name_trgm` — GIN on `(company_name gin_trgm_ops)`. Fuzzy company-name search; requires `pg_trgm` extension (installed in 0001 migration). Autogenerate-blind — added by hand in the migration.
 
 **Constraints.**
 - `CHECK (length(isin) = 12)`
@@ -62,34 +65,36 @@
 
 ---
 
-### 1.2 `stock_identifiers` — change-history audit
+### 1.2 `stock_identifiers` — SCD Type 2 identity history
 
-**Purpose.** Append-only log of identity / classification changes per stock. Never updated. Captures rename, BSE↔NSE symbol changes, sector reclassification, F&O on/off, lot-size revisions.
+**Purpose.** Slowly-changing-dimension log per `(isin, identifier_type)`. Records the value of each identity / classification field across time with explicit `effective_from` / `effective_to` ranges. Supports point-in-time symbol / name / sector queries (backtest reports, historical news matching, research). When the Universe Agent detects a change, it end-dates the current row (sets `effective_to`) and inserts a new row with the new value.
 
 | Column | Type | Null | Default | Description |
 |---|---|---|---|---|
 | `id` | `BIGSERIAL` | NO | seq | |
 | `isin` | `VARCHAR(12)` | NO | — | FK → `stocks(isin)`. |
 | `identifier_type` | `VARCHAR(24)` | NO | — | One of `nse_symbol` / `bse_symbol` / `company_name` / `industry` / `sector` / `mcap_category` / `lot_size_fno` / `is_fno`. |
-| `old_value` | `TEXT` | YES | — | Previous value (NULL on first observation). |
-| `new_value` | `TEXT` | YES | — | New value (NULL on retirement of a field). |
-| `effective_from` | `DATE` | NO | — | Date the change took effect (per source). |
+| `value` | `TEXT` | NO | — | Actual symbol / name / sector value during the period. |
+| `effective_from` | `DATE` | NO | — | Inclusive start. |
+| `effective_to` | `DATE` | YES | — | Exclusive end. NULL = current. |
 | `recorded_at` | `TIMESTAMPTZ` | NO | `now()` | Insert time. |
 | `source` | `VARCHAR(64)` | NO | — | e.g., `nse_archive`, `openalgo`, `manual`. |
 
 **Primary key.** `id`.
 **Foreign keys.**
-- `isin` → `stocks(isin)` `ON DELETE RESTRICT`. Stocks are never deleted; FK enforces the contract.
+- `isin` → `stocks(isin)` `ON DELETE CASCADE`. Identity history is rebuildable from sources; cascade matches "stock removed → drop its history rows" intent.
 
 **Indexes.**
-- `idx_stock_identifiers_isin` on `(isin, effective_from DESC)`.
-- `idx_stock_identifiers_type` on `(identifier_type, effective_from DESC)`.
+- `idx_stock_identifiers_lookup` on `(isin, identifier_type, effective_from DESC)` — main backtest / point-in-time lookup.
+- `idx_stock_identifiers_current` partial on `(isin, identifier_type)` `WHERE effective_to IS NULL` — fast "current value of field X for stock Y".
+- `idx_stock_identifiers_reverse` on `(identifier_type, value)` — reverse lookup ("which ISIN had symbol RELIANCE on 2018-04-15"); supports historical news matching.
 
 **Constraints.**
 - `CHECK (identifier_type IN ('nse_symbol','bse_symbol','company_name','industry','sector','mcap_category','lot_size_fno','is_fno'))`
-- `CHECK (old_value IS NOT NULL OR new_value IS NOT NULL)`
+- `CHECK (effective_to IS NULL OR effective_to > effective_from)`
+- `UNIQUE (isin, identifier_type, effective_from)` — same field cannot have two version-starts on the same date.
 
-**Growth.** ~50–200 rows/year. Trivial.
+**Growth.** Initial seed at universe load: ~500 stocks × ~8 fields = ~4,000 rows. Plus ~50–200 changes/year. Trivial.
 **Retention.** Forever.
 
 ---
@@ -105,7 +110,7 @@
 | `index_type` | `VARCHAR(16)` | NO | — | `broad` / `sector` / `thematic`. |
 | `description` | `TEXT` | YES | — | |
 | `created_at` | `TIMESTAMPTZ` | NO | `now()` | |
-| `updated_at` | `TIMESTAMPTZ` | NO | `now()` | |
+| `updated_at` | `TIMESTAMPTZ` | NO | `now()` | Maintained by SQLAlchemy `onupdate=func.now()`. |
 
 **Primary key.** `index_code`.
 **Foreign keys.** None.
@@ -136,7 +141,7 @@
 **Primary key.** `id`.
 **Foreign keys.**
 - `index_code` → `indices(index_code)` `ON DELETE RESTRICT`. Indices are not deleted.
-- `isin` → `stocks(isin)` `ON DELETE RESTRICT`.
+- `isin` → `stocks(isin)` `ON DELETE RESTRICT`. Survivorship rule — must not lose membership history.
 
 **Indexes.**
 - `idx_constituents_lookup` on `(index_code, isin, effective_from DESC)` — main backtest lookup.
@@ -175,9 +180,9 @@
 | `ingestion_run_id` | `BIGINT` | NO | — | FK → `data_ingestion_runs(id)`. |
 | `inserted_at` | `TIMESTAMPTZ` | NO | `now()` | |
 
-**Primary key.** `(trade_date, isin)` — see Open Question 4 for ordering rationale.
+**Primary key.** `(trade_date, isin)`.
 **Foreign keys.**
-- `isin` → `stocks(isin)` `ON DELETE RESTRICT`. Never lose price history.
+- `isin` → `stocks(isin)` `ON DELETE RESTRICT`. Price history irreplaceable.
 - `ingestion_run_id` → `data_ingestion_runs(id)` `ON DELETE RESTRICT`. Provenance must outlive the run row.
 
 **Indexes.**
@@ -218,7 +223,7 @@
 
 **Primary key.** `id`.
 **Foreign keys.**
-- `isin` → `stocks(isin)` `ON DELETE RESTRICT`.
+- `isin` → `stocks(isin)` `ON DELETE RESTRICT`. Action history irreplaceable; required for adjusted-price math.
 
 **Indexes.**
 - `idx_ca_isin_exdate` on `(isin, ex_date DESC)`.
@@ -235,7 +240,7 @@
 
 ### 1.7 `trading_calendar` — exchange open/closed days
 
-**Purpose.** Pre-loaded list of every calendar day per exchange, flagging open vs closed. Universe Agent and Price Agent gate on this. See Open Question 5 for "every day vs only open days".
+**Purpose.** Pre-loaded list of every calendar day per exchange, flagging open vs closed. Universe Agent and Price Agent gate on this.
 
 | Column | Type | Null | Default | Description |
 |---|---|---|---|---|
@@ -243,8 +248,10 @@
 | `exchange` | `VARCHAR(8)` | NO | `'NSE'` | `NSE` or `BSE`. |
 | `is_open` | `BOOLEAN` | NO | — | |
 | `session_type` | `VARCHAR(16)` | NO | `'regular'` | `regular` / `muhurat` / `closed`. |
-| `notes` | `TEXT` | YES | — | e.g., "Republic Day", "Diwali Muhurat". |
+| `holiday_name` | `VARCHAR(80)` | YES | — | Canonical name (e.g., "Republic Day", "Diwali"). NULL on weekends and regular trading days. Enables clean joins for "what was the holiday on date X". |
+| `notes` | `TEXT` | YES | — | Free-text operational annotations. |
 | `created_at` | `TIMESTAMPTZ` | NO | `now()` | |
+| `updated_at` | `TIMESTAMPTZ` | NO | `now()` | Maintained by SQLAlchemy `onupdate=func.now()`. |
 
 **Primary key.** `(trade_date, exchange)`.
 **Foreign keys.** None.
@@ -311,7 +318,7 @@
 | `severity` | `VARCHAR(8)` | NO | — | `info` / `warn` / `error`. |
 | `code` | `VARCHAR(64)` | NO | — | Stable code, e.g., `STALE_PRICE`, `VOLUME_DISCREPANCY`. |
 | `message` | `TEXT` | NO | — | Human-readable. |
-| `context` | `JSONB` | YES | — | Structured payload (per Open Question 6). |
+| `context` | `JSONB` | YES | — | Structured payload. |
 | `detected_at` | `TIMESTAMPTZ` | NO | `now()` | |
 | `resolved_at` | `TIMESTAMPTZ` | YES | — | NULL = open. |
 | `resolved_by` | `VARCHAR(64)` | YES | — | `manual` / `auto` / agent name. |
@@ -319,7 +326,7 @@
 **Primary key.** `id`.
 **Foreign keys.**
 - `ingestion_run_id` → `data_ingestion_runs(id)` `ON DELETE SET NULL`. Quality events outlive defective run rows defensively.
-- `isin` → `stocks(isin)` `ON DELETE RESTRICT`.
+- `isin` → `stocks(isin)` `ON DELETE CASCADE`. Quality logs are rebuildable from re-ingestion.
 
 **Indexes.**
 - `idx_dql_open` partial on `(severity, detected_at DESC)` `WHERE resolved_at IS NULL`.
@@ -331,6 +338,27 @@
 
 **Growth.** ~50,000/year early, dropping as ops mature.
 **Retention.** `error` rows forever; `info`/`warn` archived after 1 year (mechanism deferred).
+
+---
+
+### 1.10 `schema_version` — operational migration history
+
+**Purpose.** Human-readable migration log alongside Alembic's internal `alembic_version` table. Each Alembic migration's final operation writes a row here. Operators run `SELECT * FROM schema_version ORDER BY applied_at` for a one-query summary of project schema history without parsing the migrations folder.
+
+| Column | Type | Null | Default | Description |
+|---|---|---|---|---|
+| `version_label` | `VARCHAR(32)` | NO | — | Migration label, e.g., `0001_initial_schema`. |
+| `applied_at` | `TIMESTAMPTZ` | NO | `now()` | When the migration ran. |
+| `description` | `TEXT` | YES | — | Free-form summary. |
+| `chunk_reference` | `VARCHAR(32)` | YES | — | e.g., `phase-1-chunk-1.1`. |
+
+**Primary key.** `version_label`.
+**Foreign keys.** None.
+**Indexes.** PK only.
+**Constraints.** None.
+
+**Growth.** ~10–30 rows/year as schema evolves. Trivial.
+**Retention.** Forever.
 
 ---
 
@@ -352,11 +380,15 @@ erDiagram
         date trade_date
         text exchange
     }
+    schema_version {
+        text version_label
+        timestamp applied_at
+    }
 ```
 
 ### 2.2 Naming conventions
 
-- **Tables:** `snake_case`. Plural for collections (`stocks`, `indices`, `prices_eod`); the locked list mixes in `trading_calendar`, `data_ingestion_runs`, `data_quality_log` — see Open Question 10.
+- **Tables:** `snake_case`. Plural for collections (`stocks`, `indices`, `prices_eod`); the locked list mixes in `trading_calendar`, `data_ingestion_runs`, `data_quality_log`, `schema_version` (singular). Inconsistency accepted under SCOPE LOCK.
 - **Columns:** `snake_case`.
 - **FK columns:**
   - Surrogate-key FKs end in `_id` (e.g., `ingestion_run_id`).
@@ -364,22 +396,40 @@ erDiagram
   - Index-code FKs use `index_code` directly.
 - **Booleans:** `is_*` prefix (`is_open`, `is_fno`).
 - **Timestamps:** `*_at` for timestamps, `*_date` for dates. `_at` is always `TIMESTAMPTZ` (UTC); `_date` is `DATE`.
-- **Status / type / category:** stored as `VARCHAR(...)` plus `CHECK` constraint listing allowed values (see Open Question 2 for ENUM-vs-CHECK rationale).
+- **Status / type / category:** stored as `VARCHAR(...)` plus `CHECK` constraint listing allowed values (no native ENUMs).
 
 ### 2.3 Timestamp policy
 
-- **Mutable parent tables** (`stocks`, `indices`, `trading_calendar`): `created_at` + `updated_at`. Maintenance per Open Question 1.
+- **Mutable parent tables** (`stocks`, `indices`, `trading_calendar`): `created_at` + `updated_at`. `updated_at` maintained by SQLAlchemy via `onupdate=func.now()` on the column. **All updates must flow through the ORM** — raw SQL `UPDATE` statements bypass this and must be avoided. Each ORM model docstring restates this contract. No Postgres triggers.
 - **Append-only tables** (`stock_identifiers`, `index_constituents`, `prices_eod`, `corporate_actions`, `data_ingestion_runs`, `data_quality_log`): single insertion timestamp only (`recorded_at` / `inserted_at` / `created_at` / `started_at` / `detected_at`). No `updated_at` because rows are never updated.
-- All timestamps stored as `TIMESTAMPTZ` in UTC. IST conversion only at display layer.
+- **Operational table** (`schema_version`): `applied_at` only (immutable after insert).
+- All timestamps stored as `TIMESTAMPTZ` in UTC. IST conversion only at the display layer.
 
 ### 2.4 Soft-delete policy
 
 Not used. Justifications:
 - `stocks`: delisting modeled semantically via `delisted_on`.
-- `index_constituents`: end-dated via `effective_to`.
+- `index_constituents` and `stock_identifiers`: end-dated via `effective_to`.
 - All other tables: append-only, deletion would violate audit guarantees.
 
 If deletion ever becomes necessary (e.g., GDPR-style request — irrelevant here, no PII), it is a manual operations procedure outside the schema's contract.
+
+### 2.5 ON DELETE policy — hybrid
+
+Derived / rebuildable child tables `CASCADE`; precious historical data `RESTRICT`s.
+
+| FK | ON DELETE | Rationale |
+|---|---|---|
+| `stock_identifiers.isin → stocks.isin` | CASCADE | Identity history rebuildable from sources. |
+| `index_constituents.isin → stocks.isin` | RESTRICT | Survivorship-bias rule — must not lose membership history. |
+| `index_constituents.index_code → indices.index_code` | RESTRICT | Same. |
+| `prices_eod.isin → stocks.isin` | RESTRICT | Price history irreplaceable. |
+| `prices_eod.ingestion_run_id → data_ingestion_runs.id` | RESTRICT | Provenance must outlive the run row. |
+| `corporate_actions.isin → stocks.isin` | RESTRICT | Action history irreplaceable; required for adjusted-price math. |
+| `data_quality_log.isin → stocks.isin` | CASCADE | Quality logs are rebuildable. |
+| `data_quality_log.ingestion_run_id → data_ingestion_runs.id` | SET NULL | Quality events outlive defective run rows defensively. |
+
+(Stocks and ingestion-run rows are never deleted by design; these FK behaviors codify what would happen if someone bypassed the contract.)
 
 ---
 
@@ -387,22 +437,23 @@ If deletion ever becomes necessary (e.g., GDPR-style request — irrelevant here
 
 ### 3.1 Creation order (FK dependencies)
 
-1. `stocks`
-2. `indices`
-3. `trading_calendar`
-4. `data_ingestion_runs`
-5. `stock_identifiers` *(FK → stocks)*
-6. `index_constituents` *(FKs → stocks, indices)*
-7. `corporate_actions` *(FK → stocks)*
-8. `prices_eod` *(FKs → stocks, data_ingestion_runs)*
-9. `data_quality_log` *(FKs → stocks, data_ingestion_runs)*
+1. `schema_version` *(no dependencies)*
+2. `stocks`
+3. `indices`
+4. `trading_calendar`
+5. `data_ingestion_runs`
+6. `stock_identifiers` *(FK → stocks)*
+7. `index_constituents` *(FKs → stocks, indices)*
+8. `corporate_actions` *(FK → stocks)*
+9. `prices_eod` *(FKs → stocks, data_ingestion_runs)*
+10. `data_quality_log` *(FKs → stocks, data_ingestion_runs)*
 
 ### 3.2 Seed data
 
 | Seed | Source | Approx rows |
 |---|---|---|
 | `indices` | Hand-curated list: 4 broad (NIFTY50/100/200/500) + 11 sectoral (NIFTYBANK, NIFTYIT, NIFTYAUTO, NIFTYPHARMA, NIFTYFMCG, NIFTYMETAL, NIFTYENERGY, NIFTYREALTY, NIFTYFINSERVICE, NIFTYMEDIA, NIFTYPSUBANK) | ~15 |
-| `trading_calendar` | NSE published holiday list 2024–2027 + BSE holiday list 2024–2027, Saturdays/Sundays = closed, weekday-non-holiday = open, Diwali muhurat sessions = `muhurat` | ~3,000 |
+| `trading_calendar` | NSE published holiday list 2024–2027 + BSE holiday list 2024–2027, Saturdays/Sundays = closed, weekday-non-holiday = open, Diwali muhurat sessions = `muhurat`. `holiday_name` populated for every closed/muhurat day. | ~3,000 |
 | `index_constituents` | **Deferred to Chunk 1.2** (Universe Agent populates) | 0 |
 
 ### 3.3 Alembic autogenerate handling
@@ -412,93 +463,42 @@ If deletion ever becomes necessary (e.g., GDPR-style request — irrelevant here
    - `target_metadata = Base.metadata` from `backend/db/models.py`.
    - Use a sync database URL (alembic standard; introspection requires sync). Read from same `.env` but adapter swap (`postgresql+asyncpg://` → `postgresql+psycopg://` for migrations only).
 3. `alembic revision --autogenerate -m "0001_initial_schema"` produces structural migration. Hand-review and patch:
-   - Partial indexes (autogenerate sometimes drops the `WHERE` clause).
-   - `CHECK` constraints (autogenerate omits some).
-   - `gen_random_uuid()` default (requires `pgcrypto` extension via explicit `op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")`).
-4. `alembic revision -m "0002_seed_indices"` — manual data migration inserting the ~15 index rows.
-5. `alembic revision -m "0003_seed_trading_calendar"` — manual data migration inserting ~3,000 calendar rows. Source data shipped as a CSV in `alembic/seeds/`.
-6. `alembic upgrade head` runs cleanly against a fresh Postgres.
+   - **Required extensions:** `op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")` (for `gen_random_uuid()`) and `op.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm")` (for fuzzy company-name search). Both at the top of `upgrade()`.
+   - **Partial indexes** — autogenerate sometimes drops the `WHERE` clause. Verify and patch.
+   - **`CHECK` constraints** — autogenerate omits some. Verify against the spec.
+   - **GIN trigram index** on `stocks.company_name` using `gin_trgm_ops` is autogenerate-blind; add manually.
+   - **Final op** in every migration: `op.execute("INSERT INTO schema_version (version_label, description, chunk_reference) VALUES (...)")` recording label, description, and chunk reference.
+4. `alembic revision -m "0002_seed_indices"` — manual data migration inserting the ~15 index rows. Final op: `INSERT INTO schema_version`.
+5. `alembic revision -m "0003_seed_trading_calendar"` — manual data migration inserting ~3,000 calendar rows. Source data shipped as a CSV in `alembic/seeds/`. Final op: `INSERT INTO schema_version`.
+6. `alembic upgrade head` runs cleanly against a fresh Postgres. Verification: `SELECT * FROM schema_version` shows three rows (`0001_initial_schema`, `0002_seed_indices`, `0003_seed_trading_calendar`).
 
-Update path: ORM is the source of truth. Schema changes start with model edits → `alembic revision --autogenerate` → review → commit.
+Update path: ORM is the source of truth. Schema changes start with model edits → `alembic revision --autogenerate` → review → commit. Every revision file ends with a `schema_version` insert.
 
 ---
 
-## 4. Open questions (operator answers required before code)
+## 4. Decisions log (open questions resolved)
 
-Each option lists tradeoffs; recommendation noted explicitly.
-
-### Q1. `updated_at` maintenance — trigger vs app-managed?
-
-- **(a)** Postgres `BEFORE UPDATE` trigger sets `updated_at = now()` on every row touch. DB-level guarantee, immune to ORM bypass.
-- **(b)** SQLAlchemy event listener / `onupdate=func.now()` column default. Simpler migrations; trusts every code path to use the ORM.
-- **(c)** Skip `updated_at`; reconstruct change history from `stock_identifiers` + git diff of vault notes.
-- **Recommend (a).** Triggers are 5 lines per table and survive raw SQL maintenance scripts. Cost: one Alembic data migration to install triggers + plpgsql helper function. Pgvector image ships plpgsql.
-
-### Q2. Postgres native ENUMs vs `VARCHAR + CHECK`?
-
-- **(a)** Native `CREATE TYPE … AS ENUM` for `action_type`, `severity`, `status`, `mcap_category`, etc. DB-level type safety, prettier `psql` output.
-- **(b)** `VARCHAR + CHECK` constraint listing allowed values (current spec).
-- **Recommend (b).** Postgres ENUM alteration is painful in production (`ALTER TYPE … ADD VALUE` is fine but reordering/removal requires recreating type and rewriting columns). `CHECK` gives equivalent correctness with one-line `ALTER TABLE` for new values.
-
-### Q3. `stock_identifiers` modeling — change-event log vs SCD Type 2?
-
-- **(a)** Change-event log: one row per change with `old_value`/`new_value`. Mental model = "rename happened on day X". Current `stocks` row holds canonical current value.
-- **(b)** SCD Type 2: one row per `(isin, identifier_type)` with `effective_from`/`effective_to`; close out old, insert new. Querying "what was the symbol on 2023-04-15" is a single row lookup.
-- **Recommend (a).** Simpler. `stocks` already holds canonical current state; "symbol on date X" is rare and computable via window function over the log. Tradeoff: SCD Type 2 is more elegant if we ever need point-in-time queries by symbol — but ISIN is point-in-time-stable, so we don't.
-
-### Q4. `prices_eod` PK ordering — `(isin, trade_date)` vs `(trade_date, isin)`?
-
-- **(a)** `(isin, trade_date)` — optimizes single-stock-across-time queries. Backtesting per-stock pattern.
-- **(b)** `(trade_date, isin)` — optimizes single-day-across-stocks queries (daily report fan-out, cross-sectional ranking) and aligns directly with future `PARTITION BY RANGE(trade_date)`.
-- **Recommend (b).** Daily-report and ranking pipelines hit "all stocks for trade_date X" much more than "all dates for ISIN X". Per-stock history queries stay fast via `idx_prices_eod_isin_date`. Partitioning later requires zero PK rework.
-
-### Q5. `trading_calendar` — every calendar day or only trading days?
-
-- **(a)** Every calendar day with `is_open` boolean (~3,000 rows for 4 years × 2 exchanges).
-- **(b)** Only trading days where `is_open=true` (~2,000 rows); "is X a trading day" = "row exists".
-- **Recommend (a).** Lets the app answer "next/prev trading day from arbitrary date" via `WHERE is_open AND trade_date > $X ORDER BY trade_date LIMIT 1` without generate_series gymnastics. Storage difference is irrelevant.
-
-### Q6. `data_quality_log.context` — JSONB vs typed columns?
-
-- **(a)** `JSONB` blob, agents serialize whatever they need. Quality codes evolve without schema migrations.
-- **(b)** Typed columns per known check (e.g., `expected_close NUMERIC`, `actual_close NUMERIC`). Schema enforces shape.
-- **(c)** Hybrid: a `code`-driven view layer that interprets JSONB for known codes, falls back to raw display.
-- **Recommend (a).** Quality-check vocabulary will grow rapidly through Phase 1–2; typed columns become a migration-per-week graveyard. GIN index on `context` deferrable until actually needed.
-
-### Q7. Numeric precision for prices — `NUMERIC(18,4)` vs higher?
-
-- **(a)** `NUMERIC(18,4)` — current spec. ±99 trillion at 0.0001 precision (1 paise).
-- **(b)** `NUMERIC(20,6)` everywhere — micro-paise precision; future-proofs against derivatives or basis-point reporting.
-- **(c)** Mixed: `NUMERIC(18,4)` for OHLC, `NUMERIC(20,6)` for VWAP and `turnover_inr`.
-- **Recommend (a).** NSE quotes 4-decimal precision; (b)/(c) over-engineer. CLAUDE.md §8 "Decimal not float" already satisfied.
-
-### Q8. `indices` — enforce code allowlist via CHECK?
-
-- **(a)** Free-form `index_code`, document conventions only.
-- **(b)** `CHECK (index_code IN ('NIFTY50','NIFTYBANK',...))` enumerating known codes.
-- **Recommend (a).** NSE launches new indices regularly; allowlist becomes maintenance debt. Index registry table itself enforces the catalog.
-
-### Q9. Default `ON DELETE` behavior across all FKs?
-
-- **(a)** `RESTRICT` everywhere (current spec). Forces explicit cleanup; prevents accidental cascading data loss.
-- **(b)** `CASCADE` for child tables (deleting a stock cascades to identifiers, prices_eod, etc.) — matches "rebuild universe" intent.
-- **(c)** Mixed: `RESTRICT` on prices_eod / corporate_actions (precious data), `CASCADE` on stock_identifiers / data_quality_log (rebuildable).
-- **Recommend (a).** Stocks are never deleted per design (`delisted_on` instead). RESTRICT makes that contract enforceable at the FK level.
-
-### Q10. Naming inconsistency — locked list mixes plural and singular table names.
-
-The locked list contains plural `stocks`, `indices`, `prices_eod`, `index_constituents`, `corporate_actions`, `data_ingestion_runs`, `stock_identifiers` alongside singular `trading_calendar` and `data_quality_log`.
-
-- **(a)** Accept locked names as-is; document the inconsistency in this spec and move on.
-- **(b)** Rename `trading_calendar` → `trading_days` and `data_quality_log` → `data_quality_events` for plural consistency. Cheapest moment is now (zero code written).
-- **(c)** Switch the rest to singular: `stock`, `index` (conflicts with SQL keyword), `price_eod`. Not recommended.
-- **Recommend (a).** SCOPE LOCK preserves locked names. Inconsistency is cosmetic; codifying it in the spec costs one paragraph.
+| # | Decision | Resolution |
+|---|---|---|
+| Q1 | `updated_at` maintenance | (b) SQLAlchemy `onupdate=func.now()`. No Postgres triggers. ORM-only updates documented in each model docstring. |
+| Q2 | ENUM vs CHECK | (b) `VARCHAR + CHECK`. |
+| Q3 | `stock_identifiers` modeling | **(b) SCD Type 2** *(operator override)*. Revised shape applied in §1.2. Rationale: point-in-time symbol lookups are not rare; uniformity with `index_constituents` reduces schema cognitive load. |
+| Q4 | `prices_eod` PK ordering | (b) `(trade_date, isin)`. |
+| Q5 | Trading calendar coverage | (a) every calendar day. **Addition:** new `holiday_name VARCHAR(80) NULL` column for clean joins; `notes` retained for free-text annotations. |
+| Q6 | `data_quality_log.context` | (a) JSONB. |
+| Q7 | Numeric precision | (a) `NUMERIC(18,4)`. |
+| Q8 | Index code allowlist | (a) free-form. |
+| Q9 | ON DELETE behavior | **(c) hybrid** *(operator override)*. Per-FK table in §2.5. |
+| Q10 | Naming inconsistency | (a) accept locked names. SCOPE LOCK overrides cosmetic concerns. |
+| A1 | Fuzzy name search | `pg_trgm` extension + GIN index on `stocks.company_name gin_trgm_ops`. Codified in §1.1 and §3.3. |
+| A2 | Operational migration log | New `schema_version` table (§1.10). Inserted-into by every Alembic migration as its final op. |
 
 ---
 
 ## 5. Out of scope for Chunk 1.1 (deferred — flagged for AGENTS.md if not already)
 
-- ORM model file `backend/db/models.py` — drafted in Chunk 1.1 *implementation* (next chunk after spec approval), not in this spec.
+- ORM model file `backend/db/models.py` — produced in the Chunk 1.1 *implementation* prompt (next), not in this spec.
+- Alembic env config + 0001/0002/0003 migrations — same.
 - Universe Agent population logic — Chunk 1.2.
 - Adjusted-price columns / corporate-action math — Phase 2.5.
 - Index-constituents population (initial load + quarterly refresh) — Chunk 1.2.
@@ -508,4 +508,4 @@ The locked list contains plural `stocks`, `indices`, `prices_eod`, `index_consti
 
 ---
 
-*End of spec. Status: review pending. Operator answers Q1–Q10 → spec updated → implementation prompt drafted.*
+*End of spec. Status: operator-approved with amendments. Awaiting authorization for the Chunk 1.1 implementation prompt (ORM models + Alembic env + 0001 / 0002 / 0003 migrations).*
