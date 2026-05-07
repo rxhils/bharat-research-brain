@@ -232,6 +232,57 @@ Use the Obsidian Git plugin. Auto-commit every 30 minutes. Push to a **private**
 GitHub repo. Vault is in `.gitignore` for the main code repo — they are
 separate repositories.
 
+### 6.1 Vault as persistent memory for Claude Code
+
+The vault at $VAULT_PATH (`C:/claude/vault/rahil claude`) is also
+accessible to Claude Code via the filesystem MCP server. Claude Code
+treats the vault as its persistent memory across sessions.
+
+Operating rules for Claude Code's vault interactions:
+
+1. AT THE START of every non-trivial session (anything beyond a one-line
+   question), read the most recent lesson note in `08_Lessons/` and the
+   most recent two daily agent logs in `00_System/AgentLogs/`. State
+   what you read in 1-2 lines before proceeding.
+
+2. AT THE END of any session that produced a chunk-level deliverable
+   (a commit, a design decision, a debugging gotcha, a SCOPE LOCK
+   refusal), write a lesson note to `08_Lessons/` named
+   `<chunk-or-topic>-<YYYY-MM-DD>.md`. Use the structure of existing
+   notes (frontmatter with date/phase/tags/status, body sections).
+
+3. NEVER write to `04_Reports/` — those are agent-generated. Claude
+   Code's writes go to `08_Lessons/`, `00_System/`, or
+   `06_Decisions/` only.
+
+4. When the operator asks "what did we learn about X" or "have we
+   seen this before", grep the vault for relevant notes BEFORE
+   answering from context.
+
+5. The vault is canonical for prose and lessons. Postgres is canonical
+   for structured data. If they disagree on a fact, the vault wins
+   for narrative ("we decided X because Y") and the database wins
+   for numbers ("Reliance closed at 2890.50").
+
+6. Treat vault writes as commits — atomic, descriptive, complete.
+   Don't write half a note and stop.
+
+7. Vault structure (do not deviate):
+   - 00_System/        — project memory, prompt library, agent logs
+   - 01_Stocks/        — one note per ticker (agents fill in)
+   - 02_Sectors/       — one note per sector
+   - 03_Macro/         — USDINR, Crude, RBI, Fed, Yields
+   - 04_Reports/       — agent-generated, do not write here
+   - 05_Watchlists/    — operator + agent curated lists
+   - 06_Decisions/     — design and trade decisions
+   - 07_News/Inbox/    — raw news drops (agent-managed)
+   - 08_Lessons/       — Claude Code writes here
+   - 99_Templates/     — reusable note templates
+
+Apply SCOPE LOCK to vault writes too. If you find yourself wanting
+to write outside `08_Lessons/`, `06_Decisions/`, or `00_System/`,
+stop and ask the operator first.
+
 ---
 
 ## 7. Repository layout
