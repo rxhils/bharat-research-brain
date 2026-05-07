@@ -462,4 +462,14 @@ TZ=Asia/Kolkata
 
 ---
 
+## 16. Follow-ups (out-of-scope flags surfaced during chunk work)
+
+Operator decides whether to action each. Format: date · chunk · description · status.
+
+- **2026-05-07 · Phase 1 Chunk 1.1 commit 7 · Dockerfile does not copy `alembic/` or `alembic.ini` into the backend image.** Required for `docker compose exec backend alembic ...` (used in commit 8 of the implementation prompt). Three options: patch Dockerfile, bind-mount via docker-compose, or run alembic from host. Recommendation: patch Dockerfile. Status: awaiting operator authorization.
+- **2026-05-07 · Phase 0 commit 1 · `AGENTS.md` got tracked by `git add .`.** Operator stated "leave it alone" but did not specify "untrack". One-line `git rm --cached AGENTS.md` if untrack desired. Status: open.
+- **2026-05-07 · Phase 1 Chunk 1.1 commit 7 · `pyproject.toml` gained `alembic>=1.13` and `psycopg[binary]>=3.2`.** Implicit in Alembic configuration (the env.py adapter swap to `postgresql+psycopg` requires psycopg). Surfacing for record; operator-acknowledged via the commit-7 authorization. Status: applied.
+
+---
+
 *End of AGENTS.md. Last updated: 2026-05-07.*
