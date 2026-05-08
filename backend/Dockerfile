@@ -11,7 +11,7 @@ COPY backend ./backend
 COPY alembic.ini ./
 COPY alembic ./alembic
 
-RUN pip install --upgrade pip && pip install .
+RUN pip install --upgrade pip && pip install --no-cache-dir ".[dev]"
 
 EXPOSE 8000
 
