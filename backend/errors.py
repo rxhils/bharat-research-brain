@@ -16,7 +16,26 @@ class DataSourceError(BharatError):
 
     Use for HTTP errors after exhausted retries, parse failures, schema
     mismatches at the source boundary.
+
+    Optional `status_code` carries the HTTP status (when applicable) so
+    callers can branch on it without parsing the message string.
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        status_code: int | None = None,
+        reason_code: str | None = None,
+    ) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+        self.reason_code = reason_code
+        # reason_code values used in this codebase:
+        #   "soft_404_html_body"  — HTTP 200 with HTML body (custom 404 page)
+        #   "deferred_filename"   — filename in source map is sentinel
+        #   "rate_limited"        — actual 429 (caller should not retry)
+        #   "auth_required"       — actual 403 (anti-bot or auth missing)
 
 
 class ValidationError(BharatError):
