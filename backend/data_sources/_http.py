@@ -108,16 +108,19 @@ async def _do_get(client: httpx.AsyncClient, url: str) -> httpx.Response:
     # Hard-fail on rate-limit / block signals — do not retry past tenacity
     # defaults. NSE rate-limit signals must be respected (CLAUDE.md §2 rule 5).
     if resp.status_code in (403, 429):
+        reason = "rate_limited" if resp.status_code == 429 else "auth_required"
         log.error(
             "http.blocked",
             source_url=url,
             http_status=resp.status_code,
+            reason=reason,
             note="provider blocked or rate-limited; do not retry, do not spoof",
         )
         raise DataSourceError(
             f"Source returned {resp.status_code} for {url} — "
             "provider rate-limited or blocked our user agent. Do not retry.",
             status_code=resp.status_code,
+            reason_code=reason,
         )
 
     resp.raise_for_status()
