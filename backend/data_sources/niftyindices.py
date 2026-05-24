@@ -140,11 +140,18 @@ class NiftyIndicesClient:
         bound_log: structlog.stdlib.BoundLogger,
         cache_ttl: int,
     ) -> tuple[bytes, FetchMetadata]:
-        """Try primary; on 404 or soft-404, fall back to FALLBACK_BASE_URL once."""
+        """Try primary; on 404 or soft-404, fall back to FALLBACK_BASE_URL once.
+
+        The HTML/soft-404 sniff is passed to `fetch_bytes` as a `validate`
+        hook so a soft-404 page (HTTP 200 with an HTML body) is rejected
+        BEFORE being cached — it cannot poison the 1-hour cache window.
+        """
         try:
-            body, meta = await fetch_bytes(primary_url, cache_ttl=cache_ttl)
-            self._raise_if_html(body, primary_url, status_hint=meta.http_status)
-            return body, meta
+            return await fetch_bytes(
+                primary_url,
+                cache_ttl=cache_ttl,
+                validate=lambda b: self._raise_if_html(b, primary_url, status_hint=200),
+            )
         except DataSourceError as exc:
             should_fallback = (
                 exc.status_code == 404
@@ -158,17 +165,21 @@ class NiftyIndicesClient:
                 fallback_url=fallback_url,
                 reason=exc.reason_code or f"status_{exc.status_code}",
             )
-            body, meta = await fetch_bytes(fallback_url, cache_ttl=cache_ttl)
             try:
-                self._raise_if_html(body, fallback_url, status_hint=meta.http_status)
+                return await fetch_bytes(
+                    fallback_url,
+                    cache_ttl=cache_ttl,
+                    validate=lambda b: self._raise_if_html(b, fallback_url, status_hint=200),
+                )
             except DataSourceError as fb_exc:
-                raise DataSourceError(
-                    f"soft-404 from BOTH primary ({primary_url}) and "
-                    f"fallback ({fallback_url}). {fb_exc}",
-                    status_code=fb_exc.status_code,
-                    reason_code="soft_404_html_body",
-                ) from fb_exc
-            return body, meta
+                if fb_exc.reason_code == "soft_404_html_body":
+                    raise DataSourceError(
+                        f"soft-404 from BOTH primary ({primary_url}) and "
+                        f"fallback ({fallback_url}). {fb_exc}",
+                        status_code=fb_exc.status_code,
+                        reason_code="soft_404_html_body",
+                    ) from fb_exc
+                raise
 
     @staticmethod
     def _raise_if_html(body: bytes, url: str, *, status_hint: int) -> None:

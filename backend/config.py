@@ -19,4 +19,7 @@ class Settings(BaseSettings):
     )
 
 
-settings = Settings()
+# All fields are populated from the environment / .env at runtime, so no
+# arguments are passed here. `type: ignore[call-arg]` silences mypy's
+# false positive — pydantic-settings does not require them at the call site.
+settings = Settings()  # type: ignore[call-arg]

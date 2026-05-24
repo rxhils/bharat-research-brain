@@ -17,7 +17,9 @@ CONTRACT:
 from __future__ import annotations
 
 import hashlib
+import tempfile
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -38,7 +40,7 @@ from backend.errors import DataSourceError
 log = structlog.get_logger()
 
 USER_AGENT = "bharat-research-brain/0.1 (personal research)"
-CACHE_DIR = Path("/tmp/bharat-cache")
+CACHE_DIR = Path(tempfile.gettempdir()) / "bharat-cache"
 DEFAULT_CACHE_TTL = 3600  # 1 hour
 
 
@@ -132,16 +134,24 @@ async def fetch_bytes(
     *,
     cache_ttl: int = DEFAULT_CACHE_TTL,
     timeout: float = 30.0,
+    validate: Callable[[bytes], None] | None = None,
 ) -> tuple[bytes, FetchMetadata]:
     """Fetch raw bytes with retry, cache, and provenance metadata.
 
     Returns (body, metadata). Metadata's `row_count` defaults to 0 — callers
     parse the body and emit an updated `FetchMetadata` via dataclasses.replace().
+
+    `validate`, if given, is called with the body BEFORE it is cached (and on
+    cache hits). It should raise to reject the body — a rejected body is never
+    written to the cache, so transient error pages served as HTTP 200 (e.g.
+    soft-404 HTML) cannot poison the cache for the TTL window.
     """
     bound_log = log.bind(source_url=url)
 
     cached = _read_cache(url, cache_ttl)
     if cached is not None:
+        if validate is not None:
+            validate(cached)
         bound_log.info("http.cache_hit", bytes=len(cached))
         return cached, FetchMetadata(
             source_url=url,
@@ -176,6 +186,8 @@ async def fetch_bytes(
             raise DataSourceError(f"fetch failed for {url}: {exc}") from exc
 
     body = resp.content
+    if validate is not None:
+        validate(body)
     _write_cache(url, body)
     sha = hashlib.sha256(body).hexdigest()
     bound_log.info(

@@ -21,7 +21,6 @@ from typing import ClassVar
 import structlog
 
 from backend.db.session import SessionLocal
-from backend.errors import BharatError
 
 log = structlog.get_logger()
 
@@ -88,7 +87,11 @@ class BaseAgent(ABC):
 
         try:
             result = await self._execute(ctx)
-        except BharatError as exc:
+        except Exception as exc:
+            # Catch BharatError AND unexpected exceptions: either way the run
+            # row must be closed as 'failed' so it never dangles at 'running'
+            # (which would corrupt idx_ingestion_failed and run monitoring).
+            # We re-raise unconditionally — this records, it does not swallow.
             bound_log.error(
                 "agent.run.error",
                 exc_type=type(exc).__name__,

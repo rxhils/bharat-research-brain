@@ -102,7 +102,16 @@ def downgrade() -> None:
     op.execute(
         "DELETE FROM schema_version WHERE version_label = '0003_seed_trading_calendar'"
     )
-    op.execute(
+    # Delete ONLY the rows this migration seeded — keyed by the exact
+    # (trade_date, exchange) pairs from the CSV — so any operator-added
+    # calendar rows inside the 2024-2027 range are preserved.
+    conn = op.get_bind()
+    stmt = sa.text(
         "DELETE FROM trading_calendar "
-        "WHERE trade_date BETWEEN '2024-01-01' AND '2027-12-31'"
+        "WHERE trade_date = :trade_date AND exchange = :exchange"
     )
+    for row in _load_csv():
+        conn.execute(
+            stmt,
+            {"trade_date": row["trade_date"], "exchange": row["exchange"]},
+        )

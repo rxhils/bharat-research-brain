@@ -61,7 +61,8 @@ async def _version_async() -> None:
             await session.execute(
                 text(
                     "SELECT version_label, applied_at, chunk_reference "
-                    "FROM schema_version ORDER BY applied_at DESC LIMIT 1"
+                    "FROM schema_version "
+                    "ORDER BY applied_at DESC, version_label DESC LIMIT 1"
                 )
             )
         ).first()
