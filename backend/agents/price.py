@@ -48,6 +48,8 @@ _PUBLISH_MINUTE = 30
 
 @dataclass
 class PriceResult:
+    open_days: int = 0
+    present_days: int = 0
     dates_attempted: int = 0
     dates_succeeded: int = 0
     dates_failed: int = 0
@@ -126,7 +128,12 @@ class PriceAgent(BaseAgent):
             *(self._fetch_one(d, known, sem, cache_ttl) for d in missing)
         )
 
-        result = PriceResult(dates_attempted=len(missing), missing=missing)
+        result = PriceResult(
+            open_days=len(open_dates),
+            present_days=len(present),
+            dates_attempted=len(missing),
+            missing=missing,
+        )
         good_rows: list[BhavRow] = []
         for d, rows, warns, parsed, ok in fetched:
             result.warnings.extend(warns)

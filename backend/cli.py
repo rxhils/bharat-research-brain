@@ -31,6 +31,8 @@ console = Console()
 app = typer.Typer(help="bharat-research-brain CLI", no_args_is_help=True)
 universe_app = typer.Typer(help="Universe agent commands", no_args_is_help=True)
 app.add_typer(universe_app, name="universe")
+prices_app = typer.Typer(help="Price agent commands", no_args_is_help=True)
+app.add_typer(prices_app, name="prices")
 
 
 # -----------------------------------------------------------------------------
@@ -375,6 +377,205 @@ async def _universe_show_async(
         console.print("[yellow]no matching active rows[/yellow]")
 
     log.info("cli.universe.show.finish", total=total_stocks, active=active_stocks)
+
+
+# -----------------------------------------------------------------------------
+# prices backfill / fetch-today / show
+# -----------------------------------------------------------------------------
+
+
+@prices_app.command("backfill")
+def prices_backfill(
+    years: int = typer.Option(5, "--years", help="Look back this many years."),
+    from_date: str | None = typer.Option(
+        None, "--from", help="Start date YYYY-MM-DD (overrides --years)."
+    ),
+    to_date: str | None = typer.Option(
+        None, "--to", help="End date YYYY-MM-DD (defaults to today IST)."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Download + parse, print plan, write nothing."
+    ),
+) -> None:
+    """Backfill prices_eod from NSE bhavcopies for missing trading days."""
+    asyncio.run(
+        _prices_backfill_async(
+            years=years, from_date=from_date, to_date=to_date, dry_run=dry_run
+        )
+    )
+
+
+async def _prices_backfill_async(
+    *, years: int, from_date: str | None, to_date: str | None, dry_run: bool
+) -> None:
+    from datetime import date, timedelta
+
+    from backend.agents.base import RunContext
+    from backend.agents.price import PriceAgent, PriceRequest
+    from backend.db.repositories._helpers import today_ist
+
+    end = date.fromisoformat(to_date) if to_date else today_ist()
+    start = date.fromisoformat(from_date) if from_date else end - timedelta(days=years * 365)
+    log.info("cli.prices.backfill.start", start=str(start), end=str(end), dry_run=dry_run)
+
+    if dry_run:
+        result = await PriceAgent().backfill(start=start, end=end, dry_run=True)
+        _render_backfill_plan(start, end, result)
+        return
+
+    agent = PriceAgent(request=PriceRequest(mode="backfill", start=start, end=end))
+    agent_result = await agent.run(RunContext())
+    table = Table(title="Prices backfill — APPLIED")
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("status", agent_result.status)
+    table.add_row("rows inserted", str(agent_result.rows_inserted))
+    for k, v in agent_result.metrics.items():
+        table.add_row(f"metric:{k}", str(int(v)))
+    console.print(table)
+    console.print(f"[dim]{len(agent_result.warnings)} warnings logged to data_quality_log[/dim]")
+    log.info("cli.prices.backfill.finish", status=agent_result.status)
+
+
+def _render_backfill_plan(start: object, end: object, result: object) -> None:
+    from backend.agents.price import PriceResult
+
+    assert isinstance(result, PriceResult)
+    table = Table(title="Prices backfill — DRY RUN (no writes)")
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("date range", f"{start} .. {end}")
+    table.add_row("open trading days (calendar)", str(result.open_days))
+    table.add_row("already present in prices_eod", str(result.present_days))
+    table.add_row("would download (missing)", str(result.dates_attempted))
+    table.add_row("downloaded OK", str(result.dates_succeeded))
+    table.add_row("download failed", str(result.dates_failed))
+    table.add_row("rows ready to insert", str(result.rows_ready))
+    table.add_row("rows skipped (series/universe)", str(result.rows_skipped))
+    table.add_row("rows warned (quality)", str(result.rows_warned))
+    console.print(table)
+
+    sample = sorted(result.missing)[:15]
+    if sample:
+        console.print("[bold]Sample dates to fetch (first 15):[/bold]")
+        console.print("  " + ", ".join(str(d) for d in sample))
+    if result.failed_dates:
+        console.print(
+            "[yellow]failed dates (first 15):[/yellow] "
+            + ", ".join(str(d) for d in sorted(result.failed_dates)[:15])
+        )
+    console.print("[dim]DRY RUN — nothing was written to prices_eod.[/dim]")
+
+
+@prices_app.command("fetch-today")
+def prices_fetch_today(
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Download + parse, write nothing."
+    ),
+) -> None:
+    """Fetch today's bhavcopy and insert new rows (skips non-trading days)."""
+    asyncio.run(_prices_fetch_today_async(dry_run=dry_run))
+
+
+async def _prices_fetch_today_async(*, dry_run: bool) -> None:
+    from backend.agents.base import RunContext
+    from backend.agents.price import PriceAgent, PriceRequest
+
+    log.info("cli.prices.fetch_today.start", dry_run=dry_run)
+    if dry_run:
+        result = await PriceAgent().fetch_today(dry_run=True)
+        if result.note:
+            console.print(f"[yellow]{result.note}[/yellow]")
+        table = Table(title="Prices fetch-today — DRY RUN")
+        table.add_column("field", style="bold")
+        table.add_column("value")
+        for k, v in result.counts().items():
+            table.add_row(k, str(v))
+        console.print(table)
+        return
+
+    agent = PriceAgent(request=PriceRequest(mode="today"))
+    agent_result = await agent.run(RunContext())
+    console.print(
+        f"fetch-today: status={agent_result.status}, "
+        f"rows inserted={agent_result.rows_inserted}"
+    )
+    log.info("cli.prices.fetch_today.finish", status=agent_result.status)
+
+
+@prices_app.command("show")
+def prices_show(
+    isin: str | None = typer.Option(None, "--isin", help="ISIN to display."),
+    symbol: str | None = typer.Option(None, "--symbol", help="NSE symbol to display."),
+    limit: int = typer.Option(30, "--limit", help="Most recent N rows."),
+) -> None:
+    """Show the most recent EOD rows for one stock (by --isin or --symbol)."""
+    if not isin and not symbol:
+        console.print("[red]provide --isin or --symbol[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_prices_show_async(isin=isin, symbol=symbol, limit=limit))
+
+
+async def _prices_show_async(
+    *, isin: str | None, symbol: str | None, limit: int
+) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import PriceEod, Stock
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        if isin is None and symbol is not None:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol)
+                )
+            ).scalar_one_or_none()
+            if isin is None:
+                console.print(f"[red]no stock with nse_symbol={symbol!r}[/red]")
+                raise typer.Exit(code=1)
+
+        label = (
+            await session.execute(
+                select(Stock.nse_symbol, Stock.company_name).where(Stock.isin == isin)
+            )
+        ).first()
+        rows = (
+            (
+                await session.execute(
+                    select(PriceEod)
+                    .where(PriceEod.isin == isin)
+                    .order_by(PriceEod.trade_date.desc())
+                    .limit(limit)
+                )
+            )
+            .scalars()
+            .all()
+        )
+
+    heading = f"{isin}"
+    if label is not None:
+        heading = f"{label[0]} ({isin}) — {label[1]}"
+    table = Table(title=f"Prices (most recent {limit}) — {heading}")
+    for col in ("date", "open", "high", "low", "close", "volume", "delivery_pct"):
+        table.add_column(col)
+    for r in rows:
+        table.add_row(
+            str(r.trade_date),
+            _fmt(r.open),
+            _fmt(r.high),
+            _fmt(r.low),
+            _fmt(r.close),
+            str(r.volume if r.volume is not None else "—"),
+            _fmt(r.delivery_pct),
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no price rows for this stock yet[/yellow]")
+
+
+def _fmt(value: object) -> str:
+    return "—" if value is None else str(value)
 
 
 # -----------------------------------------------------------------------------
