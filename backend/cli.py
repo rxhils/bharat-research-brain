@@ -218,18 +218,31 @@ def _render_plan(plan: object) -> None:
 @universe_app.command("show")
 def universe_show(
     limit: int = typer.Option(20, "--limit", help="Max rows to display."),
+    sector: str | None = typer.Option(
+        None, "--sector", help="Filter active stocks by canonical sector."
+    ),
+    index: str | None = typer.Option(
+        None, "--index", help="List active members of an index_code."
+    ),
 ) -> None:
-    """Show current universe state from Postgres (read-only)."""
-    asyncio.run(_universe_show_async(limit=limit))
+    """Show current universe state from Postgres (read-only).
+
+    With --index, lists active members of that index. With --sector, lists
+    active stocks in that canonical sector. Otherwise shows the summary,
+    per-index counts, and a stock sample.
+    """
+    asyncio.run(_universe_show_async(limit=limit, sector=sector, index=index))
 
 
-async def _universe_show_async(*, limit: int) -> None:
+async def _universe_show_async(
+    *, limit: int, sector: str | None, index: str | None
+) -> None:
     from sqlalchemy import func, select
 
     from backend.db.models import IndexConstituent, Stock
     from backend.db.session import SessionLocal
 
-    log.info("cli.universe.show.start", limit=limit)
+    log.info("cli.universe.show.start", limit=limit, sector=sector, index=index)
     async with SessionLocal() as session:
         total_stocks = (
             await session.execute(select(func.count()).select_from(Stock))
@@ -248,26 +261,78 @@ async def _universe_show_async(*, limit: int) -> None:
                 .where(IndexConstituent.effective_to.is_(None))
             )
         ).scalar_one()
-        per_index = (
-            await session.execute(
-                select(IndexConstituent.index_code, func.count())
-                .where(IndexConstituent.effective_to.is_(None))
-                .group_by(IndexConstituent.index_code)
-                .order_by(func.count().desc())
-            )
-        ).all()
-        sample = (
-            (
+
+        per_index = []
+        sample: list[Stock] = []
+        filtered_count: int | None = None
+        if index is not None:
+            filtered_count = (
                 await session.execute(
-                    select(Stock)
-                    .where(Stock.delisted_on.is_(None))
-                    .order_by(Stock.nse_symbol)
-                    .limit(limit)
+                    select(func.count())
+                    .select_from(IndexConstituent)
+                    .where(
+                        IndexConstituent.index_code == index,
+                        IndexConstituent.effective_to.is_(None),
+                    )
                 )
+            ).scalar_one()
+            sample = list(
+                (
+                    await session.execute(
+                        select(Stock)
+                        .join(IndexConstituent, IndexConstituent.isin == Stock.isin)
+                        .where(
+                            IndexConstituent.index_code == index,
+                            IndexConstituent.effective_to.is_(None),
+                        )
+                        .order_by(Stock.nse_symbol)
+                        .limit(limit)
+                    )
+                )
+                .scalars()
+                .all()
             )
-            .scalars()
-            .all()
-        )
+        elif sector is not None:
+            filtered_count = (
+                await session.execute(
+                    select(func.count())
+                    .select_from(Stock)
+                    .where(Stock.delisted_on.is_(None), Stock.sector == sector)
+                )
+            ).scalar_one()
+            sample = list(
+                (
+                    await session.execute(
+                        select(Stock)
+                        .where(Stock.delisted_on.is_(None), Stock.sector == sector)
+                        .order_by(Stock.nse_symbol)
+                        .limit(limit)
+                    )
+                )
+                .scalars()
+                .all()
+            )
+        else:
+            per_index = (
+                await session.execute(
+                    select(IndexConstituent.index_code, func.count())
+                    .where(IndexConstituent.effective_to.is_(None))
+                    .group_by(IndexConstituent.index_code)
+                    .order_by(func.count().desc())
+                )
+            ).all()
+            sample = list(
+                (
+                    await session.execute(
+                        select(Stock)
+                        .where(Stock.delisted_on.is_(None))
+                        .order_by(Stock.nse_symbol)
+                        .limit(limit)
+                    )
+                )
+                .scalars()
+                .all()
+            )
 
     summary = Table(title="Universe — current state")
     summary.add_column("field", style="bold")
@@ -275,6 +340,10 @@ async def _universe_show_async(*, limit: int) -> None:
     summary.add_row("stocks (total)", str(total_stocks))
     summary.add_row("stocks (active)", str(active_stocks))
     summary.add_row("active memberships", str(active_members))
+    if index is not None:
+        summary.add_row(f"members of {index}", str(filtered_count))
+    elif sector is not None:
+        summary.add_row(f"active stocks in {sector}", str(filtered_count))
     console.print(summary)
 
     if per_index:
@@ -286,7 +355,13 @@ async def _universe_show_async(*, limit: int) -> None:
         console.print(idx_table)
 
     if sample:
-        stock_table = Table(title=f"Stocks (first {limit} by symbol)")
+        if index is not None:
+            title = f"Members of {index} (first {limit} by symbol)"
+        elif sector is not None:
+            title = f"{sector} stocks (first {limit} by symbol)"
+        else:
+            title = f"Stocks (first {limit} by symbol)"
+        stock_table = Table(title=title)
         stock_table.add_column("isin")
         stock_table.add_column("nse_symbol")
         stock_table.add_column("sector")
@@ -296,6 +371,8 @@ async def _universe_show_async(*, limit: int) -> None:
                 s.isin, s.nse_symbol or "—", s.sector or "—", s.company_name
             )
         console.print(stock_table)
+    elif index is not None or sector is not None:
+        console.print("[yellow]no matching active rows[/yellow]")
 
     log.info("cli.universe.show.finish", total=total_stocks, active=active_stocks)
 
