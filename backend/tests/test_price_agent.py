@@ -38,16 +38,19 @@ KNOWN = "INE040A01034"  # HDFCBANK — present in the live universe
 # ---------------------------------------------------------------------------
 # Fixtures: in-memory bhavcopy CSV + ZIP builders
 # ---------------------------------------------------------------------------
+# UDiFF format (current): TtlTradgVol / TtlTrfVal (rupees) / TtlNbOfTxsExctd,
+# no delivery columns. TtlTrfVal=15000000 rupees → 1.5 crore.
 NEW_CSV = (
-    "TradDt,SctySrs,ISIN,OpnPric,HghPric,LwPric,ClsPric,TtlTrdQnty,TtlTrdVal,"
-    "TtlNbOfTxnsExctd,DlvryQty,DlvryPrc\n"
-    "24-Jan-2024,EQ,INE040A01034,100.5,105.0,99.0,103.2,1000,1.5,50,600,60.0\n"
+    "TradDt,SctySrs,ISIN,OpnPric,HghPric,LwPric,ClsPric,TtlTradgVol,TtlTrfVal,"
+    "TtlNbOfTxsExctd\n"
+    "24-Jan-2024,EQ,INE040A01034,100.5,105.0,99.0,103.2,1000,15000000,50\n"
 )
 
+# Old historical format: TOTTRDVAL in rupees. 15000000 rupees → 1.5 crore.
 OLD_CSV = (
     "SYMBOL,SERIES,OPEN,HIGH,LOW,CLOSE,LAST,PREVCLOSE,TOTTRDQTY,TOTTRDVAL,"
     "TIMESTAMP,TOTALTRADES,ISIN,DELIV_QTY,DELIV_PER\n"
-    "HDFCBANK,EQ,100.5,105.0,99.0,103.2,103.0,100.0,1000,150.0,24-Jan-2020,"
+    "HDFCBANK,EQ,100.5,105.0,99.0,103.2,103.0,100.0,1000,15000000,24-Jan-2020,"
     "50,INE040A01034,600,60.0\n"
 )
 
@@ -102,9 +105,9 @@ def test_parse_new_format_csv() -> None:
     assert r.low == Decimal("99.0")
     assert r.close == Decimal("103.2")
     assert r.volume == 1000
-    assert r.value_inr_cr == Decimal("1.5")
-    assert r.delivery_qty == 600
-    assert r.delivery_pct == Decimal("60.0")
+    assert r.value_inr_cr == Decimal("1.5")  # 15,000,000 rupees → 1.5 cr
+    assert r.delivery_qty is None  # UDiFF carries no delivery columns
+    assert r.delivery_pct is None
 
 
 def test_parse_old_format_csv() -> None:
@@ -113,7 +116,7 @@ def test_parse_old_format_csv() -> None:
     r = rows[0]
     assert r.isin == "INE040A01034"
     assert r.trade_date == date(2020, 1, 24)
-    # 150 lakhs / 100 → 1.5 crores
+    # 15,000,000 rupees / 1e7 → 1.5 crores
     assert r.value_inr_cr == Decimal("1.5")
 
 

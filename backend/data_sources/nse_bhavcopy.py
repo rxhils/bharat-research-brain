@@ -35,8 +35,10 @@ OLD_BASE = "https://archives.nseindia.com/content/historical/EQUITIES/"
 
 ALLOWED_SERIES = frozenset({"EQ", "BE", "BZ"})
 _DATE_FORMATS = ("%d-%b-%Y", "%Y-%m-%d", "%d-%m-%Y")
-# 100 lakh = 1 crore.
-LAKHS_PER_CRORE = Decimal(100)
+# Both bhavcopy formats report traded value in RUPEES (verified against live
+# data 2026-05-25 — the build spec's "crores"/"lakhs" claims were wrong).
+# crore = 1e7 rupees, so value_inr_cr = rupees / RUPEES_PER_CRORE.
+RUPEES_PER_CRORE = Decimal(10_000_000)
 
 
 # ---------------------------------------------------------------------------
@@ -119,9 +121,16 @@ def _parse_date(s: str) -> date | None:
 # CSV parsers
 # ---------------------------------------------------------------------------
 def parse_new_format(text: str) -> list[BhavRow]:
+    """Parse the UDiFF CM bhavcopy (NSE's current format).
+
+    Real columns: TtlTradgVol (volume), TtlTrfVal (traded value in RUPEES),
+    TtlNbOfTxsExctd (trades). UDiFF carries no delivery columns, so
+    delivery_qty / delivery_pct are always None here.
+    """
     reader = csv.DictReader(StringIO(text))
     out: list[BhavRow] = []
     for row in reader:
+        val = _dec(row.get("TtlTrfVal"))  # rupees
         out.append(
             BhavRow(
                 isin=_clean(row.get("ISIN")),
@@ -131,11 +140,11 @@ def parse_new_format(text: str) -> list[BhavRow]:
                 high=_dec(row.get("HghPric")),
                 low=_dec(row.get("LwPric")),
                 close=_dec(row.get("ClsPric")),
-                volume=_int(row.get("TtlTrdQnty")),
-                value_inr_cr=_dec(row.get("TtlTrdVal")),
-                trades_count=_int(row.get("TtlNbOfTxnsExctd")),
-                delivery_qty=_int(row.get("DlvryQty")),
-                delivery_pct=_dec(row.get("DlvryPrc")),
+                volume=_int(row.get("TtlTradgVol")),
+                value_inr_cr=(val / RUPEES_PER_CRORE) if val is not None else None,
+                trades_count=_int(row.get("TtlNbOfTxsExctd")),
+                delivery_qty=None,
+                delivery_pct=None,
             )
         )
     return out
@@ -145,7 +154,7 @@ def parse_old_format(text: str) -> list[BhavRow]:
     reader = csv.DictReader(StringIO(text))
     out: list[BhavRow] = []
     for row in reader:
-        val = _dec(row.get("TOTTRDVAL"))
+        val = _dec(row.get("TOTTRDVAL"))  # rupees
         out.append(
             BhavRow(
                 isin=_clean(row.get("ISIN")),
@@ -156,8 +165,7 @@ def parse_old_format(text: str) -> list[BhavRow]:
                 low=_dec(row.get("LOW")),
                 close=_dec(row.get("CLOSE")),
                 volume=_int(row.get("TOTTRDQTY")),
-                # Old format reports value in lakhs → convert to crores.
-                value_inr_cr=(val / LAKHS_PER_CRORE) if val is not None else None,
+                value_inr_cr=(val / RUPEES_PER_CRORE) if val is not None else None,
                 trades_count=_int(row.get("TOTALTRADES")),
                 delivery_qty=_int(row.get("DELIV_QTY")),
                 delivery_pct=_dec(row.get("DELIV_PER")),
