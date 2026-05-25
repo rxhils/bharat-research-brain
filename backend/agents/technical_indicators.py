@@ -93,3 +93,33 @@ def avg_last_n(values: list[float | None], n: int) -> float | None:
     """Mean of the last `n` entries, skipping None. None if none are present."""
     window = [v for v in values[-n:] if v is not None]
     return sum(window) / len(window) if window else None
+
+
+def ema_cross_signal(
+    closes: list[float],
+    short: int = 20,
+    long: int = 200,
+    lookback: int = 20,
+) -> str:
+    """Detect a recent short/long EMA cross.
+
+    'golden' if the short EMA is now above the long AND was at/below it within
+    the last `lookback` steps; 'death' for the mirror case; otherwise 'none'
+    (including when there isn't enough data for the long EMA).
+    """
+    short_s = ema_series(closes, short)
+    long_s = ema_series(closes, long)
+    if not long_s or len(short_s) < len(long_s):
+        return "none"
+    short_aligned = short_s[len(short_s) - len(long_s) :]
+    diff = [short_aligned[i] - long_s[i] for i in range(len(long_s))]
+    if len(diff) < 2:
+        return "none"
+    window = diff[-(lookback + 1) :]
+    current = window[-1]
+    prior = window[:-1]
+    if current > 0 and any(d <= 0 for d in prior):
+        return "golden"
+    if current < 0 and any(d >= 0 for d in prior):
+        return "death"
+    return "none"

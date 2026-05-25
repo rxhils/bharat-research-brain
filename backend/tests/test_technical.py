@@ -11,6 +11,7 @@ from backend.agents.technical_indicators import (
     atr,
     avg_last_n,
     ema,
+    ema_cross_signal,
     macd,
     rsi,
 )
@@ -101,3 +102,27 @@ def test_avg_last_n() -> None:
 def test_avg_last_n_all_none() -> None:
     assert avg_last_n([None, None], 5) is None
     assert avg_last_n([], 5) is None
+
+
+# ---------------------------------------------------------------------------
+# EMA cross (recent golden / death detection)
+# ---------------------------------------------------------------------------
+def test_ema_cross_golden() -> None:
+    # flat for 200 then a sharp rise → short EMA crosses above long EMA
+    closes = [100.0] * 200 + [100.0 + i for i in range(1, 16)]
+    assert ema_cross_signal(closes) == "golden"
+
+
+def test_ema_cross_death() -> None:
+    closes = [100.0] * 200 + [100.0 - i for i in range(1, 16)]
+    assert ema_cross_signal(closes) == "death"
+
+
+def test_ema_cross_none_steady_uptrend() -> None:
+    # short EMA above long throughout — no recent cross
+    closes = [float(i) for i in range(1, 260)]
+    assert ema_cross_signal(closes) == "none"
+
+
+def test_ema_cross_none_insufficient() -> None:
+    assert ema_cross_signal([1.0, 2.0, 3.0]) == "none"
