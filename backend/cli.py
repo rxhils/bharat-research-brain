@@ -45,6 +45,8 @@ intraday_app = typer.Typer(help="Intraday signal commands", no_args_is_help=True
 app.add_typer(intraday_app, name="intraday")
 technical_app = typer.Typer(help="Technical agent commands", no_args_is_help=True)
 app.add_typer(technical_app, name="technical")
+news_app = typer.Typer(help="News agent commands", no_args_is_help=True)
+app.add_typer(news_app, name="news")
 
 
 # -----------------------------------------------------------------------------
@@ -1294,6 +1296,112 @@ async def _technical_show_async(*, isin: str | None, symbol: str | None) -> None
     console.print(table)
     if not rows:
         console.print("[yellow]no technical signals for this stock yet[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# news fetch / show
+# -----------------------------------------------------------------------------
+
+
+@news_app.command("fetch")
+def news_fetch(
+    source: str = typer.Option(
+        "rss", "--source", help="rss | newsapi | marketaux | all."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Fetch + match, print sample, write nothing."
+    ),
+) -> None:
+    """Fetch market news, dedup, match to ISINs, store in news_articles."""
+    if source not in ("rss", "newsapi", "marketaux", "all"):
+        console.print("[red]--source must be rss | newsapi | marketaux | all[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_news_fetch_async(source=source, dry_run=dry_run))
+
+
+async def _news_fetch_async(*, source: str, dry_run: bool) -> None:
+    from backend.agents.news import NewsAgent
+
+    log.info("cli.news.fetch.start", source=source, dry_run=dry_run)
+    res = await NewsAgent().run(sources=(source,), dry_run=dry_run)
+
+    table = Table(
+        title="News fetch" + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+    )
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("fetched", str(res.fetched))
+    table.add_row("after dedup", str(res.deduped))
+    table.add_row("matched to ISIN", str(res.matched))
+    table.add_row("unmatched (market-wide)", str(res.unmatched))
+    table.add_row("inserted", str(res.inserted))
+    console.print(table)
+
+    if res.sample:
+        sample = Table(title="Sample (first 10)")
+        sample.add_column("isin")
+        sample.add_column("headline")
+        for headline, isin in res.sample:
+            sample.add_row(isin or "—", headline[:80])
+        console.print(sample)
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to news_articles.[/dim]")
+
+
+@news_app.command("show")
+def news_show(
+    isin: str | None = typer.Option(None, "--isin", help="Filter by ISIN."),
+    symbol: str | None = typer.Option(None, "--symbol", help="Filter by NSE symbol."),
+    unmatched: bool = typer.Option(
+        False, "--unmatched", help="Show market-wide (isin NULL) articles."
+    ),
+    limit: int = typer.Option(20, "--limit", help="Max rows."),
+) -> None:
+    """Show stored news articles."""
+    asyncio.run(
+        _news_show_async(isin=isin, symbol=symbol, unmatched=unmatched, limit=limit)
+    )
+
+
+async def _news_show_async(
+    *, isin: str | None, symbol: str | None, unmatched: bool, limit: int
+) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import news as news_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        if not unmatched and isin is None and symbol is not None:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol)
+                )
+            ).scalar_one_or_none()
+            if isin is None:
+                console.print(f"[red]no stock with nse_symbol={symbol!r}[/red]")
+                raise typer.Exit(code=1)
+        rows = await news_repo.fetch(
+            session, isin=isin, unmatched=unmatched, limit=limit
+        )
+
+    title = "Unmatched news" if unmatched else f"News — {isin or 'all'}"
+    table = Table(title=title)
+    table.add_column("published")
+    table.add_column("isin")
+    table.add_column("source")
+    table.add_column("headline")
+    for r in rows:
+        table.add_row(
+            r.published_at.strftime("%Y-%m-%d %H:%M") if r.published_at else "—",
+            r.isin or "—",
+            r.source_name,
+            r.headline[:70],
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no articles[/yellow]")
 
 
 # -----------------------------------------------------------------------------

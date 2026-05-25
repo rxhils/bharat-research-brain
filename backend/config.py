@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     log_format: str = "console"
     tz: str = "Asia/Kolkata"
     live_feed_mode: str = "demo"  # 'demo' (synthetic ticks) | 'fyers' (broker WS)
+    newsapi_key: str = ""  # optional; RSS works without it
+    marketaux_key: str = ""  # optional; RSS works without it
 
     model_config = SettingsConfigDict(
         env_file=".env",

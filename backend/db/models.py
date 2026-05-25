@@ -598,3 +598,43 @@ class TechnicalSignal(Base):
         ),
         Index("idx_technical_isin_date", "isin", text("computed_date DESC")),
     )
+
+
+class NewsArticle(Base):
+    """Daily market news, deduplicated by source_url and matched to ISINs.
+
+    `isin` is nullable — market-wide articles with no stock match are still
+    stored. `source_url` is unique (the dedup key). `sentiment_score` /
+    `sentiment_label` are filled later by the Sentiment Agent (Chunk 3.3).
+    """
+
+    __tablename__ = "news_articles"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    isin: Mapped[str | None] = mapped_column(
+        String(12), ForeignKey("stocks.isin", ondelete="SET NULL")
+    )
+    headline: Mapped[str] = mapped_column(Text, nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text)
+    source_name: Mapped[str] = mapped_column(String(120), nullable=False)
+    source_url: Mapped[str] = mapped_column(Text, nullable=False, unique=True)
+    published_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    fetched_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+    sentiment_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
+    sentiment_label: Mapped[str | None] = mapped_column(String(8))
+    tags: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+
+    __table_args__ = (
+        CheckConstraint(
+            "sentiment_label IS NULL OR sentiment_label IN ('bull','bear','neutral')",
+            name="sentiment_label_allowed",
+        ),
+        Index("idx_news_isin_published", "isin", text("published_at DESC")),
+        Index("idx_news_published", text("published_at DESC")),
+    )
