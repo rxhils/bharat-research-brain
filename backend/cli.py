@@ -39,6 +39,8 @@ events_app = typer.Typer(help="Corporate events agent commands", no_args_is_help
 app.add_typer(events_app, name="events")
 vault_app = typer.Typer(help="Vault writer commands", no_args_is_help=True)
 app.add_typer(vault_app, name="vault")
+live_app = typer.Typer(help="Live price feed commands", no_args_is_help=True)
+app.add_typer(live_app, name="live")
 
 
 # -----------------------------------------------------------------------------
@@ -1035,6 +1037,98 @@ async def _prices_adjust_async(
     if dry_run:
         console.print("[dim]DRY RUN — nothing written to prices_eod_adjusted.[/dim]")
     log.info("cli.prices.adjust.finish", isin=isin, upserted=result.rows_upserted)
+
+
+# -----------------------------------------------------------------------------
+# live start / status / stop
+# -----------------------------------------------------------------------------
+
+
+@live_app.command("start")
+def live_start(
+    paper: bool = typer.Option(
+        False, "--paper", help="Force DEMO mode (synthetic ticks; no broker)."
+    ),
+    duration: float = typer.Option(
+        0.0, "--duration", help="Run for N seconds then stop (0 = until stopped)."
+    ),
+) -> None:
+    """Start the live price feed → Redis."""
+    asyncio.run(_live_start_async(paper=paper, duration=duration))
+
+
+async def _live_start_async(*, paper: bool, duration: float) -> None:
+    from backend.services.live_feed import LiveFeedService
+
+    mode = "demo" if paper else None
+    svc = LiveFeedService(mode=mode)
+    log.info("cli.live.start", mode=svc.mode, paper=paper, duration=duration)
+    await svc.connect()
+    console.print(
+        f"[green]live feed started[/green] mode={svc.mode} "
+        f"symbols={svc.symbol_count} ttl=300s"
+    )
+    try:
+        rounds = await svc.stream(interval=2.0, duration=duration)
+        console.print(f"[dim]streamed {rounds} round(s); stopped.[/dim]")
+    except KeyboardInterrupt:
+        console.print("[yellow]interrupted[/yellow]")
+    finally:
+        await svc.disconnect()
+    log.info("cli.live.start.finish")
+
+
+@live_app.command("status")
+def live_status() -> None:
+    """Show live-feed status from Redis."""
+    asyncio.run(_live_status_async())
+
+
+async def _live_status_async() -> None:
+    from backend.services.live_feed import LiveFeedService
+
+    st = await LiveFeedService().status()
+    meta = st["meta"]
+    table = Table(title="Live feed status")
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("mode", str(meta["mode"]) if meta else "—")
+    table.add_row("started_at", str(meta["started_at"]) if meta else "—")
+    table.add_row("symbol_count (meta)", str(meta["symbol_count"]) if meta else "—")
+    table.add_row("live keys in Redis", str(st["live_count"]))
+    console.print(table)
+
+    if st["samples"]:
+        sample = Table(title="Sample live ticks (first 5)")
+        sample.add_column("key")
+        sample.add_column("ltp", justify="right")
+        sample.add_column("timestamp")
+        for key, ltp, ts in st["samples"]:
+            sample.add_row(key, str(ltp), str(ts))
+        console.print(sample)
+    else:
+        console.print("[yellow]no live ticks in Redis (feed not running?)[/yellow]")
+
+
+@live_app.command("stop")
+def live_stop() -> None:
+    """Signal a running live feed to shut down gracefully."""
+    asyncio.run(_live_stop_async())
+
+
+async def _live_stop_async() -> None:
+    from redis.asyncio import Redis
+
+    from backend.config import settings
+    from backend.services.live_feed import STOP_KEY
+
+    client = Redis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        await client.set(STOP_KEY, "1")
+    finally:
+        await client.aclose()
+    console.print(f"[green]stop signal sent[/green] ({STOP_KEY}=1)")
+    log.info("cli.live.stop")
 
 
 # -----------------------------------------------------------------------------

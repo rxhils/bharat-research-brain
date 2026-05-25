@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     finbert_host: str = "http://localhost:8765"
     log_format: str = "console"
     tz: str = "Asia/Kolkata"
+    live_feed_mode: str = "demo"  # 'demo' (synthetic ticks) | 'fyers' (broker WS)
 
     model_config = SettingsConfigDict(
         env_file=".env",
