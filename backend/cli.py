@@ -856,6 +856,9 @@ def vault_write(
         "--emit",
         help="Emit NDJSON {symbol, filename, note} for Claude Code to write via MCP.",
     ),
+    out_file: str | None = typer.Option(
+        None, "--out-file", help="With --emit, write NDJSON to this path (clean UTF-8)."
+    ),
 ) -> None:
     """Render per-stock vault notes from the DB.
 
@@ -863,11 +866,20 @@ def vault_write(
     performed by Claude Code via the filesystem MCP using --emit output.
     --dry-run prints one sample note; neither flag prints guidance.
     """
-    asyncio.run(_vault_write_async(limit=limit, symbol=symbol, dry_run=dry_run, emit=emit))
+    asyncio.run(
+        _vault_write_async(
+            limit=limit, symbol=symbol, dry_run=dry_run, emit=emit, out_file=out_file
+        )
+    )
 
 
 async def _vault_write_async(
-    *, limit: int | None, symbol: str | None, dry_run: bool, emit: bool
+    *,
+    limit: int | None,
+    symbol: str | None,
+    dry_run: bool,
+    emit: bool,
+    out_file: str | None,
 ) -> None:
     import json
     import sys
@@ -895,19 +907,27 @@ async def _vault_write_async(
         return
 
     if emit:
-        for nd in notes:
-            sys.stdout.write(
-                json.dumps(
-                    {
-                        "symbol": nd.symbol,
-                        "filename": note_filename(nd.symbol),
-                        "note": render_note(nd),
-                    },
-                    ensure_ascii=False,
-                )
-                + "\n"
+        lines = [
+            json.dumps(
+                {
+                    "symbol": nd.symbol,
+                    "filename": note_filename(nd.symbol),
+                    "note": render_note(nd),
+                },
+                ensure_ascii=False,
             )
-        log.info("cli.vault.write.emit", count=len(notes))
+            for nd in notes
+        ]
+        if out_file is not None:
+            from pathlib import Path
+
+            await asyncio.to_thread(
+                Path(out_file).write_text, "\n".join(lines) + "\n", encoding="utf-8"
+            )
+        else:
+            for line in lines:
+                sys.stdout.write(line + "\n")
+        log.info("cli.vault.write.emit", count=len(notes), out_file=out_file)
         return
 
     console.print(
