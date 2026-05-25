@@ -35,6 +35,8 @@ prices_app = typer.Typer(help="Price agent commands", no_args_is_help=True)
 app.add_typer(prices_app, name="prices")
 quality_app = typer.Typer(help="Data quality agent commands", no_args_is_help=True)
 app.add_typer(quality_app, name="quality")
+events_app = typer.Typer(help="Corporate events agent commands", no_args_is_help=True)
+app.add_typer(events_app, name="events")
 
 
 # -----------------------------------------------------------------------------
@@ -724,6 +726,115 @@ async def _quality_show_async(*, severity: str | None, limit: int) -> None:
     console.print(table)
     if not rows:
         console.print("[yellow]no findings[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# events backfill / show
+# -----------------------------------------------------------------------------
+
+
+@events_app.command("backfill")
+def events_backfill(
+    years: int = typer.Option(5, "--years", help="Look back this many years."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Fetch + map, print summary, write nothing."
+    ),
+) -> None:
+    """Backfill corporate_actions (splits + dividends) from yfinance."""
+    asyncio.run(_events_backfill_async(years=years, dry_run=dry_run))
+
+
+async def _events_backfill_async(*, years: int, dry_run: bool) -> None:
+    from backend.agents.base import RunContext
+    from backend.agents.corporate_events import CorporateEventsAgent
+
+    log.info("cli.events.backfill.start", years=years, dry_run=dry_run)
+    if dry_run:
+        result = await CorporateEventsAgent().backfill(years=years, dry_run=True)
+        table = Table(title="Corporate events backfill — DRY RUN (no writes)")
+        table.add_column("field", style="bold")
+        table.add_column("value")
+        table.add_row("stocks attempted", str(result.stocks_attempted))
+        table.add_row("stocks succeeded", str(result.stocks_succeeded))
+        table.add_row("stocks failed", str(result.stocks_failed))
+        table.add_row("splits found", str(result.splits))
+        table.add_row("dividends found", str(result.dividends))
+        table.add_row("rows ready to insert", str(result.rows_ready))
+        console.print(table)
+        console.print("[dim]DRY RUN — nothing written to corporate_actions.[/dim]")
+        return
+
+    agent_result = await CorporateEventsAgent().run(RunContext())
+    table = Table(title="Corporate events backfill — APPLIED")
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("status", agent_result.status)
+    table.add_row("rows inserted", str(agent_result.rows_inserted))
+    for k, v in sorted(agent_result.metrics.items()):
+        table.add_row(f"metric:{k}", str(int(v)))
+    console.print(table)
+    log.info("cli.events.backfill.finish", status=agent_result.status)
+
+
+@events_app.command("show")
+def events_show(
+    isin: str | None = typer.Option(None, "--isin", help="Filter by ISIN."),
+    symbol: str | None = typer.Option(None, "--symbol", help="Filter by NSE symbol."),
+    action_type: str | None = typer.Option(
+        None, "--type", help="Filter by action_type (split | dividend | ...)."
+    ),
+    limit: int = typer.Option(30, "--limit", help="Most recent N events."),
+) -> None:
+    """Show recent corporate_actions rows."""
+    asyncio.run(
+        _events_show_async(
+            isin=isin, symbol=symbol, action_type=action_type, limit=limit
+        )
+    )
+
+
+async def _events_show_async(
+    *, isin: str | None, symbol: str | None, action_type: str | None, limit: int
+) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import corporate_actions as ca_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        if isin is None and symbol is not None:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol)
+                )
+            ).scalar_one_or_none()
+            if isin is None:
+                console.print(f"[red]no stock with nse_symbol={symbol!r}[/red]")
+                raise typer.Exit(code=1)
+        rows = await ca_repo.fetch_actions(
+            session, isin=isin, action_type=action_type, limit=limit
+        )
+
+    table = Table(title=f"corporate_actions (most recent {limit})")
+    table.add_column("ex_date")
+    table.add_column("isin")
+    table.add_column("type")
+    table.add_column("ratio / amount")
+    table.add_column("description")
+    for r in rows:
+        if r.action_type == "dividend":
+            detail = f"Rs {r.amount_inr}/sh"
+        elif r.ratio_numerator is not None:
+            detail = f"{r.ratio_numerator}:{r.ratio_denominator}"
+        else:
+            detail = "—"
+        table.add_row(
+            str(r.ex_date), r.isin, r.action_type, detail, r.description or "—"
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no corporate actions found[/yellow]")
 
 
 # -----------------------------------------------------------------------------
