@@ -1060,10 +1060,11 @@ def live_start(
 
 
 async def _live_start_async(*, paper: bool, duration: float) -> None:
+    from backend.services.intraday_signals import IntradaySignalService
     from backend.services.live_feed import LiveFeedService
 
     mode = "demo" if paper else None
-    svc = LiveFeedService(mode=mode)
+    svc = LiveFeedService(mode=mode, signal_service=IntradaySignalService())
     log.info("cli.live.start", mode=svc.mode, paper=paper, duration=duration)
     await svc.connect()
     console.print(
