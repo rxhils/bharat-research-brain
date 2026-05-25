@@ -515,3 +515,40 @@ class DataQualityLog(Base):
         Index("idx_dql_isin", "isin", text("detected_at DESC")),
         Index("idx_dql_code", "code", text("detected_at DESC")),
     )
+
+
+class PriceEodAdjusted(Base):
+    """Back-adjusted EOD prices, derived from prices_eod + corporate_actions.
+
+    Materialized by the Adjusted Price Agent (`prices adjust`). `adj_factor`
+    is the cumulative split MULTIPLIER applied (adj ≈ raw × adj_factor for the
+    split component; 0.5 after a 2:1 split, 1.0 with no prior split). Re-runs
+    upsert. Composite PK `(trade_date, isin)` mirrors prices_eod. No
+    non-negative CHECK: subtractive dividend back-adjustment can legitimately
+    push very old low prices below zero.
+    """
+
+    __tablename__ = "prices_eod_adjusted"
+
+    trade_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    isin: Mapped[str] = mapped_column(
+        String(12),
+        ForeignKey("stocks.isin", ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    adj_open: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    adj_high: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    adj_low: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    adj_close: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    adj_volume: Mapped[int | None] = mapped_column(BigInteger)
+    adj_factor: Mapped[Decimal | None] = mapped_column(Numeric(18, 8))
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'adjusted'")
+    )
+    computed_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_prices_adj_isin_date", "isin", text("trade_date DESC")),
+    )
