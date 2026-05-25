@@ -975,6 +975,69 @@ async def _vault_write_async(
 
 
 # -----------------------------------------------------------------------------
+# prices adjust
+# -----------------------------------------------------------------------------
+
+
+@prices_app.command("adjust")
+def prices_adjust(
+    isin: str | None = typer.Option(None, "--isin", help="Adjust one stock."),
+    all_: bool = typer.Option(False, "--all", help="Adjust every active stock."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Compute + print sample; write nothing."
+    ),
+) -> None:
+    """Compute back-adjusted prices into prices_eod_adjusted."""
+    if not isin and not all_:
+        console.print("[red]provide --isin ISIN or --all[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_prices_adjust_async(isin=isin, all_=all_, dry_run=dry_run))
+
+
+async def _prices_adjust_async(
+    *, isin: str | None, all_: bool, dry_run: bool
+) -> None:
+    from backend.agents.price_adjust import AdjustedPriceAgent
+
+    log.info("cli.prices.adjust.start", isin=isin, all=all_, dry_run=dry_run)
+    agent = AdjustedPriceAgent()
+
+    if all_:
+        result = await agent.adjust_all(dry_run=dry_run)
+        table = Table(
+            title="Prices adjust --all" + (" — DRY RUN" if dry_run else " — APPLIED")
+        )
+        table.add_column("field", style="bold")
+        table.add_column("value")
+        table.add_row("stocks processed", str(result.stocks_processed))
+        table.add_row("raw bars seen", str(result.bars))
+        table.add_row("actions applied", str(result.actions))
+        table.add_row("rows upserted", str(result.rows_upserted))
+        console.print(table)
+        if dry_run:
+            console.print("[dim]DRY RUN — nothing written.[/dim]")
+        return
+
+    assert isin is not None
+    result = await agent.adjust_isin(isin, dry_run=dry_run)
+    console.print(
+        f"[bold]{isin}[/bold]: {result.bars} raw bars, {result.actions} actions, "
+        f"{result.rows_upserted} rows upserted"
+        + (" (DRY RUN)" if dry_run else "")
+    )
+    sample = Table(title="adj_factor boundaries (one row per change)")
+    sample.add_column("trade_date")
+    sample.add_column("adj_close", justify="right")
+    sample.add_column("adj_factor (multiplier)", justify="right")
+    for d, adj_close, factor in result.sample:
+        sample.add_row(str(d), str(adj_close) if adj_close is not None else "—", str(factor))
+    console.print(sample)
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to prices_eod_adjusted.[/dim]")
+    log.info("cli.prices.adjust.finish", isin=isin, upserted=result.rows_upserted)
+
+
+# -----------------------------------------------------------------------------
 # entrypoint
 # -----------------------------------------------------------------------------
 
