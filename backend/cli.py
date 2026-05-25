@@ -859,6 +859,11 @@ def vault_write(
     out_file: str | None = typer.Option(
         None, "--out-file", help="With --emit, write NDJSON to this path (clean UTF-8)."
     ),
+    out: str | None = typer.Option(
+        None,
+        "--out",
+        help="Write each note as a .md into this directory (use with a -v vault mount).",
+    ),
 ) -> None:
     """Render per-stock vault notes from the DB.
 
@@ -868,9 +873,34 @@ def vault_write(
     """
     asyncio.run(
         _vault_write_async(
-            limit=limit, symbol=symbol, dry_run=dry_run, emit=emit, out_file=out_file
+            limit=limit,
+            symbol=symbol,
+            dry_run=dry_run,
+            emit=emit,
+            out_file=out_file,
+            out=out,
         )
     )
+
+
+def _write_notes_to_dir(notes: list[object], out_dir: str) -> int:
+    """Sync writer: render each note, preserve post-marker content, write file."""
+    from pathlib import Path
+
+    from backend.agents.vault_writer import NoteData, note_filename, render_note
+
+    base = Path(out_dir)
+    base.mkdir(parents=True, exist_ok=True)
+    written = 0
+    for nd in notes:
+        assert isinstance(nd, NoteData)
+        fp = base / note_filename(nd.symbol)
+        existing = fp.read_text(encoding="utf-8") if fp.exists() else None
+        fp.write_text(render_note(nd, existing), encoding="utf-8")
+        written += 1
+        if written % 50 == 0:
+            print(f"Written {written}/{len(notes)}")  # noqa: T201
+    return written
 
 
 async def _vault_write_async(
@@ -880,6 +910,7 @@ async def _vault_write_async(
     dry_run: bool,
     emit: bool,
     out_file: str | None,
+    out: str | None,
 ) -> None:
     import json
     import sys
@@ -928,6 +959,12 @@ async def _vault_write_async(
             for line in lines:
                 sys.stdout.write(line + "\n")
         log.info("cli.vault.write.emit", count=len(notes), out_file=out_file)
+        return
+
+    if out is not None:
+        written = await asyncio.to_thread(_write_notes_to_dir, list(notes), out)
+        console.print(f"[green]Written {written}/{len(notes)}[/green] notes to {out}")
+        log.info("cli.vault.write.out", count=written, out=out)
         return
 
     console.print(
