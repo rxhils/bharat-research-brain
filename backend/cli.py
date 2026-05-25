@@ -43,6 +43,8 @@ live_app = typer.Typer(help="Live price feed commands", no_args_is_help=True)
 app.add_typer(live_app, name="live")
 intraday_app = typer.Typer(help="Intraday signal commands", no_args_is_help=True)
 app.add_typer(intraday_app, name="intraday")
+technical_app = typer.Typer(help="Technical agent commands", no_args_is_help=True)
+app.add_typer(technical_app, name="technical")
 
 
 # -----------------------------------------------------------------------------
@@ -1184,6 +1186,114 @@ async def _intraday_status_async(*, isin: str | None, limit: int) -> None:
     finally:
         await client.aclose()
     console.print(table)
+
+
+# -----------------------------------------------------------------------------
+# technical run / show
+# -----------------------------------------------------------------------------
+
+
+@technical_app.command("run")
+def technical_run(
+    isin: str | None = typer.Option(None, "--isin", help="Compute one stock."),
+    all_: bool = typer.Option(False, "--all", help="Compute every active stock."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Compute + print; write nothing."
+    ),
+) -> None:
+    """Compute technical indicators into technical_signals."""
+    if not isin and not all_:
+        console.print("[red]provide --isin ISIN or --all[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_technical_run_async(isin=isin, all_=all_, dry_run=dry_run))
+
+
+async def _technical_run_async(*, isin: str | None, all_: bool, dry_run: bool) -> None:
+    from backend.agents.technical import TechnicalAgent
+
+    log.info("cli.technical.run.start", isin=isin, all=all_, dry_run=dry_run)
+    agent = TechnicalAgent()
+    if all_:
+        res = await agent.run_all(dry_run=dry_run)
+        table = Table(
+            title="Technical run --all" + (" — DRY RUN" if dry_run else " — APPLIED")
+        )
+        table.add_column("field", style="bold")
+        table.add_column("value")
+        table.add_row("stocks processed", str(res.stocks_processed))
+        table.add_row("rows upserted", str(res.rows_upserted))
+        table.add_row("skipped (no adj data)", str(res.skipped_no_data))
+        console.print(table)
+        return
+
+    assert isin is not None
+    row = await agent.run_isin(isin, dry_run=dry_run)
+    if row is None:
+        console.print(f"[yellow]no adjusted prices for {isin}[/yellow]")
+        return
+    console.print(
+        f"[bold]{isin}[/bold] @ {row['computed_date']}: "
+        f"rsi_14={row['rsi_14']} ema_200={row['ema_200']} "
+        f"price_vs_ema200={row['price_vs_ema200']} ema_cross={row['ema_cross']}"
+        + (" (DRY RUN)" if dry_run else "")
+    )
+
+
+@technical_app.command("show")
+def technical_show(
+    isin: str | None = typer.Option(None, "--isin", help="ISIN to display."),
+    symbol: str | None = typer.Option(None, "--symbol", help="NSE symbol to display."),
+) -> None:
+    """Show recent technical_signals rows for one stock."""
+    if not isin and not symbol:
+        console.print("[red]provide --isin or --symbol[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_technical_show_async(isin=isin, symbol=symbol))
+
+
+async def _technical_show_async(*, isin: str | None, symbol: str | None) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import technical as tech_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        if isin is None and symbol is not None:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol)
+                )
+            ).scalar_one_or_none()
+            if isin is None:
+                console.print(f"[red]no stock with nse_symbol={symbol!r}[/red]")
+                raise typer.Exit(code=1)
+        rows = await tech_repo.fetch_signals(session, isin=isin, limit=5)
+
+    table = Table(title=f"technical_signals — {isin}")
+    for col in (
+        "date",
+        "rsi_14",
+        "ema_20",
+        "ema_200",
+        "price_vs_ema200",
+        "ema_cross",
+        "macd_hist",
+    ):
+        table.add_column(col)
+    for r in rows:
+        table.add_row(
+            str(r.computed_date),
+            str(r.rsi_14) if r.rsi_14 is not None else "—",
+            str(r.ema_20) if r.ema_20 is not None else "—",
+            str(r.ema_200) if r.ema_200 is not None else "—",
+            r.price_vs_ema200 or "—",
+            r.ema_cross or "—",
+            str(r.macd_hist) if r.macd_hist is not None else "—",
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no technical signals for this stock yet[/yellow]")
 
 
 # -----------------------------------------------------------------------------

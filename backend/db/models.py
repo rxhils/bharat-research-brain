@@ -552,3 +552,49 @@ class PriceEodAdjusted(Base):
     __table_args__ = (
         Index("idx_prices_adj_isin_date", "isin", text("trade_date DESC")),
     )
+
+
+class TechnicalSignal(Base):
+    """Nightly technical indicators per stock, computed on adjusted prices.
+
+    One row per (isin, computed_date). The Technical Agent upserts as-of the
+    latest adjusted trade date. `avg_delivery_pct_30d` is nullable — the UDiFF
+    bhavcopy dropped delivery columns, so recent windows have no delivery data.
+    """
+
+    __tablename__ = "technical_signals"
+
+    isin: Mapped[str] = mapped_column(
+        String(12),
+        ForeignKey("stocks.isin", ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    computed_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    rsi_14: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    ema_20: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    ema_200: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    macd_line: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    macd_signal: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    macd_hist: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    atr_14: Mapped[Decimal | None] = mapped_column(Numeric(18, 4))
+    avg_delivery_pct_30d: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
+    price_vs_ema200: Mapped[str | None] = mapped_column(String(8))
+    ema_cross: Mapped[str | None] = mapped_column(String(8))
+    source: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default=text("'technical_agent'")
+    )
+    computed_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "price_vs_ema200 IS NULL OR price_vs_ema200 IN ('above','below','at')",
+            name="price_vs_ema200_allowed",
+        ),
+        CheckConstraint(
+            "ema_cross IS NULL OR ema_cross IN ('golden','death','none')",
+            name="ema_cross_allowed",
+        ),
+        Index("idx_technical_isin_date", "isin", text("computed_date DESC")),
+    )
