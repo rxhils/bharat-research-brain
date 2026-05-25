@@ -37,6 +37,8 @@ quality_app = typer.Typer(help="Data quality agent commands", no_args_is_help=Tr
 app.add_typer(quality_app, name="quality")
 events_app = typer.Typer(help="Corporate events agent commands", no_args_is_help=True)
 app.add_typer(events_app, name="events")
+vault_app = typer.Typer(help="Vault writer commands", no_args_is_help=True)
+app.add_typer(vault_app, name="vault")
 
 
 # -----------------------------------------------------------------------------
@@ -835,6 +837,84 @@ async def _events_show_async(
     console.print(table)
     if not rows:
         console.print("[yellow]no corporate actions found[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# vault write
+# -----------------------------------------------------------------------------
+
+
+@vault_app.command("write")
+def vault_write(
+    limit: int | None = typer.Option(None, "--limit", help="First N stocks only."),
+    symbol: str | None = typer.Option(None, "--symbol", help="Write just one stock."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Print one sample note to stdout; write nothing."
+    ),
+    emit: bool = typer.Option(
+        False,
+        "--emit",
+        help="Emit NDJSON {symbol, filename, note} for Claude Code to write via MCP.",
+    ),
+) -> None:
+    """Render per-stock vault notes from the DB.
+
+    The container cannot reach the host vault path, so actual file writes are
+    performed by Claude Code via the filesystem MCP using --emit output.
+    --dry-run prints one sample note; neither flag prints guidance.
+    """
+    asyncio.run(_vault_write_async(limit=limit, symbol=symbol, dry_run=dry_run, emit=emit))
+
+
+async def _vault_write_async(
+    *, limit: int | None, symbol: str | None, dry_run: bool, emit: bool
+) -> None:
+    import json
+    import sys
+
+    from backend.agents.vault_writer import assemble_notes, note_filename, render_note
+    from backend.db.session import SessionLocal
+
+    log.info("cli.vault.write.start", limit=limit, symbol=symbol, dry_run=dry_run, emit=emit)
+    async with SessionLocal() as session:
+        notes = await assemble_notes(
+            session, symbol=symbol, limit=(1 if dry_run and not symbol else limit)
+        )
+
+    if not notes:
+        console.print("[yellow]no matching stocks[/yellow]")
+        raise typer.Exit(code=1)
+
+    if dry_run:
+        sample = render_note(notes[0])
+        console.print(
+            f"[dim]--- sample note for {notes[0].symbol} "
+            f"({len(notes)} would be rendered) — DRY RUN, nothing written ---[/dim]"
+        )
+        sys.stdout.write(sample + "\n")
+        return
+
+    if emit:
+        for nd in notes:
+            sys.stdout.write(
+                json.dumps(
+                    {
+                        "symbol": nd.symbol,
+                        "filename": note_filename(nd.symbol),
+                        "note": render_note(nd),
+                    },
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )
+        log.info("cli.vault.write.emit", count=len(notes))
+        return
+
+    console.print(
+        f"[yellow]{len(notes)} notes ready.[/yellow] The backend container cannot "
+        "write to the host vault. Use [bold]--emit[/bold] (Claude Code writes via "
+        "the filesystem MCP) or [bold]--dry-run[/bold] for a sample."
+    )
 
 
 # -----------------------------------------------------------------------------
