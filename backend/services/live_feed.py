@@ -70,6 +70,7 @@ class LiveFeedService:
         symbols: list[str] | None = None,
         start_prices: dict[str, Decimal] | None = None,
         seed: int | None = None,
+        signal_service: Any | None = None,
     ) -> None:
         self.mode = (mode or settings.live_feed_mode).lower()
         self._redis = redis
@@ -78,6 +79,7 @@ class LiveFeedService:
         self._rng = random.Random(seed)
         self._states: dict[str, TickState] = {}
         self._running = False
+        self._signal_service = signal_service
 
     @property
     def symbol_count(self) -> int:
@@ -107,6 +109,8 @@ class LiveFeedService:
         }
         await client.set(META_KEY, json.dumps(meta))
         await client.set(STOP_KEY, "0")
+        if self._signal_service is not None:
+            await self._signal_service.load_volume_baselines(self._symbols)
         log.info("live.connect", mode=self.mode, symbols=len(self._symbols))
 
     async def on_tick(self, tick: TickState) -> None:
@@ -122,6 +126,8 @@ class LiveFeedService:
         await client.set(
             f"{LIVE_PREFIX}{tick.isin}", json.dumps(payload), ex=TTL_SECONDS
         )
+        if self._signal_service is not None:
+            await self._signal_service.on_tick(tick.isin, tick)
 
     async def _demo_round(self) -> int:
         for isin in self._symbols or []:

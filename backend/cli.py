@@ -41,6 +41,8 @@ vault_app = typer.Typer(help="Vault writer commands", no_args_is_help=True)
 app.add_typer(vault_app, name="vault")
 live_app = typer.Typer(help="Live price feed commands", no_args_is_help=True)
 app.add_typer(live_app, name="live")
+intraday_app = typer.Typer(help="Intraday signal commands", no_args_is_help=True)
+app.add_typer(intraday_app, name="intraday")
 
 
 # -----------------------------------------------------------------------------
@@ -1129,6 +1131,58 @@ async def _live_stop_async() -> None:
         await client.aclose()
     console.print(f"[green]stop signal sent[/green] ({STOP_KEY}=1)")
     log.info("cli.live.stop")
+
+
+# -----------------------------------------------------------------------------
+# intraday status
+# -----------------------------------------------------------------------------
+
+
+@intraday_app.command("status")
+def intraday_status(
+    isin: str | None = typer.Option(None, "--isin", help="Show one stock."),
+    limit: int = typer.Option(10, "--limit", help="Top N by |volume z-score|."),
+) -> None:
+    """Show current intraday signals from Redis."""
+    asyncio.run(_intraday_status_async(isin=isin, limit=limit))
+
+
+async def _intraday_status_async(*, isin: str | None, limit: int) -> None:
+    import json as _json
+
+    from redis.asyncio import Redis
+
+    from backend.config import settings
+    from backend.services.intraday_signals import IntradaySignalService
+
+    rows = await IntradaySignalService().status(isin=isin, limit=limit)
+    if not rows:
+        console.print(
+            "[yellow]no intraday signals in Redis (live feed not running?)[/yellow]"
+        )
+        return
+
+    client = Redis.from_url(settings.redis_url, decode_responses=True)
+    table = Table(title="Intraday signals (by |volume z-score|)")
+    table.add_column("symbol")
+    table.add_column("ltp", justify="right")
+    table.add_column("vwap_dist%", justify="right")
+    table.add_column("vol_zscore", justify="right")
+    table.add_column("momentum", justify="right")
+    try:
+        for sym, sig in rows:
+            live = await client.get(f"live:{sym}")
+            ltp = _json.loads(live)["ltp"] if live else None
+            table.add_row(
+                sym,
+                f"{ltp:.2f}" if ltp is not None else "—",
+                f"{sig['vwap_distance_pct']:.3f}",
+                f"{sig['volume_zscore']:.2f}",
+                f"{sig['momentum_5tick']:.4f}",
+            )
+    finally:
+        await client.aclose()
+    console.print(table)
 
 
 # -----------------------------------------------------------------------------
