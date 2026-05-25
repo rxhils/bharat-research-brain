@@ -33,6 +33,8 @@ universe_app = typer.Typer(help="Universe agent commands", no_args_is_help=True)
 app.add_typer(universe_app, name="universe")
 prices_app = typer.Typer(help="Price agent commands", no_args_is_help=True)
 app.add_typer(prices_app, name="prices")
+quality_app = typer.Typer(help="Data quality agent commands", no_args_is_help=True)
+app.add_typer(quality_app, name="quality")
 
 
 # -----------------------------------------------------------------------------
@@ -576,6 +578,152 @@ async def _prices_show_async(
 
 def _fmt(value: object) -> str:
     return "—" if value is None else str(value)
+
+
+# -----------------------------------------------------------------------------
+# quality run / show
+# -----------------------------------------------------------------------------
+
+
+@quality_app.command("run")
+def quality_run(
+    fix: bool = typer.Option(
+        False, "--fix", help="Re-fetch bhavcopies for PRICE_GAP dates, then persist."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Run checks and print summary; write nothing."
+    ),
+) -> None:
+    """Run the Data Quality Agent over prices_eod + stocks."""
+    asyncio.run(_quality_run_async(fix=fix, dry_run=dry_run))
+
+
+async def _quality_run_async(*, fix: bool, dry_run: bool) -> None:
+    from backend.agents.base import RunContext
+    from backend.agents.data_quality import DataQualityAgent
+    from backend.agents.price import PriceAgent, PriceRequest
+
+    log.info("cli.quality.run.start", fix=fix, dry_run=dry_run)
+
+    if fix and not dry_run:
+        # Detect (no write) → re-fetch gap span → persist final findings.
+        report = await DataQualityAgent().run_checks(dry_run=True)
+        firsts = [
+            f.context["first_gap"]
+            for f in report.findings
+            if f.code == "PRICE_GAP" and f.context.get("first_gap")
+        ]
+        lasts = [
+            f.context["last_gap"]
+            for f in report.findings
+            if f.code == "PRICE_GAP" and f.context.get("last_gap")
+        ]
+        if firsts:
+            from datetime import date as _date
+
+            start = _date.fromisoformat(min(firsts))
+            end = _date.fromisoformat(max(lasts))
+            console.print(
+                f"[bold]--fix:[/bold] re-fetching bhavcopies for gap span "
+                f"{start} .. {end}"
+            )
+            price_res = await PriceAgent(
+                request=PriceRequest(mode="backfill", start=start, end=end)
+            ).run(RunContext())
+            console.print(
+                f"  re-fetch: {price_res.rows_inserted} new price rows inserted"
+            )
+        else:
+            console.print("[dim]--fix: no PRICE_GAP findings to re-fetch[/dim]")
+        result = await DataQualityAgent().run(RunContext())
+        _render_quality_result(result, persisted=True)
+        return
+
+    if dry_run:
+        report = await DataQualityAgent().run_checks(dry_run=True)
+        _render_quality_report(report)
+        return
+
+    result = await DataQualityAgent().run(RunContext())
+    _render_quality_result(result, persisted=True)
+
+
+def _render_quality_report(report: object) -> None:
+    from backend.agents.data_quality import QualityReport
+
+    assert isinstance(report, QualityReport)
+    table = Table(title="Data quality — DRY RUN (no writes)")
+    table.add_column("code", style="bold")
+    table.add_column("findings", justify="right")
+    for code, n in sorted(report.by_code().items()):
+        table.add_row(code, str(n))
+    table.add_row("[bold]TOTAL[/bold]", str(len(report.findings)))
+    console.print(table)
+    sev = report.by_severity()
+    console.print(
+        f"severity: [red]error={sev.get('error', 0)}[/red] "
+        f"[yellow]warn={sev.get('warn', 0)}[/yellow]"
+    )
+    for f in report.findings[:10]:
+        console.print(f"  [{ 'red' if f.severity=='error' else 'yellow'}]{f.code}[/] "
+                      f"{f.isin}: {f.message}")
+    console.print("[dim]DRY RUN — nothing written to data_quality_log.[/dim]")
+
+
+def _render_quality_result(result: object, *, persisted: bool) -> None:
+    from backend.agents.base import AgentResult
+
+    assert isinstance(result, AgentResult)
+    table = Table(title="Data quality — APPLIED")
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("status", result.status)
+    table.add_row("findings written", str(result.rows_inserted))
+    for k, v in sorted(result.metrics.items()):
+        table.add_row(f"code:{k}", str(int(v)))
+    console.print(table)
+
+
+@quality_app.command("show")
+def quality_show(
+    severity: str | None = typer.Option(
+        None, "--severity", help="Filter: warn | error."
+    ),
+    limit: int = typer.Option(50, "--limit", help="Most recent N findings."),
+) -> None:
+    """Show recent data_quality_log findings."""
+    asyncio.run(_quality_show_async(severity=severity, limit=limit))
+
+
+async def _quality_show_async(*, severity: str | None, limit: int) -> None:
+    from backend.db.repositories import data_quality as dq_repo
+    from backend.db.session import SessionLocal
+
+    if severity is not None and severity not in ("warn", "error"):
+        console.print("[red]--severity must be 'warn' or 'error'[/red]")
+        raise typer.Exit(code=1)
+
+    async with SessionLocal() as session:
+        rows = await dq_repo.fetch_findings(session, severity=severity, limit=limit)
+
+    table = Table(title=f"data_quality_log (most recent {limit})")
+    table.add_column("detected_at")
+    table.add_column("severity")
+    table.add_column("code")
+    table.add_column("isin")
+    table.add_column("message")
+    for r in rows:
+        color = "red" if r.severity == "error" else "yellow"
+        table.add_row(
+            r.detected_at.strftime("%Y-%m-%d %H:%M"),
+            f"[{color}]{r.severity}[/{color}]",
+            r.code,
+            r.isin or "—",
+            r.message,
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no findings[/yellow]")
 
 
 # -----------------------------------------------------------------------------
