@@ -57,6 +57,8 @@ sector_app = typer.Typer(help="Sector agent commands", no_args_is_help=True)
 app.add_typer(sector_app, name="sector")
 fii_app = typer.Typer(help="FII/DII (FPI) flow agent commands", no_args_is_help=True)
 app.add_typer(fii_app, name="fii")
+macro_app = typer.Typer(help="Macro agent commands", no_args_is_help=True)
+app.add_typer(macro_app, name="macro")
 
 
 # -----------------------------------------------------------------------------
@@ -1946,6 +1948,86 @@ async def _fii_show_async(*, limit: int) -> None:
     console.print(table)
     if not rows:
         console.print("[yellow]no flow rows — run 'fii run --file <csv>' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# macro
+# -----------------------------------------------------------------------------
+@macro_app.command("run")
+def macro_run(
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Fetch + compute regime, print, write nothing."
+    ),
+) -> None:
+    """Fetch macro indicators (public sources), compute regime, upsert macro_signals."""
+    asyncio.run(_macro_run_async(dry_run=dry_run))
+
+
+def _macro_value(value: object) -> str:
+    return f"{float(value):,.4f}" if value is not None else "—"
+
+
+async def _macro_run_async(*, dry_run: bool) -> None:
+    from backend.agents.macro import REGIME, MacroAgent
+
+    log.info("cli.macro.run.start", dry_run=dry_run)
+    readings = await MacroAgent().run(dry_run=dry_run)
+    regime = readings[REGIME].signal
+
+    table = Table(
+        title="Macro run"
+        + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+        + f"  ·  regime: {regime}"
+    )
+    table.add_column("indicator")
+    table.add_column("value", justify="right")
+    table.add_column("signal", style="bold")
+    table.add_column("weight", justify="right")
+    table.add_column("source")
+    for ind, r in readings.items():
+        table.add_row(
+            ind,
+            _macro_value(r.value),
+            r.signal,
+            _macro_value(r.regime_weight),
+            r.source,
+        )
+    console.print(table)
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to macro_signals.[/dim]")
+
+
+@macro_app.command("show")
+def macro_show() -> None:
+    """Show the latest stored macro signals + regime."""
+    asyncio.run(_macro_show_async())
+
+
+async def _macro_show_async() -> None:
+    from backend.db.repositories import macro as macro_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        rows = await macro_repo.fetch_latest(session)
+
+    regime = next((r.signal for r in rows if r.indicator == "regime"), "—")
+    table = Table(title=f"Macro signals (latest)  ·  regime: {regime}")
+    table.add_column("indicator")
+    table.add_column("value", justify="right")
+    table.add_column("signal", style="bold")
+    table.add_column("regime")
+    table.add_column("computed_date")
+    for r in rows:
+        table.add_row(
+            r.indicator,
+            _macro_value(r.value),
+            r.signal,
+            regime if r.indicator == "regime" else "",
+            r.computed_date.isoformat(),
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no macro signals — run 'macro run' first[/yellow]")
 
 
 # -----------------------------------------------------------------------------

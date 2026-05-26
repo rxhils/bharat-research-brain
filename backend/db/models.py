@@ -750,3 +750,37 @@ class FiiDiiFlow(Base):
             name="fii_signal_allowed",
         ),
     )
+
+
+class MacroSignal(Base):
+    """Daily macro indicators + derived market regime (Chunk 4.1).
+
+    One row per (indicator, computed_date), upserted on re-run. Indicators
+    (usd_inr, crude_brent, nifty_50, india_10y) carry a numeric `value` + a
+    rising/falling/stable/unknown `signal`. A special `indicator='regime'` row
+    holds the market regime (risk-on / neutral / risk-off) in `signal`, with a
+    numeric +1/0/-1 encoding in `value`. `regime_weight` is the tunable tilt
+    the Ranking Agent (Phase 4.3) applies. Sources are public + permitted
+    (Frankfurter FX, Yahoo Finance) — no NSE scraping.
+    """
+
+    __tablename__ = "macro_signals"
+
+    indicator: Mapped[str] = mapped_column(String(24), primary_key=True)
+    computed_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    value: Mapped[Decimal | None] = mapped_column(Numeric(14, 4))
+    signal: Mapped[str] = mapped_column(String(12), nullable=False)
+    regime_weight: Mapped[Decimal] = mapped_column(Numeric(6, 4), nullable=False)
+    source: Mapped[str] = mapped_column(String(32), nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "signal IN ('rising','falling','stable','unknown',"
+            "'risk-on','risk-off','neutral')",
+            name="macro_signal_allowed",
+        ),
+        Index("idx_macro_signals_date", text("computed_date DESC")),
+    )
