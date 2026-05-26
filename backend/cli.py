@@ -70,6 +70,8 @@ auditor_app = typer.Typer(help="Meta-Auditor commands", no_args_is_help=True)
 app.add_typer(auditor_app, name="auditor")
 pipeline_app = typer.Typer(help="Nightly pipeline commands", no_args_is_help=True)
 app.add_typer(pipeline_app, name="pipeline")
+promoter_app = typer.Typer(help="Promoter pledge agent commands", no_args_is_help=True)
+app.add_typer(promoter_app, name="promoter")
 
 
 # -----------------------------------------------------------------------------
@@ -1668,6 +1670,33 @@ async def _fundamentals_run_async(*, isin: str | None, dry_run: bool) -> None:
             detail.add_row("52w_low", _f(row.fifty_two_week_low))
             detail.add_row("avg_volume_30d", str(row.avg_volume_30d or "—"))
             detail.add_row("promoter_holding", _f(row.promoter_holding))
+            # Chunk 4.8 extension fields
+            fcf_cr = (
+                f"{row.free_cash_flow / 1e7:,.0f} Cr"
+                if row.free_cash_flow is not None
+                else "—"
+            )
+            detail.add_row("free_cash_flow (INR)", str(row.free_cash_flow or "—"))
+            detail.add_row("free_cash_flow (Cr)", fcf_cr)
+            detail.add_row(
+                "fcf_positive",
+                "—" if row.fcf_positive is None else str(row.fcf_positive),
+            )
+            detail.add_row("interest_coverage", _f(row.interest_coverage))
+            detail.add_row("current_ratio", _f(row.current_ratio))
+            detail.add_row(
+                "dividend_consecutive_years",
+                str(row.dividend_consecutive_years or "—"),
+            )
+            detail.add_row("dividend_payout_ratio", _f(row.dividend_payout_ratio))
+            detail.add_row(
+                "quarterly_profit_trend", str(row.quarterly_profit_trend or "—")
+            )
+            detail.add_row("q_profit_direction", row.q_profit_direction or "—")
+            detail.add_row(
+                "quarterly_revenue_trend", str(row.quarterly_revenue_trend or "—")
+            )
+            detail.add_row("q_revenue_direction", row.q_revenue_direction or "—")
             console.print(detail)
         console.print("[dim]DRY RUN — nothing written to fundamental_signals.[/dim]")
 
@@ -1959,6 +1988,134 @@ async def _fii_show_async(*, limit: int) -> None:
     console.print(table)
     if not rows:
         console.print("[yellow]no flow rows — run 'fii run --file <csv>' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# promoter
+# -----------------------------------------------------------------------------
+@promoter_app.command("ingest")
+def promoter_ingest(
+    file: str | None = typer.Option(
+        None, "--file", help="Path to a BSE shareholding-pattern XML/XBRL file."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Parse + classify, print, write nothing."
+    ),
+) -> None:
+    """Ingest promoter holding + pledge from a local BSE shareholding file.
+
+    Source is an operator-downloaded BSE shareholding-pattern XBRL — no NSE/BSE
+    scraping (CLAUDE.md §2 rule 5). A missing/blocked file is non-fatal.
+    """
+    asyncio.run(_promoter_ingest_async(file=file, dry_run=dry_run))
+
+
+async def _promoter_ingest_async(*, file: str | None, dry_run: bool) -> None:
+    from backend.agents.promoter import PromoterAgent
+
+    log.info("cli.promoter.ingest.start", file=file, dry_run=dry_run)
+    res = await PromoterAgent().run(path=file, dry_run=dry_run)
+
+    if res.rows_parsed == 0:
+        console.print(
+            "[yellow]No promoter rows parsed.[/yellow] Pass --file with a "
+            "downloaded BSE shareholding-pattern XML/XBRL file."
+        )
+        return
+
+    def _f(value: object) -> str:
+        return f"{float(value):.2f}" if value is not None else "—"
+
+    table = Table(
+        title="Promoter pledge — parsed"
+        + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+    )
+    table.add_column("isin")
+    table.add_column("report_date")
+    table.add_column("holding %", justify="right")
+    table.add_column("pledged %", justify="right")
+    table.add_column("flag", style="bold")
+    for r in res.rows[:25]:
+        table.add_row(
+            r.isin,
+            r.report_date.isoformat(),
+            _f(r.promoter_holding_pct),
+            _f(r.promoter_pledged_pct),
+            r.pledge_risk_flag,
+        )
+    console.print(table)
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to promoter_signals.[/dim]")
+    else:
+        console.print(
+            f"[green]Upserted {res.rows_upserted} promoter rows[/green]"
+            + (
+                f" ([yellow]{res.rows_skipped_unknown_isin} skipped: "
+                "ISIN not in universe[/yellow])"
+                if res.rows_skipped_unknown_isin
+                else ""
+            )
+        )
+
+
+@promoter_app.command("show")
+def promoter_show(
+    symbol: str | None = typer.Option(None, "--symbol", help="Filter by NSE symbol."),
+    flag: str | None = typer.Option(
+        None, "--flag", help="Filter by pledge_risk_flag (safe/moderate/high/critical)."
+    ),
+    limit: int = typer.Option(50, "--limit", help="Max rows."),
+) -> None:
+    """Show stored promoter pledge signals (latest quarter, highest pledge first)."""
+    asyncio.run(_promoter_show_async(symbol=symbol, flag=flag, limit=limit))
+
+
+async def _promoter_show_async(
+    *, symbol: str | None, flag: str | None, limit: int
+) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import promoter as promoter_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        isin: str | None = None
+        if symbol is not None:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol)
+                )
+            ).scalar_one_or_none()
+            if isin is None:
+                console.print(f"[red]no stock with nse_symbol={symbol!r}[/red]")
+                raise typer.Exit(code=1)
+        rows = await promoter_repo.fetch_signals(
+            session, isin=isin, flag=flag, limit=limit
+        )
+
+    def _f(value: object) -> str:
+        return f"{float(value):.2f}" if value is not None else "—"
+
+    table = Table(title="Promoter pledge signals")
+    table.add_column("symbol")
+    table.add_column("report_date")
+    table.add_column("holding %", justify="right")
+    table.add_column("pledged %", justify="right")
+    table.add_column("flag", style="bold")
+    for row, sym in rows:
+        table.add_row(
+            sym or "—",
+            row.report_date.isoformat(),
+            _f(row.promoter_holding_pct),
+            _f(row.promoter_pledged_pct),
+            row.pledge_risk_flag,
+        )
+    console.print(table)
+    if not rows:
+        console.print(
+            "[yellow]no promoter rows — run 'promoter ingest --file <xml>' first[/yellow]"
+        )
 
 
 # -----------------------------------------------------------------------------

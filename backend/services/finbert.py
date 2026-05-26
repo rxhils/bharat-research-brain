@@ -51,16 +51,19 @@ class FinBertService:
     def load(self) -> None:
         if self._pipe is not None:
             return
+        import torch
         from transformers import pipeline  # lazy: torch is a ~2GB optional dep
 
-        log.info("finbert.load.start", model=_MODEL)
+        device = 0 if torch.cuda.is_available() else -1
+        log.info("finbert.load.start", model=_MODEL, device="cuda:0" if device == 0 else "cpu")
         self._pipe = pipeline(
             "sentiment-analysis",
             model=_MODEL,
             truncation=True,
             max_length=_MAX_LEN,
+            device=device,
         )
-        log.info("finbert.load.done", model=_MODEL)
+        log.info("finbert.load.done", model=_MODEL, device="cuda:0" if device == 0 else "cpu")
 
     def score(self, text: str) -> SentimentResult:
         return self.score_batch([text])[0]

@@ -61,8 +61,9 @@ def compute_risk(
     news_count_24h: int,
     news_avg_7d: Decimal,
     macro_regime: str,
+    pledge_flag: str | None = None,
 ) -> RiskRow:
-    """Pure risk scoring: base 50, volatility/news/regime adjustments, clamp 0-100."""
+    """Pure risk scoring: base 50, volatility/news/regime/pledge adjustments, clamp."""
     flag = _volatility_flag(atr_pct)
     spike = _is_news_spike(news_count_24h, news_avg_7d)
 
@@ -78,6 +79,8 @@ def compute_risk(
         score += 15
     if macro_regime == "risk-off":
         score += 10
+    # Promoter pledge (Chunk 4.9): a high pledge is a governance red flag.
+    score += {"critical": 20, "high": 10, "moderate": 5}.get(pledge_flag or "", 0)
     score = max(0, min(100, score))
 
     return RiskRow(
@@ -97,6 +100,7 @@ class RiskAgent:
     async def run_all(
         self, *, isin: str | None = None, dry_run: bool = False
     ) -> list[RiskRow]:
+        from backend.db.repositories import promoter as promoter_repo
         from backend.db.repositories import risk as risk_repo
         from backend.db.session import SessionLocal
 
@@ -105,12 +109,16 @@ class RiskAgent:
             news_by_isin = await risk_repo.fetch_news_counts(session, isin=isin)
             regime = await risk_repo.fetch_macro_regime(session)
             isins = await risk_repo.fetch_active_isins(session, isin=isin)
+            pledge_by_isin = await promoter_repo.fetch_latest_flags(session)
 
         rows: list[RiskRow] = []
         for i in isins:
             count_24h, avg_7d = news_by_isin.get(i, (0, Decimal(0)))
             rows.append(
-                compute_risk(i, atr_by_isin.get(i), count_24h, avg_7d, regime)
+                compute_risk(
+                    i, atr_by_isin.get(i), count_24h, avg_7d, regime,
+                    pledge_by_isin.get(i),
+                )
             )
         rows.sort(key=lambda r: r.risk_score, reverse=True)
 

@@ -671,6 +671,17 @@ class FundamentalSignal(Base):
     fifty_two_week_high: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     fifty_two_week_low: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
     avg_volume_30d: Mapped[int | None] = mapped_column(BigInteger)
+    # Chunk 4.8 extension (migration 0017): richer yfinance financials.
+    free_cash_flow: Mapped[int | None] = mapped_column(BigInteger)
+    fcf_positive: Mapped[bool | None] = mapped_column(Boolean)
+    interest_coverage: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    current_ratio: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    dividend_consecutive_years: Mapped[int | None] = mapped_column(Integer)
+    dividend_payout_ratio: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    quarterly_profit_trend: Mapped[list[int] | None] = mapped_column(JSONB)
+    quarterly_revenue_trend: Mapped[list[int] | None] = mapped_column(JSONB)
+    q_profit_direction: Mapped[str | None] = mapped_column(Text)
+    q_revenue_direction: Mapped[str | None] = mapped_column(Text)
     source: Mapped[str] = mapped_column(
         String(16), nullable=False, server_default=text("'yfinance'")
     )
@@ -779,7 +790,7 @@ class MacroSignal(Base):
     __table_args__ = (
         CheckConstraint(
             "signal IN ('rising','falling','stable','unknown',"
-            "'risk-on','risk-off','neutral')",
+            "'risk-on','risk-off','neutral','elevated','spike')",
             name="macro_signal_allowed",
         ),
         Index("idx_macro_signals_date", text("computed_date DESC")),
@@ -939,4 +950,39 @@ class PipelineRun(Base):
             name="pipeline_status_allowed",
         ),
         Index("idx_pipeline_runs_started", text("started_at DESC")),
+    )
+
+
+class PromoterSignal(Base):
+    """Quarterly promoter holding + pledge per stock (Chunk 4.9 improvement 5).
+
+    File-ingested from operator-downloaded BSE shareholding-pattern XBRL. One row
+    per (isin, report_date), upserted on re-ingest. `pledge_risk_flag` drives a
+    Risk Agent adjustment: a high promoter pledge is a known governance red flag.
+    """
+
+    __tablename__ = "promoter_signals"
+
+    isin: Mapped[str] = mapped_column(
+        String(12),
+        ForeignKey("stocks.isin", ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    report_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    promoter_holding_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    promoter_pledged_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    pledge_risk_flag: Mapped[str] = mapped_column(Text, nullable=False)
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'bse_xbrl_file'")
+    )
+    fetched_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "pledge_risk_flag IN ('safe','moderate','high','critical')",
+            name="pledge_risk_flag_allowed",
+        ),
+        Index("idx_promoter_isin_date", "isin", text("report_date DESC")),
     )

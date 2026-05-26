@@ -17,7 +17,7 @@ debt_to_equity÷100, pe as-is.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import ROUND_HALF_EVEN, Decimal
 
@@ -40,6 +40,12 @@ class TechInputs:
     price_vs_ema200: str | None
     ema_cross: str | None
     macd_hist: Decimal | None
+    # Chunk 4.9 improvements 2+3 (default None keeps the original 4-arg form).
+    fifty_two_week_high: Decimal | None = None
+    fifty_two_week_low: Decimal | None = None
+    current_price: Decimal | None = None
+    current_volume: int | None = None
+    avg_volume_30d: int | None = None
 
 
 @dataclass(frozen=True)
@@ -48,6 +54,13 @@ class FundInputs:
     roe: Decimal | None
     debt_to_equity: Decimal | None
     revenue_growth: Decimal | None
+    # Chunk 4.8 extension signals (default None keeps the original 4-arg form).
+    fcf_positive: bool | None = None
+    q_profit_direction: str | None = None
+    dividend_consecutive_years: int | None = None
+    interest_coverage: Decimal | None = None
+    # Chunk 4.9 improvement 4: sector median PE for relative valuation.
+    sector_median_pe: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -119,6 +132,34 @@ def score_technical(t: TechInputs) -> Decimal:
         elif t.macd_hist < 0:
             score -= 5
 
+    # 52-week proximity (Chunk 4.9): momentum confirmation near the high,
+    # value-trap flag near the low.
+    if (
+        t.current_price is not None
+        and t.fifty_two_week_high
+        and t.current_price / t.fifty_two_week_high >= Decimal("0.97")
+    ):
+        if t.rsi_14 is not None and Decimal("55") <= t.rsi_14 <= Decimal("70"):
+            score += 8  # within 3% of high + healthy momentum
+        elif t.rsi_14 is not None and t.rsi_14 > Decimal("70"):
+            score += 3  # extended but still strong
+    if (
+        t.current_price is not None
+        and t.fifty_two_week_low
+        and t.current_price / t.fifty_two_week_low <= Decimal("1.05")
+    ):
+        score -= 8  # within 5% of 52w low
+
+    # Volume trend (Chunk 4.9): conviction behind the move.
+    if t.current_volume is not None and t.avg_volume_30d and t.avg_volume_30d > 0:
+        vol_ratio = Decimal(t.current_volume) / Decimal(t.avg_volume_30d)
+        if vol_ratio >= 3:
+            score += 10
+        elif vol_ratio >= Decimal("1.5"):
+            score += 5
+        elif vol_ratio <= Decimal("0.5"):
+            score -= 5
+
     return _clamp(score)
 
 
@@ -130,15 +171,30 @@ def score_fundamental(f: FundInputs) -> Decimal:
     score = Decimal(50)
 
     if f.pe_ratio is not None:
-        pe = f.pe_ratio
-        if pe < 15:
-            score += 20
-        elif pe < 25:
-            score += 10
-        elif pe <= 40:
-            score += 0
+        if f.sector_median_pe is not None and f.sector_median_pe > 0:
+            # Sector-relative PE (Chunk 4.9): cheap/expensive vs sector peers.
+            pe_relative = f.pe_ratio / f.sector_median_pe
+            if pe_relative < Decimal("0.7"):
+                score += 20
+            elif pe_relative < Decimal("0.9"):
+                score += 10
+            elif pe_relative <= Decimal("1.1"):
+                score += 0
+            elif pe_relative <= Decimal("1.3"):
+                score -= 5
+            else:
+                score -= 10
         else:
-            score -= 10
+            # Fallback: absolute PE thresholds (no sector data available).
+            pe = f.pe_ratio
+            if pe < 15:
+                score += 20
+            elif pe < 25:
+                score += 10
+            elif pe <= 40:
+                score += 0
+            else:
+                score -= 10
 
     if f.roe is not None:
         roe_pct = f.roe * 100  # fraction -> percent
@@ -168,6 +224,27 @@ def score_fundamental(f: FundInputs) -> Decimal:
             score += 5
         else:
             score -= 5
+
+    # Chunk 4.8 extension signals — cash generation, profit trend, payout
+    # stability, and debt-servicing risk.
+    if f.fcf_positive is False:
+        score -= 10  # burning cash
+    elif f.fcf_positive is True:
+        score += 5  # real cash generation
+
+    if f.q_profit_direction == "improving":
+        score += 8
+    elif f.q_profit_direction == "declining":
+        score -= 8
+
+    if (
+        f.dividend_consecutive_years is not None
+        and f.dividend_consecutive_years >= 5
+    ):
+        score += 5  # payout stability
+
+    if f.interest_coverage is not None and f.interest_coverage < Decimal("2.0"):
+        score -= 10  # debt risk
 
     return _clamp(score)
 
@@ -280,13 +357,18 @@ class RankingAgent:
             sector_by_isin = await ranking_repo.fetch_sector_by_isin(session)
             fii_signal = await ranking_repo.fetch_fii_signal(session)
             regime = await ranking_repo.fetch_macro_regime(session)
+            sector_median_pe = await ranking_repo.fetch_sector_median_pe(session)
+            isin_sector = await ranking_repo.fetch_isin_sectors(session)
 
         rows: list[RankingRow] = []
         for i in isins:
             tt = tech.get(i)
             t = TechInputs(*tt) if tt else TechInputs(None, None, None, None)
+            sec = isin_sector.get(i)
+            smedian = sector_median_pe.get(sec) if sec else None
             ff = fund.get(i)
-            f = FundInputs(*ff) if ff else FundInputs(None, None, None, None)
+            base_f = FundInputs(*ff) if ff else FundInputs(None, None, None, None)
+            f = replace(base_f, sector_median_pe=smedian)
             m = MacroInputs(fii_signal, sector_by_isin.get(i), regime)
             rows.append(compute_score(i, t, f, m, sent.get(i), risk.get(i)))
         rows.sort(key=lambda r: r.composite_score, reverse=True)

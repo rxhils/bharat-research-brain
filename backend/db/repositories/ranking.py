@@ -19,6 +19,8 @@ from backend.db.models import (
     FundamentalSignal,
     MacroSignal,
     NewsArticle,
+    PriceEod,
+    PriceEodAdjusted,
     RiskSignal,
     SectorSignal,
     Stock,
@@ -46,8 +48,15 @@ async def fetch_active_isins(session: AsyncSession) -> list[str]:
 
 async def fetch_technicals(
     session: AsyncSession,
-) -> dict[str, tuple[Decimal | None, str | None, str | None, Decimal | None]]:
-    stmt = (
+) -> dict[str, tuple[Any, ...]]:
+    """Latest per-isin technicals in TechInputs order (Chunk 4.9 widened).
+
+    (rsi_14, price_vs_ema200, ema_cross, macd_hist, fifty_two_week_high,
+    fifty_two_week_low, current_price, current_volume, avg_volume_30d). The 52w
+    band + avg volume come from fundamental_signals; current price/volume are the
+    latest adjusted close / raw volume.
+    """
+    tech_stmt = (
         select(
             TechnicalSignal.isin,
             TechnicalSignal.rsi_14,
@@ -58,15 +67,79 @@ async def fetch_technicals(
         .distinct(TechnicalSignal.isin)
         .order_by(TechnicalSignal.isin, TechnicalSignal.computed_date.desc())
     )
-    return {
+    fund_stmt = (
+        select(
+            FundamentalSignal.isin,
+            FundamentalSignal.fifty_two_week_high,
+            FundamentalSignal.fifty_two_week_low,
+            FundamentalSignal.avg_volume_30d,
+        )
+        .distinct(FundamentalSignal.isin)
+        .order_by(FundamentalSignal.isin, FundamentalSignal.fetched_date.desc())
+    )
+    price_stmt = (
+        select(PriceEodAdjusted.isin, PriceEodAdjusted.adj_close)
+        .distinct(PriceEodAdjusted.isin)
+        .order_by(PriceEodAdjusted.isin, PriceEodAdjusted.trade_date.desc())
+    )
+    vol_stmt = (
+        select(PriceEod.isin, PriceEod.volume)
+        .distinct(PriceEod.isin)
+        .order_by(PriceEod.isin, PriceEod.trade_date.desc())
+    )
+
+    tech_by = {
         i: (rsi, pve, cross, macd)
-        for i, rsi, pve, cross, macd in (await session.execute(stmt)).all()
+        for i, rsi, pve, cross, macd in (await session.execute(tech_stmt)).all()
     }
+    fund_by = {
+        i: (hi, lo, av) for i, hi, lo, av in (await session.execute(fund_stmt)).all()
+    }
+    price_by = {i: p for i, p in (await session.execute(price_stmt)).all()}
+    vol_by = {i: v for i, v in (await session.execute(vol_stmt)).all()}
+
+    out: dict[str, tuple[Any, ...]] = {}
+    for i in tech_by.keys() | fund_by.keys() | price_by.keys() | vol_by.keys():
+        rsi, pve, cross, macd = tech_by.get(i, (None, None, None, None))
+        hi, lo, av = fund_by.get(i, (None, None, None))
+        out[i] = (rsi, pve, cross, macd, hi, lo, price_by.get(i), vol_by.get(i), av)
+    return out
+
+
+async def fetch_sector_median_pe(session: AsyncSession) -> dict[str, Decimal]:
+    """Median trailing PE per sector from the latest fundamentals snapshot."""
+    latest_date = select(func.max(FundamentalSignal.fetched_date)).scalar_subquery()
+    median = func.percentile_cont(0.5).within_group(
+        FundamentalSignal.pe_ratio.asc()
+    )
+    stmt = (
+        select(Stock.sector, median)
+        .join(FundamentalSignal, FundamentalSignal.isin == Stock.isin)
+        .where(
+            FundamentalSignal.fetched_date == latest_date,
+            FundamentalSignal.pe_ratio.is_not(None),
+            FundamentalSignal.pe_ratio > 0,
+            Stock.sector.is_not(None),
+        )
+        .group_by(Stock.sector)
+    )
+    return {
+        sector: Decimal(str(m))
+        for sector, m in (await session.execute(stmt)).all()
+        if m is not None
+    }
+
+
+async def fetch_isin_sectors(session: AsyncSession) -> dict[str, str | None]:
+    """isin -> sector for active stocks (for sector-relative PE lookup)."""
+    stmt = select(Stock.isin, Stock.sector).where(Stock.delisted_on.is_(None))
+    return {i: s for i, s in (await session.execute(stmt)).all()}
 
 
 async def fetch_fundamentals(
     session: AsyncSession,
-) -> dict[str, tuple[Decimal | None, Decimal | None, Decimal | None, Decimal | None]]:
+) -> dict[str, tuple[Any, ...]]:
+    """Latest per-isin fundamentals in FundInputs order (incl. Chunk 4.8 signals)."""
     stmt = (
         select(
             FundamentalSignal.isin,
@@ -74,13 +147,16 @@ async def fetch_fundamentals(
             FundamentalSignal.roe,
             FundamentalSignal.debt_to_equity,
             FundamentalSignal.revenue_growth,
+            FundamentalSignal.fcf_positive,
+            FundamentalSignal.q_profit_direction,
+            FundamentalSignal.dividend_consecutive_years,
+            FundamentalSignal.interest_coverage,
         )
         .distinct(FundamentalSignal.isin)
         .order_by(FundamentalSignal.isin, FundamentalSignal.fetched_date.desc())
     )
     return {
-        i: (pe, roe, de, rg)
-        for i, pe, roe, de, rg in (await session.execute(stmt)).all()
+        row[0]: tuple(row[1:]) for row in (await session.execute(stmt)).all()
     }
 
 

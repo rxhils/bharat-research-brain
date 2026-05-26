@@ -33,6 +33,16 @@ _UPSERT_COLS = (
     "fifty_two_week_high",
     "fifty_two_week_low",
     "avg_volume_30d",
+    "free_cash_flow",
+    "fcf_positive",
+    "interest_coverage",
+    "current_ratio",
+    "dividend_consecutive_years",
+    "dividend_payout_ratio",
+    "quarterly_profit_trend",
+    "quarterly_revenue_trend",
+    "q_profit_direction",
+    "q_revenue_direction",
     "source",
 )
 

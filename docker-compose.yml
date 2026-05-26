@@ -37,6 +37,13 @@ services:
       dockerfile: backend/Dockerfile
     platform: linux/amd64
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     depends_on:
       postgres:
         condition: service_healthy

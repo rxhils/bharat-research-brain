@@ -16,7 +16,9 @@ from backend.agents.fundamentals import (
     info_to_row,
     mcap_to_category,
 )
-from backend.data_sources.yfinance_client import YFinanceClient
+from backend.data_sources.yfinance_client import FinancialData, YFinanceClient
+
+_EMPTY_FINANCIALS = FinancialData(None, None, None, None, None, [], [])
 
 # A representative yfinance .info dict (Reliance-like; values illustrative).
 INFO: dict[str, Any] = {
@@ -42,6 +44,9 @@ class FakeYFClient:
 
     async def fetch_info(self, yf_symbol: str) -> dict[str, Any]:
         return self._info
+
+    async def fetch_financials(self, yf_symbol: str) -> FinancialData:
+        return _EMPTY_FINANCIALS
 
 
 # ---------------------------------------------------------------------------

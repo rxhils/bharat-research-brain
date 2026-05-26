@@ -33,6 +33,7 @@ USD_INR = "usd_inr"
 CRUDE = "crude_brent"
 NIFTY = "nifty_50"
 BOND = "india_10y"
+INDIA_VIX = "india_vix"
 REGIME = "regime"
 
 # Default regime weights (tunable placeholders consumed by the Ranking Agent
@@ -42,11 +43,16 @@ _WEIGHTS: dict[str, Decimal] = {
     CRUDE: Decimal("0.15"),
     NIFTY: Decimal("0.40"),
     BOND: Decimal("0.10"),
+    INDIA_VIX: Decimal("0.20"),
     REGIME: Decimal("1.00"),
 }
 
 _STABLE_BAND_PCT = Decimal("0.5")  # |move| <= 0.5% counts as "stable"
 _RBI_REPO_FALLBACK = Decimal("6.5")  # last-known RBI repo rate (bond fallback)
+
+# India VIX fear bands (level, not trend): <15 calm, 15-20 caution, >20 fear.
+_VIX_STABLE_MAX = Decimal("15")
+_VIX_ELEVATED_MAX = Decimal("20")
 
 _FRANKFURTER = "https://api.frankfurter.app"
 _YAHOO_CHART = "https://query1.finance.yahoo.com/v8/finance/chart"
@@ -86,8 +92,27 @@ def classify_trend(
     return "rising" if pct > 0 else "falling"
 
 
+def classify_vix(value: Decimal | None) -> str:
+    """India VIX fear level: stable (<15) / elevated (15-20) / spike (>20)."""
+    if value is None:
+        return "unknown"
+    if value < _VIX_STABLE_MAX:
+        return "stable"
+    if value <= _VIX_ELEVATED_MAX:
+        return "elevated"
+    return "spike"
+
+
 def compute_regime(readings: dict[str, MacroReading]) -> str:
-    """Derive the market regime from nifty / crude / usd_inr signals (pure)."""
+    """Derive the market regime from nifty / crude / usd_inr / vix signals (pure).
+
+    A VIX spike (>20) overrides ALL other signals and forces risk-off,
+    regardless of where Nifty sits versus its 200-day MA — high fear dominates.
+    """
+    vix = readings[INDIA_VIX].signal if INDIA_VIX in readings else "unknown"
+    if vix == "spike":
+        return "risk-off"
+
     nifty = readings[NIFTY].signal if NIFTY in readings else "unknown"
     crude = readings[CRUDE].signal if CRUDE in readings else "unknown"
     usd = readings[USD_INR].signal if USD_INR in readings else "unknown"
@@ -188,6 +213,14 @@ class MacroAgent:
         signal = classify_trend(latest, _mean(closes[-30:]))
         return MacroReading(BOND, latest, signal, _WEIGHTS[BOND], "yahoo")
 
+    async def fetch_india_vix(self) -> MacroReading:
+        latest, _closes = await self._yahoo("^INDIAVIX", INDIA_VIX)
+        if latest is None:
+            return self._unknown(INDIA_VIX, "yahoo")
+        return MacroReading(
+            INDIA_VIX, latest, classify_vix(latest), _WEIGHTS[INDIA_VIX], "yahoo"
+        )
+
     async def _yahoo(
         self, symbol: str, indicator: str
     ) -> tuple[Decimal | None, list[Decimal]]:
@@ -209,6 +242,7 @@ class MacroAgent:
             CRUDE: await self.fetch_crude(),
             NIFTY: await self.fetch_nifty(),
             BOND: await self.fetch_bond_yield(),
+            INDIA_VIX: await self.fetch_india_vix(),
         }
         regime = compute_regime(readings)
         readings[REGIME] = MacroReading(

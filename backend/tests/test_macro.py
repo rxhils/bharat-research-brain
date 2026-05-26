@@ -15,11 +15,13 @@ import respx
 from backend.agents.macro import (
     BOND,
     CRUDE,
+    INDIA_VIX,
     NIFTY,
     USD_INR,
     MacroAgent,
     MacroReading,
     classify_trend,
+    classify_vix,
     compute_regime,
     parse_frankfurter_timeseries,
     parse_yahoo_chart,
@@ -97,6 +99,55 @@ def test_regime_neutral_on_unknown() -> None:
         USD_INR: _r(USD_INR, "stable"),
     }
     assert compute_regime(readings) == "neutral"
+
+
+# ---------------------------------------------------------------------------
+# classify_vix + VIX regime override (Chunk 4.9 improvement 1)
+# ---------------------------------------------------------------------------
+def test_classify_vix_levels() -> None:
+    assert classify_vix(Decimal("12")) == "stable"
+    assert classify_vix(Decimal("15")) == "elevated"  # 15-20 inclusive
+    assert classify_vix(Decimal("20")) == "elevated"
+    assert classify_vix(Decimal("25")) == "spike"
+    assert classify_vix(None) == "unknown"
+
+
+def test_regime_vix_spike_overrides_risk_on() -> None:
+    # nifty rising + crude falling + usd stable would be risk-on, but VIX spike
+    # forces risk-off regardless.
+    readings = {
+        NIFTY: _r(NIFTY, "rising"),
+        CRUDE: _r(CRUDE, "falling"),
+        USD_INR: _r(USD_INR, "stable"),
+        INDIA_VIX: _r(INDIA_VIX, "spike"),
+    }
+    assert compute_regime(readings) == "risk-off"
+
+
+def test_regime_vix_elevated_does_not_override() -> None:
+    # elevated (not spike) leaves the normal risk-on result intact
+    readings = {
+        NIFTY: _r(NIFTY, "rising"),
+        CRUDE: _r(CRUDE, "falling"),
+        USD_INR: _r(USD_INR, "stable"),
+        INDIA_VIX: _r(INDIA_VIX, "elevated"),
+    }
+    assert compute_regime(readings) == "risk-on"
+
+
+@respx.mock
+async def test_fetch_india_vix_spike() -> None:
+    text = (
+        '{"chart":{"result":[{"meta":{"regularMarketPrice":24.0},'
+        '"indicators":{"quote":[{"close":[18.0,21.0,24.0]}]}}],"error":null}}'
+    )
+    respx.get(re.compile(r"https://query1\.finance\.yahoo\.com/.*INDIAVIX.*")).mock(
+        return_value=httpx.Response(200, content=text.encode())
+    )
+    reading = await MacroAgent().fetch_india_vix()
+    assert reading.indicator == INDIA_VIX
+    assert reading.value == Decimal("24.0")
+    assert reading.signal == "spike"
 
 
 # ---------------------------------------------------------------------------

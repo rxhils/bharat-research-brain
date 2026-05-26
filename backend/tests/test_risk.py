@@ -88,3 +88,39 @@ def test_score_returns_riskrow() -> None:
     r = compute_risk("INE002A01018", Decimal("2.5"), 0, Decimal("0"), "neutral")
     assert isinstance(r, RiskRow)
     assert r.isin == "INE002A01018"
+
+
+# ---------------------------------------------------------------------------
+# pledge risk flag raises risk_score (Chunk 4.9 improvement 5)
+# ---------------------------------------------------------------------------
+def test_pledge_critical_raises_20() -> None:
+    # base 50 + critical 20 = 70
+    r = compute_risk("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral",
+                     pledge_flag="critical")
+    assert r.risk_score == Decimal("70")
+
+
+def test_pledge_high_raises_10() -> None:
+    r = compute_risk("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral",
+                     pledge_flag="high")
+    assert r.risk_score == Decimal("60")
+
+
+def test_pledge_moderate_raises_5() -> None:
+    r = compute_risk("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral",
+                     pledge_flag="moderate")
+    assert r.risk_score == Decimal("55")
+
+
+def test_pledge_safe_and_none_no_change() -> None:
+    assert compute_risk("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral",
+                        pledge_flag="safe").risk_score == Decimal("50")
+    assert compute_risk("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral",
+                        pledge_flag=None).risk_score == Decimal("50")
+
+
+def test_pledge_reclamps_to_100() -> None:
+    # 50 + 25 (atr>4) + 15 (spike) + 10 (risk-off) + 20 (critical) -> clamp 100
+    r = compute_risk("INE1", Decimal("5.0"), 12, Decimal("2"), "risk-off",
+                     pledge_flag="critical")
+    assert r.risk_score == Decimal("100")

@@ -84,6 +84,179 @@ def test_fundamental_weak() -> None:
 
 
 # ---------------------------------------------------------------------------
+# fundamental_score — Chunk 4.8 extension signals (fcf / quarterly / div / icr)
+# ---------------------------------------------------------------------------
+def test_fundamental_4arg_form_unchanged() -> None:
+    # backwards-compat: the original 4-arg construction yields the original score
+    f = FundInputs(
+        Decimal("22.89"), Decimal("0.0914"), Decimal("36.65"), Decimal("0.125")
+    )
+    assert score_fundamental(f) == Decimal("85")
+
+
+def test_fundamental_fcf_negative_penalty() -> None:
+    # base 50, valuation all None, fcf_positive False -> -10 => 40
+    f = FundInputs(None, None, None, None, fcf_positive=False)
+    assert score_fundamental(f) == Decimal("40")
+
+
+def test_fundamental_fcf_positive_bonus() -> None:
+    # base 50 + fcf_positive True (+5) => 55
+    f = FundInputs(None, None, None, None, fcf_positive=True)
+    assert score_fundamental(f) == Decimal("55")
+
+
+def test_fundamental_profit_direction_adjustments() -> None:
+    improving = FundInputs(None, None, None, None, q_profit_direction="improving")
+    declining = FundInputs(None, None, None, None, q_profit_direction="declining")
+    stable = FundInputs(None, None, None, None, q_profit_direction="stable")
+    assert score_fundamental(improving) == Decimal("58")  # +8
+    assert score_fundamental(declining) == Decimal("42")  # -8
+    assert score_fundamental(stable) == Decimal("50")  # no change
+
+
+def test_fundamental_dividend_stability_bonus() -> None:
+    # >= 5 consecutive years -> +5; 4 years -> no change
+    assert score_fundamental(
+        FundInputs(None, None, None, None, dividend_consecutive_years=5)
+    ) == Decimal("55")
+    assert score_fundamental(
+        FundInputs(None, None, None, None, dividend_consecutive_years=4)
+    ) == Decimal("50")
+
+
+def test_fundamental_interest_coverage_penalty() -> None:
+    # icr < 2.0 -> -10; exactly 2.0 -> no penalty (not strictly <)
+    assert score_fundamental(
+        FundInputs(None, None, None, None, interest_coverage=Decimal("1.5"))
+    ) == Decimal("40")
+    assert score_fundamental(
+        FundInputs(None, None, None, None, interest_coverage=Decimal("2.0"))
+    ) == Decimal("50")
+
+
+def test_fundamental_new_signals_combine_and_clamp() -> None:
+    # reliance-like 85 + fcf+5 + improving+8 + div+5 = 103 -> clamp 100
+    f = FundInputs(
+        Decimal("22.89"),
+        Decimal("0.0914"),
+        Decimal("36.65"),
+        Decimal("0.125"),
+        fcf_positive=True,
+        q_profit_direction="improving",
+        dividend_consecutive_years=7,
+    )
+    assert score_fundamental(f) == Decimal("100")
+
+
+# ---------------------------------------------------------------------------
+# technical_score — Chunk 4.9: 52-week proximity + volume trend
+# ---------------------------------------------------------------------------
+def _flat_tech(rsi: Decimal, **kw: object) -> TechInputs:
+    """RSI with no EMA/cross/MACD adjustment, plus any 4.9 kwargs."""
+    return TechInputs(rsi, "at", "none", Decimal("0"), **kw)  # type: ignore[arg-type]
+
+
+def test_technical_4arg_form_unchanged() -> None:
+    # rsi 60 -> 70; above +15; golden +10; macd>0 +5 = 100
+    t = TechInputs(Decimal("60"), "above", "golden", Decimal("1.2"))
+    assert score_technical(t) == Decimal("100")
+
+
+def test_technical_near_high_momentum() -> None:
+    # rsi 60 zone -> 70; within 3% of 52w high AND rsi in 55-70 -> +8 = 78
+    t = _flat_tech(
+        Decimal("60"),
+        fifty_two_week_high=Decimal("100"),
+        current_price=Decimal("98"),
+    )
+    assert score_technical(t) == Decimal("78")
+
+
+def test_technical_near_high_extended() -> None:
+    # rsi 75 zone -> 30; within 3% of high AND rsi > 70 -> +3 = 33
+    t = _flat_tech(
+        Decimal("75"),
+        fifty_two_week_high=Decimal("100"),
+        current_price=Decimal("99"),
+    )
+    assert score_technical(t) == Decimal("33")
+
+
+def test_technical_near_low_penalty() -> None:
+    # rsi 50 zone -> 50; within 5% of 52w low -> -8 = 42
+    t = _flat_tech(
+        Decimal("50"),
+        fifty_two_week_low=Decimal("100"),
+        current_price=Decimal("103"),
+    )
+    assert score_technical(t) == Decimal("42")
+
+
+def test_technical_volume_strong_conviction() -> None:
+    # rsi 50 -> 50; vol 3x -> +10 = 60
+    t = _flat_tech(
+        Decimal("50"), current_volume=3_000_000, avg_volume_30d=1_000_000
+    )
+    assert score_technical(t) == Decimal("60")
+
+
+def test_technical_volume_above_average() -> None:
+    # vol 1.5x -> +5 = 55
+    t = _flat_tech(
+        Decimal("50"), current_volume=1_500_000, avg_volume_30d=1_000_000
+    )
+    assert score_technical(t) == Decimal("55")
+
+
+def test_technical_volume_low_conviction() -> None:
+    # vol 0.5x -> -5 = 45
+    t = _flat_tech(
+        Decimal("50"), current_volume=500_000, avg_volume_30d=1_000_000
+    )
+    assert score_technical(t) == Decimal("45")
+
+
+# ---------------------------------------------------------------------------
+# fundamental_score — Chunk 4.9: sector-relative PE (with absolute fallback)
+# ---------------------------------------------------------------------------
+def test_fundamental_sector_pe_cheap() -> None:
+    # pe 10 vs sector median 20 -> rel 0.5 < 0.7 -> +20 = 70
+    f = FundInputs(Decimal("10"), None, None, None, sector_median_pe=Decimal("20"))
+    assert score_fundamental(f) == Decimal("70")
+
+
+def test_fundamental_sector_pe_slight_discount() -> None:
+    # pe 16 / 20 = 0.8 -> +10 = 60
+    f = FundInputs(Decimal("16"), None, None, None, sector_median_pe=Decimal("20"))
+    assert score_fundamental(f) == Decimal("60")
+
+
+def test_fundamental_sector_pe_fair() -> None:
+    # pe 20 / 20 = 1.0 -> 0 = 50
+    f = FundInputs(Decimal("20"), None, None, None, sector_median_pe=Decimal("20"))
+    assert score_fundamental(f) == Decimal("50")
+
+
+def test_fundamental_sector_pe_slight_premium() -> None:
+    # pe 24 / 20 = 1.2 -> -5 = 45
+    f = FundInputs(Decimal("24"), None, None, None, sector_median_pe=Decimal("20"))
+    assert score_fundamental(f) == Decimal("45")
+
+
+def test_fundamental_sector_pe_expensive() -> None:
+    # pe 30 / 20 = 1.5 > 1.3 -> -10 = 40
+    f = FundInputs(Decimal("30"), None, None, None, sector_median_pe=Decimal("20"))
+    assert score_fundamental(f) == Decimal("40")
+
+
+def test_fundamental_absolute_pe_fallback_when_no_sector() -> None:
+    # no sector median -> absolute thresholds: pe 10 < 15 -> +20 = 70
+    f = FundInputs(Decimal("10"), None, None, None)
+    assert score_fundamental(f) == Decimal("70")
+
+
+# ---------------------------------------------------------------------------
 # macro_score (base 50 + contributions)
 # ---------------------------------------------------------------------------
 def test_macro_strong() -> None:
