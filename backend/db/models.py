@@ -784,3 +784,48 @@ class MacroSignal(Base):
         ),
         Index("idx_macro_signals_date", text("computed_date DESC")),
     )
+
+
+class RiskSignal(Base):
+    """Per-stock risk flags (Chunk 4.2), aggregated from existing DB data.
+
+    One row per (isin, computed_date), upserted on re-run. `atr_pct` is ATR as
+    % of the latest price; `volatility_flag` low/medium/high; `news_spike` true
+    on a >3x 24h-vs-7d news-volume surge; `risk_score` 0-100 (higher = riskier),
+    tilted by the macro regime. `days_to_results` is always NULL until the
+    earnings calendar exists. No external source.
+    """
+
+    __tablename__ = "risk_signals"
+
+    isin: Mapped[str] = mapped_column(
+        String(12),
+        ForeignKey("stocks.isin", ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    computed_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    atr_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    volatility_flag: Mapped[str] = mapped_column(String(8), nullable=False)
+    news_spike: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    days_to_results: Mapped[int | None] = mapped_column(Integer)
+    risk_score: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'risk_agent'")
+    )
+    computed_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "volatility_flag IN ('low','medium','high')",
+            name="volatility_flag_allowed",
+        ),
+        CheckConstraint(
+            "risk_score >= 0 AND risk_score <= 100", name="risk_score_range"
+        ),
+        Index("idx_risk_signals_date", text("computed_date DESC")),
+        Index("idx_risk_signals_isin_date", "isin", text("computed_date DESC")),
+    )

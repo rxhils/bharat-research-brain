@@ -59,6 +59,8 @@ fii_app = typer.Typer(help="FII/DII (FPI) flow agent commands", no_args_is_help=
 app.add_typer(fii_app, name="fii")
 macro_app = typer.Typer(help="Macro agent commands", no_args_is_help=True)
 app.add_typer(macro_app, name="macro")
+risk_app = typer.Typer(help="Risk agent commands", no_args_is_help=True)
+app.add_typer(risk_app, name="risk")
 
 
 # -----------------------------------------------------------------------------
@@ -2028,6 +2030,94 @@ async def _macro_show_async() -> None:
     console.print(table)
     if not rows:
         console.print("[yellow]no macro signals — run 'macro run' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# risk
+# -----------------------------------------------------------------------------
+@risk_app.command("run")
+def risk_run(
+    isin: str | None = typer.Option(None, "--isin", help="Compute one ISIN only."),
+    all_: bool = typer.Option(False, "--all", help="Compute all active stocks."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Compute + print top 10, write nothing."
+    ),
+) -> None:
+    """Compute per-stock risk flags from existing DB data (no external calls)."""
+    if not all_ and isin is None:
+        console.print("[red]pass --isin ISIN or --all[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_risk_run_async(isin=isin, dry_run=dry_run))
+
+
+def _risk_num(value: object) -> str:
+    return f"{float(value):.2f}" if value is not None else "—"
+
+
+async def _risk_run_async(*, isin: str | None, dry_run: bool) -> None:
+    from backend.agents.risk import RiskAgent
+
+    log.info("cli.risk.run.start", isin=isin, dry_run=dry_run)
+    rows = await RiskAgent().run_all(isin=isin, dry_run=dry_run)
+
+    table = Table(
+        title="Risk run — "
+        + ("DRY RUN (no writes), top 10" if dry_run else "APPLIED, top 10")
+    )
+    table.add_column("isin")
+    table.add_column("atr_pct", justify="right")
+    table.add_column("volatility", style="bold")
+    table.add_column("news_spike")
+    table.add_column("risk_score", justify="right")
+    for r in rows[:10]:
+        table.add_row(
+            r.isin,
+            _risk_num(r.atr_pct),
+            r.volatility_flag,
+            "yes" if r.news_spike else "no",
+            _risk_num(r.risk_score),
+        )
+    console.print(table)
+    console.print(f"[dim]computed {len(rows)} stocks[/dim]")
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to risk_signals.[/dim]")
+
+
+@risk_app.command("show")
+def risk_show(
+    limit: int = typer.Option(20, "--limit", help="Max rows."),
+    flag: str | None = typer.Option(
+        None, "--flag", help="Filter by volatility_flag (low|medium|high)."
+    ),
+) -> None:
+    """Show the latest stored risk signals (highest risk first)."""
+    asyncio.run(_risk_show_async(limit=limit, flag=flag))
+
+
+async def _risk_show_async(*, limit: int, flag: str | None) -> None:
+    from backend.db.repositories import risk as risk_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        rows = await risk_repo.fetch_signals(session, limit=limit, flag=flag)
+
+    table = Table(title="Risk signals (latest)" + (f" — {flag}" if flag else ""))
+    table.add_column("symbol")
+    table.add_column("atr_pct", justify="right")
+    table.add_column("volatility_flag", style="bold")
+    table.add_column("news_spike")
+    table.add_column("risk_score", justify="right")
+    for r, sym in rows:
+        table.add_row(
+            sym or r.isin,
+            _risk_num(r.atr_pct),
+            r.volatility_flag,
+            "yes" if r.news_spike else "no",
+            _risk_num(r.risk_score),
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no risk signals — run 'risk run --all' first[/yellow]")
 
 
 # -----------------------------------------------------------------------------
