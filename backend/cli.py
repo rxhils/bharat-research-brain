@@ -47,6 +47,16 @@ technical_app = typer.Typer(help="Technical agent commands", no_args_is_help=Tru
 app.add_typer(technical_app, name="technical")
 news_app = typer.Typer(help="News agent commands", no_args_is_help=True)
 app.add_typer(news_app, name="news")
+sentiment_app = typer.Typer(help="Sentiment agent commands", no_args_is_help=True)
+app.add_typer(sentiment_app, name="sentiment")
+fundamentals_app = typer.Typer(
+    help="Fundamentals agent commands", no_args_is_help=True
+)
+app.add_typer(fundamentals_app, name="fundamentals")
+sector_app = typer.Typer(help="Sector agent commands", no_args_is_help=True)
+app.add_typer(sector_app, name="sector")
+fii_app = typer.Typer(help="FII/DII (FPI) flow agent commands", no_args_is_help=True)
+app.add_typer(fii_app, name="fii")
 
 
 # -----------------------------------------------------------------------------
@@ -1303,27 +1313,74 @@ async def _technical_show_async(*, isin: str | None, symbol: str | None) -> None
 # -----------------------------------------------------------------------------
 
 
+_NEWS_SOURCES = (
+    "rss",
+    "newsapi",
+    "marketaux",
+    "nse-deals",
+    "bse-announcements",
+    "all",
+)
+
+
 @news_app.command("fetch")
 def news_fetch(
     source: str = typer.Option(
-        "rss", "--source", help="rss | newsapi | marketaux | all."
+        "rss",
+        "--source",
+        help="rss | newsapi | marketaux | nse-deals | bse-announcements | all.",
+    ),
+    bulk_file: str | None = typer.Option(
+        None, "--bulk-file", help="Path to a downloaded NSE bulk-deal JSON file."
+    ),
+    block_file: str | None = typer.Option(
+        None, "--block-file", help="Path to a downloaded NSE block-deal JSON file."
+    ),
+    bse_file: str | None = typer.Option(
+        None, "--bse-file", help="Path to a downloaded BSE announcement JSON file."
     ),
     dry_run: bool = typer.Option(
         False, "--dry-run", help="Fetch + match, print sample, write nothing."
     ),
 ) -> None:
-    """Fetch market news, dedup, match to ISINs, store in news_articles."""
-    if source not in ("rss", "newsapi", "marketaux", "all"):
-        console.print("[red]--source must be rss | newsapi | marketaux | all[/red]")
+    """Fetch market news, dedup, match to ISINs, store in news_articles.
+
+    nse-deals / bse-announcements ingest locally-downloaded published files
+    (NSE/BSE website scraping is barred by CLAUDE.md §2 rule 5 / §12). Pass the
+    relevant --bulk-file / --block-file / --bse-file; a missing file is non-fatal.
+    """
+    if source not in _NEWS_SOURCES:
+        console.print(f"[red]--source must be one of {' | '.join(_NEWS_SOURCES)}[/red]")
         raise typer.Exit(code=1)
-    asyncio.run(_news_fetch_async(source=source, dry_run=dry_run))
+    asyncio.run(
+        _news_fetch_async(
+            source=source,
+            dry_run=dry_run,
+            bulk_file=bulk_file,
+            block_file=block_file,
+            bse_file=bse_file,
+        )
+    )
 
 
-async def _news_fetch_async(*, source: str, dry_run: bool) -> None:
+async def _news_fetch_async(
+    *,
+    source: str,
+    dry_run: bool,
+    bulk_file: str | None = None,
+    block_file: str | None = None,
+    bse_file: str | None = None,
+) -> None:
     from backend.agents.news import NewsAgent
 
     log.info("cli.news.fetch.start", source=source, dry_run=dry_run)
-    res = await NewsAgent().run(sources=(source,), dry_run=dry_run)
+    res = await NewsAgent().run(
+        sources=(source,),
+        dry_run=dry_run,
+        nse_bulk_path=bulk_file,
+        nse_block_path=block_file,
+        bse_path=bse_file,
+    )
 
     table = Table(
         title="News fetch" + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
@@ -1402,6 +1459,493 @@ async def _news_show_async(
     console.print(table)
     if not rows:
         console.print("[yellow]no articles[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# sentiment
+# -----------------------------------------------------------------------------
+@sentiment_app.command("run")
+def sentiment_run(
+    isin: str | None = typer.Option(
+        None, "--isin", help="Only score articles for this ISIN."
+    ),
+    batch_size: int = typer.Option(32, "--batch-size", help="Articles per batch."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Score one batch, print samples, write nothing."
+    ),
+) -> None:
+    """Score unscored news with FinBERT, write sentiment_label + sentiment_score."""
+    asyncio.run(
+        _sentiment_run_async(isin=isin, batch_size=batch_size, dry_run=dry_run)
+    )
+
+
+async def _sentiment_run_async(
+    *, isin: str | None, batch_size: int, dry_run: bool
+) -> None:
+    from backend.agents.sentiment import SentimentAgent, _text_of, build_updates
+    from backend.db.repositories import news as news_repo
+    from backend.db.session import SessionLocal
+
+    log.info("cli.sentiment.run.start", isin=isin, batch_size=batch_size, dry_run=dry_run)
+
+    agent = SentimentAgent()
+
+    if dry_run:
+        # Score a single small sample so the operator can eyeball the mapping
+        # before committing the (slow) full pass. Nothing is written.
+        import asyncio as _asyncio
+
+        async with SessionLocal() as session:
+            rows = await news_repo.fetch_unscored(session, isin=isin, limit=5)
+        if not rows:
+            console.print("[yellow]no unscored articles[/yellow]")
+            return
+        articles = [(r.id, r.headline, r.summary) for r in rows]
+        texts = [_text_of(h, s) for _id, h, s in articles]
+        results = await _asyncio.to_thread(agent.finbert.score_batch, texts)
+        updates = build_updates(articles, results)
+
+        table = Table(title="Sentiment — DRY RUN (5 samples, no writes)")
+        table.add_column("label", style="bold")
+        table.add_column("score", justify="right")
+        table.add_column("headline")
+        for (_id, headline, _s), u in zip(articles, updates, strict=True):
+            table.add_row(u["sentiment_label"], f"{u['sentiment_score']:+.4f}", headline[:70])
+        console.print(table)
+        console.print("[dim]DRY RUN — nothing written to news_articles.[/dim]")
+        return
+
+    res = await agent.run(batch_size=batch_size, isin=isin)
+    table = Table(title="Sentiment run — APPLIED")
+    table.add_column("field", style="bold")
+    table.add_column("value", justify="right")
+    table.add_row("scored", str(res["scored"]))
+    table.add_row("updated", str(res["updated"]))
+    table.add_row("bull", str(res["bull"]))
+    table.add_row("bear", str(res["bear"]))
+    table.add_row("neutral", str(res["neutral"]))
+    console.print(table)
+
+
+@sentiment_app.command("show")
+def sentiment_show(
+    isin: str | None = typer.Option(None, "--isin", help="Filter by ISIN."),
+    symbol: str | None = typer.Option(None, "--symbol", help="Filter by NSE symbol."),
+    limit: int = typer.Option(20, "--limit", help="Max rows."),
+) -> None:
+    """Show scored news articles (symbol, headline, label, score, published_at)."""
+    asyncio.run(_sentiment_show_async(isin=isin, symbol=symbol, limit=limit))
+
+
+async def _sentiment_show_async(
+    *, isin: str | None, symbol: str | None, limit: int
+) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import NewsArticle, Stock
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        if isin is None and symbol is not None:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol)
+                )
+            ).scalar_one_or_none()
+            if isin is None:
+                console.print(f"[red]no stock with nse_symbol={symbol!r}[/red]")
+                raise typer.Exit(code=1)
+        stmt = select(NewsArticle, Stock.nse_symbol).join(
+            Stock, NewsArticle.isin == Stock.isin, isouter=True
+        )
+        if isin is not None:
+            stmt = stmt.where(NewsArticle.isin == isin)
+        stmt = stmt.where(NewsArticle.sentiment_label.is_not(None))
+        stmt = stmt.order_by(NewsArticle.published_at.desc().nullslast()).limit(limit)
+        rows = (await session.execute(stmt)).all()
+
+    table = Table(title=f"Scored news — {isin or 'all'}")
+    table.add_column("symbol")
+    table.add_column("headline")
+    table.add_column("label", style="bold")
+    table.add_column("score", justify="right")
+    table.add_column("published")
+    for article, sym in rows:
+        table.add_row(
+            sym or "—",
+            article.headline[:60],
+            article.sentiment_label or "—",
+            f"{float(article.sentiment_score):+.4f}"
+            if article.sentiment_score is not None
+            else "—",
+            article.published_at.strftime("%Y-%m-%d %H:%M")
+            if article.published_at
+            else "—",
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no scored articles[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# fundamentals
+# -----------------------------------------------------------------------------
+@fundamentals_app.command("run")
+def fundamentals_run(
+    isin: str | None = typer.Option(None, "--isin", help="Fetch one ISIN only."),
+    all_: bool = typer.Option(False, "--all", help="Fetch all active stocks."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Fetch + map, print sample, write nothing."
+    ),
+) -> None:
+    """Fetch yfinance fundamentals, store, and classify mcap_category."""
+    if not all_ and isin is None:
+        console.print("[red]pass --isin ISIN or --all[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_fundamentals_run_async(isin=isin, dry_run=dry_run))
+
+
+async def _fundamentals_run_async(*, isin: str | None, dry_run: bool) -> None:
+    from backend.agents.fundamentals import FundamentalsAgent, mcap_to_category
+
+    log.info("cli.fundamentals.run.start", isin=isin, dry_run=dry_run)
+    res = await FundamentalsAgent().run_all(isin=isin, dry_run=dry_run)
+
+    table = Table(
+        title="Fundamentals run"
+        + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+    )
+    table.add_column("field", style="bold")
+    table.add_column("value", justify="right")
+    table.add_row("attempted", str(res.stocks_attempted))
+    table.add_row("succeeded", str(res.stocks_succeeded))
+    table.add_row("failed", str(res.stocks_failed))
+    table.add_row("rows ready", str(res.rows_ready))
+    if not dry_run:
+        table.add_row("rows upserted", str(res.rows_upserted))
+        table.add_row("mcap categories set", str(res.categories_updated))
+    console.print(table)
+
+    if dry_run:
+
+        def _f(value: object) -> str:
+            return f"{float(value):.4f}" if value is not None else "—"
+
+        for row in res.samples:
+            mcap_cr = (
+                f"{row.market_cap / 1e7:,.0f} Cr" if row.market_cap is not None else "—"
+            )
+            detail = Table(title=f"Fundamentals (preview) — {row.isin}")
+            detail.add_column("field", style="bold")
+            detail.add_column("value", justify="right")
+            detail.add_row("pe_ratio", _f(row.pe_ratio))
+            detail.add_row("pb_ratio", _f(row.pb_ratio))
+            detail.add_row("roe", _f(row.roe))
+            detail.add_row("roce (ROA proxy)", _f(row.roce))
+            detail.add_row("debt_to_equity", _f(row.debt_to_equity))
+            detail.add_row("revenue_growth", _f(row.revenue_growth))
+            detail.add_row("earnings_growth", _f(row.earnings_growth))
+            detail.add_row("profit_margin", _f(row.profit_margin))
+            detail.add_row("market_cap (INR)", str(row.market_cap or "—"))
+            detail.add_row("market_cap (Cr)", mcap_cr)
+            detail.add_row("→ mcap_category", mcap_to_category(row.market_cap) or "—")
+            detail.add_row("dividend_yield", _f(row.dividend_yield))
+            detail.add_row("52w_high", _f(row.fifty_two_week_high))
+            detail.add_row("52w_low", _f(row.fifty_two_week_low))
+            detail.add_row("avg_volume_30d", str(row.avg_volume_30d or "—"))
+            detail.add_row("promoter_holding", _f(row.promoter_holding))
+            console.print(detail)
+        console.print("[dim]DRY RUN — nothing written to fundamental_signals.[/dim]")
+
+
+@fundamentals_app.command("show")
+def fundamentals_show(
+    isin: str | None = typer.Option(None, "--isin", help="Filter by ISIN."),
+    symbol: str | None = typer.Option(None, "--symbol", help="Filter by NSE symbol."),
+) -> None:
+    """Show the latest stored fundamentals for a stock."""
+    asyncio.run(_fundamentals_show_async(isin=isin, symbol=symbol))
+
+
+async def _fundamentals_show_async(*, isin: str | None, symbol: str | None) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import fundamentals as fund_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        if isin is None and symbol is not None:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol)
+                )
+            ).scalar_one_or_none()
+            if isin is None:
+                console.print(f"[red]no stock with nse_symbol={symbol!r}[/red]")
+                raise typer.Exit(code=1)
+        if isin is None:
+            console.print("[red]pass --isin ISIN or --symbol SYMBOL[/red]")
+            raise typer.Exit(code=1)
+        row = await fund_repo.fetch_latest(session, isin=isin)
+        stock = (
+            await session.execute(
+                select(Stock.nse_symbol, Stock.mcap_category).where(
+                    Stock.isin == isin
+                )
+            )
+        ).first()
+
+    sym = stock[0] if stock else None
+    mcap_category = stock[1] if stock else None
+
+    if row is None:
+        console.print(f"[yellow]no fundamentals for {isin}[/yellow]")
+        return
+
+    def _f(value: object) -> str:
+        return f"{float(value):.4f}" if value is not None else "—"
+
+    table = Table(title=f"Fundamentals — {sym or isin}")
+    table.add_column("symbol")
+    table.add_column("pe", justify="right")
+    table.add_column("pb", justify="right")
+    table.add_column("roe", justify="right")
+    table.add_column("d/e", justify="right")
+    table.add_column("rev_growth", justify="right")
+    table.add_column("mcap_category")
+    table.add_column("fetched_date")
+    table.add_row(
+        sym or "—",
+        _f(row.pe_ratio),
+        _f(row.pb_ratio),
+        _f(row.roe),
+        _f(row.debt_to_equity),
+        _f(row.revenue_growth),
+        mcap_category or "—",
+        row.fetched_date.isoformat(),
+    )
+    console.print(table)
+
+
+# -----------------------------------------------------------------------------
+# sector
+# -----------------------------------------------------------------------------
+@sector_app.command("run")
+def sector_run(
+    sector: str | None = typer.Option(None, "--sector", help="Compute one sector."),
+    all_: bool = typer.Option(False, "--all", help="Compute all sectors."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Compute + print, write nothing."
+    ),
+) -> None:
+    """Compute sector momentum signals from existing DB data (no external calls)."""
+    if not all_ and sector is None:
+        console.print("[red]pass --sector NAME or --all[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_sector_run_async(sector=sector, dry_run=dry_run))
+
+
+def _sector_table(rows: list[object], title: str) -> Table:
+    from backend.agents.sector import SectorRow
+
+    def _f(value: object) -> str:
+        return f"{float(value):.4f}" if value is not None else "—"
+
+    table = Table(title=title)
+    table.add_column("sector")
+    table.add_column("signal", style="bold")
+    table.add_column("avg_rsi", justify="right")
+    table.add_column("pct>ema200", justify="right")
+    table.add_column("mom_7d", justify="right")
+    table.add_column("mom_30d", justify="right")
+    table.add_column("avg_sent", justify="right")
+    for r in rows:
+        assert isinstance(r, SectorRow)
+        table.add_row(
+            r.sector,
+            r.signal,
+            _f(r.avg_rsi_14),
+            _f(r.pct_above_ema200),
+            _f(r.momentum_7d),
+            _f(r.momentum_30d),
+            _f(r.avg_sentiment_score),
+        )
+    return table
+
+
+async def _sector_run_async(*, sector: str | None, dry_run: bool) -> None:
+    from backend.agents.sector import SectorAgent
+
+    log.info("cli.sector.run.start", sector=sector, dry_run=dry_run)
+    agent = SectorAgent()
+    if sector is not None and not dry_run:
+        from backend.db.repositories import sector as sector_repo
+        from backend.db.repositories._helpers import today_ist
+        from backend.db.session import SessionLocal
+
+        row = await agent.compute_sector(sector, today_ist())
+        async with SessionLocal() as session:
+            await sector_repo.bulk_upsert(session, [_row_payload(row)])
+            await session.commit()
+        console.print(_sector_table([row], "Sector run — APPLIED"))
+        return
+
+    res = await agent.run_all(dry_run=dry_run)
+    title = "Sector run — " + ("DRY RUN (no writes)" if dry_run else "APPLIED")
+    rows = [r for r in res.rows if sector is None or r.sector == sector]
+    console.print(_sector_table(rows, title))
+    if not dry_run:
+        console.print(f"[green]Upserted {res.rows_upserted} sector rows[/green]")
+    else:
+        console.print("[dim]DRY RUN — nothing written to sector_signals.[/dim]")
+
+
+def _row_payload(row: object) -> dict[str, object]:
+    from backend.agents.sector import _row_to_dict
+
+    return _row_to_dict(row)  # type: ignore[arg-type]
+
+
+@sector_app.command("show")
+def sector_show(
+    limit: int = typer.Option(20, "--limit", help="Max rows."),
+) -> None:
+    """Show the latest stored sector signals (most momentum first)."""
+    asyncio.run(_sector_show_async(limit=limit))
+
+
+async def _sector_show_async(*, limit: int) -> None:
+    from backend.db.repositories import sector as sector_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        rows = await sector_repo.fetch_signals(session, limit=limit)
+
+    def _f(value: object) -> str:
+        return f"{float(value):.4f}" if value is not None else "—"
+
+    table = Table(title="Sector signals (latest)")
+    table.add_column("sector")
+    table.add_column("signal", style="bold")
+    table.add_column("avg_rsi", justify="right")
+    table.add_column("pct>ema200", justify="right")
+    table.add_column("mom_7d", justify="right")
+    table.add_column("mom_30d", justify="right")
+    table.add_column("avg_sent", justify="right")
+    for r in rows:
+        table.add_row(
+            r.sector,
+            r.signal,
+            _f(r.avg_rsi_14),
+            _f(r.pct_above_ema200),
+            _f(r.momentum_7d),
+            _f(r.momentum_30d),
+            _f(r.avg_sentiment_score),
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no sector signals — run 'sector run --all' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# fii (FII/DII / FPI flows)
+# -----------------------------------------------------------------------------
+@fii_app.command("run")
+def fii_run(
+    file: str | None = typer.Option(
+        None, "--file", help="Path to a downloaded NSDL/SEBI FPI CSV file."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Parse + compute, print, write nothing."
+    ),
+) -> None:
+    """Ingest FPI flows from a local file, compute rolling sums + signal, upsert.
+
+    Source is a locally-downloaded NSDL/SEBI FPI file — NSE website scraping is
+    barred by CLAUDE.md §2 rule 5 / §12. A missing/blocked file is non-fatal:
+    the run reports 0 rows and writes nothing.
+    """
+    asyncio.run(_fii_run_async(file=file, dry_run=dry_run))
+
+
+async def _fii_run_async(*, file: str | None, dry_run: bool) -> None:
+    from backend.agents.fii_dii import FiiDiiAgent
+
+    log.info("cli.fii.run.start", file=file, dry_run=dry_run)
+    res = await FiiDiiAgent().run(path=file, dry_run=dry_run)
+
+    if res.rows_parsed == 0:
+        console.print(
+            "[yellow]No FPI rows parsed.[/yellow] "
+            "Pass --file with a downloaded NSDL/SEBI FPI CSV "
+            "(headers: flow_date,fii_net_cr,dii_net_cr)."
+        )
+        return
+
+    def _f(value: object) -> str:
+        return f"{float(value):,.2f}" if value is not None else "—"
+
+    table = Table(
+        title="FII/DII (FPI) flows — last 10"
+        + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+    )
+    table.add_column("date")
+    table.add_column("fii_net", justify="right")
+    table.add_column("dii_net", justify="right")
+    table.add_column("fii_5d_sum", justify="right")
+    table.add_column("fii_signal", style="bold")
+    for r in res.flows[-10:]:
+        table.add_row(
+            r.flow_date.isoformat(),
+            _f(r.fii_net_cr),
+            _f(r.dii_net_cr),
+            _f(r.fii_5d_sum),
+            r.fii_signal,
+        )
+    console.print(table)
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to fii_dii_flows.[/dim]")
+    else:
+        console.print(f"[green]Upserted {res.rows_upserted} flow rows[/green]")
+
+
+@fii_app.command("show")
+def fii_show(
+    limit: int = typer.Option(30, "--limit", help="Max rows."),
+) -> None:
+    """Show stored FII/DII (FPI) flows, newest first."""
+    asyncio.run(_fii_show_async(limit=limit))
+
+
+async def _fii_show_async(*, limit: int) -> None:
+    from backend.db.repositories import fii_dii as fii_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        rows = await fii_repo.fetch_recent(session, limit=limit)
+
+    def _f(value: object) -> str:
+        return f"{float(value):,.2f}" if value is not None else "—"
+
+    table = Table(title="FII/DII (FPI) flows")
+    table.add_column("date")
+    table.add_column("fii_net", justify="right")
+    table.add_column("dii_net", justify="right")
+    table.add_column("fii_5d_sum", justify="right")
+    table.add_column("fii_signal", style="bold")
+    for r in rows:
+        table.add_row(
+            r.flow_date.isoformat(),
+            _f(r.fii_net_cr),
+            _f(r.dii_net_cr),
+            _f(r.fii_5d_sum),
+            r.fii_signal,
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no flow rows — run 'fii run --file <csv>' first[/yellow]")
 
 
 # -----------------------------------------------------------------------------

@@ -22,6 +22,14 @@ KNOWN = [
     KnownStock("INE467B01029", "TCS", "Tata Consultancy Services Limited"),
 ]
 
+# Three-letter symbols that are also common English words — the 3.2
+# false-positive trap ("Cooling Oil" -> OIL).
+BLOCKLISTED = [
+    KnownStock("INE274J01014", "OIL", "Oil India Limited"),
+    KnownStock("INE079A01024", "SUN", "Sun Pharmaceutical Industries Limited"),
+    KnownStock("INE176A01028", "YES", "Yes Bank Limited"),
+]
+
 
 # ---------------------------------------------------------------------------
 # Stock matching
@@ -55,6 +63,34 @@ def test_match_none_for_market_wide() -> None:
 
 def test_symbol_takes_priority() -> None:
     assert match_to_isin("RELIANCE Industries gains", None, KNOWN) == "INE002A01018"
+
+
+# ---------------------------------------------------------------------------
+# Short-symbol blocklist (Chunk 3.3 fix) — common English words that collide
+# with 3-letter NSE symbols must NOT match without context confirmation.
+# ---------------------------------------------------------------------------
+def test_blocklisted_word_does_not_falsely_match() -> None:
+    # "Oil" the commodity, not OIL India
+    assert match_to_isin("Cooling oil prices ease pressure", None, BLOCKLISTED) is None
+    assert match_to_isin("Sun shines on monsoon outlook", None, BLOCKLISTED) is None
+    assert match_to_isin("He said yes to the merger talks", None, BLOCKLISTED) is None
+
+
+def test_blocklisted_symbol_matches_with_context_word() -> None:
+    assert (
+        match_to_isin("OIL shares jump on results", None, BLOCKLISTED)
+        == "INE274J01014"
+    )
+    assert (
+        match_to_isin("NSE: YES rallies 5%", None, BLOCKLISTED) == "INE176A01028"
+    )
+
+
+def test_blocklisted_symbol_matches_with_company_name() -> None:
+    assert (
+        match_to_isin("Oil India Limited posts higher output", None, BLOCKLISTED)
+        == "INE274J01014"
+    )
 
 
 # ---------------------------------------------------------------------------
