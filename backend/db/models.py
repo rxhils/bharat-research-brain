@@ -829,3 +829,81 @@ class RiskSignal(Base):
         Index("idx_risk_signals_date", text("computed_date DESC")),
         Index("idx_risk_signals_isin_date", "isin", text("computed_date DESC")),
     )
+
+
+class StockRanking(Base):
+    """Composite 0-100 ranking per stock (Chunk 4.3) — the morning score.
+
+    Merges every signal table into one weighted score + a plain-English label
+    from the approved vocabulary (CLAUDE.md §2 rule 2). One row per
+    (isin, computed_date), upserted on re-run. `score_breakdown` holds the full
+    component detail (JSONB) for the Report Agent. Pure computation, no LLM.
+    """
+
+    __tablename__ = "stock_rankings"
+
+    isin: Mapped[str] = mapped_column(
+        String(12),
+        ForeignKey("stocks.isin", ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    computed_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    composite_score: Mapped[Decimal] = mapped_column(Numeric(6, 2), nullable=False)
+    signal_label: Mapped[str] = mapped_column(String(20), nullable=False)
+    fundamental_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    technical_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    macro_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    sentiment_adj: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    risk_penalty: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    score_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'ranking_agent'")
+    )
+    computed_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "signal_label IN ('bullish-watch','needs-confirmation','neutral',"
+            "'cautious','avoid')",
+            name="signal_label_allowed",
+        ),
+        CheckConstraint(
+            "composite_score >= 0 AND composite_score <= 100",
+            name="composite_score_range",
+        ),
+        Index(
+            "idx_stock_rankings_date_score",
+            text("computed_date DESC"),
+            text("composite_score DESC"),
+        ),
+        Index("idx_stock_rankings_isin_date", "isin", text("computed_date DESC")),
+    )
+
+
+class DailyReport(Base):
+    """The daily research note (Chunk 4.4) — one row per report_date, upserted.
+
+    `body_md` is the full markdown; `top_stocks` is a JSONB array of the top 10
+    {isin, score}; `audit_passed` stays False until the Meta-Auditor (Chunk 4.5)
+    validates the note's claims.
+    """
+
+    __tablename__ = "daily_reports"
+
+    report_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    body_md: Mapped[str] = mapped_column(Text, nullable=False)
+    word_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    top_stocks: Mapped[list[Any] | None] = mapped_column(JSONB)
+    macro_summary: Mapped[str | None] = mapped_column(Text)
+    audit_passed: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false")
+    )
+    generated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_daily_reports_date", text("report_date DESC")),
+    )

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from datetime import date
 
 # Configure logging before any module that calls structlog.get_logger() at import.
 from backend.logging_setup import configure_logging
@@ -61,6 +62,12 @@ macro_app = typer.Typer(help="Macro agent commands", no_args_is_help=True)
 app.add_typer(macro_app, name="macro")
 risk_app = typer.Typer(help="Risk agent commands", no_args_is_help=True)
 app.add_typer(risk_app, name="risk")
+ranking_app = typer.Typer(help="Ranking agent commands", no_args_is_help=True)
+app.add_typer(ranking_app, name="ranking")
+report_app = typer.Typer(help="Report agent commands", no_args_is_help=True)
+app.add_typer(report_app, name="report")
+auditor_app = typer.Typer(help="Meta-Auditor commands", no_args_is_help=True)
+app.add_typer(auditor_app, name="auditor")
 
 
 # -----------------------------------------------------------------------------
@@ -2118,6 +2125,278 @@ async def _risk_show_async(*, limit: int, flag: str | None) -> None:
     console.print(table)
     if not rows:
         console.print("[yellow]no risk signals — run 'risk run --all' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# ranking
+# -----------------------------------------------------------------------------
+@ranking_app.command("run")
+def ranking_run(
+    all_: bool = typer.Option(False, "--all", help="Rank all active stocks."),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Compute + print top 20, write nothing."
+    ),
+) -> None:
+    """Compute the composite 0-100 morning ranking for every stock."""
+    if not all_ and not dry_run:
+        console.print("[red]pass --all (optionally with --dry-run)[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_ranking_run_async(dry_run=dry_run))
+
+
+def _score(value: object) -> str:
+    return f"{float(value):.2f}" if value is not None else "—"
+
+
+async def _ranking_run_async(*, dry_run: bool) -> None:
+    from backend.agents.ranking import RankingAgent
+
+    log.info("cli.ranking.run.start", dry_run=dry_run)
+    rows = await RankingAgent().run_all(dry_run=dry_run)
+
+    table = Table(
+        title="Ranking — "
+        + ("DRY RUN (no writes), top 20" if dry_run else "APPLIED, top 20")
+    )
+    table.add_column("#", justify="right")
+    table.add_column("isin")
+    table.add_column("score", justify="right")
+    table.add_column("label", style="bold")
+    table.add_column("f", justify="right")
+    table.add_column("t", justify="right")
+    table.add_column("m", justify="right")
+    table.add_column("risk_pen", justify="right")
+    for n, r in enumerate(rows[:20], start=1):
+        table.add_row(
+            str(n),
+            r.isin,
+            _score(r.composite_score),
+            r.signal_label,
+            _score(r.fundamental_score),
+            _score(r.technical_score),
+            _score(r.macro_score),
+            _score(r.risk_penalty),
+        )
+    console.print(table)
+    console.print(f"[dim]ranked {len(rows)} stocks[/dim]")
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to stock_rankings.[/dim]")
+
+
+@ranking_app.command("show")
+def ranking_show(
+    limit: int = typer.Option(20, "--limit", help="Max rows."),
+    sector: str | None = typer.Option(None, "--sector", help="Filter by sector."),
+    signal: str | None = typer.Option(
+        None, "--signal", help="Filter by signal_label (e.g. bullish-watch)."
+    ),
+) -> None:
+    """Show the latest stored rankings (highest score first)."""
+    asyncio.run(_ranking_show_async(limit=limit, sector=sector, signal=signal))
+
+
+async def _ranking_show_async(
+    *, limit: int, sector: str | None, signal: str | None
+) -> None:
+    from backend.db.repositories import ranking as ranking_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        rows = await ranking_repo.fetch_rankings(
+            session, limit=limit, sector=sector, signal=signal
+        )
+
+    title = "Rankings (latest)"
+    if sector:
+        title += f" — {sector}"
+    if signal:
+        title += f" — {signal}"
+    table = Table(title=title)
+    table.add_column("rank", justify="right")
+    table.add_column("symbol")
+    table.add_column("sector")
+    table.add_column("score", justify="right")
+    table.add_column("label", style="bold")
+    table.add_column("f_score", justify="right")
+    table.add_column("t_score", justify="right")
+    table.add_column("m_score", justify="right")
+    table.add_column("risk_penalty", justify="right")
+    for n, (r, sym, sec) in enumerate(rows, start=1):
+        table.add_row(
+            str(n),
+            sym or r.isin,
+            sec or "—",
+            _score(r.composite_score),
+            r.signal_label,
+            _score(r.fundamental_score),
+            _score(r.technical_score),
+            _score(r.macro_score),
+            _score(r.risk_penalty),
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no rankings — run 'ranking run --all' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# report
+# -----------------------------------------------------------------------------
+def _parse_report_date(value: str | None) -> date | None:
+    from datetime import date as _date
+
+    from backend.db.repositories._helpers import today_ist
+
+    if value is None:
+        return None
+    if value.lower() == "today":
+        return today_ist()
+    return _date.fromisoformat(value)
+
+
+@report_app.command("run")
+def report_run(
+    date_: str | None = typer.Option(None, "--date", help="Report date (ISO|today)."),
+    out: str | None = typer.Option(
+        None, "--out", help="Obsidian dir to write {date}.md (real run only)."
+    ),
+    dry_run: bool = typer.Option(
+        False,
+        "--dry-run",
+        help="Assemble + print template with placeholders; no Ollama/DB/vault.",
+    ),
+) -> None:
+    """Generate the daily research note (LLM prose via Ollama qwen2.5:14b)."""
+    asyncio.run(
+        _report_run_async(as_of=_parse_report_date(date_), out=out, dry_run=dry_run)
+    )
+
+
+async def _report_run_async(
+    *, as_of: date | None, out: str | None, dry_run: bool
+) -> None:
+    import sys
+
+    from backend.agents.report import ReportAgent, word_count
+
+    log.info("cli.report.run.start", dry_run=dry_run, out=out)
+    body = await ReportAgent().run(as_of_date=as_of, out_dir=out, dry_run=dry_run)
+
+    if dry_run:
+        console.print(
+            "[dim]--- DRY RUN: template with placeholders, nothing written ---[/dim]"
+        )
+        sys.stdout.write(body + "\n")
+        return
+    console.print(
+        f"[green]Report generated[/green] — {word_count(body)} words"
+        + (f", written to {out}/" if out else "")
+    )
+
+
+@report_app.command("show")
+def report_show(
+    date_: str | None = typer.Option(
+        None, "--date", help="Print this report's body (ISO|today)."
+    ),
+    limit: int = typer.Option(5, "--limit", help="Rows when listing reports."),
+) -> None:
+    """List recent reports, or print one report's body with --date."""
+    asyncio.run(_report_show_async(date_=_parse_report_date(date_), limit=limit))
+
+
+async def _report_show_async(*, date_: date | None, limit: int) -> None:
+    import sys
+
+    from backend.db.repositories import report as report_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        if date_ is not None:
+            row = await report_repo.fetch_report(session, report_date=date_)
+            if row is None:
+                console.print(f"[yellow]no report for {date_.isoformat()}[/yellow]")
+                return
+            sys.stdout.write(row.body_md + "\n")
+            return
+        rows = await report_repo.fetch_reports(session, limit=limit)
+
+    table = Table(title="Daily reports")
+    table.add_column("report_date")
+    table.add_column("words", justify="right")
+    table.add_column("audit_passed")
+    table.add_column("macro_summary")
+    for r in rows:
+        table.add_row(
+            r.report_date.isoformat(),
+            str(r.word_count),
+            "yes" if r.audit_passed else "no",
+            (r.macro_summary or "")[:70],
+        )
+    console.print(table)
+    if not rows:
+        console.print("[yellow]no reports — run 'report run' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# auditor (Meta-Auditor)
+# -----------------------------------------------------------------------------
+@auditor_app.command("run")
+def auditor_run(
+    date_: str | None = typer.Option(None, "--date", help="Report date (ISO|today)."),
+    out: str | None = typer.Option(
+        "/vault/04_Reports/Audits", "--out", help="Obsidian dir for the audit log."
+    ),
+) -> None:
+    """Audit a daily report against the 5 rules; set audit_passed; write log."""
+    asyncio.run(_auditor_run_async(as_of=_parse_report_date(date_), out=out))
+
+
+def _print_audit(result: object, title: str) -> None:
+    from backend.agents.meta_auditor import AuditResult
+
+    assert isinstance(result, AuditResult)
+    table = Table(title=title)
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("passed", "yes" if result.passed else "no")
+    table.add_row("rules_checked", str(result.rules_checked))
+    table.add_row("rules_passed", str(result.rules_passed))
+    table.add_row("checked_at", result.checked_at.isoformat())
+    console.print(table)
+    if result.failures:
+        console.print("[red]Failures:[/red]")
+        for f in result.failures:
+            console.print(f"  - {f}")
+    else:
+        console.print("[green]All rules passed.[/green]")
+
+
+async def _auditor_run_async(*, as_of: date | None, out: str | None) -> None:
+    from backend.agents.meta_auditor import MetaAuditor
+
+    log.info("cli.auditor.run.start", out=out)
+    result = await MetaAuditor().run(report_date=as_of, out_dir=out)
+    _print_audit(result, "Audit — APPLIED (audit_passed updated)")
+
+
+@auditor_app.command("show")
+def auditor_show(
+    date_: str | None = typer.Option(None, "--date", help="Report date (ISO|today)."),
+) -> None:
+    """Re-run the 5 rules read-only and show the result (no DB write)."""
+    asyncio.run(_auditor_show_async(as_of=_parse_report_date(date_)))
+
+
+async def _auditor_show_async(*, as_of: date | None) -> None:
+    from backend.agents.meta_auditor import MetaAuditor
+
+    auditor = MetaAuditor()
+    target = as_of or await auditor._latest_report_date()
+    if target is None:
+        console.print("[yellow]no reports to audit[/yellow]")
+        return
+    result = await auditor.audit_report(target)
+    _print_audit(result, f"Audit (read-only) — {target.isoformat()}")
 
 
 # -----------------------------------------------------------------------------
