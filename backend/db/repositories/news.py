@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -45,3 +45,35 @@ async def fetch(
         stmt = stmt.where(NewsArticle.isin == isin)
     stmt = stmt.order_by(NewsArticle.published_at.desc().nullslast()).limit(limit)
     return list((await session.execute(stmt)).scalars().all())
+
+
+async def fetch_unscored(
+    session: AsyncSession,
+    *,
+    isin: str | None = None,
+    limit: int = 32,
+) -> list[NewsArticle]:
+    """Rows with no sentiment yet (sentiment_label IS NULL), oldest first."""
+    stmt = select(NewsArticle).where(NewsArticle.sentiment_label.is_(None))
+    if isin is not None:
+        stmt = stmt.where(NewsArticle.isin == isin)
+    stmt = stmt.order_by(NewsArticle.id).limit(limit)
+    return list((await session.execute(stmt)).scalars().all())
+
+
+async def update_sentiment(
+    session: AsyncSession, updates: Sequence[dict[str, Any]]
+) -> int:
+    """Write back sentiment_label + sentiment_score per article id."""
+    updated = 0
+    for u in updates:
+        result = await session.execute(
+            update(NewsArticle)
+            .where(NewsArticle.id == u["id"])
+            .values(
+                sentiment_label=u["sentiment_label"],
+                sentiment_score=u["sentiment_score"],
+            )
+        )
+        updated += result.rowcount or 0
+    return updated

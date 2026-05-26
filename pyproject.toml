@@ -25,6 +25,8 @@ dependencies = [
   "rich>=13.7",
   "yfinance>=0.2.40",
   "feedparser>=6.0",
+  "transformers>=4.44",
+  "torch>=2.2",
 ]
 
 [project.optional-dependencies]
