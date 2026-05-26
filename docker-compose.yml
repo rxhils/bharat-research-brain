@@ -1,6 +1,7 @@
 services:
   postgres:
-    image: pgvector/pgvector:pg16
+    image: postgres:16
+    platform: linux/amd64
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-bharat}
@@ -17,7 +18,8 @@ services:
       retries: 10
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-bookworm
+    platform: linux/amd64
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -33,6 +35,7 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
+    platform: linux/amd64
     restart: unless-stopped
     depends_on:
       postgres:
