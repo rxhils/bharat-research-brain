@@ -907,3 +907,36 @@ class DailyReport(Base):
     __table_args__ = (
         Index("idx_daily_reports_date", text("report_date DESC")),
     )
+
+
+class PipelineRun(Base):
+    """One nightly pipeline run (Chunk 4.6). One row per run_date, upserted.
+
+    `agents_run` is a JSONB array of {agent, status, duration_seconds, error}.
+    `status` is running/success/partial/failed/skipped.
+    """
+
+    __tablename__ = "pipeline_runs"
+
+    run_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    run_date: Mapped[date] = mapped_column(Date, nullable=False, unique=True)
+    started_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+    finished_at: Mapped[datetime | None] = mapped_column(TIMESTAMP(timezone=True))
+    status: Mapped[str] = mapped_column(String(12), nullable=False)
+    agents_run: Mapped[list[Any] | None] = mapped_column(JSONB)
+    total_duration_seconds: Mapped[int | None] = mapped_column(Integer)
+    error_message: Mapped[str | None] = mapped_column(Text)
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('running','success','partial','failed','skipped')",
+            name="pipeline_status_allowed",
+        ),
+        Index("idx_pipeline_runs_started", text("started_at DESC")),
+    )

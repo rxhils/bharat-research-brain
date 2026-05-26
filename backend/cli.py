@@ -68,6 +68,8 @@ report_app = typer.Typer(help="Report agent commands", no_args_is_help=True)
 app.add_typer(report_app, name="report")
 auditor_app = typer.Typer(help="Meta-Auditor commands", no_args_is_help=True)
 app.add_typer(auditor_app, name="auditor")
+pipeline_app = typer.Typer(help="Nightly pipeline commands", no_args_is_help=True)
+app.add_typer(pipeline_app, name="pipeline")
 
 
 # -----------------------------------------------------------------------------
@@ -2397,6 +2399,100 @@ async def _auditor_show_async(*, as_of: date | None) -> None:
         return
     result = await auditor.audit_report(target)
     _print_audit(result, f"Audit (read-only) — {target.isoformat()}")
+
+
+# -----------------------------------------------------------------------------
+# pipeline (nightly scheduler)
+# -----------------------------------------------------------------------------
+@pipeline_app.command("run")
+def pipeline_run(
+    date_: str | None = typer.Option(None, "--date", help="Run date (ISO|today)."),
+    vault: str | None = typer.Option(
+        None, "--vault", help="Vault dir for report/audit/notes (else $VAULT_PATH)."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Print the agent sequence; run nothing."
+    ),
+) -> None:
+    """Run the full nightly agent pipeline once (sequential, failure-isolated)."""
+    asyncio.run(
+        _pipeline_run_async(
+            as_of=_parse_report_date(date_),
+            vault=vault or os.getenv("VAULT_PATH"),
+            dry_run=dry_run,
+        )
+    )
+
+
+async def _pipeline_run_async(
+    *, as_of: date | None, vault: str | None, dry_run: bool
+) -> None:
+    from backend.orchestration.scheduler import PipelineScheduler
+
+    log.info("cli.pipeline.run.start", dry_run=dry_run, vault=vault)
+    if not dry_run:
+        console.print("[dim]Running full pipeline — 5-10 min for 507 stocks...[/dim]")
+    result = await PipelineScheduler().run_pipeline(
+        run_date=as_of, vault_dir=vault, dry_run=dry_run
+    )
+
+    title = "Pipeline " + ("DRY RUN — planned sequence" if dry_run else result.status.upper())
+    table = Table(title=f"{title}  ·  {result.run_date.isoformat()}")
+    table.add_column("#", justify="right")
+    table.add_column("agent")
+    table.add_column("status", style="bold")
+    table.add_column("duration_s", justify="right")
+    for n, a in enumerate(result.agents_run, start=1):
+        table.add_row(
+            str(n),
+            str(a.get("agent")),
+            str(a.get("status")),
+            f"{a.get('duration_seconds', 0)}" if not dry_run else "—",
+        )
+    console.print(table)
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing executed or written.[/dim]")
+        return
+    console.print(
+        f"[bold]status:[/bold] {result.status} · "
+        f"total {result.total_duration_seconds}s"
+    )
+    if result.error_message:
+        console.print(f"[yellow]errors:[/yellow] {result.error_message}")
+
+
+@pipeline_app.command("status")
+def pipeline_status(
+    limit: int = typer.Option(10, "--limit", help="Recent runs to show."),
+) -> None:
+    """Show recent pipeline runs with status + duration."""
+    asyncio.run(_pipeline_status_async(limit=limit))
+
+
+async def _pipeline_status_async(*, limit: int) -> None:
+    from backend.db.repositories import pipeline as pipeline_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        runs = await pipeline_repo.fetch_runs(session, limit=limit)
+
+    table = Table(title="Pipeline runs")
+    table.add_column("run_date")
+    table.add_column("status", style="bold")
+    table.add_column("duration_s", justify="right")
+    table.add_column("agents", justify="right")
+    table.add_column("started_at")
+    for r in runs:
+        table.add_row(
+            r.run_date.isoformat(),
+            r.status,
+            str(r.total_duration_seconds if r.total_duration_seconds is not None else "—"),
+            str(len(r.agents_run) if r.agents_run else 0),
+            r.started_at.strftime("%Y-%m-%d %H:%M") if r.started_at else "—",
+        )
+    console.print(table)
+    if not runs:
+        console.print("[yellow]no pipeline runs — run 'pipeline run' first[/yellow]")
 
 
 # -----------------------------------------------------------------------------
