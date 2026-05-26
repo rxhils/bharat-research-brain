@@ -16,6 +16,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from typing import Any
 
 import structlog
 
@@ -41,6 +42,17 @@ class YFinanceClient:
         self, yf_symbol: str, *, start: date, end: date
     ) -> tuple[list[RawSplit], list[RawDividend]]:
         return await asyncio.to_thread(self._fetch_sync, yf_symbol, start, end)
+
+    async def fetch_info(self, yf_symbol: str) -> dict[str, Any]:
+        """The yfinance `.info` dict for one ticker (fundamentals snapshot)."""
+        return await asyncio.to_thread(self._fetch_info_sync, yf_symbol)
+
+    @staticmethod
+    def _fetch_info_sync(yf_symbol: str) -> dict[str, Any]:
+        import yfinance as yf  # lazy: keeps module importable without the dep
+
+        info = yf.Ticker(yf_symbol).info
+        return dict(info) if info else {}
 
     @staticmethod
     def _fetch_sync(

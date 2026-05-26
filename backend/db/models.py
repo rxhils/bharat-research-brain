@@ -638,3 +638,115 @@ class NewsArticle(Base):
         Index("idx_news_isin_published", "isin", text("published_at DESC")),
         Index("idx_news_published", text("published_at DESC")),
     )
+
+
+class FundamentalSignal(Base):
+    """Weekly fundamentals snapshot per stock, sourced from yfinance (Chunk 3.4).
+
+    One row per (isin, fetched_date), upserted on re-run. Values are stored raw
+    as yfinance returns them: ratios are fractions (ROE 0.094 = 9.4%),
+    `market_cap` is in INR. `promoter_holding` is not exposed by yfinance and is
+    always NULL (documented gap). Drives `stocks.mcap_category` classification.
+    """
+
+    __tablename__ = "fundamental_signals"
+
+    isin: Mapped[str] = mapped_column(
+        String(12),
+        ForeignKey("stocks.isin", ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    fetched_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    pe_ratio: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    pb_ratio: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    roe: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    roce: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    debt_to_equity: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    revenue_growth: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    earnings_growth: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    profit_margin: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    market_cap: Mapped[int | None] = mapped_column(BigInteger)
+    dividend_yield: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    promoter_holding: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    fifty_two_week_high: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    fifty_two_week_low: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    avg_volume_30d: Mapped[int | None] = mapped_column(BigInteger)
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'yfinance'")
+    )
+    fetched_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        Index("idx_fundamentals_isin_date", "isin", text("fetched_date DESC")),
+    )
+
+
+class SectorSignal(Base):
+    """Daily sector-level momentum signals (Chunk 3.5).
+
+    One row per (sector, computed_date), upserted on re-run. Computed purely by
+    aggregating prices_eod_adjusted + technical_signals + news_articles — no
+    external source. `signal` is leading / neutral / lagging.
+    """
+
+    __tablename__ = "sector_signals"
+
+    sector: Mapped[str] = mapped_column(String(80), primary_key=True)
+    computed_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    stock_count: Mapped[int] = mapped_column(Integer, nullable=False)
+    avg_rsi_14: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    pct_above_ema200: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    momentum_7d: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    momentum_30d: Mapped[Decimal | None] = mapped_column(Numeric(10, 4))
+    avg_sentiment_score: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    bull_article_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    signal: Mapped[str] = mapped_column(String(8), nullable=False)
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'sector_agent'")
+    )
+    computed_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "signal IN ('leading','neutral','lagging')",
+            name="sector_signal_allowed",
+        ),
+        Index("idx_sector_signals_date", text("computed_date DESC")),
+    )
+
+
+class FiiDiiFlow(Base):
+    """Daily market-wide institutional flows (Chunk 3.6).
+
+    SOURCE: NSDL/SEBI FPI figures, ingested from a locally-downloaded file
+    (NSE website scraping is barred by CLAUDE.md §2 rule 5 / §12). Because
+    NSDL/SEBI publish FPI (not the NSE FII/DII cash pair): `fii_net_cr` holds
+    FPI net equity (the FII proxy) and `dii_net_cr` is nullable (not published
+    by this source). One row per flow_date, upserted on re-run.
+    """
+
+    __tablename__ = "fii_dii_flows"
+
+    flow_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    fii_net_cr: Mapped[Decimal] = mapped_column(Numeric(14, 2), nullable=False)
+    dii_net_cr: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    fii_5d_sum: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    dii_5d_sum: Mapped[Decimal | None] = mapped_column(Numeric(14, 2))
+    fii_signal: Mapped[str] = mapped_column(String(12), nullable=False)
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'nsdl_fpi'")
+    )
+    fetched_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "fii_signal IN ('strong_buy','buy','neutral','sell','strong_sell')",
+            name="fii_signal_allowed",
+        ),
+    )
