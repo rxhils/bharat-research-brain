@@ -24,6 +24,7 @@ configure_logging(os.getenv("LOG_FORMAT", "console"))
 import structlog  # noqa: E402
 import typer  # noqa: E402
 from rich.console import Console  # noqa: E402
+from rich.panel import Panel  # noqa: E402
 from rich.table import Table  # noqa: E402
 
 log = structlog.get_logger()
@@ -2116,6 +2117,414 @@ async def _promoter_show_async(
         console.print(
             "[yellow]no promoter rows — run 'promoter ingest --file <xml>' first[/yellow]"
         )
+
+
+# -----------------------------------------------------------------------------
+# analyze — ticker deep-dive (read-only)
+# -----------------------------------------------------------------------------
+_SIGNAL_COLOR = {
+    "bullish-watch": "green",
+    "needs-confirmation": "yellow",
+    "neutral": "white",
+    "cautious": "dark_orange",
+    "avoid": "red",
+}
+_REGIME_IMPLICATION = {
+    "risk-off": "broad market defensive",
+    "risk-on": "broad market constructive",
+    "neutral": "no strong market tilt",
+}
+# Composite weights (mirror ranking.compute_score) for impact ordering.
+_W_FUND, _W_TECH, _W_MACRO = 0.40, 0.35, 0.25
+
+
+def _az_f(value: object, *, suffix: str = "", nd: int = 2) -> str:
+    return f"{float(value):.{nd}f}{suffix}" if value is not None else "data pending"
+
+
+def _az_rsi_markup(rsi: object) -> str:
+    if rsi is None:
+        return "data pending"
+    r = float(rsi)
+    if r < 30 or r > 80:
+        color = "red"
+    elif r < 50 or r > 70:
+        color = "dark_orange"
+    else:
+        color = "green"
+    return f"[{color}]{r:.1f}[/{color}]"
+
+
+def _az_rsi_zone(rsi: float) -> int:
+    if rsi < 30:
+        return 20
+    if rsi < 45:
+        return 40
+    if rsi < 55:
+        return 50
+    if rsi < 65:
+        return 70
+    if rsi < 75:
+        return 60
+    return 30
+
+
+def _az_near_low(d: object) -> bool:
+    lo = getattr(d, "fifty_two_week_low", None)
+    cp = getattr(d, "current_price", None)
+    return cp is not None and lo is not None and float(lo) > 0 and float(cp) / float(lo) <= 1.05
+
+
+def _az_improvements(d: object) -> list[tuple[str, float]]:
+    """Score-improvement candidates (text, composite-impact), highest impact first."""
+    out: list[tuple[str, float]] = []
+    rsi = getattr(d, "rsi_14", None)
+    if rsi is not None and float(rsi) < 50:
+        delta = 70 - _az_rsi_zone(float(rsi))
+        txt = f"RSI above 55 (now {float(rsi):.0f}) adds ~+{delta} pts to technical"
+        out.append((txt, delta * _W_TECH))
+    if getattr(d, "price_vs_ema200", None) == "below":
+        out.append(("Price above EMA200 adds +15 pts (technical)", 15 * _W_TECH))
+    if getattr(d, "ema_cross", None) == "death":
+        out.append(("A golden cross adds ~+20 pts (technical)", 20 * _W_TECH))
+    if getattr(d, "q_profit_direction", None) == "declining":
+        out.append(("Quarterly profit trend reversal adds +8 pts (fundamental)", 16 * _W_FUND))
+    if getattr(d, "fcf_positive", None) is False:
+        out.append(("Turning FCF positive adds ~+15 pts (fundamental)", 15 * _W_FUND))
+    icr = getattr(d, "interest_coverage", None)
+    if icr is not None and float(icr) < 2:
+        out.append(("Interest coverage above 2.0 removes a -10 fundamental penalty", 10 * _W_FUND))
+    if getattr(d, "regime", None) == "risk-off":
+        out.append(("Regime shift to risk-on adds ~8 pts to macro score", 20 * _W_MACRO))
+    if _az_near_low(d):
+        out.append(("Moving off the 52-week low removes a -8 technical penalty", 8 * _W_TECH))
+    out.sort(key=lambda x: x[1], reverse=True)
+    return out
+
+
+def _az_key_risks(d: object) -> list[str]:
+    """Top-3 risks in spec priority order, only those that actually apply."""
+    risks: list[str] = []
+    if getattr(d, "regime", None) == "risk-off":
+        risks.append("Regime risk-off - broad market defensive")
+    if getattr(d, "price_vs_ema200", None) == "below":
+        risks.append("Below 200-day EMA - no trend confirmation")
+    if getattr(d, "q_profit_direction", None) == "declining":
+        risks.append("Quarterly profits declining")
+    if getattr(d, "volatility_flag", None) == "high":
+        atr = getattr(d, "atr_pct", None)
+        msg = f"High volatility - ATR {float(atr):.1f}%" if atr is not None else "High volatility"
+        risks.append(msg)
+    if _az_near_low(d):
+        risks.append("Near 52-week low - potential value trap")
+    risks.append("No earnings date - results timing unknown")  # always (calendar not built)
+    sent = getattr(d, "avg_sentiment", None)
+    if sent is not None and float(sent) < -0.2:
+        risks.append("News sentiment negative")
+    if getattr(d, "pledge_risk_flag", None) in ("high", "critical"):
+        risks.append("Promoter pledging risk")
+    return risks[:3]
+
+
+def _az_aligned(d: object) -> int:
+    sent = getattr(d, "avg_sentiment", None)
+    t = getattr(d, "technical_score", None)
+    f = getattr(d, "fundamental_score", None)
+    m = getattr(d, "macro_score", None)
+    rk = getattr(d, "risk_score", None)
+    flags = [
+        t is not None and t >= 60,
+        f is not None and f >= 65,
+        m is not None and m >= 55,
+        rk is not None and rk <= 50,
+        sent is not None and float(sent) > 0.2,
+    ]
+    return sum(1 for f in flags if f)
+
+
+def _az_setup_quality(score: object) -> str:
+    if score is None:
+        return "Unrated"
+    s = float(score)
+    if s >= 75:
+        return "Strong"
+    if s >= 55:
+        return "Moderate"
+    if s >= 40:
+        return "Mixed"
+    if s >= 25:
+        return "Weak"
+    return "Poor"
+
+
+def _az_conviction(n: int) -> str:
+    return {5: "Very high", 4: "High", 3: "Moderate", 2: "Low"}.get(n, "Very low")
+
+
+def _az_momentum(d: object) -> str:
+    rsi = getattr(d, "rsi_14", None)
+    if rsi is None:
+        return "neutral"
+    r = float(rsi)
+    if r >= 55 and getattr(d, "price_vs_ema200", None) == "above":
+        return "building"
+    if r < 45 or getattr(d, "price_vs_ema200", None) == "below":
+        return "fading"
+    return "neutral"
+
+
+def _az_fund_strength(d: object) -> str:
+    fs = getattr(d, "fundamental_score", None)
+    if fs is None:
+        return "unrated"
+    s = float(fs)
+    return "strong" if s >= 65 else "moderate" if s >= 45 else "weak"
+
+
+def _az_fcf_status(d: object) -> str:
+    fcf = getattr(d, "fcf_positive", None)
+    if fcf is None:
+        return "FCF data pending"
+    return "FCF positive" if fcf else "FCF negative"
+
+
+def _az_debt_status(d: object) -> str:
+    de = getattr(d, "debt_to_equity", None)
+    if de is None:
+        return "debt data pending"
+    ratio = float(de) / 100
+    return "low debt" if ratio < 0.5 else "moderate debt" if ratio <= 1.5 else "high debt"
+
+
+@app.command("analyze")
+def analyze(
+    symbol: str | None = typer.Argument(None, help="NSE symbol, e.g. RELIANCE."),
+    isin: str | None = typer.Option(None, "--isin", help="ISIN, e.g. INE002A01018."),
+) -> None:
+    """Full read-only research deep-dive for one ticker (no fetches, no writes)."""
+    if symbol is None and isin is None:
+        console.print("[red]pass a SYMBOL or --isin[/red]")
+        raise typer.Exit(code=1)
+    asyncio.run(_analyze_async(symbol=symbol, isin=isin))
+
+
+async def _analyze_async(*, symbol: str | None, isin: str | None) -> None:
+    from backend.db.repositories import analyze as analyze_repo
+    from backend.db.repositories._helpers import today_ist
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        resolved = await analyze_repo.resolve_isin(session, symbol=symbol, isin=isin)
+        if resolved is None:
+            if symbol is not None:
+                matches = await analyze_repo.fuzzy_symbol_matches(session, symbol)
+                if matches:
+                    sugg = ", ".join(s for s, _ in matches[:3])
+                    console.print(
+                        f"[yellow]{symbol} not found. Did you mean {sugg}?[/yellow]"
+                    )
+                else:
+                    console.print(f"[red]{symbol} not found and no close matches.[/red]")
+            else:
+                console.print(f"[red]ISIN {isin} not found.[/red]")
+            raise typer.Exit(code=1)
+        data = await analyze_repo.fetch_analysis(session, resolved)
+
+    if data is None:  # resolved exists, so this is defensive only
+        console.print("[red]no data for that stock[/red]")
+        raise typer.Exit(code=1)
+    _render_analysis(data, today_ist())
+
+
+def _render_analysis(d: object, as_of: object) -> None:  # noqa: PLR0915 - linear formatter
+    from backend.db.repositories.analyze import AnalysisData
+
+    assert isinstance(d, AnalysisData)
+    sym = d.nse_symbol or d.isin
+
+    # 1. Header
+    label = d.signal_label or "unrated"
+    label_c = _SIGNAL_COLOR.get(label, "white")
+    score_s = f"{float(d.composite_score):.2f}" if d.composite_score is not None else "data pending"
+    updated = (
+        d.ranking_computed_at.strftime("%Y-%m-%d %H:%M")
+        if d.ranking_computed_at is not None
+        else "data pending"
+    )
+    header = (
+        f"[bold]{d.company_name}[/bold]  ({sym})\n"
+        f"ISIN {d.isin}  ·  sector: {d.sector or 'data pending'}  ·  "
+        f"cap: {d.mcap_category or 'data pending'}\n"
+        f"Composite [bold]{score_s}[/bold]/100  ·  "
+        f"signal: [{label_c}]{label}[/{label_c}]\n"
+        f"[dim]last updated: {updated}[/dim]"
+    )
+    console.print(Panel(header, title="Analysis", border_style=label_c))
+
+    # 2. Technical
+    t_score = f"{float(d.technical_score):.0f}" if d.technical_score is not None else "—"
+    prox_high = (
+        f"{(1 - float(d.current_price) / float(d.fifty_two_week_high)) * 100:.1f}% below 52w high"
+        if d.current_price is not None and d.fifty_two_week_high
+        else "data pending"
+    )
+    vol_trend = "data pending"
+    if d.current_volume is not None and d.avg_volume_30d:
+        ratio = d.current_volume / d.avg_volume_30d
+        vol_trend = f"{ratio:.2f}x 30d avg ({d.current_volume:,} vs {d.avg_volume_30d:,})"
+    mh = d.macd_hist
+    macd_dir = "positive" if mh and mh > 0 else "negative" if mh and mh < 0 else "flat/pending"
+    tech = (
+        f"RSI: {_az_rsi_markup(d.rsi_14)}\n"
+        f"EMA cross: {d.ema_cross or 'data pending'}  ·  "
+        f"price vs EMA200: {d.price_vs_ema200 or 'data pending'}\n"
+        f"MACD hist: {_az_f(d.macd_hist, nd=4)} ({macd_dir})\n"
+        f"Volume: {vol_trend}\n"
+        f"52w high/low: {_az_f(d.fifty_two_week_high)} / {_az_f(d.fifty_two_week_low)}  ·  "
+        f"current: {_az_f(d.current_price)}\n"
+        f"Distance from 52w high: {prox_high}"
+    )
+    console.print(Panel(tech, title=f"Technical ({t_score}/100)", border_style="cyan"))
+
+    # 3. Fundamental
+    f_score = f"{float(d.fundamental_score):.0f}" if d.fundamental_score is not None else "—"
+    pe_rel = ""
+    if d.pe_ratio is not None and d.sector_median_pe:
+        rel = float(d.pe_ratio) / float(d.sector_median_pe)
+        pe_rel = f"  ({rel:.2f}x sector median {float(d.sector_median_pe):.1f})"
+    roe_s = f"{float(d.roe) * 100:.1f}%" if d.roe is not None else "data pending"
+    rg_s = (
+        f"{float(d.revenue_growth) * 100:.1f}%"
+        if d.revenue_growth is not None
+        else "data pending"
+    )
+    de_s = (
+        f"{float(d.debt_to_equity) / 100:.2f}"
+        if d.debt_to_equity is not None
+        else "data pending"
+    )
+    fcf_s = (
+        f"{d.free_cash_flow / 1e7:,.0f} Cr ({_az_fcf_status(d)})"
+        if d.free_cash_flow is not None
+        else _az_fcf_status(d)
+    )
+    div_years = (
+        d.dividend_consecutive_years
+        if d.dividend_consecutive_years is not None
+        else "data pending"
+    )
+    fund = (
+        f"PE: {_az_f(d.pe_ratio)}{pe_rel}\n"
+        f"ROE: {roe_s}  ·  D/E: {de_s}  ·  revenue growth: {rg_s}\n"
+        f"FCF: {fcf_s}\n"
+        f"Quarterly profit direction: {d.q_profit_direction or 'data pending'}\n"
+        f"Dividend consecutive years: {div_years}\n"
+        f"Interest coverage: {_az_f(d.interest_coverage)}"
+    )
+    console.print(Panel(fund, title=f"Fundamental ({f_score}/100)", border_style="cyan"))
+
+    # 4. Macro
+    m_score = f"{float(d.macro_score):.0f}" if d.macro_score is not None else "—"
+    vix = (
+        f"{float(d.vix_value):.1f} ({d.vix_signal})"
+        if d.vix_value is not None
+        else "data pending"
+    )
+    macro = (
+        f"Sector signal: {d.sector_signal or 'data pending'}  ·  "
+        f"7d momentum: {_az_f(d.sector_momentum_7d, suffix='%')}\n"
+        f"FII signal: {d.fii_signal or 'data pending'}\n"
+        f"Macro regime: {d.regime or 'data pending'}  ·  India VIX: {vix}"
+    )
+    console.print(Panel(macro, title=f"Macro ({m_score}/100)", border_style="cyan"))
+
+    # 5. Risk
+    spike_s = "yes" if d.news_spike else "no" if d.news_spike is not None else "data pending"
+    pledge_s = d.pledge_risk_flag or "data pending"
+    if d.promoter_pledged_pct is not None:
+        pledge_s += f" ({_az_f(d.promoter_pledged_pct, suffix='%')})"
+    risk = (
+        f"Risk score: {_az_f(d.risk_score, nd=0)}/100  ·  "
+        f"volatility: {d.volatility_flag or 'data pending'}  ·  ATR%: {_az_f(d.atr_pct)}\n"
+        f"News spike: {spike_s}\n"
+        f"Promoter pledge: {pledge_s}"
+    )
+    console.print(Panel(risk, title="Risk", border_style="magenta"))
+
+    # 6. Sentiment
+    sent_avg = f"{float(d.avg_sentiment):+.3f}" if d.avg_sentiment is not None else "data pending"
+    sent_lbl = "data pending"
+    if d.avg_sentiment is not None:
+        a = float(d.avg_sentiment)
+        sent_lbl = "positive" if a > 0.2 else "negative" if a < -0.2 else "neutral"
+    sentiment = (
+        f"Matched articles: {d.news_count}\n"
+        f"Average score: {sent_avg}  ·  label: {sent_lbl}"
+        if d.news_count
+        else "no scored company news"
+    )
+    console.print(Panel(sentiment, title="Sentiment", border_style="blue"))
+
+    # 7. What would improve this score (top 3)
+    improvements = _az_improvements(d)
+    if improvements:
+        body = "\n".join(f"• {t}" for t, _ in improvements[:3])
+    else:
+        body = "Score is already strong across components — no high-impact levers."
+    console.print(Panel(body, title="What would improve this score", border_style="green"))
+
+    # 8. Recent news
+    news_table = Table(title="Recent news", show_header=True)
+    news_table.add_column("published")
+    news_table.add_column("sentiment", style="bold")
+    news_table.add_column("headline")
+    for item in d.recent_news:
+        news_table.add_row(
+            item.published_at.strftime("%Y-%m-%d %H:%M") if item.published_at else "—",
+            item.sentiment_label or "—",
+            item.headline[:80],
+        )
+    if d.recent_news:
+        console.print(news_table)
+    else:
+        console.print(Panel("no recent company news", title="Recent news", border_style="blue"))
+
+    # 9. Footnote
+    console.print(f"[dim]Data as of {as_of}. Not investment advice.[/dim]")
+
+    # 10. Research verdict
+    aligned = _az_aligned(d)
+    quality = _az_setup_quality(d.composite_score)
+    conviction = _az_conviction(aligned)
+    score_v = f"{float(d.composite_score):.0f}" if d.composite_score is not None else "—"
+    roe_v = f"{float(d.roe) * 100:.1f}%" if d.roe is not None else "ROE n/a"
+    rsi_v = f"{float(d.rsi_14):.0f}" if d.rsi_14 is not None else "n/a"
+    mom_v = f"{float(d.sector_momentum_7d):+.1f}%" if d.sector_momentum_7d is not None else "n/a"
+    regime_impl = _REGIME_IMPLICATION.get(d.regime or "", "market regime unknown")
+    paragraph = (
+        f"{sym} scores {score_v}/100 ({label}). "
+        f"Fundamentals are {_az_fund_strength(d)} "
+        f"(ROE {roe_v}, {_az_fcf_status(d)}, {_az_debt_status(d)}). "
+        f"Technical momentum is {_az_momentum(d)} "
+        f"(RSI {rsi_v}, {d.price_vs_ema200 or 'unknown'} EMA200). "
+        f"Sector ({d.sector or 'n/a'}) is {d.sector_signal or 'unrated'} "
+        f"with {mom_v} 7-day momentum. "
+        f"Macro regime is {d.regime or 'unknown'} - {regime_impl}. "
+        f"{aligned}/5 signals are aligned."
+    )
+    risks = _az_key_risks(d)
+    watch = _az_improvements(d)[:2]
+    verdict_body = (
+        f"Setup quality: [bold]{quality}[/bold]  ·  "
+        f"signals aligned: {aligned}/5  ·  conviction: [bold]{conviction}[/bold]\n\n"
+        f"{paragraph}\n\n"
+        f"[bold]Key risks:[/bold]\n" + "\n".join(f"• {r}" for r in risks) + "\n\n"
+        "[bold]What to watch:[/bold]\n"
+        + ("\n".join(f"• {t}" for t, _ in watch) if watch else "• Setup is already strong")
+        + "\n\n[dim]Research output only. Not investment advice. "
+        "Not registered with SEBI as an investment adviser.[/dim]"
+    )
+    console.print(Panel(verdict_body, title="Research verdict", border_style=label_c))
 
 
 # -----------------------------------------------------------------------------
