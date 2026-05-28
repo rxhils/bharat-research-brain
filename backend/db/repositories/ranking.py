@@ -7,6 +7,7 @@ ON CONFLICT (isin, computed_date) DO UPDATE.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
@@ -107,28 +108,50 @@ async def fetch_technicals(
     return out
 
 
-async def fetch_sector_median_pe(session: AsyncSession) -> dict[str, Decimal]:
-    """Median trailing PE per sector from the latest fundamentals snapshot."""
+@dataclass(frozen=True)
+class SectorMedians:
+    """Per-sector median fundamentals from the latest snapshot. `median_roe` /
+    `median_de` are None when a sector has no non-null values for them."""
+
+    sector: str
+    median_pe: Decimal
+    median_roe: Decimal | None
+    median_de: Decimal | None
+
+
+async def fetch_sector_medians(session: AsyncSession) -> dict[str, SectorMedians]:
+    """Median trailing PE / ROE / debt-to-equity per sector from the latest
+    fundamentals snapshot. PE filtered to (0, 200) to drop nulls and outliers."""
     latest_date = select(func.max(FundamentalSignal.fetched_date)).scalar_subquery()
-    median = func.percentile_cont(0.5).within_group(
+    median_pe = func.percentile_cont(0.5).within_group(
         FundamentalSignal.pe_ratio.asc()
     )
+    median_roe = func.percentile_cont(0.5).within_group(FundamentalSignal.roe.asc())
+    median_de = func.percentile_cont(0.5).within_group(
+        FundamentalSignal.debt_to_equity.asc()
+    )
     stmt = (
-        select(Stock.sector, median)
+        select(Stock.sector, median_pe, median_roe, median_de)
         .join(FundamentalSignal, FundamentalSignal.isin == Stock.isin)
         .where(
             FundamentalSignal.fetched_date == latest_date,
-            FundamentalSignal.pe_ratio.is_not(None),
             FundamentalSignal.pe_ratio > 0,
+            FundamentalSignal.pe_ratio < 200,
             Stock.sector.is_not(None),
         )
         .group_by(Stock.sector)
     )
-    return {
-        sector: Decimal(str(m))
-        for sector, m in (await session.execute(stmt)).all()
-        if m is not None
-    }
+    out: dict[str, SectorMedians] = {}
+    for sector, m_pe, m_roe, m_de in (await session.execute(stmt)).all():
+        if m_pe is None:
+            continue
+        out[sector] = SectorMedians(
+            sector=sector,
+            median_pe=Decimal(str(m_pe)),
+            median_roe=Decimal(str(m_roe)) if m_roe is not None else None,
+            median_de=Decimal(str(m_de)) if m_de is not None else None,
+        )
+    return out
 
 
 async def fetch_isin_sectors(session: AsyncSession) -> dict[str, str | None]:

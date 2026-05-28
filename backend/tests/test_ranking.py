@@ -19,6 +19,7 @@ from backend.agents.ranking import (
     score_fundamental,
     score_macro,
     score_technical,
+    sector_bonus,
     sentiment_adjustment,
     signal_label,
 )
@@ -301,6 +302,69 @@ def test_fundamental_absolute_pe_fallback_when_no_sector() -> None:
     # no sector median -> absolute thresholds: pe 10 < 15 -> +20 = 70
     f = FundInputs(Decimal("10"), None, None, None)
     assert score_fundamental(f) == Decimal("70")
+
+
+# ---------------------------------------------------------------------------
+# fundamental_score — Chunk 4.11: sector-fair PE (hardcoded SECTOR_PE_FAIR) +
+# sector bonus. SECTOR_PE_FAIR takes priority over the DB sector median; its
+# ratio tiers are <0.7:+20, <0.9:+12, <1.1:+6, <1.3:+0, else:-8.
+# ---------------------------------------------------------------------------
+def test_banking_pe12_scores_higher_than_fmcg_pe12() -> None:
+    # Same PE 12 scores by sector context. Banking fair 15 -> 0.8 -> cheap
+    # (+12) -> 62. FMCG fair 40 -> 0.3 -> very cheap (+20) -> 70. PE 12 is a
+    # bigger bargain against FMCG's high fair multiple, so FMCG scores higher.
+    banking = FundInputs(Decimal("12"), None, None, None, sector="Banking")
+    fmcg = FundInputs(Decimal("12"), None, None, None, sector="FMCG")
+    assert score_fundamental(banking) == Decimal("62")
+    assert score_fundamental(fmcg) == Decimal("70")
+    assert score_fundamental(fmcg) > score_fundamental(banking)
+
+
+def test_pharma_pe28_is_fair_not_cheap() -> None:
+    # Pharma fair 30; PE 28 -> ratio 0.933 -> fair band (+6) -> 56. NOT the +10
+    # the absolute thresholds (15<=28<25? no, 25<=28<=40 -> +0) would give, and
+    # not a "cheap" reward — sector context says 28 is fair value for Pharma.
+    pharma = FundInputs(Decimal("28"), None, None, None, sector="Pharma")
+    assert score_fundamental(pharma) == Decimal("56")
+
+
+def test_fmcg_pe50_is_expensive() -> None:
+    # FMCG fair 40; PE 50 -> ratio 1.25 -> slightly rich band (+0) -> 50.
+    fmcg = FundInputs(Decimal("50"), None, None, None, sector="FMCG")
+    assert score_fundamental(fmcg) == Decimal("50")
+
+
+def test_sector_none_falls_back_to_absolute() -> None:
+    # sector='' (and no sector_median_pe) -> absolute thresholds unchanged:
+    # PE 10 < 15 -> +20 -> 70.
+    assert score_fundamental(
+        FundInputs(Decimal("10"), None, None, None)
+    ) == Decimal("70")
+    assert score_fundamental(
+        FundInputs(Decimal("10"), None, None, None, sector="")
+    ) == Decimal("70")
+
+
+def test_banking_roe_bonus() -> None:
+    # Banking/Financials: +5 when roe > 15%. IT/Technology: +5 when roe > 20%.
+    # roe arrives as a fraction (0.18 = 18%).
+    assert sector_bonus("Banking", Decimal("0.18"), None) == Decimal("5")
+    assert sector_bonus("Banking", Decimal("0.12"), None) == Decimal("0")
+    assert sector_bonus("Financials", Decimal("0.16"), None) == Decimal("5")
+    assert sector_bonus("IT", Decimal("0.22"), None) == Decimal("5")
+    assert sector_bonus("IT", Decimal("0.18"), None) == Decimal("0")
+    assert sector_bonus("Metals", Decimal("0.99"), None) == Decimal("0")
+
+
+def test_pharma_growth_bonus() -> None:
+    # Pharma/Healthcare: +5 when revenue_growth > 15%. FMCG/Consumer: +3 > 10%.
+    # revenue_growth arrives as a fraction (0.20 = 20%).
+    assert sector_bonus("Pharma", None, Decimal("0.20")) == Decimal("5")
+    assert sector_bonus("Pharma", None, Decimal("0.08")) == Decimal("0")
+    assert sector_bonus("Healthcare", None, Decimal("0.18")) == Decimal("5")
+    assert sector_bonus("FMCG", None, Decimal("0.12")) == Decimal("3")
+    assert sector_bonus("FMCG", None, Decimal("0.05")) == Decimal("0")
+    assert sector_bonus("Energy", None, Decimal("0.50")) == Decimal("0")
 
 
 # ---------------------------------------------------------------------------

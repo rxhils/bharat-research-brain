@@ -33,6 +33,29 @@ _W_FUND = Decimal("0.40")
 _W_TECH = Decimal("0.35")
 _W_MACRO = Decimal("0.25")
 
+# Sector-fair trailing PE (Chunk 4.11): the multiple the market normally awards
+# a sector. A PE is scored by its ratio to this fair value, not in absolute
+# terms — PE 25 is cheap for Pharma (fair 30) but expensive for Energy (fair 12).
+# Keys must match `stocks.sector` labels. When a stock's sector is absent here,
+# scoring falls back to the DB sector-median PE, then to absolute thresholds.
+SECTOR_PE_FAIR: dict[str, Decimal] = {
+    "Financials": Decimal("15"),
+    "Banking": Decimal("15"),
+    "Pharma": Decimal("30"),
+    "Healthcare": Decimal("28"),
+    "IT": Decimal("25"),
+    "Technology": Decimal("25"),
+    "FMCG": Decimal("40"),
+    "Consumer": Decimal("38"),
+    "Energy": Decimal("12"),
+    "Oil & Gas": Decimal("12"),
+    "Metals": Decimal("10"),
+    "Mining": Decimal("10"),
+    "Auto": Decimal("20"),
+    "Realty": Decimal("25"),
+    "Infra": Decimal("18"),
+}
+
 
 @dataclass(frozen=True)
 class TechInputs:
@@ -78,6 +101,8 @@ class FundInputs:
     interest_coverage: Decimal | None = None
     # Chunk 4.9 improvement 4: sector median PE for relative valuation.
     sector_median_pe: Decimal | None = None
+    # Chunk 4.11: sector label, keyed into SECTOR_PE_FAIR + sector_bonus.
+    sector: str = ""
 
 
 @dataclass(frozen=True)
@@ -213,7 +238,21 @@ def score_fundamental(f: FundInputs) -> Decimal:
     score = Decimal(50)
 
     if f.pe_ratio is not None:
-        if f.sector_median_pe is not None and f.sector_median_pe > 0:
+        fair_pe = SECTOR_PE_FAIR.get(f.sector)
+        if fair_pe is not None and fair_pe > 0:
+            # Sector-fair PE (Chunk 4.11): ratio to the sector's normal multiple.
+            ratio = f.pe_ratio / fair_pe
+            if ratio < Decimal("0.7"):
+                score += 20  # very cheap
+            elif ratio < Decimal("0.9"):
+                score += 12  # cheap
+            elif ratio < Decimal("1.1"):
+                score += 6  # fair value
+            elif ratio < Decimal("1.3"):
+                score += 0  # slightly rich
+            else:
+                score -= 8  # expensive
+        elif f.sector_median_pe is not None and f.sector_median_pe > 0:
             # Sector-relative PE (Chunk 4.9): cheap/expensive vs sector peers.
             pe_relative = f.pe_ratio / f.sector_median_pe
             if pe_relative < Decimal("0.7"):
@@ -288,7 +327,34 @@ def score_fundamental(f: FundInputs) -> Decimal:
     if f.interest_coverage is not None and f.interest_coverage < Decimal("2.0"):
         score -= 10  # debt risk
 
+    # Sector quality bonus (Chunk 4.11): reward the metric that matters most for
+    # each sector (bank profitability, pharma/FMCG growth, IT returns).
+    score += sector_bonus(f.sector, f.roe, f.revenue_growth)
+
     return _clamp(score)
+
+
+def sector_bonus(
+    sector: str, roe: Decimal | None, revenue_growth: Decimal | None
+) -> Decimal:
+    """Sector-specific quality bonus (Chunk 4.11), 0-5 pts.
+
+    `roe` and `revenue_growth` arrive as raw yfinance fractions (0.18 = 18%).
+    Banking/Financials: +5 if roe > 15%. IT/Technology: +5 if roe > 20%.
+    Pharma/Healthcare: +5 if revenue_growth > 15%. FMCG/Consumer: +3 if
+    revenue_growth > 10%. All other sectors: 0.
+    """
+    roe_pct = roe * 100 if roe is not None else None
+    rg_pct = revenue_growth * 100 if revenue_growth is not None else None
+    if sector in ("Banking", "Financials"):
+        return Decimal(5) if roe_pct is not None and roe_pct > 15 else Decimal(0)
+    if sector in ("IT", "Technology"):
+        return Decimal(5) if roe_pct is not None and roe_pct > 20 else Decimal(0)
+    if sector in ("Pharma", "Healthcare"):
+        return Decimal(5) if rg_pct is not None and rg_pct > 15 else Decimal(0)
+    if sector in ("FMCG", "Consumer"):
+        return Decimal(3) if rg_pct is not None and rg_pct > 10 else Decimal(0)
+    return Decimal(0)
 
 
 def score_macro(m: MacroInputs) -> Decimal:
@@ -407,7 +473,7 @@ class RankingAgent:
             sector_by_isin = await ranking_repo.fetch_sector_by_isin(session)
             fii_signal = await ranking_repo.fetch_fii_signal(session)
             regime = await ranking_repo.fetch_macro_regime(session)
-            sector_median_pe = await ranking_repo.fetch_sector_median_pe(session)
+            sector_medians = await ranking_repo.fetch_sector_medians(session)
             isin_sector = await ranking_repo.fetch_isin_sectors(session)
             vcp = await vcp_repo.fetch_latest(session)
 
@@ -429,10 +495,14 @@ class RankingAgent:
                     t, vcp_detected=v.vcp_detected, vcp_score=v.vcp_score
                 )
             sec = isin_sector.get(i)
-            smedian = sector_median_pe.get(sec) if sec else None
+            sm = sector_medians.get(sec) if sec else None
             ff = fund.get(i)
             base_f = FundInputs(*ff) if ff else FundInputs(None, None, None, None)
-            f = replace(base_f, sector_median_pe=smedian)
+            f = replace(
+                base_f,
+                sector=sec or "",
+                sector_median_pe=sm.median_pe if sm else None,
+            )
             m = MacroInputs(fii_signal, sector_by_isin.get(i), regime)
             rows.append(compute_score(i, t, f, m, sent.get(i), risk.get(i)))
         rows.sort(key=lambda r: r.composite_score, reverse=True)
