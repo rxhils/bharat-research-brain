@@ -134,9 +134,10 @@ is none. Set `DEEPSEEK_API_KEY` in `.env`.
 
 Always specify the model explicitly in code — never rely on a "default".
 
-FinBERT is a separate sentiment sidecar (`services/finbert/`, port 8765) — it was
-never an Ollama dependency. NOTE: the sidecar is **not yet implemented** (the
-directory holds only `.gitkeep`), so `sentiment` is non-functional until it is built.
+FinBERT runs in-process inside the backend container via
+`backend/services/finbert.py` (a lazy-loaded `transformers`/`torch` pipeline) — no
+sidecar, no port 8765. It was never an Ollama dependency. Run sentiment scoring with
+`docker compose run --rm backend python -m backend.cli sentiment run`.
 
 > Migration follow-up (open): embeddings (was `nomic-embed-text` / `bge-m3` via
 > Ollama) and optional vision (`qwen2.5vl:7b`) need a non-Ollama provider — DeepSeek's

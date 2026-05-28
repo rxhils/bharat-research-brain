@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     postgres_url: str
     redis_url: str = "redis://localhost:6379/0"
     ollama_host: str = "http://localhost:11434"
-    finbert_host: str = "http://localhost:8765"
     log_format: str = "console"
     tz: str = "Asia/Kolkata"
     live_feed_mode: str = "demo"  # 'demo' (synthetic ticks) | 'fyers' (broker WS)
