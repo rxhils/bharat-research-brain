@@ -986,3 +986,71 @@ class PromoterSignal(Base):
         ),
         Index("idx_promoter_isin_date", "isin", text("report_date DESC")),
     )
+
+
+class DeliverySignal(Base):
+    """Per-stock delivery-percentage snapshot (Build D).
+
+    File-ingested from an operator-downloaded Moneycontrol deliverables export
+    (no scraping — CLAUDE.md §2 rule 5). One row per (isin, trade_date), upserted
+    on re-ingest. High delivery % = lower intraday churn (an accumulation proxy).
+    """
+
+    __tablename__ = "delivery_signals"
+
+    isin: Mapped[str] = mapped_column(
+        String(12), ForeignKey("stocks.isin", ondelete="RESTRICT"), primary_key=True
+    )
+    trade_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    delivery_pct: Mapped[Decimal] = mapped_column(Numeric(8, 4), nullable=False)
+    avg_5d_delivery_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    traded_volume: Mapped[int | None] = mapped_column(BigInteger)
+    delivery_volume: Mapped[int | None] = mapped_column(BigInteger)
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'moneycontrol'")
+    )
+    fetched_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "delivery_pct >= 0 AND delivery_pct <= 100", name="delivery_pct_range"
+        ),
+        Index("idx_delivery_isin_date", "isin", text("trade_date DESC")),
+    )
+
+
+class EarningsCalendar(Base):
+    """Upcoming/announced quarterly result dates per stock (Build E).
+
+    File-ingested from an operator-downloaded Moneycontrol results-calendar export
+    (no scraping — CLAUDE.md §2 rule 5). One row per (isin, result_date), upserted.
+    Feeds the Risk Agent's `days_to_results` event-risk adjustment.
+    """
+
+    __tablename__ = "earnings_calendar"
+
+    isin: Mapped[str] = mapped_column(
+        String(12), ForeignKey("stocks.isin", ondelete="RESTRICT"), primary_key=True
+    )
+    result_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    quarter: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(
+        String(12), nullable=False, server_default=text("'upcoming'")
+    )
+    source: Mapped[str] = mapped_column(
+        String(16), nullable=False, server_default=text("'moneycontrol'")
+    )
+    fetched_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('upcoming','announced','confirmed')",
+            name="earnings_status_allowed",
+        ),
+        Index("idx_earnings_result_date", text("result_date")),
+        Index("idx_earnings_isin_date", "isin", text("result_date")),
+    )

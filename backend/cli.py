@@ -73,6 +73,10 @@ pipeline_app = typer.Typer(help="Nightly pipeline commands", no_args_is_help=Tru
 app.add_typer(pipeline_app, name="pipeline")
 promoter_app = typer.Typer(help="Promoter pledge agent commands", no_args_is_help=True)
 app.add_typer(promoter_app, name="promoter")
+delivery_app = typer.Typer(help="Delivery-% agent commands", no_args_is_help=True)
+app.add_typer(delivery_app, name="delivery")
+earnings_app = typer.Typer(help="Earnings-calendar agent commands", no_args_is_help=True)
+app.add_typer(earnings_app, name="earnings")
 
 
 # -----------------------------------------------------------------------------
@@ -1421,6 +1425,66 @@ async def _news_fetch_async(
         console.print("[dim]DRY RUN — nothing written to news_articles.[/dim]")
 
 
+@news_app.command("ingest-deals")
+def news_ingest_deals(
+    bulk_file: str | None = typer.Option(
+        None, "--bulk-file", help="Path to a downloaded NSE bulk-deal CSV file."
+    ),
+    block_file: str | None = typer.Option(
+        None, "--block-file", help="Path to a downloaded NSE block-deal CSV file."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Parse + match, print sample, write nothing."
+    ),
+) -> None:
+    """Ingest locally-downloaded NSE bulk/block-deal CSVs into news_articles.
+
+    NSE website scraping is barred by CLAUDE.md §2 rule 5 / §12 — the operator
+    downloads the published CSVs and this command parses them. A missing file is
+    non-fatal.
+    """
+    asyncio.run(
+        _news_ingest_deals_async(
+            bulk_file=bulk_file, block_file=block_file, dry_run=dry_run
+        )
+    )
+
+
+async def _news_ingest_deals_async(
+    *, bulk_file: str | None, block_file: str | None, dry_run: bool
+) -> None:
+    from backend.agents.news import NewsAgent
+
+    log.info(
+        "cli.news.ingest_deals.start",
+        bulk_file=bulk_file,
+        block_file=block_file,
+        dry_run=dry_run,
+    )
+    res = await NewsAgent().ingest_deals_csv(
+        bulk_path=bulk_file, block_path=block_file, dry_run=dry_run
+    )
+    table = Table(
+        title="NSE deal ingest" + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+    )
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("parsed", str(res.fetched))
+    table.add_row("after dedup", str(res.deduped))
+    table.add_row("matched to ISIN", str(res.matched))
+    table.add_row("inserted", str(res.inserted))
+    console.print(table)
+    if res.sample:
+        sample = Table(title="Sample (first 10)")
+        sample.add_column("isin")
+        sample.add_column("headline")
+        for headline, isin in res.sample:
+            sample.add_row(isin or "—", headline[:80])
+        console.print(sample)
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to news_articles.[/dim]")
+
+
 @news_app.command("show")
 def news_show(
     isin: str | None = typer.Option(None, "--isin", help="Filter by ISIN."),
@@ -1909,6 +1973,23 @@ def fii_run(
     Source is a locally-downloaded NSDL/SEBI FPI file — NSE website scraping is
     barred by CLAUDE.md §2 rule 5 / §12. A missing/blocked file is non-fatal:
     the run reports 0 rows and writes nothing.
+    """
+    asyncio.run(_fii_run_async(file=file, dry_run=dry_run))
+
+
+@fii_app.command("ingest")
+def fii_ingest(
+    file: str | None = typer.Option(
+        None, "--file", help="Path to a downloaded NSDL/SEBI FPI CSV file."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Parse + compute, print, write nothing."
+    ),
+) -> None:
+    """Alias of `fii run` — ingest FPI flows from a local CSV file.
+
+    Provided for naming parity with `promoter ingest`. Identical behaviour to
+    `fii run`: reuses the same parse/rolling/upsert path, no logic duplication.
     """
     asyncio.run(_fii_run_async(file=file, dry_run=dry_run))
 
@@ -3059,6 +3140,212 @@ async def _pipeline_status_async(*, limit: int) -> None:
     console.print(table)
     if not runs:
         console.print("[yellow]no pipeline runs — run 'pipeline run' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# delivery (delivery-% file ingest)
+# -----------------------------------------------------------------------------
+@delivery_app.command("ingest")
+def delivery_ingest(
+    file: str | None = typer.Option(
+        None, "--file", help="Path to a downloaded Moneycontrol deliverables CSV."
+    ),
+    snapshot_date: str | None = typer.Option(
+        None, "--date", help="Snapshot trade date (DD-MMM-YYYY); default today (IST)."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Parse + match, print sample, write nothing."
+    ),
+) -> None:
+    """Ingest an operator-downloaded Moneycontrol deliverables CSV.
+
+    No website scraping (CLAUDE.md §2 rule 5) — the operator downloads the export.
+    Company names are matched to ISIN via pg_trgm. A missing file is non-fatal.
+    """
+    asyncio.run(
+        _delivery_ingest_async(file=file, snapshot_date=snapshot_date, dry_run=dry_run)
+    )
+
+
+async def _delivery_ingest_async(
+    *, file: str | None, snapshot_date: str | None, dry_run: bool
+) -> None:
+    from datetime import datetime
+
+    from backend.agents.delivery import DeliveryAgent
+
+    td = None
+    if snapshot_date:
+        try:
+            td = datetime.strptime(snapshot_date, "%d-%b-%Y").date()
+        except ValueError:
+            console.print("[red]--date must be DD-MMM-YYYY (e.g. 28-May-2026)[/red]")
+            raise typer.Exit(code=1) from None
+
+    log.info("cli.delivery.ingest.start", file=file, dry_run=dry_run)
+    res = await DeliveryAgent().ingest_from_file(path=file, trade_date=td, dry_run=dry_run)
+
+    table = Table(
+        title="Delivery ingest" + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+    )
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("parsed", str(res.parsed))
+    table.add_row("matched to ISIN", str(res.matched))
+    table.add_row("unmatched (skipped)", str(res.unmatched))
+    table.add_row("upserted", str(res.upserted))
+    console.print(table)
+    if res.sample:
+        sample = Table(title="Sample matches (first 10)")
+        sample.add_column("isin")
+        sample.add_column("company")
+        for isin, name in res.sample:
+            sample.add_row(isin, name[:50])
+        console.print(sample)
+    if res.parsed == 0:
+        console.print(
+            "[yellow]No delivery rows parsed.[/yellow] Pass --file with a downloaded "
+            "Moneycontrol deliverables CSV (cols: Company, Dely%, 5-Day Avg Del%, "
+            "Delivery Volumes, Traded Volumes)."
+        )
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to delivery_signals.[/dim]")
+
+
+@delivery_app.command("show")
+def delivery_show(
+    symbol: str | None = typer.Option(None, "--symbol", help="Filter by NSE symbol."),
+    limit: int = typer.Option(30, "--limit", help="Max rows."),
+) -> None:
+    """Show stored delivery signals (high delivery % first)."""
+    asyncio.run(_delivery_show_async(symbol=symbol, limit=limit))
+
+
+async def _delivery_show_async(*, symbol: str | None, limit: int) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import delivery as delivery_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        isin = None
+        if symbol:
+            isin = (
+                await session.execute(
+                    select(Stock.isin).where(Stock.nse_symbol == symbol.upper())
+                )
+            ).scalar_one_or_none()
+        rows = await delivery_repo.fetch_recent(session, isin=isin, limit=limit)
+
+    table = Table(title="Delivery signals")
+    table.add_column("symbol")
+    table.add_column("trade_date")
+    table.add_column("delivery_pct", justify="right")
+    table.add_column("avg_5d_pct", justify="right")
+    table.add_column("traded_volume", justify="right")
+    for sym, td, dely, avg5, tvol in rows:
+        table.add_row(
+            sym or "—",
+            td.isoformat(),
+            f"{float(dely):.2f}" if dely is not None else "—",
+            f"{float(avg5):.2f}" if avg5 is not None else "—",
+            f"{tvol:,}" if tvol is not None else "—",
+        )
+    console.print(table)
+    if not rows:
+        console.print(
+            "[yellow]no delivery signals — run 'delivery ingest --file <csv>' first[/yellow]"
+        )
+
+
+# -----------------------------------------------------------------------------
+# earnings (results-calendar file ingest)
+# -----------------------------------------------------------------------------
+@earnings_app.command("ingest")
+def earnings_ingest(
+    file: str | None = typer.Option(
+        None, "--file", help="Path to a downloaded Moneycontrol results-calendar CSV."
+    ),
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Parse + match, print sample, write nothing."
+    ),
+) -> None:
+    """Ingest an operator-downloaded Moneycontrol results-calendar CSV.
+
+    No website scraping (CLAUDE.md §2 rule 5). Company names are matched to ISIN
+    via pg_trgm. A missing file is non-fatal.
+    """
+    asyncio.run(_earnings_ingest_async(file=file, dry_run=dry_run))
+
+
+async def _earnings_ingest_async(*, file: str | None, dry_run: bool) -> None:
+    from backend.agents.earnings import EarningsAgent
+
+    log.info("cli.earnings.ingest.start", file=file, dry_run=dry_run)
+    res = await EarningsAgent().ingest_from_file(path=file, dry_run=dry_run)
+
+    table = Table(
+        title="Earnings ingest" + (" — DRY RUN (no writes)" if dry_run else " — APPLIED")
+    )
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("parsed", str(res.parsed))
+    table.add_row("matched to ISIN", str(res.matched))
+    table.add_row("unmatched (skipped)", str(res.unmatched))
+    table.add_row("upserted", str(res.upserted))
+    console.print(table)
+    if res.sample:
+        sample = Table(title="Sample matches (first 10)")
+        sample.add_column("isin")
+        sample.add_column("company")
+        for isin, name in res.sample:
+            sample.add_row(isin, name[:50])
+        console.print(sample)
+    if res.parsed == 0:
+        console.print(
+            "[yellow]No earnings rows parsed.[/yellow] Pass --file with a downloaded "
+            "Moneycontrol results-calendar CSV (cols: Company, result date, quarter)."
+        )
+    if dry_run:
+        console.print("[dim]DRY RUN — nothing written to earnings_calendar.[/dim]")
+
+
+@earnings_app.command("show")
+def earnings_show(
+    limit: int = typer.Option(20, "--limit", help="Max rows."),
+    days: int = typer.Option(14, "--days", help="Look ahead this many days."),
+) -> None:
+    """Show upcoming results within the next N days (soonest first)."""
+    asyncio.run(_earnings_show_async(limit=limit, days=days))
+
+
+async def _earnings_show_async(*, limit: int, days: int) -> None:
+    from backend.db.repositories import earnings as earnings_repo
+    from backend.db.repositories._helpers import today_ist
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        rows = await earnings_repo.fetch_recent(session, days=days, limit=limit)
+
+    today = today_ist()
+    table = Table(title=f"Upcoming results (next {days}d)")
+    table.add_column("symbol")
+    table.add_column("result_date")
+    table.add_column("days_away", justify="right")
+    table.add_column("quarter")
+    for sym, rdate, quarter, _status in rows:
+        table.add_row(
+            sym or "—",
+            rdate.isoformat(),
+            str((rdate - today).days),
+            quarter or "—",
+        )
+    console.print(table)
+    if not rows:
+        console.print(
+            "[yellow]no upcoming results — run 'earnings ingest --file <csv>' first[/yellow]"
+        )
 
 
 # -----------------------------------------------------------------------------

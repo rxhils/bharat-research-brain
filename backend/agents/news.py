@@ -10,10 +10,13 @@ No LLMs; sentiment columns are left NULL for Chunk 3.3.
 from __future__ import annotations
 
 import calendar
+import csv
+import io
 import json
 import re
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 import structlog
@@ -292,6 +295,118 @@ def announcement_to_article(
     )
 
 
+# ---------------------------------------------------------------------------
+# NSE bulk/block deal CSV ingest (Build B) — permitted local-file ingest of
+# operator-downloaded deal CSVs (NSE website scraping barred, §2.5 / §12).
+# ---------------------------------------------------------------------------
+def _slugify(value: str) -> str:
+    """Lowercase + collapse non-alphanumeric runs to '-' (deterministic key)."""
+    return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-")
+
+
+def _price_cell(norm: dict[str, str]) -> str | None:
+    """The trade-price column ('TRADE PRICE/ WEIGHTED. AVG. PRICE')."""
+    for key, val in norm.items():
+        if key.startswith("TRADE PRICE"):
+            return val
+    return None
+
+
+def _parse_int(value: str | None) -> int | None:
+    if value is None:
+        return None
+    s = value.replace(",", "").strip()
+    if not s:
+        return None
+    try:
+        return int(Decimal(s))
+    except (InvalidOperation, ValueError):
+        return None
+
+
+def _parse_money(value: str | None) -> Decimal | None:
+    if value is None:
+        return None
+    s = value.replace(",", "").strip()
+    if not s:
+        return None
+    try:
+        return Decimal(s)
+    except InvalidOperation:
+        return None
+
+
+def _deals_csv_to_articles(
+    content: str, known_symbols: dict[str, str], deal_type: str
+) -> list[RawArticle]:
+    """Parse an NSE bulk/block-deal CSV into articles; ISIN via nse_symbol map.
+
+    Unknown symbols and unparseable qty/price rows are logged and skipped — never
+    raised: a single bad row must not abort the ingest (CLAUDE.md error-handling).
+    """
+    source_name = f"nse_{deal_type}_deal"
+    out: list[RawArticle] = []
+    for rec in csv.DictReader(io.StringIO(content)):
+        norm = {(k or "").strip().upper(): (v or "").strip() for k, v in rec.items()}
+        symbol = norm.get("SYMBOL", "").upper()
+        if not symbol:
+            continue
+        isin = known_symbols.get(symbol)
+        if isin is None:
+            log.warning(
+                "news.deals_csv.unknown_symbol", symbol=symbol, deal_type=deal_type
+            )
+            continue
+        qty = _parse_int(norm.get("QUANTITY TRADED"))
+        price = _parse_money(_price_cell(norm))
+        if qty is None or price is None:
+            log.warning(
+                "news.deals_csv.bad_number",
+                symbol=symbol,
+                qty=norm.get("QUANTITY TRADED"),
+                price=_price_cell(norm),
+            )
+            continue
+        client = norm.get("CLIENT NAME", "")
+        buy_sell = norm.get("BUY/SELL", "")
+        deal_date = _parse_ddmonyyyy(norm.get("DATE"))
+        date_iso = deal_date.isoformat() if deal_date else ""
+        headline = (
+            f"{client} {buy_sell} deal in {symbol} — "
+            f"{qty:,.0f} shares @ ₹{price:,.2f}"
+        )
+        published = (
+            datetime(deal_date.year, deal_date.month, deal_date.day, tzinfo=UTC)
+            if deal_date
+            else None
+        )
+        out.append(
+            RawArticle(
+                headline=headline,
+                summary=None,
+                source_name=source_name,
+                source_url=_slugify(f"nse_{deal_type}_{symbol}_{date_iso}_{client}"),
+                published_at=published,
+                isin=isin,
+            )
+        )
+    return out
+
+
+def parse_bulk_deals_csv(
+    content: str, known_symbols: dict[str, str]
+) -> list[RawArticle]:
+    """Parse an NSE bulk-deal CSV -> articles (source_name 'nse_bulk_deal')."""
+    return _deals_csv_to_articles(content, known_symbols, "bulk")
+
+
+def parse_block_deals_csv(
+    content: str, known_symbols: dict[str, str]
+) -> list[RawArticle]:
+    """Parse an NSE block-deal CSV -> articles (source_name 'nse_block_deal')."""
+    return _deals_csv_to_articles(content, known_symbols, "block")
+
+
 class NewsAgent:
     async def fetch_rss(self, feed_url: str, source_name: str) -> list[RawArticle]:
         import feedparser  # lazy: keeps module importable without the dep
@@ -491,6 +606,73 @@ class NewsAgent:
         except (ValueError, KeyError) as exc:
             log.warning("news.deals.parse_failed", path=path, error=str(exc))
             return []
+
+    async def ingest_deals_csv(
+        self,
+        *,
+        bulk_path: str | None = None,
+        block_path: str | None = None,
+        dry_run: bool = False,
+    ) -> NewsResult:
+        """Ingest NSE bulk/block-deal CSVs into news_articles (Build B).
+
+        ISIN is pre-resolved from `stocks.nse_symbol`; unknown symbols are skipped
+        in the parser. Idempotent: `news_repo.bulk_insert` is ON CONFLICT
+        (source_url) DO NOTHING, so re-ingesting the same file inserts 0 new rows.
+        """
+        symbol_map = await self._load_symbol_isin_map()
+        raw: list[RawArticle] = []
+        for path, parser in (
+            (bulk_path, parse_bulk_deals_csv),
+            (block_path, parse_block_deals_csv),
+        ):
+            text = await self._read_text(path, "deals-csv")
+            if text is None:
+                continue
+            raw.extend(parser(text, symbol_map))
+
+        deduped = dedup_by_url(raw)
+        now = datetime.now(UTC)
+        rows = [
+            {
+                "isin": a.isin,
+                "headline": a.headline,
+                "summary": a.summary,
+                "source_name": a.source_name,
+                "source_url": a.source_url,
+                "published_at": a.published_at,
+                "fetched_at": now,
+            }
+            for a in deduped
+        ]
+        matched = sum(1 for a in deduped if a.isin)
+        sample = [(a.headline, a.isin) for a in deduped[:10]]
+
+        inserted = 0
+        if not dry_run and rows:
+            from backend.db.repositories import news as news_repo
+            from backend.db.session import SessionLocal
+
+            async with SessionLocal() as session:
+                inserted = await news_repo.bulk_insert(session, rows)
+                await session.commit()
+
+        log.info(
+            "news.deals_csv.done",
+            parsed=len(raw),
+            deduped=len(deduped),
+            matched=matched,
+            inserted=inserted,
+            dry_run=dry_run,
+        )
+        return NewsResult(
+            fetched=len(raw),
+            deduped=len(deduped),
+            matched=matched,
+            unmatched=len(deduped) - matched,
+            inserted=inserted,
+            sample=sample,
+        )
 
     async def fetch_bse_file(self, path: str | None) -> list[AnnItem]:
         """Parse a downloaded BSE announcement file. Resilient: [] on issue."""
