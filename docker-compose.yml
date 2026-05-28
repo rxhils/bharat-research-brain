@@ -52,7 +52,6 @@ services:
     environment:
       POSTGRES_URL: postgresql+asyncpg://${POSTGRES_USER:-bharat}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-bharat}
       REDIS_URL: redis://redis:6379/0
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       FINBERT_HOST: ${FINBERT_HOST:-http://host.docker.internal:8765}
       LOG_FORMAT: ${LOG_FORMAT:-console}
       TZ: ${TZ:-Asia/Kolkata}
