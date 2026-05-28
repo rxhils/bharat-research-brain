@@ -125,12 +125,7 @@ retired** — removed from `docker-compose.yml` on 2026-05-28. Do NOT call Ollam
 (`http://…:11434`), run `ollama pull`, or assume a local model server exists; there
 is none. Set `DEEPSEEK_API_KEY` in `.env`.
 
-| Task | Model | Reason |
-|---|---|---|
-| Daily report writer | `deepseek-chat` | Long-form structured prose |
-| Meta-Auditor (CoT) | `deepseek-chat` (or `deepseek-reasoner` for visible CoT) | Catches weak claims |
-| Tool-calling agents | `deepseek-chat` | Reliable JSON, low latency |
-| Fast classifier | `deepseek-chat` | News relevance, dedup, ticker matching |
+LLM: DeepSeek API (`deepseek-chat`) via `DEEPSEEK_API_KEY`.
 
 Always specify the model explicitly in code — never rely on a "default".
 
