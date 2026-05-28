@@ -67,7 +67,7 @@ conflicts with one of these, refuse and explain. If unclear, ask.
 | DB | PostgreSQL 16 + `pgvector` | One DB. No Qdrant until we have ≥ 6 months of news |
 | Cache / queue | Redis 7 | Pub/sub for agent events, cache for prices |
 | Knowledge layer | Obsidian vault (markdown + frontmatter) | The "brain" — see §6 |
-| LLM serving | Ollama (local) | Models per task — see §5 |
+| LLM | DeepSeek API (`deepseek-chat`) | Cloud API; Ollama retired — see §5 |
 | Sentiment (BERT) | FinBERT via `transformers` sidecar | Not on Ollama. Tiny FastAPI service |
 | Embeddings | `nomic-embed-text` (default) / `bge-m3` (multilingual fallback) | Both via Ollama |
 | Frontend | Next.js 14 + Tailwind + shadcn/ui | Server components default |
@@ -118,34 +118,30 @@ unverified Twitter — only if cross-confirmed by Tier A/B.
 
 ---
 
-## 5. Ollama model assignments
+## 5. LLM: DeepSeek API (`deepseek-chat`)
 
-Pull these once: `ollama pull <name>`.
+The system's LLM is the **DeepSeek API** (model `deepseek-chat`). **Ollama has been
+retired** — removed from `docker-compose.yml` on 2026-05-28. Do NOT call Ollama
+(`http://…:11434`), run `ollama pull`, or assume a local model server exists; there
+is none. Set `DEEPSEEK_API_KEY` in `.env`.
 
 | Task | Model | Reason |
 |---|---|---|
-| Daily report writer | `qwen3.6:27b` (or `llama3.3:70b` if 48 GB+ VRAM) | Long-form structured prose |
-| Meta-Auditor (CoT) | `deepseek-r1:32b` | Visible reasoning, catches weak claims |
-| Tool-calling agents | `qwen3:8b` | Reliable JSON, low latency |
-| Fast classifier | `llama3.2:3b` | News relevance, dedup, ticker matching |
-| Embeddings | `nomic-embed-text` + `bge-m3` | Default + multilingual fallback |
-| Vision (optional) | `qwen2.5vl:7b` | Chart / annual-report screenshots |
+| Daily report writer | `deepseek-chat` | Long-form structured prose |
+| Meta-Auditor (CoT) | `deepseek-chat` (or `deepseek-reasoner` for visible CoT) | Catches weak claims |
+| Tool-calling agents | `deepseek-chat` | Reliable JSON, low latency |
+| Fast classifier | `deepseek-chat` | News relevance, dedup, ticker matching |
 
-FinBERT runs in a separate sidecar (`services/finbert/`) on port 8765, called
-over localhost. Ollama serves on default `:11434`.
+Always specify the model explicitly in code — never rely on a "default".
 
-Always specify the model explicitly in code — never rely on "default":
+FinBERT is a separate sentiment sidecar (`services/finbert/`, port 8765) — it was
+never an Ollama dependency. NOTE: the sidecar is **not yet implemented** (the
+directory holds only `.gitkeep`), so `sentiment` is non-functional until it is built.
 
-```python
-OLLAMA_MODELS = {
-    "report": "qwen3.6:27b",
-    "auditor": "deepseek-r1:32b",
-    "agent": "qwen3:8b",
-    "classifier": "llama3.2:3b",
-    "embed": "nomic-embed-text",
-    "embed_multilingual": "bge-m3",
-}
-```
+> Migration follow-up (open): embeddings (was `nomic-embed-text` / `bge-m3` via
+> Ollama) and optional vision (`qwen2.5vl:7b`) need a non-Ollama provider — DeepSeek's
+> API does not serve embeddings. Decide a replacement before any embedding/vector
+> feature runs.
 
 ---
 
