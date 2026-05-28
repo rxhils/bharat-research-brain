@@ -15,6 +15,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.db.models import (
+    DeliverySignal,
     FiiDiiFlow,
     FundamentalSignal,
     MacroSignal,
@@ -167,6 +168,23 @@ async def fetch_risk(session: AsyncSession) -> dict[str, Decimal]:
         .order_by(RiskSignal.isin, RiskSignal.computed_date.desc())
     )
     return {i: s for i, s in (await session.execute(stmt)).all()}
+
+
+async def fetch_delivery(
+    session: AsyncSession,
+) -> dict[str, tuple[Decimal | None, Decimal | None]]:
+    """Latest per-isin (delivery_pct, avg_5d_delivery_pct) — DISTINCT ON isin,
+    newest trade_date first. Plain tuples so this layer never imports the agent."""
+    stmt = (
+        select(
+            DeliverySignal.isin,
+            DeliverySignal.delivery_pct,
+            DeliverySignal.avg_5d_delivery_pct,
+        )
+        .distinct(DeliverySignal.isin)
+        .order_by(DeliverySignal.isin, DeliverySignal.trade_date.desc())
+    )
+    return {i: (d, a) for i, d, a in (await session.execute(stmt)).all()}
 
 
 async def fetch_sentiment(session: AsyncSession) -> dict[str, Decimal]:

@@ -218,6 +218,53 @@ def test_technical_volume_low_conviction() -> None:
 
 
 # ---------------------------------------------------------------------------
+# technical_score — Build D: delivery % (accumulation proxy)
+# ---------------------------------------------------------------------------
+def test_technical_delivery_strong_conviction() -> None:
+    # rsi 50 -> 50; delivery 75 (>=70) -> +8 = 58
+    t = _flat_tech(Decimal("50"), delivery_pct=Decimal("75"))
+    assert score_technical(t) == Decimal("58")
+
+
+def test_technical_delivery_above_average() -> None:
+    # rsi 50 -> 50; delivery 60 (>=55, <70) -> +4 = 54
+    t = _flat_tech(Decimal("50"), delivery_pct=Decimal("60"))
+    assert score_technical(t) == Decimal("54")
+
+
+def test_technical_delivery_speculative_churn() -> None:
+    # rsi 50 -> 50; delivery 15 (<=20) -> -5 = 45
+    t = _flat_tech(Decimal("50"), delivery_pct=Decimal("15"))
+    assert score_technical(t) == Decimal("45")
+
+
+def test_technical_delivery_none_no_change() -> None:
+    # delivery None -> no change; rsi 50 -> 50 (backward compat)
+    t = _flat_tech(Decimal("50"), delivery_pct=None)
+    assert score_technical(t) == Decimal("50")
+
+
+def test_technical_delivery_sustained_accumulation_bonus() -> None:
+    # rsi 50 -> 50; delivery 72 (>=70) +8; avg_5d 65 & delivery >=60 -> +3 = 61
+    t = _flat_tech(
+        Decimal("50"),
+        delivery_pct=Decimal("72"),
+        avg_5d_delivery_pct=Decimal("65"),
+    )
+    assert score_technical(t) == Decimal("61")
+
+
+def test_technical_delivery_bonus_needs_both_avg_and_pct() -> None:
+    # avg_5d 65 but delivery 50 (<60) -> tier none + no bonus; rsi 50 -> 50
+    t = _flat_tech(
+        Decimal("50"),
+        delivery_pct=Decimal("50"),
+        avg_5d_delivery_pct=Decimal("65"),
+    )
+    assert score_technical(t) == Decimal("50")
+
+
+# ---------------------------------------------------------------------------
 # fundamental_score — Chunk 4.9: sector-relative PE (with absolute fallback)
 # ---------------------------------------------------------------------------
 def test_fundamental_sector_pe_cheap() -> None:

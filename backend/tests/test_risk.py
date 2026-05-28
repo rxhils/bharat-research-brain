@@ -124,3 +124,25 @@ def test_pledge_reclamps_to_100() -> None:
     r = compute_risk("INE1", Decimal("5.0"), 12, Decimal("2"), "risk-off",
                      pledge_flag="critical")
     assert r.risk_score == Decimal("100")
+
+
+# ---------------------------------------------------------------------------
+# earnings event-risk: days_to_results raises risk_score (Build E)
+# ---------------------------------------------------------------------------
+def test_days_to_results_raises_risk_above_none() -> None:
+    # Same stock: an imminent result must score riskier than no known date.
+    near = compute_risk("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral",
+                        days_to_results=3)
+    none = compute_risk("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral",
+                        days_to_results=None)
+    assert near.risk_score > none.risk_score
+    # 3 days falls in the <=5 tier (+10): 50 -> 60; None leaves the term at 0.
+    assert near.risk_score == Decimal("60")
+    assert none.risk_score == Decimal("50")
+
+
+def test_days_to_results_tiers() -> None:
+    base = ("INE1", Decimal("1.5"), 0, Decimal("0"), "neutral")
+    assert compute_risk(*base, days_to_results=1).risk_score == Decimal("65")  # <=2 +15
+    assert compute_risk(*base, days_to_results=8).risk_score == Decimal("55")  # <=10 +5
+    assert compute_risk(*base, days_to_results=20).risk_score == Decimal("50")  # >10 +0

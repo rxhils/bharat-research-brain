@@ -46,6 +46,20 @@ class TechInputs:
     current_price: Decimal | None = None
     current_volume: int | None = None
     avg_volume_30d: int | None = None
+    # Build D wiring (default None keeps the original 4-arg form): delivery % is
+    # an accumulation proxy — high delivery = lower intraday churn.
+    delivery_pct: Decimal | None = None
+    avg_5d_delivery_pct: Decimal | None = None
+
+
+@dataclass(frozen=True)
+class DeliveryInputs:
+    """Latest delivery snapshot per isin, carried from `fetch_delivery` into the
+    stock's TechInputs in `run_all`."""
+
+    isin: str
+    delivery_pct: Decimal | None = None
+    avg_5d_delivery_pct: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -159,6 +173,23 @@ def score_technical(t: TechInputs) -> Decimal:
             score += 5
         elif vol_ratio <= Decimal("0.5"):
             score -= 5
+
+    # Delivery % (Build D): high delivery = accumulation conviction, very low
+    # delivery = speculative intraday churn. Tiers are mutually exclusive; the
+    # 5-day-avg gate adds a bonus for sustained accumulation.
+    if t.delivery_pct is not None:
+        if t.delivery_pct >= 70:
+            score += 8
+        elif t.delivery_pct >= 55:
+            score += 4
+        elif t.delivery_pct <= 20:
+            score -= 5
+        if (
+            t.avg_5d_delivery_pct is not None
+            and t.avg_5d_delivery_pct >= 60
+            and t.delivery_pct >= 60
+        ):
+            score += 3
 
     return _clamp(score)
 
@@ -344,13 +375,20 @@ class RankingAgent:
     name = "ranking"
 
     async def run_all(self, *, dry_run: bool = False) -> list[RankingRow]:
+        from backend.agents.risk import RiskAgent
         from backend.db.repositories import ranking as ranking_repo
         from backend.db.repositories._helpers import today_ist
         from backend.db.session import SessionLocal
 
+        # Refresh risk signals first so earnings proximity (days_to_results) and
+        # the other risk inputs are current in risk_signals before ranking reads
+        # them via fetch_risk. dry_run propagates: no writes when previewing.
+        await RiskAgent().run_all(dry_run=dry_run)
+
         async with SessionLocal() as session:
             isins = await ranking_repo.fetch_active_isins(session)
             tech = await ranking_repo.fetch_technicals(session)
+            delivery = await ranking_repo.fetch_delivery(session)
             fund = await ranking_repo.fetch_fundamentals(session)
             risk = await ranking_repo.fetch_risk(session)
             sent = await ranking_repo.fetch_sentiment(session)
@@ -364,6 +402,14 @@ class RankingAgent:
         for i in isins:
             tt = tech.get(i)
             t = TechInputs(*tt) if tt else TechInputs(None, None, None, None)
+            d = delivery.get(i)
+            if d is not None:
+                di = DeliveryInputs(i, *d)
+                t = replace(
+                    t,
+                    delivery_pct=di.delivery_pct,
+                    avg_5d_delivery_pct=di.avg_5d_delivery_pct,
+                )
             sec = isin_sector.get(i)
             smedian = sector_median_pe.get(sec) if sec else None
             ff = fund.get(i)
