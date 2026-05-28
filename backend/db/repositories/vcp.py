@@ -20,7 +20,6 @@ from backend.db.models import PriceEodAdjusted, Stock, VcpSignal
 
 _BATCH = 1000
 _SERIES_BARS = 200  # how many recent adjusted bars to load per stock.
-_PROXY_TOP_N = 10  # large-caps to equal-weight when there's no Nifty index row.
 SOURCE = "vcp_agent"
 
 # (date, high, low, close, volume) oldest first — matches PriceRow in the agent.
@@ -28,6 +27,23 @@ PriceRow = tuple[date, float, float, float, float]
 
 # Symbols a real Nifty-50 index row might carry, if one is ever loaded.
 _NIFTY_SYMBOLS = ("NIFTY", "NIFTY50", "NIFTY 50", "^NSEI")
+
+# Equal-weight Nifty proxy when no real index row exists: ten heavyweight
+# Nifty-50 constituents spanning banks, IT, energy, FMCG, NBFC. The previous
+# `mcap_inr_cr`-ordered top-N returned empty live (mcap not populated), so the
+# basket is pinned by symbol — all ten are already in the stocks table.
+_PROXY_SYMBOLS = (
+    "RELIANCE",
+    "TCS",
+    "HDFCBANK",
+    "INFY",
+    "ICICIBANK",
+    "HINDUNILVR",
+    "AXISBANK",
+    "KOTAKBANK",
+    "BAJFINANCE",
+    "SBIN",
+)
 
 
 @dataclass
@@ -144,7 +160,7 @@ async def load_market_proxy(session: AsyncSession) -> list[PriceRow]:
     """A Nifty-50 close series for relative strength.
 
     Prefers a real index row if one exists; otherwise builds an equal-weight
-    proxy from the top `_PROXY_TOP_N` large-caps' adjusted closes per date.
+    proxy from the `_PROXY_SYMBOLS` large-caps' adjusted closes per date.
     """
     idx_isin = (
         await session.execute(
@@ -156,22 +172,16 @@ async def load_market_proxy(session: AsyncSession) -> list[PriceRow]:
         if series:
             return series
 
-    top = list(
+    basket = list(
         (
             await session.execute(
-                select(Stock.isin)
-                .where(
-                    Stock.delisted_on.is_(None),
-                    Stock.mcap_inr_cr.is_not(None),
-                )
-                .order_by(Stock.mcap_inr_cr.desc())
-                .limit(_PROXY_TOP_N)
+                select(Stock.isin).where(Stock.nse_symbol.in_(_PROXY_SYMBOLS))
             )
         )
         .scalars()
         .all()
     )
-    if not top:
+    if not basket:
         return []
 
     stmt = (
@@ -179,7 +189,7 @@ async def load_market_proxy(session: AsyncSession) -> list[PriceRow]:
             PriceEodAdjusted.trade_date,
             func.avg(PriceEodAdjusted.adj_close),
         )
-        .where(PriceEodAdjusted.isin.in_(top))
+        .where(PriceEodAdjusted.isin.in_(basket))
         .group_by(PriceEodAdjusted.trade_date)
         .order_by(PriceEodAdjusted.trade_date.desc())
         .limit(_SERIES_BARS)

@@ -32,6 +32,11 @@ _LOOKBACK = 60  # bars for contractions / pivot.
 _RS_LOOKBACK = 63  # ~3 trading months for relative strength.
 _Q2 = Decimal("0.01")
 
+# Contraction tuning (real Indian EOD data, not clean zigzags):
+_PIVOT_WIDTH = 2  # 5-bar pivot: strict extreme vs the 2 bars on each side.
+_MIN_DEPTH = 0.03  # ignore swings shallower than 3% — pure noise, not a pullback.
+_DEPTH_TOLERANCE = 1.20  # a leg may be up to 20% DEEPER than the previous one.
+
 
 def _dec(value: float) -> Decimal:
     return Decimal(str(value)).quantize(_Q2, rounding=ROUND_HALF_EVEN)
@@ -74,25 +79,38 @@ def score_trend_template(prices: list[PriceRow]) -> Decimal:
     return Decimal(25 * sum(1 for c in conditions if c))
 
 
-def find_contractions(prices: list[PriceRow]) -> tuple[int, Decimal]:
-    """Count sequential, shrinking peak->trough contractions in the last 60 bars.
+def _swing_pivots(highs: list[float], lows: list[float]) -> list[tuple[str, float]]:
+    """5-bar swing pivots: a bar is a swing high (low) only if its high (low) is
+    a STRICT extreme versus the `_PIVOT_WIDTH` bars on each side. The wider
+    window smooths the intrabar chop that a 3-bar pivot mistakes for structure.
+    """
+    w = _PIVOT_WIDTH
+    swings: list[tuple[str, float]] = []
+    for i in range(w, len(highs) - w):
+        h, lo = highs[i], lows[i]
+        if all(h > highs[i + d] for d in range(-w, w + 1) if d != 0):
+            swings.append(("high", h))
+        elif all(lo < lows[i + d] for d in range(-w, w + 1) if d != 0):
+            swings.append(("low", lo))
+    return swings
 
-    A contraction is a 3-bar swing high paired with the following 3-bar swing
-    low; depth = (high - low) / high. The sequence is valid only if every
-    contraction is shallower than the previous by >= 10% (depth_i <=
-    depth_{i-1} x 0.90); otherwise the count is 0. Quality maps count ->
-    {0:0, 1:25, 2:50, 3:75, 4+:100}.
+
+def find_contractions(prices: list[PriceRow]) -> tuple[int, Decimal]:
+    """Count sequential, tightening peak->trough contractions in the last 60 bars.
+
+    A contraction is a 5-bar swing high paired with the following 5-bar swing
+    low; depth = (high - low) / high. Swings shallower than `_MIN_DEPTH` (3%)
+    are dropped as noise. The sequence is a valid contracting base only if it
+    tightens overall (last depth < first) and no leg is more than
+    `_DEPTH_TOLERANCE` (20%) deeper than the one before it — real data ticks up
+    a little between legs, so a strict monotonic rule never fires on it.
+    Quality maps count -> {0:0, 1:25, 2:50, 3:75, 4+:100}.
     """
     window = prices[-_LOOKBACK:]
     highs = [p[1] for p in window]
     lows = [p[2] for p in window]
 
-    swings: list[tuple[str, float]] = []
-    for i in range(1, len(window) - 1):
-        if highs[i] > highs[i - 1] and highs[i] > highs[i + 1]:
-            swings.append(("high", highs[i]))
-        elif lows[i] < lows[i - 1] and lows[i] < lows[i + 1]:
-            swings.append(("low", lows[i]))
+    swings = _swing_pivots(highs, lows)
 
     depths: list[float] = []
     i = 0
@@ -100,17 +118,21 @@ def find_contractions(prices: list[PriceRow]) -> tuple[int, Decimal]:
         if swings[i][0] == "high" and swings[i + 1][0] == "low":
             hi, lo = swings[i][1], swings[i + 1][1]
             if hi > 0:
-                depths.append((hi - lo) / hi)
+                depth = (hi - lo) / hi
+                if depth >= _MIN_DEPTH:
+                    depths.append(depth)
             i += 2
         else:
             i += 1
 
     if not depths:
         return 0, Decimal(0)
-    shrinking = all(
-        depths[j] <= depths[j - 1] * 0.90 for j in range(1, len(depths))
+    within_tolerance = all(
+        depths[j] <= depths[j - 1] * _DEPTH_TOLERANCE for j in range(1, len(depths))
     )
-    count = len(depths) if shrinking else 0
+    contracts_overall = len(depths) == 1 or depths[-1] < depths[0]
+    valid = within_tolerance and contracts_overall
+    count = len(depths) if valid else 0
     quality = 100 if count >= 4 else {0: 0, 1: 25, 2: 50, 3: 75}[count]
     return count, Decimal(quality)
 

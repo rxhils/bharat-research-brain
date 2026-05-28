@@ -113,6 +113,51 @@ def test_contractions_not_decreasing() -> None:
     assert count == 0
 
 
+# --- contractions on realistic (non-clean) shapes --------------------------
+# Real Indian price series never give a perfect 10%-shallower staircase: legs
+# tick up slightly inside an overall-tightening base, and intrabar chop spawns
+# spurious 3-bar pivots. These guard the loosened detector (5-bar pivots, 3%
+# min-depth, 20% per-leg tolerance, must contract overall).
+
+
+def _jitter(closes: list[float], *, every: int, amp: float) -> list[float]:
+    """Add alternating +/-amp to non-corner bars (corners are multiples of
+    `every`). Models intrabar chop that fools a 3-bar pivot but not a 5-bar one.
+    """
+    return [
+        c if i % every == 0 else c + (amp if i % 2 else -amp)
+        for i, c in enumerate(closes)
+    ]
+
+
+def test_noisy_shrinking_contractions_detected() -> None:
+    # Depths ~12% -> 13% -> 7%: the middle leg ticks UP slightly (within the
+    # 20% tolerance) but the base still contracts overall. The old strict
+    # ">=10% shallower every leg" rule rejected this; the loosened rule accepts.
+    # Trailing corner (100) keeps the third trough interior so all 3 legs pair.
+    closes = _zigzag([80.0, 100.0, 88.0, 101.0, 87.87, 102.0, 94.86, 100.0])
+    count, quality = find_contractions(_bars(closes))
+    assert count == 3
+    assert quality == Decimal(75)
+
+
+def test_flat_oscillation_not_detected() -> None:
+    # Equal ~10% pullbacks that never tighten -> not a contracting base.
+    closes = _zigzag([90.0, 100.0, 90.0, 100.0, 90.0, 100.0, 90.0])
+    count, _quality = find_contractions(_bars(closes))
+    assert count == 0
+
+
+def test_five_bar_pivots_ignore_intrabar_noise() -> None:
+    # A clean 3-leg tightening base with intrabar chop injected. 3-bar pivots
+    # would shatter the depth sequence into noise; 5-bar pivots see only the
+    # real corners, so the contraction count survives.
+    base = _zigzag([80.0, 130.0, 110.0, 132.0, 116.0, 130.0, 120.0], seg=6)
+    noisy = _jitter(base, every=6, amp=3.0)
+    count, _quality = find_contractions(_bars(noisy))
+    assert count >= 2
+
+
 # --- volume dry-up ----------------------------------------------------------
 
 
