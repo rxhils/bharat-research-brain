@@ -47,6 +47,8 @@ intraday_app = typer.Typer(help="Intraday signal commands", no_args_is_help=True
 app.add_typer(intraday_app, name="intraday")
 technical_app = typer.Typer(help="Technical agent commands", no_args_is_help=True)
 app.add_typer(technical_app, name="technical")
+vcp_app = typer.Typer(help="VCP screener commands", no_args_is_help=True)
+app.add_typer(vcp_app, name="vcp")
 news_app = typer.Typer(help="News agent commands", no_args_is_help=True)
 app.add_typer(news_app, name="news")
 sentiment_app = typer.Typer(help="Sentiment agent commands", no_args_is_help=True)
@@ -1326,6 +1328,105 @@ async def _technical_show_async(*, isin: str | None, symbol: str | None) -> None
     console.print(table)
     if not rows:
         console.print("[yellow]no technical signals for this stock yet[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# vcp run / show
+# -----------------------------------------------------------------------------
+
+
+@vcp_app.command("run")
+def vcp_run(
+    dry_run: bool = typer.Option(
+        False, "--dry-run", help="Compute + print; write nothing."
+    ),
+) -> None:
+    """Run the VCP / Minervini screener over every active stock."""
+    asyncio.run(_vcp_run_async(dry_run=dry_run))
+
+
+async def _vcp_run_async(*, dry_run: bool) -> None:
+    from backend.agents.vcp import VcpAgent
+
+    log.info("cli.vcp.run.start", dry_run=dry_run)
+    res = await VcpAgent().run_all(dry_run=dry_run)
+    table = Table(title="VCP run" + (" — DRY RUN" if dry_run else " — APPLIED"))
+    table.add_column("field", style="bold")
+    table.add_column("value")
+    table.add_row("stocks processed", str(res.stocks_processed))
+    table.add_row("rows upserted", str(res.rows_upserted))
+    table.add_row("vcp detected", str(res.detected))
+    table.add_row("skipped (insufficient history)", str(res.skipped_no_data))
+    console.print(table)
+
+
+@vcp_app.command("show")
+def vcp_show(
+    limit: int = typer.Option(20, "--limit", help="Max candidates to show."),
+    min_score: float = typer.Option(
+        40.0, "--min-score", help="Minimum vcp_score to include."
+    ),
+) -> None:
+    """Show the top VCP candidates by composite score."""
+    asyncio.run(_vcp_show_async(limit=limit, min_score=min_score))
+
+
+async def _vcp_show_async(*, limit: int, min_score: float) -> None:
+    from decimal import Decimal
+
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import vcp as vcp_repo
+    from backend.db.session import SessionLocal
+
+    threshold = Decimal(str(min_score))
+    async with SessionLocal() as session:
+        latest = await vcp_repo.fetch_latest(session)
+        meta = {
+            isin: (sym, sec)
+            for isin, sym, sec in (
+                await session.execute(
+                    select(Stock.isin, Stock.nse_symbol, Stock.sector)
+                )
+            ).all()
+        }
+
+    candidates = [
+        r
+        for r in latest.values()
+        if r.vcp_score is not None and r.vcp_score >= threshold
+    ]
+    candidates.sort(key=lambda r: r.vcp_score or Decimal(0), reverse=True)
+    candidates = candidates[:limit]
+
+    table = Table(title=f"VCP candidates — vcp_score >= {min_score:g}")
+    for col in (
+        "rank",
+        "symbol",
+        "sector",
+        "vcp_score",
+        "contractions",
+        "vol_dryup",
+        "pivot_prox",
+        "trend",
+    ):
+        table.add_column(col)
+    for rank, r in enumerate(candidates, start=1):
+        sym, sec = meta.get(r.isin, (None, None))
+        table.add_row(
+            str(rank),
+            sym or r.isin,
+            sec or "—",
+            str(r.vcp_score),
+            str(r.contraction_count) if r.contraction_count is not None else "—",
+            "yes" if r.volume_dryup else "no",
+            str(r.pivot_proximity) if r.pivot_proximity is not None else "—",
+            str(r.trend_score) if r.trend_score is not None else "—",
+        )
+    console.print(table)
+    if not candidates:
+        console.print("[yellow]no VCP candidates at/above this score[/yellow]")
 
 
 # -----------------------------------------------------------------------------

@@ -1054,3 +1054,47 @@ class EarningsCalendar(Base):
         Index("idx_earnings_result_date", text("result_date")),
         Index("idx_earnings_isin_date", "isin", text("result_date")),
     )
+
+
+class VcpSignal(Base):
+    """VCP / Minervini screener output per stock (Chunk 4.10).
+
+    One row per (isin, computed_date), upserted as-of the latest adjusted trade
+    date. `vcp_detected` is the hard gate (trend template satisfied + >= 2
+    contractions + composite >= 40). The component scores (trend / quality /
+    proximity / relative strength) and `vcp_score` (0-100 composite) are
+    nullable — stocks with too little history are recorded as not-detected with
+    NULL scores.
+    """
+
+    __tablename__ = "stock_vcp_signals"
+
+    isin: Mapped[str] = mapped_column(
+        String(12),
+        ForeignKey("stocks.isin", ondelete="RESTRICT"),
+        primary_key=True,
+    )
+    computed_date: Mapped[date] = mapped_column(Date, primary_key=True)
+    vcp_detected: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    contraction_count: Mapped[int | None] = mapped_column(Integer)
+    contraction_quality: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    volume_dryup: Mapped[bool | None] = mapped_column(Boolean)
+    trend_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    pivot_proximity: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    relative_strength: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    vcp_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    source: Mapped[str] = mapped_column(
+        String(32), nullable=False, server_default=text("'vcp_agent'")
+    )
+    computed_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "contraction_count IS NULL OR contraction_count >= 0",
+            name="vcp_contraction_count_nonneg",
+        ),
+        Index("idx_vcp_isin_date", "isin", text("computed_date DESC")),
+        Index("idx_vcp_detected", text("computed_date DESC"), "vcp_detected"),
+    )

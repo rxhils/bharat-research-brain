@@ -290,7 +290,7 @@ NSE scraping is prohibited. All NSE data enters via manually downloaded files.
 | 3 — Analytics | ✅ | 8 signal agents |
 | 3.2b — News + data | ✅ | FII real data, delivery, earnings |
 | 4 — Synthesis | ✅ | Ranking, report, auditor, scheduler |
-| 4.10 — VCP screener | 🔄 | Minervini pattern detection |
+| 4.10 — VCP screener | ✅ | Minervini VCP screen (trend / contractions / volume dry-up / pivot / RS) → `stock_vcp_signals`, +10/+5 ranking bonus |
 | 4.11 — Sector ratios | 🔄 | NIM/NPA for banks, ANDA for pharma |
 | 4.12 — Market breadth | 🔄 | A/D ratio, % stocks above EMA200 |
 | 5 — Outcomes + ML | ⏳ | Outcome agent, XGBoost signal validation |

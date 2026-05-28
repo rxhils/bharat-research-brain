@@ -50,6 +50,9 @@ class TechInputs:
     # an accumulation proxy — high delivery = lower intraday churn.
     delivery_pct: Decimal | None = None
     avg_5d_delivery_pct: Decimal | None = None
+    # Chunk 4.10: VCP screen — a confirmed base near pivot earns a momentum bonus.
+    vcp_detected: bool = False
+    vcp_score: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -190,6 +193,14 @@ def score_technical(t: TechInputs) -> Decimal:
             and t.delivery_pct >= 60
         ):
             score += 3
+
+    # VCP screen (Chunk 4.10): a confirmed contraction base near its pivot is a
+    # momentum bonus — strong setups +10, developing setups +5.
+    if t.vcp_detected and t.vcp_score is not None:
+        if t.vcp_score >= 60:
+            score += 10
+        elif t.vcp_score >= 40:
+            score += 5
 
     return _clamp(score)
 
@@ -377,6 +388,7 @@ class RankingAgent:
     async def run_all(self, *, dry_run: bool = False) -> list[RankingRow]:
         from backend.agents.risk import RiskAgent
         from backend.db.repositories import ranking as ranking_repo
+        from backend.db.repositories import vcp as vcp_repo
         from backend.db.repositories._helpers import today_ist
         from backend.db.session import SessionLocal
 
@@ -397,6 +409,7 @@ class RankingAgent:
             regime = await ranking_repo.fetch_macro_regime(session)
             sector_median_pe = await ranking_repo.fetch_sector_median_pe(session)
             isin_sector = await ranking_repo.fetch_isin_sectors(session)
+            vcp = await vcp_repo.fetch_latest(session)
 
         rows: list[RankingRow] = []
         for i in isins:
@@ -409,6 +422,11 @@ class RankingAgent:
                     t,
                     delivery_pct=di.delivery_pct,
                     avg_5d_delivery_pct=di.avg_5d_delivery_pct,
+                )
+            v = vcp.get(i)
+            if v is not None:
+                t = replace(
+                    t, vcp_detected=v.vcp_detected, vcp_score=v.vcp_score
                 )
             sec = isin_sector.get(i)
             smedian = sector_median_pe.get(sec) if sec else None
