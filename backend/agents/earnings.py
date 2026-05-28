@@ -120,6 +120,7 @@ class EarningsAgent:
 
         result = EarningsResult(parsed=len(raws))
         rows: list[dict[str, object]] = []
+        seen: set[tuple[str, object]] = set()
         async with SessionLocal() as session:
             for r in raws:
                 isin = await self._match_isin(session, r.company_name)
@@ -127,6 +128,18 @@ class EarningsAgent:
                     result.unmatched += 1
                     log.warning("earnings.match.miss", company=r.company_name)
                     continue
+                key = (isin, r.result_date)
+                if key in seen:
+                    # Two names fuzzy-matched to the same ISIN on the same date;
+                    # keep first, skip rest so the ON CONFLICT batch PKs are unique.
+                    result.unmatched += 1
+                    log.warning(
+                        "earnings.match.duplicate",
+                        isin=isin,
+                        company=r.company_name,
+                    )
+                    continue
+                seen.add(key)
                 rows.append(
                     {
                         "isin": isin,

@@ -134,6 +134,7 @@ class DeliveryAgent:
         td = trade_date or today_ist()
         result = DeliveryResult(parsed=len(raws))
         rows: list[dict[str, object]] = []
+        seen: set[str] = set()
         async with SessionLocal() as session:
             for r in raws:
                 isin = await self._match_isin(session, r.company_name)
@@ -141,6 +142,19 @@ class DeliveryAgent:
                     result.unmatched += 1
                     log.warning("delivery.match.miss", company=r.company_name)
                     continue
+                if isin in seen:
+                    # Two source names fuzzy-matched to the same ISIN (pg_trgm
+                    # false positive, e.g. 'LIC India' -> 3M India). Keep the
+                    # first, skip the rest so the ON CONFLICT batch has unique
+                    # (isin, trade_date) keys (Postgres rejects a dup PK there).
+                    result.unmatched += 1
+                    log.warning(
+                        "delivery.match.duplicate_isin",
+                        isin=isin,
+                        company=r.company_name,
+                    )
+                    continue
+                seen.add(isin)
                 rows.append(
                     {
                         "isin": isin,
