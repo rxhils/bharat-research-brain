@@ -26,6 +26,7 @@ Step = tuple[str, Callable[[], Awaitable[Any]]]
 # Intended IST ordering (single run executes them in this sequence).
 SEQUENCE = (
     "price",
+    "price_yf",  # yfinance EOD fallback when the manual bhavcopy is absent
     "adjusted",
     "technical",
     "news",
@@ -129,6 +130,14 @@ class PipelineScheduler:
 
             await PriceAgent(request=PriceRequest(mode="today")).run(RunContext())
 
+        async def price_yf() -> None:
+            from backend.agents.base import RunContext
+            from backend.agents.price import PriceAgent, PriceRequest
+
+            await PriceAgent(
+                request=PriceRequest(mode="today_yfinance")
+            ).run(RunContext())
+
         async def adjusted() -> None:
             from backend.agents.price_adjust import AdjustedPriceAgent
 
@@ -196,6 +205,7 @@ class PipelineScheduler:
 
         return {
             "price": price,
+            "price_yf": price_yf,
             "adjusted": adjusted,
             "technical": technical,
             "news": news,

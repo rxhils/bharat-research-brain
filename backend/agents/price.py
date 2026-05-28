@@ -26,12 +26,14 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.agents.base import AgentResult, BaseAgent, HealthStatus, RunContext
+from backend.config import settings
 from backend.data_sources.nse_bhavcopy import (
     BhavRow,
     FilterWarning,
     NSEBhavcopyClient,
     filter_rows,
 )
+from backend.data_sources.yfinance_client import PriceBar, YFinanceClient
 from backend.db.models import DataIngestionRun, DataQualityLog, Stock
 from backend.db.repositories import calendar as calendar_repo
 from backend.db.repositories import prices as prices_repo
@@ -44,6 +46,9 @@ log = structlog.get_logger()
 _QUALITY_CODES = frozenset({"ZERO_OR_NEGATIVE_PRICE", "OHLC_VIOLATION"})
 _PUBLISH_HOUR = 18
 _PUBLISH_MINUTE = 30
+# If today already holds this many rows, the manual bhavcopy was loaded — the
+# yfinance fallback stands down rather than racing the canonical source.
+_BHAVCOPY_PRESENT_THRESHOLD = 400
 
 
 @dataclass
@@ -78,7 +83,7 @@ class PriceResult:
 class PriceRequest:
     """What a base.run()-driven invocation should do."""
 
-    mode: str  # 'backfill' | 'today'
+    mode: str  # 'backfill' | 'today' | 'today_yfinance'
     start: date | None = None
     end: date | None = None
 
@@ -90,10 +95,12 @@ class PriceAgent(BaseAgent):
         self,
         *,
         client: NSEBhavcopyClient | None = None,
+        yf_client: YFinanceClient | None = None,
         request: PriceRequest | None = None,
     ) -> None:
         super().__init__()
         self.client = client or NSEBhavcopyClient()
+        self.yf_client = yf_client or YFinanceClient()
         self._request = request
 
     # ----- public modes -----
@@ -191,6 +198,95 @@ class PriceAgent(BaseAgent):
             cache_ttl=cache_ttl,
         )
 
+    async def fetch_eod_yfinance(
+        self,
+        *,
+        dry_run: bool = False,
+        ingestion_run_id: int | None = None,
+        lookback_days: int = 5,
+    ) -> PriceResult:
+        """Nightly EOD fill from yfinance when the manual bhavcopy is absent.
+
+        Gated by `settings.yfinance_price_fallback`. Stands down if today already
+        holds >= `_BHAVCOPY_PRESENT_THRESHOLD` rows (bhavcopy loaded). Otherwise
+        fetches the last `lookback_days` OHLCV bars for every stock with an NSE
+        symbol (yfinance symbol = nse_symbol + ".NS") and bulk-inserts with
+        ON CONFLICT (trade_date, isin) DO NOTHING.
+        """
+        if not settings.yfinance_price_fallback:
+            log.info("prices.yfinance.disabled")
+            return PriceResult(note="yfinance fallback disabled")
+
+        today = today_ist()
+        async with SessionLocal() as session:
+            present = await prices_repo.count_for_date(session, today)
+            if present >= _BHAVCOPY_PRESENT_THRESHOLD:
+                log.info("prices.yfinance.skip_present", date=str(today), rows=present)
+                return PriceResult(
+                    present_days=1,
+                    note=f"{present} rows already present for {today} — bhavcopy loaded",
+                )
+            symbols = await self._load_symbols(session)
+
+        known = {isin for isin, _ in symbols}
+        raw: list[BhavRow] = []
+        attempted = 0
+        for isin, nse_symbol in symbols:
+            if not nse_symbol:
+                continue
+            attempted += 1
+            try:
+                bars = await self.yf_client.fetch_price_history(
+                    f"{nse_symbol}.NS", lookback_days=lookback_days
+                )
+            except Exception as exc:  # noqa: BLE001 - external feed, best-effort
+                log.warning("prices.yfinance.fetch_failed", symbol=nse_symbol, error=str(exc))
+                continue
+            raw.extend(self._bar_to_row(isin, b) for b in bars)
+
+        good, warns = filter_rows(raw, known)
+        result = PriceResult(
+            dates_attempted=attempted,
+            warnings=warns,
+            rows_ready=len(good),
+        )
+
+        if not dry_run and good:
+            if ingestion_run_id is None:
+                raise ValueError("ingestion_run_id required for a non-dry-run insert")
+            async with SessionLocal() as session:
+                result.rows_inserted = await prices_repo.bulk_insert(
+                    session, good, ingestion_run_id=ingestion_run_id, source="yfinance"
+                )
+                await self._write_warnings(session, result.warnings, ingestion_run_id)
+                await session.commit()
+
+        log.info("prices.yfinance.done", **result.counts())
+        return result
+
+    @staticmethod
+    def _bar_to_row(isin: str, bar: PriceBar) -> BhavRow:
+        return BhavRow(
+            isin=isin,
+            trade_date=bar.trade_date,
+            series="EQ",
+            open=bar.open,
+            high=bar.high,
+            low=bar.low,
+            close=bar.close,
+            volume=bar.volume,
+            value_inr_cr=None,
+            trades_count=None,
+            delivery_qty=None,
+            delivery_pct=None,
+        )
+
+    async def _load_symbols(
+        self, session: AsyncSession
+    ) -> list[tuple[str, str | None]]:
+        stmt = select(Stock.isin, Stock.nse_symbol).where(Stock.delisted_on.is_(None))
+        return [(r.isin, r.nse_symbol) for r in (await session.execute(stmt)).all()]
+
     # ----- per-date download + filter -----
     async def _fetch_one(
         self,
@@ -257,6 +353,8 @@ class PriceAgent(BaseAgent):
                 dry_run=False,
                 ingestion_run_id=run_pk,
             )
+        elif self._request.mode == "today_yfinance":
+            res = await self.fetch_eod_yfinance(dry_run=False, ingestion_run_id=run_pk)
         else:
             res = await self.fetch_today(dry_run=False, ingestion_run_id=run_pk)
 

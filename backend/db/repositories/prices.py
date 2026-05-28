@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import distinct, select
+from sqlalchemy import distinct, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -43,6 +43,14 @@ async def get_dates_present(
         PriceEod.trade_date <= end,
     )
     return set((await session.execute(stmt)).scalars().all())
+
+
+async def count_for_date(session: AsyncSession, trade_date: date) -> int:
+    """How many `prices_eod` rows exist for `trade_date` (across all ISINs)."""
+    stmt = select(func.count()).select_from(PriceEod).where(
+        PriceEod.trade_date == trade_date
+    )
+    return int((await session.execute(stmt)).scalar_one())
 
 
 async def bulk_insert(

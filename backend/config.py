@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     live_feed_mode: str = "demo"  # 'demo' (synthetic ticks) | 'fyers' (broker WS)
     newsapi_key: str = ""  # optional; RSS works without it
     marketaux_key: str = ""  # optional; RSS works without it
+    yfinance_price_fallback: bool = True  # nightly EOD fill when bhavcopy absent
 
     model_config = SettingsConfigDict(
         env_file=".env",

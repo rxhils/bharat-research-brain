@@ -40,6 +40,18 @@ _REVENUE_LABELS = ("Total Revenue", "TotalRevenue", "Operating Revenue", "Revenu
 
 
 @dataclass(frozen=True)
+class PriceBar:
+    """One EOD OHLCV bar from yfinance history (Decimal prices, int volume)."""
+
+    trade_date: date
+    open: Decimal | None
+    high: Decimal | None
+    low: Decimal | None
+    close: Decimal | None
+    volume: int | None
+
+
+@dataclass(frozen=True)
 class RawSplit:
     ex_date: date
     ratio: Decimal  # yfinance factor: new shares per old share
@@ -183,6 +195,37 @@ class YFinanceClient:
     async def fetch_financials(self, yf_symbol: str) -> FinancialData:
         """Cash-flow / quarterly / dividend-history view for one ticker (Chunk 4.8)."""
         return await asyncio.to_thread(self._fetch_financials_sync, yf_symbol)
+
+    async def fetch_price_history(
+        self, yf_symbol: str, *, lookback_days: int = 5
+    ) -> list[PriceBar]:
+        """Last `lookback_days` EOD OHLCV bars for one ticker (nightly fallback)."""
+        return await asyncio.to_thread(
+            self._fetch_history_sync, yf_symbol, lookback_days
+        )
+
+    @staticmethod
+    def _fetch_history_sync(yf_symbol: str, lookback_days: int) -> list[PriceBar]:
+        import yfinance as yf  # lazy: keeps module importable without the dep
+
+        hist = yf.Ticker(yf_symbol).history(
+            period=f"{lookback_days}d", auto_adjust=False
+        )
+        bars: list[PriceBar] = []
+        if hist is None or getattr(hist, "empty", True):
+            return bars
+        for ts, row in hist.iterrows():
+            bars.append(
+                PriceBar(
+                    trade_date=ts.date(),
+                    open=_num(row.get("Open")),
+                    high=_num(row.get("High")),
+                    low=_num(row.get("Low")),
+                    close=_num(row.get("Close")),
+                    volume=_int(row.get("Volume")),
+                )
+            )
+        return bars
 
     @staticmethod
     def _fetch_info_sync(yf_symbol: str) -> dict[str, Any]:
