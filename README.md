@@ -1,32 +1,127 @@
-# Bharat Research Brain
+<p align="center">
+  <img src="assets/banner.png" alt="Bharat Research Brain" width="480" />
+</p>
 
-> Autonomous multi-agent research engine for Indian equity markets.  
-> Scores 507 NSE/BSE stocks nightly. Outputs ranked watchlists and  
-> cited daily research reports. Runs locally — zero cloud, zero cost.
+<h3 align="center">Autonomous multi-agent research engine for Indian equity markets</h3>
+<p align="center">
+  Scores 507 NSE/BSE stocks nightly &nbsp;·&nbsp; Ranked watchlists &nbsp;·&nbsp; Cited daily reports &nbsp;·&nbsp; Runs locally — zero cloud, zero cost
+</p>
 
 ---
 
-## What it does
+## What is this?
 
-Every evening at 18:30 IST, 14 agents run in sequence:
+Bharat Research Brain is a system that runs on your own computer every evening and automatically researches the Indian stock market for you. It looks at 507 stocks across the NSE and BSE — price movements, company financials, news sentiment, sector trends, and what big institutions are buying or selling — and distills all of it into a ranked list and a written research report by the time you sit down after dinner.
 
-1. Downloads NSE bhavcopy (daily OHLCV for 507 stocks)
-2. Applies split/bonus adjustments to all price history
-3. Computes RSI, MACD, EMA 20/50/200, ATR, volume signals
-4. Fetches news from 6 RSS feeds + Upstox News API
-5. Scores every article with FinBERT (local, no API)
-6. Fetches fundamentals — PE, ROE, FCF, quarterly trends
-7. Classifies 19 sectors as leading / neutral / lagging
-8. Ingests FII/DII institutional flow data
-9. Reads macro signals — VIX, USD/INR, crude, Nifty vs 200d MA
-10. Computes per-stock risk scores including earnings proximity
-11. Ranks all 507 stocks 0–100 with a composite formula
-12. Writes a structured daily research report
-13. Fact-checks the report against the database (Meta-Auditor)
-14. Saves everything to PostgreSQL + Obsidian vault
+There is no subscription, no cloud service, and no ongoing cost. Everything runs locally. The only API that costs money is DeepSeek (used in a future phase for conversational queries) — for all current phases, the monthly bill is ₹0.
 
-Output: `bharat analyze SUNPHARMA` gives a full 9-section  
-terminal deep-dive in 2 seconds from the local database.
+---
+
+## How it works, step by step
+
+Each evening at 18:30 IST, 14 agents run one after another in a pipeline. Here is exactly what each one does in plain language:
+
+**1. Universe agent**
+Confirms all 507 stocks are in the database. If NSE/BSE has added or removed a ticker, this agent flags it. Nothing proceeds until the universe is clean.
+
+**2. Price agent**
+Reads the NSE bhavcopy file (a CSV the exchange publishes daily with every stock's open, high, low, close, and volume). This file is downloaded manually by the operator — no scraping. The agent inserts new rows into the price history table. The database currently holds 522,677 rows covering 1,229 trading days.
+
+**3. Adjusted price agent**
+When a company does a stock split or a bonus issue, historical prices need to be corrected so charts don't show a false crash. This agent detects corporate events and applies backward-adjustment factors to all affected rows. Every price in the database is always split/bonus-adjusted.
+
+**4. Technical agent**
+For each of the 507 stocks, it computes:
+- **RSI (14)** — is the stock overbought, oversold, or neutral?
+- **MACD** — is momentum accelerating or decelerating?
+- **EMA 20 / 50 / 200** — is the stock above its short, medium, and long-term trend lines?
+- **ATR** — how volatile is the stock right now (daily range as % of price)?
+- **Volume signal** — is today's volume above or below the 20-day average?
+- **52-week proximity** — how close is the price to its annual high?
+- **Delivery %** — what fraction of today's trades were delivery-based (institutional conviction proxy)?
+
+**5. News agent**
+Pulls the latest headlines from 6 RSS feeds (Economic Times Markets, Mint, Business Standard, Moneycontrol, NSE announcements, BSE announcements) and the Upstox News API. Headlines are matched to stocks by ticker symbol and company name.
+
+**6. Sentiment agent**
+Runs every matched headline through FinBERT — a financial language model that runs entirely on your local machine, no API call needed. Each headline is scored as positive, negative, or neutral with a confidence value. The agent aggregates these into a per-stock sentiment score and flags any stock that has had a sudden spike in negative news.
+
+**7. Fundamentals agent**
+Fetches PE ratio, ROE, debt-to-equity ratio, free cash flow, quarterly profit trend, dividend yield, and current ratio for each stock from Yahoo Finance (free). These are stored in the database and updated weekly.
+
+**8. Sector agent**
+Groups all 507 stocks into 19 sectors. For each sector, it computes the average technical and fundamental score of all its members and classifies the sector as **leading**, **neutral**, or **lagging**. This tells you which parts of the market have tailwinds and which have headwinds.
+
+**9. FII/DII agent**
+Ingests the daily FII (foreign institutional investors) and DII (domestic institutional investors) buy/sell data published by SEBI. Computes a 5-day rolling net flow for both. When foreigners are consistently net sellers and domestics are buying, that's a very different signal than both buying together.
+
+**10. Macro agent**
+Reads four macro indicators:
+- **India VIX** — the market's fear gauge. Above 20 = spike, forces risk-off regardless of everything else.
+- **USD/INR** — a rising rupee is generally supportive; a falling rupee adds cost pressure for import-heavy sectors.
+- **Crude oil price** — impacts aviation, paints, tyres, petrochemicals, logistics.
+- **Nifty vs its 200-day EMA** — the single most reliable bull/bear regime indicator. Above = risk-on. Below = risk-off.
+
+The macro agent outputs one of three regime labels: `risk-on`, `neutral`, or `risk-off`. This label affects every stock's final score.
+
+**11. Risk agent**
+For each stock, computes a risk penalty (0–15 points subtracted from the final score) based on:
+- ATR volatility (how wild the daily price swings are)
+- News spike flag (sudden surge in negative headlines)
+- Earnings proximity (days until the next quarterly results — stocks near results are riskier)
+- Promoter pledge flag (if promoters have pledged shares as collateral, that's a red flag)
+
+**12. Ranking agent**
+Combines everything into one 0–100 composite score per stock:
+
+```
+composite = (technical × 0.35) + (fundamental × 0.40) + (macro × 0.25)
+          + sentiment_adj (±5)
+          - risk_penalty (0–15)
+```
+
+Then assigns a signal label:
+
+| Score | Label |
+|-------|-------|
+| 75–100 | `bullish-watch` |
+| 55–74 | `needs-confirmation` |
+| 40–54 | `neutral` |
+| 20–39 | `cautious` |
+| 0–19 | `avoid` |
+
+**13. Report agent**
+Writes a structured daily research note in Markdown. It covers: market regime summary, top 15 bullish-watch stocks with reasoning, sector rotation analysis, macro outlook, FII/DII flow interpretation, stocks with notable news, and a risk calendar (upcoming earnings). The report is saved to PostgreSQL and exported to your Obsidian vault.
+
+**14. Meta-Auditor agent**
+Reads the report and checks every factual claim against the database. It enforces 5 rules:
+1. Every cited score must match the database value.
+2. Every cited news headline must exist in the news table with a URL.
+3. No banned advisory language ("buy", "sell", "guaranteed", "tip").
+4. The disclaimer block must be present.
+5. No claims about the future without appropriate hedging language.
+
+If any check fails, the report is flagged and the operator is notified.
+
+---
+
+## What you get at the end
+
+```bash
+bharat analyze SUNPHARMA
+```
+
+This returns a 9-section terminal deep-dive in under 2 seconds, entirely from the local database — no external calls at query time:
+
+1. Stock snapshot (price, change, 52-week range)
+2. Technical signal breakdown (RSI, MACD, EMA stack)
+3. Fundamental snapshot (PE, ROE, FCF, D/E)
+4. Sentiment summary (recent headlines + scores)
+5. Sector context (is Pharma leading or lagging?)
+6. FII/DII flow context
+7. Macro regime impact
+8. Risk flags
+9. Composite score with component breakdown
 
 ---
 
@@ -54,39 +149,18 @@ terminal deep-dive in 2 seconds from the local database.
 
 ---
 
-## Ranking formula
-```
-composite = (technical × 0.35) + (fundamental × 0.40) + (macro × 0.25)
-          + sentiment_adj (±5)
-          - risk_penalty (0–15)
-```
-
-**Technical score** — RSI zone, EMA position, MACD, volume trend,  
-52-week proximity, delivery % (institutional conviction signal)
-
-**Fundamental score** — PE (sector-relative), ROE, D/E ratio, FCF,  
-quarterly profit trend, dividend history, current ratio
-
-**Macro score** — FII/DII 5-day rolling sum, sector momentum,  
-macro regime (Nifty vs 200d MA + India VIX)
-
-**Risk penalty** — ATR volatility, news spike, earnings proximity  
-(days to next results), promoter pledge flag
-
----
-
 ## Stack
 
 | Layer | Technology |
 |-------|-----------|
 | Language | Python 3.11 |
-| API | FastAPI |
+| API server | FastAPI |
 | ORM | SQLAlchemy 2.0 + Alembic |
 | Database | PostgreSQL 16 (pgvector + pg_trgm) |
 | Cache | Redis 7 |
 | Containers | Docker Compose |
 | NLP (local) | FinBERT — ProsusAI/finbert |
-| LLM | DeepSeek API (Phase 6) |
+| LLM | DeepSeek API (Phase 6 only) |
 | Scheduler | APScheduler |
 | Knowledge base | Obsidian vault |
 
@@ -103,7 +177,7 @@ cd bharat-research-brain
 cp .env.example .env
 # Edit .env — set POSTGRES_PASSWORD, DATABASE_URL
 
-# 3. Start
+# 3. Start services
 docker compose up -d postgres redis
 
 # 4. Run migrations
@@ -124,7 +198,7 @@ docker compose run --rm backend python -m backend.cli analyze RELIANCE
 
 ---
 
-## CLI commands
+## CLI reference
 
 ```bash
 # Rankings
@@ -186,7 +260,6 @@ backend/
   cli.py                # Typer CLI entrypoint
 scripts/
   download_permitted.py # Frankfurter + yfinance only
-services/finbert/       # reserved (in-process instead)
 ```
 
 ---
@@ -198,13 +271,12 @@ services/finbert/       # reserved (in-process instead)
 | NSE bhavcopy | Daily OHLCV | Operator download → file ingest |
 | Yahoo Finance (yfinance) | Fundamentals, macro | API (free) |
 | Frankfurter API | USD/INR | API (free) |
-| SEBI FPI files | FII institutional flows | Operator download → file ingest |
+| SEBI FPI files | FII/DII flows | Operator download → file ingest |
 | Upstox News API | Stock-specific news | API (free with account) |
 | RSS feeds (6 sources) | Market news | feedparser |
 | Moneycontrol | Delivery %, earnings calendar | Operator download → file ingest |
 
-NSE scraping is prohibited by §2.5 of CLAUDE.md.  
-All NSE data enters via manually downloaded files.
+NSE scraping is prohibited. All NSE data enters via manually downloaded files.
 
 ---
 
@@ -219,10 +291,10 @@ All NSE data enters via manually downloaded files.
 | 3.2b — News + data | ✅ | FII real data, delivery, earnings |
 | 4 — Synthesis | ✅ | Ranking, report, auditor, scheduler |
 | 4.10 — VCP screener | 🔄 | Minervini pattern detection |
-| 4.11 — Sector ratios | 🔄 | NIM/NPA, ANDA, margins |
-| 4.12 — Market breadth | 🔄 | A/D ratio, % above EMA200 |
-| 5 — Outcomes + ML | ⏳ | Outcome agent, XGBoost |
-| 6 — Hermes | ⏳ | Conversational AI layer |
+| 4.11 — Sector ratios | 🔄 | NIM/NPA for banks, ANDA for pharma |
+| 4.12 — Market breadth | 🔄 | A/D ratio, % stocks above EMA200 |
+| 5 — Outcomes + ML | ⏳ | Outcome agent, XGBoost signal validation |
+| 6 — Hermes | ⏳ | Conversational AI layer (DeepSeek) |
 | 7 — Dashboard | ⏳ | Next.js UI (after Phase 5) |
 
 ---
@@ -232,7 +304,7 @@ All NSE data enters via manually downloaded files.
 This system is for personal research only.  
 Output is never used for advisory services.  
 Not registered with SEBI as an investment adviser.  
-See CLAUDE.md §1 for the full personal-use scope lock.
+See `CLAUDE.md §1` for the full personal-use scope lock.
 
 ---
 
