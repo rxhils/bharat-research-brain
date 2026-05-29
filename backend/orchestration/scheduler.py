@@ -37,6 +37,7 @@ SEQUENCE = (
     "macro",
     "risk",
     "ranking",
+    "outcome",  # Phase 5.1 — track picks vs actuals (after ranking writes picks)
     "report",
     "auditor",
     "vault",
@@ -188,6 +189,12 @@ class PipelineScheduler:
 
             await RankingAgent().run_all()
 
+        async def outcome() -> None:
+            from backend.agents.outcome import OutcomeAgent
+
+            # vault_dir gates memory-file writes (skipped when not mounted).
+            await OutcomeAgent().run(today=run_date, vault_dir=vault_dir)
+
         async def report() -> None:
             from backend.agents.report import ReportAgent
 
@@ -216,6 +223,7 @@ class PipelineScheduler:
             "macro": macro,
             "risk": risk,
             "ranking": ranking,
+            "outcome": outcome,
             "report": report,
             "auditor": auditor,
             "vault": vault,

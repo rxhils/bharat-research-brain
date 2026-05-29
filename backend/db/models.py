@@ -1101,3 +1101,89 @@ class VcpSignal(Base):
         Index("idx_vcp_isin_date", "isin", text("computed_date DESC")),
         Index("idx_vcp_detected", text("computed_date DESC"), "vcp_detected"),
     )
+
+
+class OutcomeLog(Base):
+    """Pick-vs-actual outcome tracking (Phase 5, Chunk 5.1).
+
+    One row per (isin, pick_date): a ranking pick's entry (adj_close on pick_date)
+    plus its realised 1d/5d forward returns, filled in on later days from
+    prices_eod_adjusted. The snapshot columns (technical/fundamental/macro scores,
+    regime, vix, sector, vcp, delivery) capture the inputs that were available AT
+    pick_date so the system can later learn which signals actually predicted moves.
+    """
+
+    __tablename__ = "outcome_log"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    isin: Mapped[str] = mapped_column(
+        String(12), ForeignKey("stocks.isin", ondelete="RESTRICT"), nullable=False
+    )
+    pick_date: Mapped[date] = mapped_column(Date, nullable=False)
+    signal_label: Mapped[str] = mapped_column(Text, nullable=False)
+    composite_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    entry_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 4))
+    exit_price_1d: Mapped[Decimal | None] = mapped_column(Numeric(12, 4))
+    exit_price_5d: Mapped[Decimal | None] = mapped_column(Numeric(12, 4))
+    return_1d_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    return_5d_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    direction_correct_1d: Mapped[bool | None] = mapped_column(Boolean)
+    direction_correct_5d: Mapped[bool | None] = mapped_column(Boolean)
+    technical_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    fundamental_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    macro_score: Mapped[Decimal | None] = mapped_column(Numeric(6, 2))
+    macro_regime: Mapped[str | None] = mapped_column(Text)
+    india_vix: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    sector: Mapped[str | None] = mapped_column(Text)
+    vcp_detected: Mapped[bool | None] = mapped_column(Boolean)
+    delivery_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("isin", "pick_date", name="uq_outcome_isin_pick_date"),
+        Index("idx_outcome_pick_date", text("pick_date DESC")),
+        Index("idx_outcome_isin_date", "isin", "pick_date"),
+    )
+
+
+class XgboostTraining(Base):
+    """Feature/target matrix appended once a pick's 5d outcome is known (5.1).
+
+    One row per (isin, pick_date). Features are the pick-date snapshot (no future
+    data — mle no-leakage); the targets (`target_return_5d`,
+    `target_direction_5d`) are the realised 5-day outcome the model learns to
+    predict. Encoded categoricals: fii_signal (-2..+2), macro_regime (-1/0/1).
+    """
+
+    __tablename__ = "xgboost_training"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    isin: Mapped[str] = mapped_column(Text, nullable=False)
+    pick_date: Mapped[date] = mapped_column(Date, nullable=False)
+    f_technical_score: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_fundamental_score: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_macro_score: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_rsi_14: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_macd_hist: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_price_vs_ema200: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_pe_ratio: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_roe: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_revenue_growth: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_fii_signal_encoded: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_macro_regime_encoded: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_india_vix: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_vcp_score: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_delivery_pct: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    f_days_to_results: Mapped[int | None] = mapped_column(Integer)
+    target_return_5d: Mapped[Decimal | None] = mapped_column(Numeric(8, 4))
+    target_direction_5d: Mapped[bool | None] = mapped_column(Boolean)
+    created_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), nullable=False, server_default=func.now()
+    )
+
+    __table_args__ = (
+        UniqueConstraint("isin", "pick_date", name="uq_xgboost_isin_pick_date"),
+        Index("idx_xgboost_pick_date", text("pick_date DESC")),
+    )

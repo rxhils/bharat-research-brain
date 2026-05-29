@@ -79,6 +79,8 @@ delivery_app = typer.Typer(help="Delivery-% agent commands", no_args_is_help=Tru
 app.add_typer(delivery_app, name="delivery")
 earnings_app = typer.Typer(help="Earnings-calendar agent commands", no_args_is_help=True)
 app.add_typer(earnings_app, name="earnings")
+outcome_app = typer.Typer(help="Outcome agent commands", no_args_is_help=True)
+app.add_typer(outcome_app, name="outcome")
 
 
 # -----------------------------------------------------------------------------
@@ -3241,6 +3243,163 @@ async def _pipeline_status_async(*, limit: int) -> None:
     console.print(table)
     if not runs:
         console.print("[yellow]no pipeline runs — run 'pipeline run' first[/yellow]")
+
+
+# -----------------------------------------------------------------------------
+# outcome (pick-vs-actual tracking, Phase 5.1)
+# -----------------------------------------------------------------------------
+@outcome_app.command("run")
+def outcome_run(
+    date_str: str | None = typer.Option(
+        None, "--date", help="Run date (YYYY-MM-DD or DD-MMM-YYYY); default today IST."
+    ),
+) -> None:
+    """Record today's picks, fill due exits, append training rows, log accuracy."""
+    asyncio.run(_outcome_run_async(date_str=date_str))
+
+
+async def _outcome_run_async(*, date_str: str | None) -> None:
+    from datetime import datetime
+
+    from backend.agents.outcome import OutcomeAgent
+
+    run_date = None
+    if date_str:
+        run_date = None
+        for fmt in ("%Y-%m-%d", "%d-%b-%Y"):
+            try:
+                run_date = datetime.strptime(date_str, fmt).date()
+                break
+            except ValueError:
+                continue
+        if run_date is None:
+            console.print("[red]--date must be YYYY-MM-DD or DD-MMM-YYYY[/red]")
+            raise typer.Exit(code=1)
+
+    log.info("cli.outcome.run.start", date=date_str)
+    res = await OutcomeAgent().run(today=run_date)
+    s = res.accuracy_summary
+    table = Table(title="Outcome run")
+    table.add_column("field", style="bold")
+    table.add_column("value", justify="right")
+    table.add_row("picks recorded", str(res.picks_recorded))
+    table.add_row("exits filled", str(res.exits_filled))
+    table.add_row("training rows added", str(res.training_rows_added))
+    table.add_row("total picks tracked", str(s.total_picks))
+    table.add_row("1d accuracy %", str(s.accuracy_1d_pct))
+    table.add_row("5d accuracy %", str(s.accuracy_5d_pct))
+    console.print(table)
+
+
+@outcome_app.command("show")
+def outcome_show(
+    days: int = typer.Option(30, "--days", help="Look back this many pick dates."),
+    signal: str | None = typer.Option(None, "--signal", help="Filter by signal label."),
+    limit: int = typer.Option(30, "--limit", help="Max rows."),
+) -> None:
+    """Show per-pick outcomes (entry/exit/return/correct for 1d + 5d)."""
+    asyncio.run(_outcome_show_async(days=days, signal=signal, limit=limit))
+
+
+async def _outcome_show_async(*, days: int, signal: str | None, limit: int) -> None:
+    from sqlalchemy import select
+
+    from backend.db.models import Stock
+    from backend.db.repositories import outcome as outcome_repo
+    from backend.db.session import SessionLocal
+
+    def _f(v: object) -> str:
+        return f"{float(v):.2f}" if v is not None else "—"
+
+    def _b(v: object) -> str:
+        return "✓" if v is True else ("✗" if v is False else "—")
+
+    async with SessionLocal() as session:
+        rows = await outcome_repo.fetch_recent_outcomes(
+            session, days=days, signal=signal
+        )
+        rows = rows[:limit]
+        syms = dict(
+            (
+                await session.execute(
+                    select(Stock.isin, Stock.nse_symbol).where(
+                        Stock.isin.in_([r.isin for r in rows] or [""])
+                    )
+                )
+            ).all()
+        )
+
+    table = Table(title=f"Outcomes (last {days}d)")
+    for col in (
+        "date", "symbol", "signal", "entry", "exit_1d", "ret_1d%", "ok_1d",
+        "exit_5d", "ret_5d%", "ok_5d",
+    ):
+        table.add_column(col)
+    for r in rows:
+        table.add_row(
+            r.pick_date.isoformat(),
+            syms.get(r.isin) or r.isin,
+            r.signal_label,
+            _f(r.entry_price),
+            _f(r.exit_price_1d),
+            _f(r.return_1d_pct),
+            _b(r.direction_correct_1d),
+            _f(r.exit_price_5d),
+            _f(r.return_5d_pct),
+            _b(r.direction_correct_5d),
+        )
+    console.print(table)
+    if not rows:
+        console.print(
+            "[yellow]no outcomes yet — run 'outcome run' after a ranking[/yellow]"
+        )
+
+
+@outcome_app.command("accuracy")
+def outcome_accuracy(
+    days: int = typer.Option(30, "--days", help="Look back this many pick dates."),
+) -> None:
+    """Show directional accuracy by signal label (1d + 5d)."""
+    asyncio.run(_outcome_accuracy_async(days=days))
+
+
+async def _outcome_accuracy_async(*, days: int) -> None:
+    from backend.agents.outcome import compute_accuracy
+    from backend.db.repositories import outcome as outcome_repo
+    from backend.db.session import SessionLocal
+
+    async with SessionLocal() as session:
+        rows = await outcome_repo.fetch_recent_outcomes(session, days=days)
+    summary = compute_accuracy(rows)
+
+    table = Table(title=f"Outcome accuracy (last {days}d)")
+    for col in ("signal_label", "picks", "correct_1d", "acc_1d%", "correct_5d", "acc_5d%"):
+        table.add_column(col, justify="right")
+    table.add_column("", style="dim")  # spacer end
+    for label, d in summary.by_signal.items():
+        table.add_row(
+            label,
+            str(d["picks"]),
+            str(d["correct_1d"]),
+            str(d["accuracy_1d_pct"]),
+            str(d["correct_5d"]),
+            str(d["accuracy_5d_pct"]),
+            "",
+        )
+    table.add_row(
+        "[bold]ALL[/bold]",
+        str(summary.total_picks),
+        str(summary.correct_1d),
+        str(summary.accuracy_1d_pct),
+        str(summary.correct_5d),
+        str(summary.accuracy_5d_pct),
+        "",
+    )
+    console.print(table)
+    if not rows:
+        console.print(
+            "[yellow]no outcomes yet — sparse until picks mature 1d/5d[/yellow]"
+        )
 
 
 # -----------------------------------------------------------------------------
