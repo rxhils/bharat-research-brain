@@ -790,7 +790,8 @@ class MacroSignal(Base):
     __table_args__ = (
         CheckConstraint(
             "signal IN ('rising','falling','stable','unknown',"
-            "'risk-on','risk-off','neutral','elevated','spike')",
+            "'risk-on','risk-off','neutral','elevated','spike',"
+            "'bullish','bearish','strong','weak')",
             name="macro_signal_allowed",
         ),
         Index("idx_macro_signals_date", text("computed_date DESC")),
