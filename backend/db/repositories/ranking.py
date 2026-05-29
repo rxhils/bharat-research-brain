@@ -252,6 +252,21 @@ async def fetch_macro_regime(session: AsyncSession) -> str:
     return (await session.execute(stmt)).scalar_one_or_none() or "neutral"
 
 
+async def fetch_active_event(session: AsyncSession) -> str | None:
+    """Latest scenario_event signal (Chunk 4.13), or None if no event is stored.
+
+    The Macro Agent only writes a `scenario_event` row when an event is active, so
+    absence simply means no event — return None and the ranker applies a 0 tilt.
+    """
+    stmt = (
+        select(MacroSignal.signal)
+        .where(MacroSignal.indicator == "scenario_event")
+        .order_by(MacroSignal.computed_date.desc())
+        .limit(1)
+    )
+    return (await session.execute(stmt)).scalar_one_or_none()
+
+
 async def bulk_upsert(session: AsyncSession, rows: Sequence[dict[str, Any]]) -> int:
     """Insert/update ranking rows. Returns affected count. Caller commits."""
     if not rows:

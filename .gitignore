@@ -25,4 +25,6 @@ _vault_stage/
 
 docs/
 
-data/
+# Operator-downloaded CSV drop dir at the repo root only — must NOT ignore the
+# backend/data/ source package (e.g. scenario_patterns.py, Chunk 4.13).
+/data/

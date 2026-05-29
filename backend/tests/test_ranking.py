@@ -458,6 +458,27 @@ def test_macro_none_is_base() -> None:
 
 
 # ---------------------------------------------------------------------------
+# macro_score — Chunk 4.13: scenario event_score (sector-event sensitivity)
+# ---------------------------------------------------------------------------
+def test_macro_event_score_added() -> None:
+    # event_score is a trailing optional defaulting to 0 (backward compat); a
+    # +2 sector-event sensitivity lifts the macro score by exactly 2 points.
+    base = score_macro(MacroInputs(None, None, None))
+    lifted = score_macro(MacroInputs(None, None, None, event_score=2))
+    assert base == Decimal("50")
+    assert lifted == Decimal("52")
+    assert lifted - base == Decimal("2")
+
+
+def test_macro_event_score_negative() -> None:
+    # negative event_score lowers the macro score.
+    # base 50 + strong_sell -20 + lagging -15 + risk-off -10 + event -3 = 2
+    assert score_macro(
+        MacroInputs("strong_sell", "lagging", "risk-off", event_score=-3)
+    ) == Decimal("2")
+
+
+# ---------------------------------------------------------------------------
 # sentiment adjustment + risk penalty
 # ---------------------------------------------------------------------------
 def test_sentiment_adjustment() -> None:

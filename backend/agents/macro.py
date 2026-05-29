@@ -15,6 +15,7 @@ tested; only `fetch_*` / `run` do I/O. Results are upserted into
 from __future__ import annotations
 
 import json
+import zlib
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
@@ -24,6 +25,7 @@ import structlog
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.data.scenario_patterns import detect_active_event
 from backend.data_sources._http import fetch_bytes
 from backend.db.repositories._helpers import today_ist
 from backend.errors import DataSourceError
@@ -37,6 +39,7 @@ NIFTY = "nifty_50"
 BOND = "india_10y"
 INDIA_VIX = "india_vix"
 REGIME = "regime"
+SCENARIO_EVENT = "scenario_event"  # Chunk 4.13 — active macro event row
 
 # Chunk 4.12 — market-breadth indicators (computed from existing DB tables, no
 # external source). These describe internal participation, not a price level.
@@ -58,6 +61,9 @@ _WEIGHTS: dict[str, Decimal] = {
     ADV_DECL: Decimal("0"),
     PCT_EMA200: Decimal("0"),
     NEW_HIGH_LOW: Decimal("0"),
+    # Scenario event (Chunk 4.13) is informational at the macro row level; the
+    # per-sector tilt is applied by the Ranking Agent, so it carries no weight.
+    SCENARIO_EVENT: Decimal("0"),
 }
 
 _STABLE_BAND_PCT = Decimal("0.5")  # |move| <= 0.5% counts as "stable"
@@ -238,6 +244,19 @@ def parse_yahoo_chart(text: str) -> tuple[Decimal | None, list[Decimal]]:
 
 def _mean(values: list[Decimal]) -> Decimal | None:
     return sum(values, Decimal(0)) / len(values) if values else None
+
+
+def pct_change_30d(closes: list[Decimal]) -> float | None:
+    """% change over ~30 sessions: (latest - ref) / ref * 100, ref = close 30
+    sessions back (or the earliest available). None if insufficient/zero data.
+    Pure — used to feed `detect_active_event` (Chunk 4.13)."""
+    if len(closes) < 2:
+        return None
+    latest = closes[-1]
+    ref = closes[-31] if len(closes) >= 31 else closes[0]
+    if ref == 0:
+        return None
+    return float((latest - ref) / ref * 100)
 
 
 # ---------------------------------------------------------------------------
@@ -436,6 +455,24 @@ class MacroAgent:
     def _unknown(indicator: str, source: str) -> MacroReading:
         return MacroReading(indicator, None, "unknown", _WEIGHTS[indicator], source)
 
+    async def crude_30d_change(self) -> float | None:
+        """30-day % change in Brent (for scenario detection). None on any issue."""
+        _latest, closes = await self._yahoo("BZ=F", CRUDE)
+        return pct_change_30d(closes)
+
+    async def usd_inr_30d_change(self) -> float | None:
+        """30-day % change in USD/INR (for scenario detection). None on any issue."""
+        end = today_ist()
+        start = end - timedelta(days=45)  # ~31 sessions of buffer over weekends
+        url = f"{_FRANKFURTER}/{start.isoformat()}..{end.isoformat()}?from=USD&to=INR"
+        try:
+            body, _meta = await fetch_bytes(url, cache_ttl=0)
+            series = parse_frankfurter_timeseries(body.decode())
+        except (DataSourceError, ValueError) as exc:
+            log.warning("macro.usd_inr_change.failed", error=str(exc))
+            return None
+        return pct_change_30d(series)
+
     async def run(self, *, dry_run: bool = False) -> dict[str, MacroReading]:
         from backend.db.repositories import macro as macro_repo
         from backend.db.session import SessionLocal
@@ -458,6 +495,32 @@ class MacroAgent:
                 REGIME, _REGIME_VALUE[regime], regime, _WEIGHTS[REGIME], "macro_agent"
             )
 
+            # Scenario event detection (Chunk 4.13). rbi_action / us_fed_action are
+            # None for now (manual detection deferred). If no event is detected we
+            # store no row — fetch_active_event then returns None and the ranker
+            # applies a 0 tilt (error-handling: never crash macro run on this).
+            vix_reading = readings[INDIA_VIX].value
+            event = detect_active_event(
+                india_vix=float(vix_reading) if vix_reading is not None else None,
+                crude_30d_change_pct=await self.crude_30d_change(),
+                usd_inr_30d_change_pct=await self.usd_inr_30d_change(),
+                rbi_action=None,
+                us_fed_action=None,
+            )
+            if event is not None:
+                log.info("macro.scenario_event.detected", event=event)
+                # value is a stable, cosmetic placeholder (the signal string is the
+                # real payload). crc32 is deterministic across processes, unlike
+                # the spec's hash() which is PYTHONHASHSEED-salted — see lesson.
+                placeholder = Decimal(zlib.crc32(event.encode()) % 1000) / Decimal(100)
+                readings[SCENARIO_EVENT] = MacroReading(
+                    SCENARIO_EVENT,
+                    placeholder,
+                    event,
+                    _WEIGHTS[SCENARIO_EVENT],
+                    "macro_agent",
+                )
+
             if not dry_run:
                 payload = [_to_dict(r, today_ist()) for r in readings.values()]
                 await macro_repo.bulk_upsert(session, payload)
@@ -466,8 +529,9 @@ class MacroAgent:
         log.info(
             "macro.run.done",
             regime=regime,
+            scenario_event=event,
             dry_run=dry_run,
-            **{k: v.signal for k, v in readings.items() if k != REGIME},
+            **{k: v.signal for k, v in readings.items() if k not in (REGIME, SCENARIO_EVENT)},
         )
         return readings
 

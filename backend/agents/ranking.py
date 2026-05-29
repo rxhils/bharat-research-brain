@@ -121,6 +121,9 @@ class MacroInputs:
     fii_signal: str | None
     sector_signal: str | None
     macro_regime: str | None
+    # Chunk 4.13: per-sector scenario-event sensitivity (-3..+3), added on top of
+    # the regime score. Default 0 keeps the original 3-arg form (backward compat).
+    event_score: int = 0
 
 
 @dataclass(frozen=True)
@@ -385,6 +388,9 @@ def score_macro(m: MacroInputs) -> Decimal:
     score += {"risk-on": 10, "neutral": 0, "risk-off": -10}.get(
         m.macro_regime or "", 0
     )
+    # Chunk 4.13: scenario-event sector sensitivity (-3..+3), a small sector-
+    # rotation tilt on top of the one-size regime.
+    score += m.event_score
     return _clamp(score)
 
 
@@ -465,6 +471,7 @@ class RankingAgent:
 
     async def run_all(self, *, dry_run: bool = False) -> list[RankingRow]:
         from backend.agents.risk import RiskAgent
+        from backend.data.scenario_patterns import get_sector_event_score
         from backend.db.repositories import ranking as ranking_repo
         from backend.db.repositories import vcp as vcp_repo
         from backend.db.repositories._helpers import today_ist
@@ -485,6 +492,7 @@ class RankingAgent:
             sector_by_isin = await ranking_repo.fetch_sector_by_isin(session)
             fii_signal = await ranking_repo.fetch_fii_signal(session)
             regime = await ranking_repo.fetch_macro_regime(session)
+            active_event = await ranking_repo.fetch_active_event(session)
             sector_medians = await ranking_repo.fetch_sector_medians(session)
             isin_sector = await ranking_repo.fetch_isin_sectors(session)
             vcp = await vcp_repo.fetch_latest(session)
@@ -515,7 +523,10 @@ class RankingAgent:
                 sector=sec or "",
                 sector_median_pe=sm.median_pe if sm else None,
             )
-            m = MacroInputs(fii_signal, sector_by_isin.get(i), regime)
+            event_score = get_sector_event_score(sec or "", active_event)
+            m = MacroInputs(
+                fii_signal, sector_by_isin.get(i), regime, event_score=event_score
+            )
             rows.append(compute_score(i, t, f, m, sent.get(i), risk.get(i)))
         rows.sort(key=lambda r: r.composite_score, reverse=True)
 
