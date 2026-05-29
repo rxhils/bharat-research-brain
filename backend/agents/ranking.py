@@ -38,22 +38,33 @@ _W_MACRO = Decimal("0.25")
 # terms — PE 25 is cheap for Pharma (fair 30) but expensive for Energy (fair 12).
 # Keys must match `stocks.sector` labels. When a stock's sector is absent here,
 # scoring falls back to the DB sector-median PE, then to absolute thresholds.
+# Chunk 4.11b: keys are the EXACT active DB sector labels (SELECT DISTINCT
+# sector FROM stocks WHERE delisted_on IS NULL, 19 rows, 2026-05-29) — no
+# aliases, no dead keys. Every active sector maps so none falls through to the
+# sector-median path. Fair-PE values reuse the original palette (the dead alias
+# keys' multiples survive on their canonical label: Banking->Financials,
+# Healthcare->Pharma, Technology->IT, Oil & Gas->Energy, Mining->Metals,
+# Consumer->Consumer Services/Durables, Infra->Construction).
 SECTOR_PE_FAIR: dict[str, Decimal] = {
     "Financials": Decimal("15"),
-    "Banking": Decimal("15"),
+    "Capital Goods": Decimal("18"),
     "Pharma": Decimal("30"),
-    "Healthcare": Decimal("28"),
-    "IT": Decimal("25"),
-    "Technology": Decimal("25"),
-    "FMCG": Decimal("40"),
-    "Consumer": Decimal("38"),
-    "Energy": Decimal("12"),
-    "Oil & Gas": Decimal("12"),
-    "Metals": Decimal("10"),
-    "Mining": Decimal("10"),
     "Auto": Decimal("20"),
+    "Consumer Services": Decimal("38"),
+    "FMCG": Decimal("40"),
+    "IT": Decimal("25"),
+    "Chemicals": Decimal("20"),
+    "Construction": Decimal("18"),
+    "Metals": Decimal("10"),
+    "Energy": Decimal("12"),
+    "Power": Decimal("12"),
+    "Consumer Durables": Decimal("38"),
+    "Services": Decimal("25"),
     "Realty": Decimal("25"),
-    "Infra": Decimal("18"),
+    "Telecom": Decimal("25"),
+    "Media": Decimal("20"),
+    "Textiles": Decimal("18"),
+    "Diversified": Decimal("20"),
 }
 
 
@@ -337,22 +348,23 @@ def score_fundamental(f: FundInputs) -> Decimal:
 def sector_bonus(
     sector: str, roe: Decimal | None, revenue_growth: Decimal | None
 ) -> Decimal:
-    """Sector-specific quality bonus (Chunk 4.11), 0-5 pts.
+    """Sector-specific quality bonus (Chunk 4.11, real-label keys 4.11b), 0-5 pts.
 
     `roe` and `revenue_growth` arrive as raw yfinance fractions (0.18 = 18%).
-    Banking/Financials: +5 if roe > 15%. IT/Technology: +5 if roe > 20%.
-    Pharma/Healthcare: +5 if revenue_growth > 15%. FMCG/Consumer: +3 if
-    revenue_growth > 10%. All other sectors: 0.
+    Keys are exact active DB sector labels (no aliases). Financials: +5 if
+    roe > 15%. IT: +5 if roe > 20%. Pharma: +5 if revenue_growth > 15%.
+    FMCG / Consumer Services / Consumer Durables: +3 if revenue_growth > 10%.
+    All other sectors: 0.
     """
     roe_pct = roe * 100 if roe is not None else None
     rg_pct = revenue_growth * 100 if revenue_growth is not None else None
-    if sector in ("Banking", "Financials"):
+    if sector == "Financials":
         return Decimal(5) if roe_pct is not None and roe_pct > 15 else Decimal(0)
-    if sector in ("IT", "Technology"):
+    if sector == "IT":
         return Decimal(5) if roe_pct is not None and roe_pct > 20 else Decimal(0)
-    if sector in ("Pharma", "Healthcare"):
+    if sector == "Pharma":
         return Decimal(5) if rg_pct is not None and rg_pct > 15 else Decimal(0)
-    if sector in ("FMCG", "Consumer"):
+    if sector in ("FMCG", "Consumer Services", "Consumer Durables"):
         return Decimal(3) if rg_pct is not None and rg_pct > 10 else Decimal(0)
     return Decimal(0)
 
