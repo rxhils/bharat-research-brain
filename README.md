@@ -668,6 +668,18 @@ bharat-research-brain/
 
 ---
 
+## Consumer apps
+
+This engine is the research and data layer for:
+
+| App | What it is |
+|-----|-----------|
+| [SmartMoney India (smart-trading)](https://github.com/rxhils/smart-trading) | Premium Indian-market investing copilot — chat, AI portfolio leaderboard, read-only broker integration. Uses this engine's daily scores, signals, and news data to power grounded answers and portfolio rankings. |
+
+> If you want the app layer — the chat interface, AI portfolio leaderboard, and broker integration — that is where it lives.
+
+---
+
 ## Compliance
 
 This system is for **personal research only.**  
