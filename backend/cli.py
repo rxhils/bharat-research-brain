@@ -81,6 +81,8 @@ earnings_app = typer.Typer(help="Earnings-calendar agent commands", no_args_is_h
 app.add_typer(earnings_app, name="earnings")
 outcome_app = typer.Typer(help="Outcome agent commands", no_args_is_help=True)
 app.add_typer(outcome_app, name="outcome")
+backtest_app = typer.Typer(help="Walk-forward backtest commands", no_args_is_help=True)
+app.add_typer(backtest_app, name="backtest")
 
 
 # -----------------------------------------------------------------------------
@@ -3400,6 +3402,188 @@ async def _outcome_accuracy_async(*, days: int) -> None:
         console.print(
             "[yellow]no outcomes yet — sparse until picks mature 1d/5d[/yellow]"
         )
+
+
+# -----------------------------------------------------------------------------
+# backtest (walk-forward technical-only proxy, Phase 5.2)
+# -----------------------------------------------------------------------------
+@backtest_app.command("run")
+def backtest_run_cmd(
+    start: str = typer.Option(
+        "2024-01-01", "--start", help="Backtest start date (YYYY-MM-DD)."
+    ),
+    end: str = typer.Option(
+        "2026-05-26", "--end", help="Backtest end date (YYYY-MM-DD)."
+    ),
+    top_n: int = typer.Option(10, "--top-n", help="Number of stocks held per rebalance."),
+    hold_days: int = typer.Option(5, "--hold-days", help="Holding period in trading days."),
+    rebalance_every: int = typer.Option(
+        5, "--rebalance-every", help="Rebalance cadence in trading days."
+    ),
+    min_score: float = typer.Option(60.0, "--min-score", help="Minimum technical score."),
+    capital: float = typer.Option(
+        1_000_000.0, "--capital", help="Starting capital (INR)."
+    ),
+    sample_trades: int = typer.Option(
+        5, "--sample-trades", help="Print this many example trades for eyeballing."
+    ),
+) -> None:
+    """Run the walk-forward technical-only backtest and print summary + alpha."""
+    asyncio.run(
+        _backtest_run_async(
+            start=start,
+            end=end,
+            top_n=top_n,
+            hold_days=hold_days,
+            rebalance_every=rebalance_every,
+            min_score=min_score,
+            capital=capital,
+            sample_trades=sample_trades,
+        )
+    )
+
+
+async def _backtest_run_async(
+    *,
+    start: str,
+    end: str,
+    top_n: int,
+    hold_days: int,
+    rebalance_every: int,
+    min_score: float,
+    capital: float,
+    sample_trades: int,
+) -> None:
+    from datetime import date as _date
+    from decimal import Decimal
+
+    from backend.backtest.engine import BacktestConfig
+    from backend.backtest.runner import run_backtest
+    from backend.db.session import SessionLocal
+
+    cfg = BacktestConfig(
+        start_date=_date.fromisoformat(start),
+        end_date=_date.fromisoformat(end),
+        top_n=top_n,
+        hold_days=hold_days,
+        rebalance_every=rebalance_every,
+        starting_capital=Decimal(str(capital)),
+        min_score=Decimal(str(min_score)),
+    )
+    log.info(
+        "cli.backtest.run.start",
+        start=start,
+        end=end,
+        top_n=top_n,
+        min_score=min_score,
+    )
+    async with SessionLocal() as session:
+        result = await run_backtest(session, cfg)
+
+    def _d(v: object) -> str:
+        return str(v) if v is not None else "n/a"
+
+    console.print(
+        f"[bold]Backtest — technical-only proxy[/bold]  "
+        f"{result.config.start_date.isoformat()} → {result.config.end_date.isoformat()}  "
+        f"(min_score={float(result.config.min_score):g}, top_n={result.config.top_n}, "
+        f"hold={result.config.hold_days}d)"
+    )
+
+    # Table 1 — Returns comparison (bot vs both benchmarks).
+    t1 = Table(title="Table 1 — Returns comparison")
+    t1.add_column("strategy", style="bold")
+    t1.add_column("total return %", justify="right")
+    t1.add_column("CAGR %", justify="right")
+    t1.add_column("alpha (total) %", justify="right")
+    t1.add_row("Bot", _d(result.total_return_pct), _d(result.cagr_pct), "—")
+    t1.add_row(
+        "Nifty 50 proxy",
+        _d(result.nifty_benchmark_return_pct),
+        _d(result.nifty50_cagr_pct),
+        _d(result.alpha_vs_nifty_pct),
+    )
+    t1.add_row(
+        "Nifty 200 proxy",
+        _d(result.nifty200_return_pct),
+        _d(result.nifty200_cagr_pct),
+        _d(result.alpha_vs_nifty200_pct),
+    )
+    console.print(t1)
+
+    # Table 2 — Risk metrics.
+    t2 = Table(title="Table 2 — Risk metrics")
+    t2.add_column("metric", style="bold")
+    t2.add_column("value", justify="right")
+    t2.add_row("Sharpe (rf 7%)", _d(result.sharpe))
+    t2.add_row("Sortino (rf 7%)", _d(result.sortino))
+    t2.add_row("Beta vs Nifty 50", _d(result.beta_vs_nifty50))
+    t2.add_row("Beta vs Nifty 200", _d(result.beta_vs_nifty200))
+    t2.add_row("Max drawdown %", _d(result.max_drawdown_pct))
+    t2.add_row("Win rate %", _d(result.win_rate_pct))
+    t2.add_row(
+        "Profit factor",
+        _d(result.profit_factor)
+        + ("" if result.profit_factor is not None else " (inf, no losses)"),
+    )
+    t2.add_row("Avg win %", _d(result.avg_win_pct))
+    t2.add_row("Avg loss %", _d(result.avg_loss_pct))
+    t2.add_row("Total trades", str(result.total_trades))
+    t2.add_row("Total costs (INR)", _d(result.total_costs_paid))
+    console.print(t2)
+
+    # Sector exposure (% of holdings).
+    if result.sector_exposure:
+        t3 = Table(title="Sector exposure (% of holdings)")
+        t3.add_column("sector")
+        t3.add_column("%", justify="right")
+        for sec, pct in result.sector_exposure[:12]:
+            t3.add_row(sec, str(pct))
+        console.print(t3)
+
+    # Sanity-check banner per spec.
+    cagr = float(result.cagr_pct)
+    wr = float(result.win_rate_pct)
+    if cagr > 40:
+        console.print(
+            f"[red]SANITY: CAGR {cagr}% > 40%[/red] — suspect lookahead bias; investigate."
+        )
+    if wr > 70:
+        console.print(
+            f"[red]SANITY: win rate {wr}% > 70%[/red] — suspect data leak; investigate."
+        )
+
+    # Example trades (eyeball check)
+    if result.trades and sample_trades > 0:
+        from sqlalchemy import select
+
+        from backend.db.models import Stock
+        from backend.db.session import SessionLocal as _Sess
+
+        async with _Sess() as session:
+            syms = dict(
+                (
+                    await session.execute(
+                        select(Stock.isin, Stock.nse_symbol).where(
+                            Stock.isin.in_([t.isin for t in result.trades[:sample_trades]])
+                        )
+                    )
+                ).all()
+            )
+        ex = Table(title=f"Sample trades (first {sample_trades})")
+        for c in ("symbol", "entry_date", "exit_date", "entry", "exit", "ret_pct", "score"):
+            ex.add_column(c)
+        for t in result.trades[:sample_trades]:
+            ex.add_row(
+                syms.get(t.isin) or t.isin,
+                t.entry_date.isoformat(),
+                t.exit_date.isoformat(),
+                f"{float(t.entry_price):.2f}",
+                f"{float(t.exit_price):.2f}",
+                f"{float(t.gross_return_pct):.2f}",
+                str(t.score),
+            )
+        console.print(ex)
 
 
 # -----------------------------------------------------------------------------
