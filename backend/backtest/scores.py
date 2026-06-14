@@ -233,6 +233,11 @@ _NEUTRAL = Decimal("50")
 _W_FUND = Decimal("0.40")
 _W_TECH_FT = Decimal("0.35")
 _W_MACRO = Decimal("0.25")
+# When fundamentals are absent (pre-late-2024 history), re-normalize T+M to sum
+# to 1.0 so F's 0.40 weight is absorbed rather than pinned at a neutral 50 (which
+# capped the composite ~20 pts below the score floor). 0.35/0.60, 0.25/0.60.
+_W_TECH_ABSENT = Decimal("0.583")
+_W_MACRO_ABSENT = Decimal("0.417")
 _SECTOR_TILT = {
     "leading": Decimal("5"),
     "lagging": Decimal("-5"),
@@ -406,8 +411,9 @@ async def compute_full_composite(
     sector-momentum tilt, clamped 0..100. Returns None when the technical score is
     None (insufficient price history / warmup) — the runner then skips the stock,
     exactly as the technical-only baseline does; we never fabricate a score for a
-    stock we cannot technically rate. Missing fundamentals fall back to neutral 50
-    (the live ranker's base).
+    stock we cannot technically rate. When fundamentals are ABSENT the composite
+    re-normalizes across T and M (F's 0.40 weight is absorbed, not pinned at a
+    neutral 50) so it is not structurally capped below the score floor.
 
     `macro_score` / `sector_signal` may be supplied pre-computed (the runner
     fetches macro once per date and sector classes in one batched query per date,
@@ -417,8 +423,6 @@ async def compute_full_composite(
     if t is None:
         return None
     f = await reconstruct_fundamental_score(session, isin, as_of)
-    if f is None:
-        f = _NEUTRAL
     m = (
         macro_score
         if macro_score is not None
@@ -429,7 +433,14 @@ async def compute_full_composite(
         if sector_signal is not None
         else await reconstruct_sector_signal(session, isin, as_of)
     )
-    composite = t * _W_TECH_FT + f * _W_FUND + m * _W_MACRO
+    if f is not None:
+        composite = t * _W_TECH_FT + f * _W_FUND + m * _W_MACRO
+    else:
+        # Fundamentals absent (pre-late-2024): re-normalize across T and M so the
+        # missing 0.40 weight is absorbed, not pinned at a neutral 50. Without this
+        # the composite is structurally capped ~20 pts below the score floor and
+        # the system buys nothing in windows lacking fundamentals history.
+        composite = t * _W_TECH_ABSENT + m * _W_MACRO_ABSENT
     composite += _SECTOR_TILT.get(sig, Decimal("0"))
     composite = max(Decimal("0"), min(Decimal("100"), composite))
     return composite.quantize(_Q2, rounding=ROUND_HALF_EVEN)

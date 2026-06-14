@@ -420,8 +420,9 @@ async def test_compute_full_composite_fundamentals_missing(
     _patch_components(monkeypatch, t=Decimal("70"), f=None, m=Decimal("60"),
                       sector="neutral")
     out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
-    # F None -> neutral 50: 70*0.35 + 50*0.40 + 60*0.25 = 59.5
-    assert out == Decimal("59.50")
+    # F None -> re-normalize T+M (no 20-pt neutral-F ceiling):
+    # 70*0.583 + 60*0.417 = 65.83
+    assert out == Decimal("65.83")
 
 
 async def test_compute_full_composite_lagging_sector_clamp(
@@ -471,3 +472,31 @@ def test_weighted_ratio_none_when_no_overlap() -> None:
     base = {"A": Decimal("100")}
     prices = {"B": Decimal("100")}  # nothing in both base and prices
     assert _weighted_ratio(base, prices, None) is None
+
+
+# ---------------------------------------------------------------------------
+# Composite re-normalization when fundamentals are absent (removes the
+# structural 20-point neutral-F ceiling that blocked all pre-2024 trades).
+# ---------------------------------------------------------------------------
+async def test_composite_with_fundamentals(monkeypatch: pytest.MonkeyPatch) -> None:
+    # F present -> full composite unchanged: 70*0.35 + 80*0.40 + 60*0.25 = 71.5
+    _patch_components(monkeypatch, t=Decimal("70"), f=Decimal("80"), m=Decimal("60"),
+                      sector="neutral")
+    out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
+    assert out == Decimal("71.50")
+
+
+async def test_composite_without_fundamentals_renormalized(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # F None -> T+M re-normalized to sum 1.0: 80*0.583 + 70*0.417 = 75.83,
+    # which CLEARS the 75 floor (impossible under the old neutral-50 ceiling).
+    _patch_components(monkeypatch, t=Decimal("80"), f=None, m=Decimal("70"),
+                      sector="neutral")
+    out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
+    assert out == Decimal("75.83")
+
+
+def test_composite_renorm_weights_sum_to_one() -> None:
+    # 0.583 + 0.417 = 1.000 (T and M absorb the fundamentals weight exactly).
+    assert Decimal("1.000") == _scores._W_TECH_ABSENT + _scores._W_MACRO_ABSENT
