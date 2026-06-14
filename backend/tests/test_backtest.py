@@ -13,6 +13,7 @@ from decimal import Decimal
 
 import pytest
 
+from backend.backtest import scores as _scores
 from backend.backtest.cost_model import (
     apply_costs,
     cost_on_notional,
@@ -33,6 +34,12 @@ from backend.backtest.engine import (
     simulate_day,
     sortino_ratio,
     win_rate_pct,
+)
+from backend.backtest.scores import (
+    compute_full_composite,
+    reconstruct_fundamental_score,
+    reconstruct_macro_score,
+    reconstruct_sector_signal,
 )
 
 
@@ -284,3 +291,151 @@ def test_avg_win_and_loss_pct() -> None:
     ]
     assert avg_win_pct(trades) == Decimal("7.00")
     assert avg_loss_pct(trades) == Decimal("-3.50")
+
+
+# ---------------------------------------------------------------------------
+# Week 2 — full-composite reconstruction (Chunk 5.2b). Pure: a fake async
+# session returns canned rows shaped like the historical tables; the four
+# component functions are monkeypatched for the orchestrator tests. No DB.
+# The no-lookahead asserts live inside the functions; here we only check the
+# scoring/mapping/fallback logic.
+# ---------------------------------------------------------------------------
+class _FakeResult:
+    def __init__(self, rows: list[tuple]) -> None:
+        self._rows = rows
+
+    def first(self) -> tuple | None:
+        return self._rows[0] if self._rows else None
+
+    def all(self) -> list[tuple]:
+        return self._rows
+
+
+class _FakeSession:
+    """Async session stub. `single` answers isin/sector queries; `by_indicator`
+    answers the per-indicator macro queries (dispatched on params['indicator'])."""
+
+    def __init__(
+        self,
+        *,
+        single: list[tuple] | None = None,
+        by_indicator: dict[str, list[tuple]] | None = None,
+    ) -> None:
+        self._single = single or []
+        self._by_indicator = by_indicator or {}
+
+    async def execute(self, _query: object, params: dict | None = None) -> _FakeResult:
+        ind = (params or {}).get("indicator")
+        if ind is not None:
+            return _FakeResult(self._by_indicator.get(ind, []))
+        return _FakeResult(self._single)
+
+
+_ASOF = date(2025, 6, 1)
+_PRIOR = date(2025, 1, 1)  # a publication/computed date safely <= _ASOF
+
+
+async def test_reconstruct_fundamental_score_with_data() -> None:
+    # Stored units: roe/rev are FRACTIONS, debt_to_equity a RATIO, pe absolute.
+    # PE 15, ROE 22%, D/E 0.5, rev 15%, FCF positive, sector IT -> very strong;
+    # the reused live score_fundamental saturates to 100 on inputs this good.
+    row = (_PRIOR, Decimal("15"), Decimal("0.22"), Decimal("0.5"),
+           Decimal("1000"), Decimal("0.15"), "IT")
+    sess = _FakeSession(single=[row])
+    score = await reconstruct_fundamental_score(sess, "INE0", _ASOF)
+    assert score is not None and score >= Decimal("70")
+
+
+async def test_reconstruct_fundamental_score_no_data() -> None:
+    sess = _FakeSession(single=[])
+    assert await reconstruct_fundamental_score(sess, "INE0", _ASOF) is None
+
+
+async def test_reconstruct_macro_score_strong_breadth() -> None:
+    sess = _FakeSession(by_indicator={
+        "advance_decline_ratio": [(_PRIOR, Decimal("2.5"))],
+        "pct_above_ema200": [(_PRIOR, Decimal("70"))],
+        "new_high_low_ratio": [(_PRIOR, Decimal("5"))],
+    })
+    score = await reconstruct_macro_score(sess, _ASOF)
+    assert score > Decimal("60")
+
+
+async def test_reconstruct_macro_score_weak_breadth() -> None:
+    sess = _FakeSession(by_indicator={
+        "advance_decline_ratio": [(_PRIOR, Decimal("0.5"))],
+        "pct_above_ema200": [(_PRIOR, Decimal("30"))],
+        "new_high_low_ratio": [(_PRIOR, Decimal("0.3"))],
+    })
+    score = await reconstruct_macro_score(sess, _ASOF)
+    assert score < Decimal("40")
+
+
+async def test_reconstruct_sector_signal_leading() -> None:
+    sess = _FakeSession(single=[(_PRIOR, "leading")])
+    assert await reconstruct_sector_signal(sess, "INE0", _ASOF) == "leading"
+
+
+async def test_reconstruct_sector_signal_no_data() -> None:
+    sess = _FakeSession(single=[])
+    assert await reconstruct_sector_signal(sess, "INE0", _ASOF) == "neutral"
+
+
+def _patch_components(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    t: Decimal,
+    f: Decimal | None,
+    m: Decimal,
+    sector: str,
+) -> None:
+    monkeypatch.setattr(_scores, "compute_score_from_history", lambda _c, _v=None: t)
+
+    async def _f(*_a: object, **_k: object) -> Decimal | None:
+        return f
+
+    async def _m(*_a: object, **_k: object) -> Decimal:
+        return m
+
+    async def _s(*_a: object, **_k: object) -> str:
+        return sector
+
+    monkeypatch.setattr(_scores, "reconstruct_fundamental_score", _f)
+    monkeypatch.setattr(_scores, "reconstruct_macro_score", _m)
+    monkeypatch.setattr(_scores, "reconstruct_sector_signal", _s)
+
+
+async def test_compute_full_composite_all_present(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_components(monkeypatch, t=Decimal("70"), f=Decimal("80"), m=Decimal("60"),
+                      sector="leading")
+    out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
+    # 70*0.35 + 80*0.40 + 60*0.25 + 5 (leading) = 76.5
+    assert out == Decimal("76.50")
+
+
+async def test_compute_full_composite_fundamentals_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_components(monkeypatch, t=Decimal("70"), f=None, m=Decimal("60"),
+                      sector="neutral")
+    out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
+    # F None -> neutral 50: 70*0.35 + 50*0.40 + 60*0.25 = 59.5
+    assert out == Decimal("59.50")
+
+
+async def test_compute_full_composite_lagging_sector_clamp(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_components(monkeypatch, t=Decimal("10"), f=Decimal("10"), m=Decimal("10"),
+                      sector="lagging")
+    out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
+    # 10*0.35 + 10*0.40 + 10*0.25 - 5 (lagging) = 5
+    assert out == Decimal("5.00")
+
+
+async def test_compute_full_composite_max_clamp(monkeypatch: pytest.MonkeyPatch) -> None:
+    _patch_components(monkeypatch, t=Decimal("100"), f=Decimal("100"), m=Decimal("100"),
+                      sector="leading")
+    out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
+    # 100 + 5 = 105 -> clamped to 100
+    assert out == Decimal("100.00")

@@ -3427,8 +3427,18 @@ def backtest_run_cmd(
     sample_trades: int = typer.Option(
         5, "--sample-trades", help="Print this many example trades for eyeballing."
     ),
+    use_full_composite: bool = typer.Option(
+        True,
+        "--use-full-composite/--technical-only",
+        help="Score with the full F+T+M composite (Week 2) vs the technical-only "
+        "proxy baseline.",
+    ),
 ) -> None:
-    """Run the walk-forward technical-only backtest and print summary + alpha."""
+    """Run the walk-forward backtest and print summary + alpha.
+
+    Default is the Week 2 full composite (F+T+M, FII/sentiment neutral); pass
+    --technical-only to reproduce the Chunk 5.2 technical-only baseline.
+    """
     asyncio.run(
         _backtest_run_async(
             start=start,
@@ -3439,6 +3449,7 @@ def backtest_run_cmd(
             min_score=min_score,
             capital=capital,
             sample_trades=sample_trades,
+            use_full_composite=use_full_composite,
         )
     )
 
@@ -3453,6 +3464,7 @@ async def _backtest_run_async(
     min_score: float,
     capital: float,
     sample_trades: int,
+    use_full_composite: bool = True,
 ) -> None:
     from datetime import date as _date
     from decimal import Decimal
@@ -3469,6 +3481,7 @@ async def _backtest_run_async(
         rebalance_every=rebalance_every,
         starting_capital=Decimal(str(capital)),
         min_score=Decimal(str(min_score)),
+        use_full_composite=use_full_composite,
     )
     log.info(
         "cli.backtest.run.start",
@@ -3476,6 +3489,7 @@ async def _backtest_run_async(
         end=end,
         top_n=top_n,
         min_score=min_score,
+        use_full_composite=use_full_composite,
     )
     async with SessionLocal() as session:
         result = await run_backtest(session, cfg)
@@ -3483,11 +3497,16 @@ async def _backtest_run_async(
     def _d(v: object) -> str:
         return str(v) if v is not None else "n/a"
 
+    _label = (
+        "full composite (F+T+M, FII/sentiment neutral)"
+        if result.config.use_full_composite
+        else "technical-only proxy"
+    )
     console.print(
-        f"[bold]Backtest — technical-only proxy[/bold]  "
+        f"[bold]Backtest — {_label}[/bold]  "
         f"{result.config.start_date.isoformat()} → {result.config.end_date.isoformat()}  "
         f"(min_score={float(result.config.min_score):g}, top_n={result.config.top_n}, "
-        f"hold={result.config.hold_days}d)"
+        f"hold={result.config.hold_days}d, rebal={result.config.rebalance_every}d)"
     )
 
     # Table 1 — Returns comparison (bot vs both benchmarks).

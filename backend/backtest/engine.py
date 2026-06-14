@@ -28,6 +28,10 @@ class BacktestConfig:
     rebalance_every: int = 5
     starting_capital: Decimal = Decimal("1000000")
     min_score: Decimal = Decimal("60")
+    # Week 2 (Chunk 5.2b): score each stock with the full F+T+M composite
+    # (fundamentals/macro/sector reconstructed no-lookahead) instead of the
+    # technical-only proxy. Default False preserves the Chunk 5.2 baseline.
+    use_full_composite: bool = False
 
 
 @dataclass(frozen=True)

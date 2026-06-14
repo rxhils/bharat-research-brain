@@ -32,7 +32,11 @@ from backend.backtest.engine import (
     sortino_ratio,
     win_rate_pct,
 )
-from backend.backtest.scores import compute_score_from_history
+from backend.backtest.scores import (
+    compute_full_composite,
+    compute_score_from_history,
+    reconstruct_macro_score,
+)
 
 # India risk-free rate for Sharpe/Sortino (operator-specified).
 _RISK_FREE_ANNUAL = Decimal("0.07")
@@ -170,6 +174,39 @@ async def _active_isins(session: AsyncSession) -> list[str]:
     return [r[0] for r in rows]
 
 
+# Latest sector-momentum class per sector as-of a date — ONE DISTINCT ON query
+# for all 19 sectors, not one per stock (postgres-patterns: no N identical reads).
+_SQL_SECTOR_CLASS_ASOF = text(
+    """
+    SELECT DISTINCT ON (sector) sector, classification, computed_date
+    FROM sector_signals_historical
+    WHERE computed_date <= :as_of
+    ORDER BY sector, computed_date DESC
+    """
+)
+
+
+async def _sector_signals_on(
+    session: AsyncSession, isins: list[str], as_of: date
+) -> dict[str, str]:
+    """{isin: 'leading'|'neutral'|'lagging'} from the latest sector class <= as_of.
+
+    Two batched queries (sector classes + isin->sector), never one per stock. The
+    DISTINCT ON guarantees `computed_date <= as_of`; asserted defensively.
+    """
+    class_rows = (
+        await session.execute(_SQL_SECTOR_CLASS_ASOF, {"as_of": as_of})
+    ).all()
+    class_by_sector: dict[str, str] = {}
+    for sec, classification, cd in class_rows:
+        assert cd <= as_of, f"lookahead: sector {sec} {cd} > as_of {as_of}"
+        class_by_sector[sec] = classification or "neutral"
+    sector_rows = (
+        await session.execute(_SQL_SECTORS, {"isins": list(isins)})
+    ).all()
+    return {isin: class_by_sector.get(sec, "neutral") for isin, sec in sector_rows}
+
+
 async def _fetch_history(
     session: AsyncSession,
     isins: list[str],
@@ -261,12 +298,30 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
         )
 
         scores: dict[str, Decimal] = {}
-        for isin in isins:
-            c_series = closes.get(isin, [])
-            v_series = vols.get(isin)
-            score = compute_score_from_history(c_series, v_series)
-            if score is not None:
-                scores[isin] = score
+        if cfg.use_full_composite:
+            # Per-date inputs fetched ONCE (macro is isin-independent; sector
+            # classes batched) — only fundamentals are read per stock.
+            macro_score = await reconstruct_macro_score(session, rebalance_date)
+            sector_sig = await _sector_signals_on(session, isins, rebalance_date)
+            for isin in isins:
+                score = await compute_full_composite(
+                    session,
+                    isin,
+                    rebalance_date,
+                    closes.get(isin, []),
+                    vols.get(isin),
+                    macro_score=macro_score,
+                    sector_signal=sector_sig.get(isin, "neutral"),
+                )
+                if score is not None:
+                    scores[isin] = score
+        else:
+            for isin in isins:
+                score = compute_score_from_history(
+                    closes.get(isin, []), vols.get(isin)
+                )
+                if score is not None:
+                    scores[isin] = score
         if not scores:
             skipped += 1
             continue

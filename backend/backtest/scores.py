@@ -13,8 +13,13 @@ from this proxy and the result is honestly a technical-only score.
 """
 from __future__ import annotations
 
-from decimal import Decimal
+from datetime import date
+from decimal import ROUND_HALF_EVEN, Decimal
 
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.agents.ranking import FundInputs, score_fundamental
 from backend.agents.technical_indicators import ema, ema_cross_signal, macd, rsi
 
 # Volume window sizes (sessions).
@@ -107,3 +112,220 @@ def compute_score_from_history(
 
     score = max(0.0, min(100.0, score))
     return Decimal(str(round(score, 2)))
+
+
+# ===========================================================================
+# Week 2 — full F+T+M composite reconstruction (Chunk 5.2b).
+#
+# Mirrors the LIVE ranking weights (F 0.40 / T 0.35 / M 0.25) + a ±5 sector-
+# momentum tilt. mle no-lookahead: fundamentals read by publication_date <= as_of
+# (reporting-lag availability date); macro/sector by computed_date <= as_of
+# (same-day observable). EVERY fetch asserts the row's date <= as_of. FII flows
+# and news sentiment have NO per-date history, so they are held NEUTRAL (omitted)
+# and documented — never fabricated.
+# ===========================================================================
+_Q2 = Decimal("0.01")
+_NEUTRAL = Decimal("50")
+_W_FUND = Decimal("0.40")
+_W_TECH = Decimal("0.35")
+_W_MACRO = Decimal("0.25")
+_SECTOR_TILT = {
+    "leading": Decimal("5"),
+    "lagging": Decimal("-5"),
+    "neutral": Decimal("0"),
+}
+_MACRO_INDICATORS = ("advance_decline_ratio", "pct_above_ema200", "new_high_low_ratio")
+
+_SQL_FUND_ASOF = text(
+    """
+    SELECT f.publication_date, f.pe_ratio, f.roe, f.debt_to_equity,
+           f.fcf, f.revenue_growth_yoy, s.sector
+    FROM fundamental_signals_historical f
+    JOIN stocks s ON s.isin = f.isin
+    WHERE f.isin = :isin AND f.publication_date <= :as_of
+    ORDER BY f.publication_date DESC
+    LIMIT 1
+    """
+)
+_SQL_MACRO_ASOF = text(
+    """
+    SELECT computed_date, value
+    FROM macro_signals_historical
+    WHERE indicator = :indicator AND computed_date <= :as_of
+    ORDER BY computed_date DESC
+    LIMIT 1
+    """
+)
+_SQL_SECTOR_ASOF = text(
+    """
+    SELECT h.computed_date, h.classification
+    FROM sector_signals_historical h
+    JOIN stocks s ON s.sector = h.sector
+    WHERE s.isin = :isin AND h.computed_date <= :as_of
+    ORDER BY h.computed_date DESC
+    LIMIT 1
+    """
+)
+
+
+def _ad_subscore(v: Decimal) -> Decimal:
+    """advance/decline ratio (>1 = more advancers) -> 0..100 breadth sub-score."""
+    if v >= Decimal("2.0"):
+        return Decimal("80")
+    if v >= Decimal("1.5"):
+        return Decimal("70")
+    if v >= Decimal("1.0"):
+        return Decimal("55")
+    if v >= Decimal("0.7"):
+        return Decimal("45")
+    if v >= Decimal("0.4"):
+        return Decimal("35")
+    return Decimal("20")
+
+
+def _pct_above_subscore(v: Decimal) -> Decimal:
+    """% of stocks above EMA200 is already a 0..100 reading — clamp and use as-is."""
+    return max(Decimal("0"), min(Decimal("100"), v))
+
+
+def _nhl_subscore(v: Decimal) -> Decimal:
+    """new-high / new-low ratio (>1 = more highs) -> 0..100 breadth sub-score."""
+    if v >= Decimal("3.0"):
+        return Decimal("80")
+    if v >= Decimal("1.5"):
+        return Decimal("65")
+    if v >= Decimal("1.0"):
+        return Decimal("55")
+    if v >= Decimal("0.5"):
+        return Decimal("40")
+    return Decimal("25")
+
+
+_SUBSCORE = {
+    "advance_decline_ratio": _ad_subscore,
+    "pct_above_ema200": _pct_above_subscore,
+    "new_high_low_ratio": _nhl_subscore,
+}
+
+
+async def reconstruct_fundamental_score(
+    session: AsyncSession, isin: str, as_of: date
+) -> Decimal | None:
+    """Latest pre-cutoff fundamental score (0..100), or None if no row exists.
+
+    Reuses the LIVE `score_fundamental` so the reconstruction is identical to what
+    the ranker would have produced (sector-fair-PE path included). Stored units
+    are converted to the live contract: `debt_to_equity` is a RATIO historically
+    but the live formula expects yfinance percent (divides by 100), so it is
+    multiplied by 100 here; `roe`/`revenue_growth` are fractions and `pe_ratio`
+    is absolute, matching live. no-lookahead: SQL `publication_date <= as_of` +
+    a defensive assert.
+    """
+    row = (
+        await session.execute(_SQL_FUND_ASOF, {"isin": isin, "as_of": as_of})
+    ).first()
+    if row is None:
+        return None
+    pub, pe, roe, de, fcf, rev, sector = row
+    assert pub <= as_of, f"lookahead: fundamentals pub {pub} > as_of {as_of}"
+    fund = FundInputs(
+        pe_ratio=None if pe is None else Decimal(pe),
+        roe=None if roe is None else Decimal(roe),
+        debt_to_equity=None if de is None else Decimal(de) * 100,
+        revenue_growth=None if rev is None else Decimal(rev),
+        fcf_positive=None if fcf is None else (Decimal(fcf) > 0),
+        sector=sector or "",
+    )
+    return score_fundamental(fund)
+
+
+async def reconstruct_macro_score(session: AsyncSession, as_of: date) -> Decimal:
+    """Breadth-derived macro score (0..100): mean of three 1/3-weight breadth
+    sub-scores (advance/decline, % above EMA200, new-high/low ratio).
+
+    FII flows and news sentiment have NO per-date history, so they are held
+    NEUTRAL (omitted) rather than fabricated — this is an honest breadth-only
+    macro proxy. A missing indicator row falls back to neutral 50. no-lookahead:
+    SQL `computed_date <= as_of` + a defensive assert per indicator.
+    """
+    subs: list[Decimal] = []
+    for ind in _MACRO_INDICATORS:
+        row = (
+            await session.execute(
+                _SQL_MACRO_ASOF, {"indicator": ind, "as_of": as_of}
+            )
+        ).first()
+        if row is None:
+            subs.append(_NEUTRAL)
+            continue
+        cd, val = row
+        assert cd <= as_of, f"lookahead: macro {ind} {cd} > as_of {as_of}"
+        subs.append(_NEUTRAL if val is None else _SUBSCORE[ind](Decimal(val)))
+    macro = sum(subs, Decimal("0")) / Decimal(len(subs))
+    return max(Decimal("0"), min(Decimal("100"), macro)).quantize(
+        _Q2, rounding=ROUND_HALF_EVEN
+    )
+
+
+async def reconstruct_sector_signal(
+    session: AsyncSession, isin: str, as_of: date
+) -> str:
+    """Latest pre-cutoff sector-momentum class for the stock's sector.
+
+    Returns 'leading' | 'neutral' | 'lagging'; 'neutral' when no row exists (very
+    early dates before sector history begins). no-lookahead: SQL
+    `computed_date <= as_of` + a defensive assert.
+    """
+    row = (
+        await session.execute(_SQL_SECTOR_ASOF, {"isin": isin, "as_of": as_of})
+    ).first()
+    if row is None:
+        return "neutral"
+    cd, classification = row
+    assert cd <= as_of, f"lookahead: sector {cd} > as_of {as_of}"
+    return classification or "neutral"
+
+
+async def compute_full_composite(
+    session: AsyncSession,
+    isin: str,
+    as_of: date,
+    closes: list[float],
+    volumes: list[int] | None = None,
+    *,
+    macro_score: Decimal | None = None,
+    sector_signal: str | None = None,
+) -> Decimal | None:
+    """Full F+T+M composite (0..100) for one stock at `as_of`.
+
+    Mirrors the live ranking weights (F 0.40 / T 0.35 / M 0.25) plus a ±5
+    sector-momentum tilt, clamped 0..100. Returns None when the technical score is
+    None (insufficient price history / warmup) — the runner then skips the stock,
+    exactly as the technical-only baseline does; we never fabricate a score for a
+    stock we cannot technically rate. Missing fundamentals fall back to neutral 50
+    (the live ranker's base).
+
+    `macro_score` / `sector_signal` may be supplied pre-computed (the runner
+    fetches macro once per date and sector classes in one batched query per date,
+    avoiding N identical queries); when omitted they are fetched here.
+    """
+    t = compute_score_from_history(closes, volumes)
+    if t is None:
+        return None
+    f = await reconstruct_fundamental_score(session, isin, as_of)
+    if f is None:
+        f = _NEUTRAL
+    m = (
+        macro_score
+        if macro_score is not None
+        else await reconstruct_macro_score(session, as_of)
+    )
+    sig = (
+        sector_signal
+        if sector_signal is not None
+        else await reconstruct_sector_signal(session, isin, as_of)
+    )
+    composite = t * _W_TECH + f * _W_FUND + m * _W_MACRO
+    composite += _SECTOR_TILT.get(sig, Decimal("0"))
+    composite = max(Decimal("0"), min(Decimal("100"), composite))
+    return composite.quantize(_Q2, rounding=ROUND_HALF_EVEN)
