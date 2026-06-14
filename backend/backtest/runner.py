@@ -16,6 +16,7 @@ import structlog
 from sqlalchemy import bindparam, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.agents.technical_indicators import ema
 from backend.backtest.engine import (
     BacktestConfig,
     DayResult,
@@ -79,6 +80,28 @@ _NIFTY_200_PROXY_ISINS = (
 
 # Need ~1y of bars to seed EMA200 + a 252d window before the first rebalance.
 _WARMUP_DAYS = 260
+
+
+def _compute_breadth(closes: dict[str, list[float]]) -> Decimal | None:
+    """% of stocks whose last close is above their 200-day EMA.
+
+    Returns None when there's no data to compute from. Only stocks with
+    enough history (>= 200 bars) are counted.
+    """
+    above = 0
+    total = 0
+    for isin, series in closes.items():
+        if len(series) < 200:
+            continue
+        total += 1
+        e = ema(series, 200)
+        if e is not None and series[-1] > e:
+            above += 1
+    if total == 0:
+        return None
+    return (Decimal(above) / Decimal(total) * 100).quantize(
+        Decimal("0.1"), rounding=ROUND_HALF_EVEN
+    )
 
 
 @dataclass
@@ -297,6 +320,21 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
             session, isins, start=history_start, as_of=rebalance_date
         )
 
+        # ---- FIX 2: Market breadth regime filter ---------------------------
+        # Compute % of stocks above their 200-day EMA. If breadth < 40%,
+        # skip this rebalance entirely (move to cash). This avoids major
+        # drawdowns during bear markets, crashes, and corrections.
+        pct_above_ema200 = _compute_breadth(closes)
+        if pct_above_ema200 is not None and pct_above_ema200 < Decimal("40"):
+            skipped += 1
+            log.info(
+                "backtest.skipped.bearish",
+                date=str(rebalance_date),
+                pct_above_ema200=str(pct_above_ema200),
+            )
+            continue
+        # ---------------------------------------------------------------------
+
         scores: dict[str, Decimal] = {}
         if cfg.use_full_composite:
             # Per-date inputs fetched ONCE (macro is isin-independent; sector
@@ -358,11 +396,28 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
     bot_returns = period_returns(bot_values)
 
     # Benchmarks sampled at the SAME curve dates so returns/alpha/beta align.
+    # Chunk 5.2c: mcap-weighted (default) selects top-N by CURRENT market cap and
+    # weights by mcap; equal uses the fixed proxy baskets, equal-weight. If mcap
+    # is unpopulated, fall back to the equal proxies (with a warning), never crash.
+    if cfg.benchmark_weighting == "mcap":
+        n50_isins, n50_w = await _top_by_mcap(session, 50)
+        n200_isins, n200_w = await _top_by_mcap(session, 200)
+        if not n50_isins or not n200_isins:
+            log.warning(
+                "backtest.benchmark.mcap_unpopulated",
+                n50=len(n50_isins),
+                n200=len(n200_isins),
+            )
+            n50_isins, n50_w = list(_NIFTY_PROXY_ISINS), None
+            n200_isins, n200_w = list(_NIFTY_200_PROXY_ISINS), None
+    else:
+        n50_isins, n50_w = list(_NIFTY_PROXY_ISINS), None
+        n200_isins, n200_w = list(_NIFTY_200_PROXY_ISINS), None
     n50 = await _benchmark_curve(
-        session, list(_NIFTY_PROXY_ISINS), curve_dates, cfg.starting_capital
+        session, n50_isins, curve_dates, cfg.starting_capital, weights=n50_w
     )
     n200 = await _benchmark_curve(
-        session, list(_NIFTY_200_PROXY_ISINS), curve_dates, cfg.starting_capital
+        session, n200_isins, curve_dates, cfg.starting_capital, weights=n200_w
     )
     n50_ret, n50_cagr, n50_returns = _bench_stats(n50, years)
     n200_ret, n200_cagr, n200_returns = _bench_stats(n200, years)
@@ -432,19 +487,71 @@ _SQL_SECTORS = text(
     "SELECT isin, sector FROM stocks WHERE isin = ANY(:isins)"
 ).bindparams(bindparam("isins"))
 
+# Top-N stocks by CURRENT market cap (Chunk 5.2c). mcap is point-in-time-as-of-
+# today, NOT historical — a mild selection+weighting lookahead, flagged in the
+# lesson; still far fairer than equal-weight in a broad mid-cap rally.
+_SQL_TOP_BY_MCAP = text(
+    "SELECT isin, mcap_inr_cr FROM stocks "
+    "WHERE mcap_inr_cr IS NOT NULL AND delisted_on IS NULL "
+    "ORDER BY mcap_inr_cr DESC LIMIT :n"
+)
+
+
+async def _top_by_mcap(
+    session: AsyncSession, n: int
+) -> tuple[list[str], dict[str, Decimal]]:
+    """(top-n ISINs by mcap, {isin: mcap_cr}). Empty if mcap is unpopulated."""
+    rows = (await session.execute(_SQL_TOP_BY_MCAP, {"n": n})).all()
+    return [r[0] for r in rows], {r[0]: Decimal(r[1]) for r in rows}
+
+
+def _weighted_ratio(
+    base: dict[str, Decimal],
+    prices: dict[str, Decimal],
+    weights: dict[str, Decimal] | None,
+) -> Decimal | None:
+    """Basket value multiplier vs base, over names present in BOTH base and prices.
+
+    `weights is None` -> equal weight (mean of price/base ratios, matching the
+    original equal-weight benchmark). `weights` given -> cap-weighted: each present
+    name's ratio is scaled by its weight renormalized over the present set, so a
+    stock 10x another's mcap drives ~10/11 of the move. None if no name overlaps.
+    """
+    present = [i for i in base if base[i] > 0 and i in prices]
+    if not present:
+        return None
+    if weights is None:
+        return sum((prices[i] / base[i] for i in present), Decimal("0")) / Decimal(
+            len(present)
+        )
+    wsum = sum((weights.get(i, Decimal("0")) for i in present), Decimal("0"))
+    if wsum <= 0:
+        return sum((prices[i] / base[i] for i in present), Decimal("0")) / Decimal(
+            len(present)
+        )
+    return sum(
+        (
+            (weights.get(i, Decimal("0")) / wsum) * (prices[i] / base[i])
+            for i in present
+        ),
+        Decimal("0"),
+    )
+
 
 async def _benchmark_curve(
     session: AsyncSession,
     isins: list[str],
     curve_dates: list[date],
     starting_capital: Decimal,
+    *,
+    weights: dict[str, Decimal] | None = None,
 ) -> list[Decimal]:
-    """Equal-weighted basket value normalized to `starting_capital`, sampled at
-    each curve date. value(d) = capital × mean_i(price[i,d] / price[i,base]).
+    """Basket value normalized to `starting_capital`, sampled at each curve date.
 
-    Only ISINs with a base-date price are included; per date, only those with a
-    price that day contribute (graceful on the odd missing bar). Buy-and-hold —
-    no rebalancing, no costs (it's the benchmark).
+    `weights is None` -> equal-weight (the original behavior). `weights` given ->
+    market-cap-weighted (Chunk 5.2c). Only ISINs with a base-date price are
+    included; per date, only those with a price that day contribute (graceful on a
+    missing bar). Buy-and-hold — no rebalancing, no costs (it's the benchmark).
     """
     if len(curve_dates) < 2:
         return [starting_capital] * len(curve_dates)
@@ -456,20 +563,18 @@ async def _benchmark_curve(
     by_date: dict[date, dict[str, Decimal]] = {}
     for isin, td, ac in rows:
         by_date.setdefault(td, {})[isin] = ac
-    base = by_date.get(curve_dates[0], {})
-    based_isins = [i for i in isins if i in base and base[i] > 0]
-    if not based_isins:
+    base_day = by_date.get(curve_dates[0], {})
+    base = {i: base_day[i] for i in isins if i in base_day and base_day[i] > 0}
+    if not base:
         return [starting_capital] * len(curve_dates)
 
     out: list[Decimal] = []
     for d in curve_dates:
-        prices = by_date.get(d, {})
-        ratios = [prices[i] / base[i] for i in based_isins if i in prices]
-        if not ratios:
+        ratio = _weighted_ratio(base, by_date.get(d, {}), weights)
+        if ratio is None:
             out.append(out[-1] if out else starting_capital)
-            continue
-        mean_ratio = sum(ratios, Decimal("0")) / Decimal(len(ratios))
-        out.append(starting_capital * mean_ratio)
+        else:
+            out.append(starting_capital * ratio)
     return out
 
 

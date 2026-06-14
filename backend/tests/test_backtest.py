@@ -35,6 +35,7 @@ from backend.backtest.engine import (
     sortino_ratio,
     win_rate_pct,
 )
+from backend.backtest.runner import _weighted_ratio
 from backend.backtest.scores import (
     compute_full_composite,
     reconstruct_fundamental_score,
@@ -439,3 +440,34 @@ async def test_compute_full_composite_max_clamp(monkeypatch: pytest.MonkeyPatch)
     out = await compute_full_composite(None, "X", _ASOF, [1.0] * 40, [1] * 40)
     # 100 + 5 = 105 -> clamped to 100
     assert out == Decimal("100.00")
+
+
+# ---------------------------------------------------------------------------
+# Chunk 5.2c — benchmark weighting math (_weighted_ratio). Pure: dicts in,
+# Decimal basket-ratio out. mcap weighting must give larger stocks more pull.
+# ---------------------------------------------------------------------------
+def test_weighted_ratio_equal_is_simple_mean() -> None:
+    base = {"A": Decimal("100"), "B": Decimal("100")}
+    prices = {"A": Decimal("110"), "B": Decimal("100")}
+    # weights None -> equal weight -> (1.1 + 1.0) / 2 = 1.05
+    r = _weighted_ratio(base, prices, None)
+    assert r is not None and abs(r - Decimal("1.05")) < Decimal("0.0001")
+
+
+def test_weighted_ratio_mcap_favours_larger() -> None:
+    # A is 10x B by mcap. A +10%, B flat. A drives 10/11 (~91%) of the basket:
+    # ratio = (10/11)*1.1 + (1/11)*1.0 = 1.0909...
+    base = {"A": Decimal("100"), "B": Decimal("100")}
+    prices = {"A": Decimal("110"), "B": Decimal("100")}
+    weights = {"A": Decimal("10"), "B": Decimal("1")}
+    r = _weighted_ratio(base, prices, weights)
+    assert r is not None
+    assert abs(r - Decimal("1.090909")) < Decimal("0.0005")
+    # far closer to A's 1.1 than the equal-weight 1.05
+    assert r > Decimal("1.08")
+
+
+def test_weighted_ratio_none_when_no_overlap() -> None:
+    base = {"A": Decimal("100")}
+    prices = {"B": Decimal("100")}  # nothing in both base and prices
+    assert _weighted_ratio(base, prices, None) is None

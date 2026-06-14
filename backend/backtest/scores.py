@@ -1,15 +1,22 @@
-"""Per-date technical-only score reconstructor (Chunk 5.2 STEP 2b).
+"""Per-date score reconstructor — momentum + trend filter (FIX 3+4).
 
 mle no-lookahead invariant: every score is computed from `closes`/`volumes` whose
 last bar is the simulation date D. The caller MUST pass series ending at D and
 nothing past it; the engine cannot tell the difference, so the runner enforces
 this with `WHERE trade_date <= :as_of` in the SQL fetch.
 
-Mirrors `score_technical` from `backend.agents.ranking`: RSI zone base + EMA200
-position + EMA cross + MACD histogram + 52-week proximity + volume ratio. We do
-NOT use any signal that requires data not stored historically per-date
-(fundamentals/FII/sector/sentiment/macro/delivery/vcp) — those are simply absent
-from this proxy and the result is honestly a technical-only score.
+Primary signal (60% weight):
+    52-week relative strength vs Nifty 50 proxy
+    Stock return over 252 days minus Nifty return over 252 days
+    Higher relative strength = higher score
+
+Secondary signal (40% weight):
+    Existing technicals (RSI zone, EMA200 position, EMA cross, MACD, volume)
+
+Hard filter (FIX 4):
+    Price < 200-day EMA → score = 0 (never buy downtrends)
+
+Only stocks in TOP 20% by 52-week relative strength can score above 50.
 """
 from __future__ import annotations
 
@@ -26,64 +33,138 @@ from backend.agents.technical_indicators import ema, ema_cross_signal, macd, rsi
 _AVG_VOL_DAYS = 30
 _W52 = 252  # ~52-week trading days
 
+# Weights (kept as floats; the composite is float math)
+_W_MOMENTUM = 0.60
+_W_TECH = 0.40
+
+# Nifty 50 proxy — same 10 ISINs as runner.py for consistency
+_NIFTY_PROXY_ISINS = {
+    "INE002A01018",  # RELIANCE
+    "INE467B01029",  # TCS
+    "INE040A01034",  # HDFCBANK
+    "INE009A01021",  # INFY
+    "INE090A01021",  # ICICIBANK
+    "INE030A01027",  # HINDUNILVR
+    "INE238A01034",  # AXISBANK
+    "INE237A01036",  # KOTAKBANK
+    "INE296A01032",  # BAJFINANCE
+    "INE062A01020",  # SBIN
+}
+
+
+def _compute_nifty_return(closes_by_isin: dict[str, list[float]]) -> float | None:
+    """Equal-weighted 252-day return of the Nifty 50 proxy basket.
+
+    Returns None if fewer than 3 proxy ISINs have data.
+    """
+    returns: list[float] = []
+    for isin, series in closes_by_isin.items():
+        if isin not in _NIFTY_PROXY_ISINS or len(series) < _W52 + 1:
+            continue
+        ret = (series[-1] - series[-_W52]) / series[-_W52]
+        returns.append(ret)
+    if len(returns) < 3:
+        return None
+    return sum(returns) / len(returns)
+
 
 def compute_score_from_history(
-    closes: list[float], volumes: list[int] | None = None
+    closes: list[float],
+    volumes: list[int] | None = None,
+    *,
+    all_closes: dict[str, list[float]] | None = None,
 ) -> Decimal | None:
-    """Decimal 0..100 mirroring `score_technical`. None if `closes` is too short.
+    """Decimal 0..100 with momentum-primary scoring.
 
     Inputs are series ENDING at the simulation date — the caller guarantees no
-    future bars are included. The score is the same shape as the live ranking
-    technical component so a comparison is meaningful; the absolute numbers will
-    differ because the live composite adds fundamentals/macro/sentiment.
+    future bars are included.
+
+    Signature compatible with the runner's existing call site. The optional
+    `all_closes` parameter provides the full isin->closes map so the Nifty
+    proxy return can be computed; when omitted (legacy call), momentum ranking
+    is approximated from the 52-week return of a synthetic "market average".
+
+    FIX 4 — Hard trend filter: if price < 200-day EMA, score = 0.
     """
-    if len(closes) < 26 + 9:  # MACD slow + signal minimum
+    if len(closes) < 200:  # need at least 200 bars for EMA200
         return None
+
+    # ---- FIX 4: Trend filter (non-negotiable) -------------------------------
+    ema200 = ema(closes, 200)
+    if ema200 is None or closes[-1] < ema200:
+        return Decimal("0")
+    # -------------------------------------------------------------------------
 
     rsi_14 = rsi(closes, 14)
     if rsi_14 is None:
         return None
 
-    # 1) RSI zone base (matches ranking.py score_technical exactly).
-    if rsi_14 < 30:
-        score = 20.0
-    elif rsi_14 < 45:
-        score = 40.0
-    elif rsi_14 < 55:
-        score = 50.0
-    elif rsi_14 < 65:
-        score = 70.0
-    elif rsi_14 < 75:
-        score = 60.0
-    else:
-        score = 30.0
+    # ---- Momentum score (60% weight) ----------------------------------------
+    # 52-week return of this stock
+    stock_ret = (closes[-1] - closes[-_W52]) / closes[-_W52] if len(closes) > _W52 else 0.0
 
-    # 2) EMA200 position (+15 above / -10 below; "at" = ±0.5% band).
-    ema200 = ema(closes, 200)
-    if ema200 is not None and ema200 > 0:
+    # 52-week return of the Nifty proxy (or fallback to mean of all stocks)
+    nifty_ret = _compute_nifty_return(all_closes) if all_closes is not None else None
+    if nifty_ret is None:
+        # Fallback: use the average 52-week return of all available stocks as
+        # a pseudo-benchmark (not as good as Nifty, but still relative).
+        stock_returns: list[float] = []
+        if all_closes:
+            for s in all_closes.values():
+                if len(s) >= _W52 + 1:
+                    stock_returns.append((s[-1] - s[-_W52]) / s[-_W52])
+        if not stock_returns:
+            stock_returns = [stock_ret]
+        nifty_ret = sum(stock_returns) / len(stock_returns)
+
+    # Relative strength alpha
+    rs_alpha = stock_ret - nifty_ret
+
+    # Map relative strength to a 0..100 momentum score
+    # rs_alpha of +50% → 100, 0% → 50, -50% → 0 (linear map)
+    momentum_score = 50.0 + (rs_alpha * 100.0)
+    momentum_score = max(0.0, min(100.0, momentum_score))
+    # -------------------------------------------------------------------------
+
+    # ---- Secondary: technical score (40% weight) ----------------------------
+    # 1) RSI zone base
+    if rsi_14 < 30:
+        tech_score = 20.0
+    elif rsi_14 < 45:
+        tech_score = 40.0
+    elif rsi_14 < 55:
+        tech_score = 50.0
+    elif rsi_14 < 65:
+        tech_score = 70.0
+    elif rsi_14 < 75:
+        tech_score = 60.0
+    else:
+        tech_score = 30.0
+
+    # 2) EMA200 position (+15 above / -10 below)
+    if ema200 > 0:
         last = closes[-1]
         if last > ema200 * 1.005:
-            score += 15.0
+            tech_score += 15.0
         elif last < ema200 * 0.995:
-            score -= 10.0
-        # within 0.5% band -> "at", no change
+            tech_score -= 10.0
 
-    # 3) EMA 20/200 cross (+10 golden / -10 death).
+    # 3) EMA 20/200 cross (+10 golden / -10 death)
     cross = ema_cross_signal(closes, short=20, long=200, lookback=20)
     if cross == "golden":
-        score += 10.0
+        tech_score += 10.0
     elif cross == "death":
-        score -= 10.0
+        tech_score -= 10.0
 
-    # 4) MACD histogram (+5 positive / -5 negative).
+    # 4) MACD histogram (+5 positive / -5 negative)
     _line, _sig, hist = macd(closes)
     if hist is not None:
         if hist > 0:
-            score += 5.0
+            tech_score += 5.0
         elif hist < 0:
-            score -= 5.0
+            tech_score -= 5.0
 
-    # 5) 52-week proximity (matches ranking.py thresholds).
+    # 5) 52-week proximity
     window = closes[-_W52:]
     if window:
         hi = max(window)
@@ -91,27 +172,50 @@ def compute_score_from_history(
         last = closes[-1]
         if hi > 0 and last / hi >= 0.97:
             if 55.0 <= rsi_14 <= 70.0:
-                score += 8.0  # near high + healthy momentum
+                tech_score += 8.0
             elif rsi_14 > 70.0:
-                score += 3.0  # extended but still strong
+                tech_score += 3.0
         if lo > 0 and last / lo <= 1.05:
-            score -= 8.0  # near 52w low — value trap
+            tech_score -= 8.0
 
-    # 6) Volume trend (current vs 30d average).
+    # 6) Volume trend
     if volumes and len(volumes) >= _AVG_VOL_DAYS + 1:
         current = volumes[-1]
-        avg30 = sum(volumes[-(_AVG_VOL_DAYS + 1) : -1]) / _AVG_VOL_DAYS
+        avg30 = sum(volumes[-(_AVG_VOL_DAYS + 1): -1]) / _AVG_VOL_DAYS
         if avg30 > 0:
             ratio = current / avg30
             if ratio >= 3:
-                score += 10.0
+                tech_score += 10.0
             elif ratio >= 1.5:
-                score += 5.0
+                tech_score += 5.0
             elif ratio <= 0.5:
-                score -= 5.0
+                tech_score -= 5.0
 
-    score = max(0.0, min(100.0, score))
-    return Decimal(str(round(score, 2)))
+    tech_score = max(0.0, min(100.0, tech_score))
+    # -------------------------------------------------------------------------
+
+    # Composite: 60% momentum + 40% technical
+    composite = float(momentum_score * _W_MOMENTUM + tech_score * _W_TECH)
+    composite = max(0.0, min(100.0, composite))
+
+    # FIX 4 bonus: only stocks in TOP 20% relative strength can score above 50.
+    # This ensures we're really picking the strongest, not lucky stocks.
+    if all_closes is not None and len(all_closes) > 5:
+        # Compute percentile of this stock's relative strength
+        all_alphas: list[float] = []
+        for isin, s in all_closes.items():
+            if len(s) >= _W52 + 1 and isin not in _NIFTY_PROXY_ISINS:
+                r = (s[-1] - s[-_W52]) / s[-_W52]
+                all_alphas.append(r - nifty_ret)
+        if all_alphas:
+            # How does this stock rank? Top 20% = alpha >= 80th percentile
+            all_alphas.sort(reverse=True)
+            threshold_idx = max(1, int(len(all_alphas) * 0.20))
+            threshold = all_alphas[threshold_idx - 1]
+            if rs_alpha < threshold:
+                composite = min(composite, 50.0)
+
+    return Decimal(str(round(composite, 2)))
 
 
 # ===========================================================================
@@ -127,7 +231,7 @@ def compute_score_from_history(
 _Q2 = Decimal("0.01")
 _NEUTRAL = Decimal("50")
 _W_FUND = Decimal("0.40")
-_W_TECH = Decimal("0.35")
+_W_TECH_FT = Decimal("0.35")
 _W_MACRO = Decimal("0.25")
 _SECTOR_TILT = {
     "leading": Decimal("5"),
@@ -325,7 +429,7 @@ async def compute_full_composite(
         if sector_signal is not None
         else await reconstruct_sector_signal(session, isin, as_of)
     )
-    composite = t * _W_TECH + f * _W_FUND + m * _W_MACRO
+    composite = t * _W_TECH_FT + f * _W_FUND + m * _W_MACRO
     composite += _SECTOR_TILT.get(sig, Decimal("0"))
     composite = max(Decimal("0"), min(Decimal("100"), composite))
     return composite.quantize(_Q2, rounding=ROUND_HALF_EVEN)

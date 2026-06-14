@@ -23,15 +23,18 @@ _Q2 = Decimal("0.01")
 class BacktestConfig:
     start_date: date
     end_date: date
-    top_n: int = 10
-    hold_days: int = 5
-    rebalance_every: int = 5
+    top_n: int = 12
+    hold_days: int = 20
+    rebalance_every: int = 20
     starting_capital: Decimal = Decimal("1000000")
-    min_score: Decimal = Decimal("60")
+    min_score: Decimal = Decimal("65")
     # Week 2 (Chunk 5.2b): score each stock with the full F+T+M composite
     # (fundamentals/macro/sector reconstructed no-lookahead) instead of the
     # technical-only proxy. Default False preserves the Chunk 5.2 baseline.
     use_full_composite: bool = False
+    # Chunk 5.2c: benchmark construction — "mcap" (top-N by market cap, weighted
+    # by mcap; the fair bar) or "equal" (fixed proxy baskets, equal-weight).
+    benchmark_weighting: str = "mcap"
 
 
 @dataclass(frozen=True)

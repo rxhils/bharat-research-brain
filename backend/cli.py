@@ -3433,12 +3433,21 @@ def backtest_run_cmd(
         help="Score with the full F+T+M composite (Week 2) vs the technical-only "
         "proxy baseline.",
     ),
+    benchmark_weighting: str = typer.Option(
+        "mcap",
+        "--benchmark-weighting",
+        help="Benchmark construction: 'mcap' (top-N by market cap, weighted) or "
+        "'equal' (fixed proxy baskets, equal-weight).",
+    ),
 ) -> None:
     """Run the walk-forward backtest and print summary + alpha.
 
     Default is the Week 2 full composite (F+T+M, FII/sentiment neutral); pass
     --technical-only to reproduce the Chunk 5.2 technical-only baseline.
     """
+    if benchmark_weighting not in ("mcap", "equal"):
+        console.print("[red]--benchmark-weighting must be 'mcap' or 'equal'[/red]")
+        raise typer.Exit(code=1)
     asyncio.run(
         _backtest_run_async(
             start=start,
@@ -3450,6 +3459,7 @@ def backtest_run_cmd(
             capital=capital,
             sample_trades=sample_trades,
             use_full_composite=use_full_composite,
+            benchmark_weighting=benchmark_weighting,
         )
     )
 
@@ -3465,6 +3475,7 @@ async def _backtest_run_async(
     capital: float,
     sample_trades: int,
     use_full_composite: bool = True,
+    benchmark_weighting: str = "mcap",
 ) -> None:
     from datetime import date as _date
     from decimal import Decimal
@@ -3482,6 +3493,7 @@ async def _backtest_run_async(
         starting_capital=Decimal(str(capital)),
         min_score=Decimal(str(min_score)),
         use_full_composite=use_full_composite,
+        benchmark_weighting=benchmark_weighting,
     )
     log.info(
         "cli.backtest.run.start",
@@ -3506,7 +3518,8 @@ async def _backtest_run_async(
         f"[bold]Backtest — {_label}[/bold]  "
         f"{result.config.start_date.isoformat()} → {result.config.end_date.isoformat()}  "
         f"(min_score={float(result.config.min_score):g}, top_n={result.config.top_n}, "
-        f"hold={result.config.hold_days}d, rebal={result.config.rebalance_every}d)"
+        f"hold={result.config.hold_days}d, rebal={result.config.rebalance_every}d, "
+        f"bench={result.config.benchmark_weighting}-wt)"
     )
 
     # Table 1 — Returns comparison (bot vs both benchmarks).
