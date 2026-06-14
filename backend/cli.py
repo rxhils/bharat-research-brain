@@ -3541,6 +3541,12 @@ async def _backtest_run_async(
         _d(result.nifty200_cagr_pct),
         _d(result.alpha_vs_nifty200_pct),
     )
+    t1.add_row(
+        "Nifty 500 TRI (real)",
+        _d(result.nifty500_tri_return_pct),
+        _d(result.nifty500_tri_cagr_pct),
+        _d(result.alpha_vs_nifty500_tri_pct),
+    )
     console.print(t1)
 
     # Table 2 — Risk metrics.
@@ -3551,6 +3557,7 @@ async def _backtest_run_async(
     t2.add_row("Sortino (rf 7%)", _d(result.sortino))
     t2.add_row("Beta vs Nifty 50", _d(result.beta_vs_nifty50))
     t2.add_row("Beta vs Nifty 200", _d(result.beta_vs_nifty200))
+    t2.add_row("Beta vs Nifty 500 TRI", _d(result.beta_vs_nifty500_tri))
     t2.add_row("Max drawdown %", _d(result.max_drawdown_pct))
     t2.add_row("Win rate %", _d(result.win_rate_pct))
     t2.add_row(

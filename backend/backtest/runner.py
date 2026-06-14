@@ -126,6 +126,11 @@ class BacktestResult:
     nifty200_cagr_pct: Decimal = Decimal("0")
     alpha_vs_nifty200_pct: Decimal = Decimal("0")
     beta_vs_nifty200: Decimal | None = None
+    # Nifty 500 TRI (REAL published index — no proxy lookahead). n/a if unloaded.
+    nifty500_tri_return_pct: Decimal | None = None
+    nifty500_tri_cagr_pct: Decimal | None = None
+    alpha_vs_nifty500_tri_pct: Decimal | None = None
+    beta_vs_nifty500_tri: Decimal | None = None
     # Risk-adjusted metrics.
     sharpe: Decimal | None = None
     sortino: Decimal | None = None
@@ -356,7 +361,8 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
         else:
             for isin in isins:
                 score = compute_score_from_history(
-                    closes.get(isin, []), vols.get(isin)
+                    closes.get(isin, []), vols.get(isin),
+                    all_closes=closes,
                 )
                 if score is not None:
                     scores[isin] = score
@@ -421,6 +427,19 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
     )
     n50_ret, n50_cagr, n50_returns = _bench_stats(n50, years)
     n200_ret, n200_cagr, n200_returns = _bench_stats(n200, years)
+    # Nifty 500 TRI — REAL published index (no proxy lookahead). n/a if unloaded.
+    n500 = await _index_curve(
+        session, "nifty500_tri", curve_dates, cfg.starting_capital
+    )
+    if n500 is not None:
+        n500_ret, n500_cagr, n500_returns = _bench_stats(n500, years)
+        n500_alpha: Decimal | None = (total_return - n500_ret).quantize(
+            _Q2, rounding=ROUND_HALF_EVEN
+        )
+        n500_beta = beta(bot_returns, n500_returns)
+    else:
+        n500_ret = n500_cagr = n500_alpha = None
+        n500_beta = None
 
     ppy = (
         Decimal(len(bot_returns)) / years if years > 0 else Decimal("0")
@@ -445,6 +464,10 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
         nifty200_cagr_pct=n200_cagr,
         alpha_vs_nifty200_pct=(total_return - n200_ret).quantize(_Q2),
         beta_vs_nifty200=beta(bot_returns, n200_returns),
+        nifty500_tri_return_pct=n500_ret,
+        nifty500_tri_cagr_pct=n500_cagr,
+        alpha_vs_nifty500_tri_pct=n500_alpha,
+        beta_vs_nifty500_tri=n500_beta,
         sharpe=sharpe_ratio(bot_returns, _RISK_FREE_ANNUAL, ppy),
         sortino=sortino_ratio(bot_returns, _RISK_FREE_ANNUAL, ppy),
         profit_factor=profit_factor(all_trades),
@@ -576,6 +599,46 @@ async def _benchmark_curve(
         else:
             out.append(starting_capital * ratio)
     return out
+
+
+_SQL_INDEX_SERIES = text(
+    "SELECT trade_date, index_value FROM benchmark_index "
+    "WHERE index_name = :name ORDER BY trade_date"
+)
+
+
+async def _index_curve(
+    session: AsyncSession,
+    index_name: str,
+    curve_dates: list[date],
+    starting_capital: Decimal,
+) -> list[Decimal] | None:
+    """Value curve from a REAL published index (e.g. Nifty 500 TRI), normalized to
+    `starting_capital`, sampled at each curve date by the value on-or-before it.
+
+    No proxy, no current-mcap lookahead — published index closes. Returns None if
+    the index is not loaded (graceful 'n/a'). Both `curve_dates` and the DB series
+    are ascending, so a single forward two-pointer pass resolves on-or-before.
+    """
+    rows = (await session.execute(_SQL_INDEX_SERIES, {"name": index_name})).all()
+    if not rows or len(curve_dates) < 2:
+        return None
+    series = [(d, Decimal(v)) for d, v in rows]
+    values_on: list[Decimal | None] = []
+    j = 0
+    last: Decimal | None = None
+    for cd in curve_dates:
+        while j < len(series) and series[j][0] <= cd:
+            last = series[j][1]
+            j += 1
+        values_on.append(last)
+    base = values_on[0]
+    if base is None or base <= 0:
+        return None
+    return [
+        (starting_capital * (v / base)) if v is not None else starting_capital
+        for v in values_on
+    ]
 
 
 def _bench_stats(
