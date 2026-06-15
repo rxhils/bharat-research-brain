@@ -56,6 +56,17 @@ class BacktestConfig:
     defensive_pool_pct: Decimal = Decimal("0.40")
     # trailing trading-day window for the per-stock beta-vs-index estimate.
     beta_window: int = 252
+    # Config F (quality-momentum allocator with cash exposure) — all default OFF
+    # so A/B/C/D/E are byte-identical. Dispatch to the cash-aware portfolio path is
+    # keyed on `graded_exposure` in the runner.
+    # quality screen before ranking (low-vol proxy pre-2024 / ROE+debt post-2024).
+    quality_gate: bool = False
+    # graded cash exposure by regime (1.0 / 0.5 / 0.25) — drives the cash sleeve.
+    graded_exposure: bool = False
+    # a current holding is kept while its momentum rank stays within this buffer band.
+    hold_buffer_rank: int = 40
+    # "standard" (A-E: fresh top-N each rebalance) | "low" (F: hold winners in band).
+    turnover_mode: str = "standard"
 
 
 @dataclass(frozen=True)
@@ -387,6 +398,79 @@ def classify_defensive_pool(
     ordered = sorted(betas.items(), key=lambda kv: (kv[1], kv[0]))
     k = max(1, int(len(ordered) * float(defensive_pct)))
     return {isin for isin, _b in ordered[:k]}
+
+
+# ---------------------------------------------------------------------------
+# Config F: cash exposure (Component 0/5) + low-vol quality (Component 1) — pure.
+# ---------------------------------------------------------------------------
+def split_capital(total: Decimal, exposure: Decimal) -> tuple[Decimal, Decimal]:
+    """(invested_capital, cash_capital) for a target exposure in [0, 1].
+
+    invested = exposure * total; cash = the rest. Exposure 1.0 -> all invested
+    (cash 0), reproducing the always-invested book. Cash earns nothing here (an
+    honest, conservative assumption — see lesson). This is the core of Component 0:
+    the blended equity = invested-sleeve value + cash, so a fall only hits the
+    invested fraction.
+    """
+    exposure = max(Decimal("0"), min(Decimal("1"), exposure))
+    invested = (total * exposure).quantize(_Q4, rounding=ROUND_HALF_EVEN)
+    return invested, total - invested
+
+
+def target_exposure_for_regime(
+    index_closes: list[Decimal] | list[float],
+    *,
+    dma_window: int = 200,
+    mom_window: int = 50,
+    deep_pct: Decimal = Decimal("-8"),
+) -> Decimal:
+    """Graded target exposure from a trend filter on the index closes ENDING at the
+    decision date (caller guarantees no future bars):
+
+      above DMA AND 50-day return >= 0          -> 1.00 (healthy, fully invested)
+      below DMA                                 -> 0.50 (mild risk-off, half cash)
+      below DMA AND 50-day return < deep_pct    -> 0.25 (deep risk-off, 75% cash)
+      above DMA but 50-day return < 0           -> 0.50 (not fully healthy)
+
+    REACTIVE (200-DMA/50-day): it confirms downtrends, so it cannot dodge the first
+    leg of a sudden crash. Warmup (< dma_window closes) defaults to 1.00 (full) —
+    never fabricate a regime from thin history.
+    """
+    n = len(index_closes)
+    if n < dma_window or n <= mom_window:
+        return Decimal("1.00")
+    closes = [float(x) for x in index_closes]
+    dma = sum(closes[-dma_window:]) / dma_window
+    last = closes[-1]
+    ref = closes[-mom_window - 1]
+    mom_pct = (last - ref) / ref * 100 if ref > 0 else 0.0
+    below = last < dma
+    if below and mom_pct < float(deep_pct):
+        return Decimal("0.25")
+    if below:
+        return Decimal("0.50")
+    if mom_pct >= 0:
+        return Decimal("1.00")
+    return Decimal("0.50")
+
+
+def realized_vol(returns: list[float]) -> float | None:
+    """Sample standard deviation of daily returns (None if < 2 points)."""
+    n = len(returns)
+    if n < 2:
+        return None
+    mean = sum(returns) / n
+    return math.sqrt(sum((r - mean) ** 2 for r in returns) / (n - 1))
+
+
+def low_vol_pass(vols: dict[str, float], exclude_top_frac: float = 1.0 / 3.0) -> set[str]:
+    """Quality proxy when fundamentals are absent: the names NOT in the highest-
+    volatility tertile. Lowest-vol first, ties by ISIN. Empty if no vols."""
+    if not vols:
+        return set()
+    ordered = sorted(vols.items(), key=lambda kv: (kv[1], kv[0]))
+    keep_n = max(1, round(len(ordered) * (1.0 - exclude_top_frac)))
+    return {isin for isin, _v in ordered[:keep_n]}
 
 
 # ---------------------------------------------------------------------------

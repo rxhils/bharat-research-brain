@@ -30,14 +30,18 @@ from backend.backtest.engine import (
     classify_defensive_pool,
     compute_trade_return,
     detect_regime,
+    low_vol_pass,
     max_drawdown_pct,
     period_returns,
     position_weights,
     profit_factor,
+    realized_vol,
     select_top_n,
     sharpe_ratio,
     simulate_day,
     sortino_ratio,
+    split_capital,
+    target_exposure_for_regime,
     trailing_window,
     win_rate_pct,
 )
@@ -645,3 +649,87 @@ def test_config_e_defaults_reproduce_c() -> None:
     assert c.regime_switching is False
     assert c.defensive_pool_pct == Decimal("0.40")
     assert c.beta_window == 252
+
+
+# ---------------------------------------------------------------------------
+# Config F — cash-aware accounting (Component 0), regime exposure (5), quality (1)
+# ---------------------------------------------------------------------------
+def test_split_capital_half() -> None:
+    inv, cash = split_capital(Decimal("1000000"), Decimal("0.5"))
+    assert inv == Decimal("500000")
+    assert cash == Decimal("500000")
+
+
+def test_split_capital_full_is_all_invested() -> None:
+    # exposure 1.0 -> the invested sleeve IS the whole book, cash = 0 (= old engine).
+    inv, cash = split_capital(Decimal("1000000"), Decimal("1.0"))
+    assert inv == Decimal("1000000")
+    assert cash == Decimal("0")
+
+
+def test_cash_sleeve_does_not_move() -> None:
+    # exposure 0.5, market -20% -> total equity -10% (cash half is protected).
+    total = Decimal("1000000")
+    inv, cash = split_capital(total, Decimal("0.5"))
+    after = cash + inv * Decimal("0.80")  # invested sleeve falls 20%, cash flat
+    assert after == Decimal("900000")  # -10%, not -20%
+
+
+def test_drawdown_on_blended_curve_quarter_exposure() -> None:
+    # 0.25-exposure book through a -50% crash shows ~1/4 the market drawdown.
+    total = Decimal("1000000")
+    inv, cash = split_capital(total, Decimal("0.25"))
+    trough = cash + inv * Decimal("0.50")  # market halves
+    dd = max_drawdown_pct([total, trough])
+    assert Decimal("12") <= dd <= Decimal("13"), dd  # ~12.5% = 0.25 * 50%
+
+
+def test_cash_moves_cost_applied() -> None:
+    # going 100% -> 50% liquidates half the book; sell-side cost must be > 0.
+    cost = cost_on_notional(Decimal("500000"))
+    assert cost > 0
+
+
+def test_target_exposure_full_when_healthy() -> None:
+    closes = [Decimal(str(100 + i)) for i in range(260)]  # uptrend above 200-DMA
+    assert target_exposure_for_regime(closes) == Decimal("1.00")
+
+
+def test_target_exposure_half_when_below_dma() -> None:
+    # below the 200-DMA but a shallow 50-day pullback -> 0.50.
+    closes = [Decimal(str(300 - i)) for i in range(210)]  # 300..91 downtrend
+    closes += [Decimal(str(91 + (i % 2))) for i in range(1, 51)]  # flat-ish tail
+    assert target_exposure_for_regime(closes) == Decimal("0.50")
+
+
+def test_target_exposure_quarter_when_deep_crash() -> None:
+    # below the 200-DMA AND a steep 50-day fall (< -8%) -> 0.25.
+    closes = [Decimal(str(300 - i)) for i in range(210)]  # long downtrend
+    closes += [Decimal(str(90 - 1 * i)) for i in range(1, 51)]  # steep -50d leg
+    assert target_exposure_for_regime(closes) == Decimal("0.25")
+
+
+def test_target_exposure_warmup_defaults_full() -> None:
+    assert target_exposure_for_regime([Decimal("100")] * 50) == Decimal("1.00")
+
+
+def test_realized_vol_positive() -> None:
+    v = realized_vol([0.01, -0.02, 0.03, -0.01, 0.02])
+    assert v is not None and v > 0
+
+
+def test_low_vol_pass_excludes_top_tertile() -> None:
+    # 6 names; top-tertile (2 highest-vol) excluded -> 4 pass; the calm ones kept.
+    vols = {"A": 0.1, "B": 0.12, "C": 0.15, "D": 0.2, "E": 0.5, "F": 0.6}
+    keep = low_vol_pass(vols)
+    assert "E" not in keep and "F" not in keep  # highest-vol tertile excluded
+    assert "A" in keep and "B" in keep
+
+
+def test_config_f_defaults_reproduce_abcde() -> None:
+    # all F fields default OFF/neutral -> A/B/C/D/E configs are untouched.
+    c = BacktestConfig(start_date=date(2024, 1, 1), end_date=date(2024, 2, 1))
+    assert c.quality_gate is False
+    assert c.graded_exposure is False
+    assert c.hold_buffer_rank == 40
+    assert c.turnover_mode == "standard"

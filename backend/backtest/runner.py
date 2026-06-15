@@ -17,6 +17,7 @@ from sqlalchemy import bindparam, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.agents.technical_indicators import ema
+from backend.backtest.cost_model import cost_on_notional
 from backend.backtest.engine import (
     BacktestConfig,
     DayResult,
@@ -27,14 +28,18 @@ from backend.backtest.engine import (
     cagr_pct,
     classify_defensive_pool,
     detect_regime,
+    low_vol_pass,
     max_drawdown_pct,
     period_returns,
     profit_factor,
+    realized_vol,
     select_top_n,
     sharpe_ratio,
     simulate_day,
     simulate_day_d,
     sortino_ratio,
+    split_capital,
+    target_exposure_for_regime,
     trailing_window,
     win_rate_pct,
 )
@@ -147,6 +152,8 @@ class BacktestResult:
     trades: list[Trade] = field(default_factory=list)
     day_results: list[DayResult] = field(default_factory=list)
     skipped_dates: int = 0
+    # Config F: (rebalance_date, target_exposure) trace for the cash-exposure report.
+    exposure_trace: list[tuple[date, Decimal]] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -406,6 +413,11 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
     Read-only: every SQL has `trade_date <= as_of` or BETWEEN(start, as_of).
     Writes nothing to stock_rankings, outcome_log, or any live table.
     """
+    # Config F: cash-aware quality-momentum allocator (graded_exposure ON) uses a
+    # different simulator — persistent holdings + a cash sleeve + a daily blended
+    # equity curve. A/B/C/D/E (graded_exposure OFF) fall through unchanged.
+    if cfg.graded_exposure:
+        return await run_backtest_f(session, cfg)
     if cfg.end_date <= cfg.start_date:
         raise ValueError("end_date must be > start_date")
 
@@ -868,3 +880,307 @@ def summarize(result: BacktestResult) -> dict[str, Any]:
         "alpha_pct": str(result.alpha_vs_nifty_pct),
         "skipped": result.skipped_dates,
     }
+
+
+# ===========================================================================
+# Config F — cash-aware quality-momentum allocator (Components 0-5). Persistent
+# low-turnover portfolio + a graded cash sleeve; metrics on the DAILY blended
+# equity curve. Read-only; every DECISION uses data <= the rebalance date.
+# ===========================================================================
+@dataclass(frozen=True)
+class _FPos:
+    shares: Decimal
+    entry_date: date
+    entry_price: Decimal
+
+
+_W52_F = 252  # trailing window for the low-vol quality proxy
+_QUALITY_DE_MAX = Decimal("1.5")  # debt/equity ceiling (post-2024 fundamentals path)
+
+_SQL_FUND_QUALITY = text(
+    """
+    SELECT DISTINCT ON (isin) isin, roe, debt_to_equity
+    FROM fundamental_signals_historical
+    WHERE publication_date <= :as_of AND isin = ANY(:isins)
+    ORDER BY isin, publication_date DESC
+    """
+).bindparams(bindparam("isins"))
+
+
+async def _quality_set(
+    session: AsyncSession,
+    isins: list[str],
+    as_of: date,
+    closes: dict[str, list[float]],
+    cfg: BacktestConfig,
+) -> set[str]:
+    """Component 1 quality gate (data <= as_of). Post-2024: ROE > 0 AND debt/equity
+    below ceiling. Pre-2024 (no fundamentals): low-volatility proxy — drop the
+    highest-vol tertile by trailing-252 realized vol. All isins pass when the gate
+    is off. Fundamentals are read with publication_date <= as_of (SQL-enforced)."""
+    if not cfg.quality_gate:
+        return set(isins)
+    rows = (
+        await session.execute(_SQL_FUND_QUALITY, {"as_of": as_of, "isins": list(isins)})
+    ).all()
+    have_fund: set[str] = set()
+    fund_pass: set[str] = set()
+    for isin, roe, de in rows:
+        have_fund.add(isin)
+        if (
+            roe is not None
+            and Decimal(roe) > 0
+            and (de is None or Decimal(de) < _QUALITY_DE_MAX)
+        ):
+            fund_pass.add(isin)
+    vols: dict[str, float] = {}
+    for isin in isins:
+        if isin in have_fund:
+            continue
+        series = closes.get(isin, [])
+        if len(series) < _W52_F + 1:
+            continue
+        window = series[-(_W52_F + 1):]
+        rets = [
+            (window[k] - window[k - 1]) / window[k - 1]
+            for k in range(1, len(window))
+            if window[k - 1] != 0
+        ]
+        v = realized_vol(rets)
+        if v is not None:
+            vols[isin] = v
+    return fund_pass | low_vol_pass(vols)
+
+
+def _select_target_f(
+    keep_sorted: list[str],
+    ranked: list[str],
+    sector_by: dict[str, str],
+    cfg: BacktestConfig,
+) -> set[str]:
+    """Component 3/4: hold retained winners first (rank order), then fill to top_n
+    with the best new names, capping each sector at max_per_sector."""
+    target: list[str] = []
+    per_sec: dict[str, int] = {}
+
+    def _add(isin: str) -> None:
+        sec = sector_by.get(isin, "(unknown)")
+        cap = cfg.max_per_sector
+        if cap is not None and per_sec.get(sec, 0) >= cap:
+            return
+        target.append(isin)
+        per_sec[sec] = per_sec.get(sec, 0) + 1
+
+    for h in keep_sorted:
+        if len(target) >= cfg.top_n:
+            break
+        _add(h)
+    for isin in ranked:
+        if len(target) >= cfg.top_n:
+            break
+        if isin not in target:
+            _add(isin)
+    return set(target)
+
+
+def _f_trade(pos: _FPos, isin: str, exit_date: date, exit_price: Decimal) -> Trade:
+    """A completed round-trip for the trade table. The headline P&L/return/DD come
+    from the daily curve; this per-name record is illustrative (price return over
+    the holding, P&L on the exit-date share count)."""
+    pnl = ((exit_price - pos.entry_price) * pos.shares).quantize(
+        _Q2, rounding=ROUND_HALF_EVEN
+    )
+    ret = (
+        ((exit_price - pos.entry_price) / pos.entry_price * 100).quantize(
+            _Q2, rounding=ROUND_HALF_EVEN
+        )
+        if pos.entry_price
+        else Decimal("0")
+    )
+    return Trade(
+        isin=isin, entry_date=pos.entry_date, exit_date=exit_date,
+        entry_price=pos.entry_price, exit_price=exit_price, qty=pos.shares,
+        gross_pnl=pnl, net_pnl=pnl, gross_return_pct=ret, score=Decimal("0"),
+    )
+
+
+async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> BacktestResult:
+    """Config F — cash-aware quality-momentum allocator. Persistent low-turnover
+    portfolio (hold winners within a momentum-rank buffer), top_n names, sector cap;
+    a graded cash sleeve (Component 5) protects capital in risk-off. All metrics are
+    computed on the DAILY BLENDED equity curve (invested sleeve marked daily + flat
+    cash). Read-only; every decision (exposure, quality, scores, target) uses data
+    <= the rebalance date (helper-level asserts on the index/price fetches)."""
+    if cfg.end_date <= cfg.start_date:
+        raise ValueError("end_date must be > start_date")
+    days = await _trading_days(session, cfg.start_date, cfg.end_date)
+    if len(days) < 2:
+        raise ValueError(f"not enough trading days ({len(days)})")
+    isins = await _active_isins(session)
+    sector_by = await _sectors_map(session, isins)
+    history_start = _history_start(days[0])
+    rebal = [i for i in range(0, len(days), cfg.rebalance_every) if i < len(days) - 1]
+    log.info(
+        "backtest.f.start", start=cfg.start_date.isoformat(),
+        end=cfg.end_date.isoformat(), trading_days=len(days),
+        rebalances=len(rebal), active_isins=len(isins),
+    )
+
+    cash = cfg.starting_capital
+    positions: dict[str, _FPos] = {}
+    daily: list[tuple[date, Decimal]] = [(days[0], cfg.starting_capital)]
+    trades: list[Trade] = []
+    total_costs = Decimal("0")
+    exposure_trace: list[tuple[date, Decimal]] = []
+
+    for ri, i in enumerate(rebal):
+        rebalance_date = days[i]
+        end_i = rebal[ri + 1] if ri + 1 < len(rebal) else len(days) - 1
+        d_end = days[end_i]
+        price_d = await _adj_close_on(session, isins, rebalance_date)
+        invested_val = sum(
+            (positions[h].shares * price_d[h] for h in positions if h in price_d),
+            Decimal("0"),
+        )
+        total = invested_val + cash
+
+        idx_closes = await _index_closes_asof(
+            session, "nifty500_tri", rebalance_date, max(cfg.beta_window + 5, 260)
+        )
+        target_exp = (
+            target_exposure_for_regime(idx_closes)
+            if cfg.graded_exposure
+            else Decimal("1.0")
+        )
+        exposure_trace.append((rebalance_date, target_exp))
+
+        closes, vols_hist = await _fetch_history(
+            session, isins, start=history_start, as_of=rebalance_date
+        )
+        quality = await _quality_set(session, isins, rebalance_date, closes, cfg)
+        macro_score = await reconstruct_macro_score(session, rebalance_date)
+        sector_sig = await _sector_signals_on(session, isins, rebalance_date)
+        scores: dict[str, Decimal] = {}
+        for isin in quality:
+            sc = await compute_full_composite(
+                session, isin, rebalance_date, closes.get(isin, []),
+                vols_hist.get(isin), macro_score=macro_score,
+                sector_signal=sector_sig.get(isin, "neutral"),
+            )
+            if sc is not None:
+                scores[isin] = sc
+        ranked = [k for k, _v in sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))]
+        rank_of = {isin: r for r, isin in enumerate(ranked)}
+        keep = sorted(
+            (h for h in positions if h in rank_of and rank_of[h] < cfg.hold_buffer_rank),
+            key=lambda h: rank_of[h],
+        )
+        target = _select_target_f(keep, ranked, sector_by, cfg)
+
+        # SELL anything not retained -> cash (record round-trip + cost)
+        for h in list(positions):
+            if h not in target:
+                px = price_d.get(h) or positions[h].entry_price
+                proceeds = positions[h].shares * px
+                cost = cost_on_notional(proceeds)
+                total_costs += cost
+                cash += proceeds - cost
+                trades.append(_f_trade(positions[h], h, rebalance_date, px))
+                del positions[h]
+
+        # resize/establish target names to equal weight of the invested sleeve
+        invested_target, _cash_target = split_capital(total, target_exp)
+        tradeable = [t for t in target if price_d.get(t, Decimal("0")) > 0]
+        per_name = (
+            invested_target / Decimal(len(tradeable)) if tradeable else Decimal("0")
+        )
+        for isin in tradeable:
+            px = price_d[isin]
+            cur_val = positions[isin].shares * px if isin in positions else Decimal("0")
+            diff = per_name - cur_val
+            total_costs += cost_on_notional(abs(diff))
+            cash -= diff + cost_on_notional(abs(diff))
+            prev = positions.get(isin)
+            positions[isin] = _FPos(
+                per_name / px,
+                prev.entry_date if prev else rebalance_date,
+                prev.entry_price if prev else px,
+            )
+
+        # daily blended curve: each trading day after D through the next rebalance
+        held = list(positions.keys())
+        paths = await _daily_paths(session, held, rebalance_date, d_end)
+        by_date: dict[date, dict[str, Decimal]] = {}
+        for isin, series in paths.items():
+            for dt, px in series:
+                by_date.setdefault(dt, {})[isin] = px
+        last_px = {h: price_d.get(h) for h in held}
+        for d in days[i + 1 : end_i + 1]:
+            dmap = by_date.get(d, {})
+            inv = Decimal("0")
+            for h in held:
+                px = dmap.get(h) or last_px.get(h)
+                if px is not None:
+                    last_px[h] = px
+                    inv += positions[h].shares * px
+            daily.append((d, (inv + cash).quantize(_Q2, rounding=ROUND_HALF_EVEN)))
+
+    # mark remaining open positions to the final close for the trade table
+    final_day = days[-1]
+    final_px = await _adj_close_on(session, list(positions.keys()), final_day)
+    for h in list(positions):
+        px = final_px.get(h) or positions[h].entry_price
+        trades.append(_f_trade(positions[h], h, final_day, px))
+
+    # ---- metrics on the DAILY blended curve ----
+    curve_dates = [d for d, _ in daily]
+    bot_values = [v for _, v in daily]
+    end_value = bot_values[-1]
+    years = Decimal((cfg.end_date - cfg.start_date).days) / Decimal("365.25")
+    total_return = ((end_value / cfg.starting_capital - 1) * 100).quantize(
+        _Q2, rounding=ROUND_HALF_EVEN
+    )
+    bot_returns = period_returns(bot_values)
+    ppy = Decimal("252")
+    n500 = await _index_curve(
+        session, "nifty500_tri", curve_dates, cfg.starting_capital
+    )
+    if n500 is not None:
+        n500_ret, n500_cagr, n500_returns = _bench_stats(n500, years)
+        n500_alpha: Decimal | None = (total_return - n500_ret).quantize(
+            _Q2, rounding=ROUND_HALF_EVEN
+        )
+        n500_beta = beta(bot_returns, n500_returns)
+    else:
+        n500_ret = n500_cagr = n500_alpha = n500_beta = None
+
+    result = BacktestResult(
+        config=cfg,
+        start_value=cfg.starting_capital,
+        end_value=end_value,
+        total_return_pct=total_return,
+        cagr_pct=cagr_pct(cfg.starting_capital, end_value, years),
+        max_drawdown_pct=max_drawdown_pct(bot_values),
+        win_rate_pct=win_rate_pct(trades),
+        total_trades=len(trades),
+        total_costs_paid=total_costs.quantize(_Q2, rounding=ROUND_HALF_EVEN),
+        equity_curve=daily,
+        nifty500_tri_return_pct=n500_ret,
+        nifty500_tri_cagr_pct=n500_cagr,
+        alpha_vs_nifty500_tri_pct=n500_alpha,
+        beta_vs_nifty500_tri=n500_beta,
+        sharpe=sharpe_ratio(bot_returns, _RISK_FREE_ANNUAL, ppy),
+        sortino=sortino_ratio(bot_returns, _RISK_FREE_ANNUAL, ppy),
+        profit_factor=profit_factor(trades),
+        avg_win_pct=avg_win_pct(trades),
+        avg_loss_pct=avg_loss_pct(trades),
+        sector_exposure=await _sector_exposure(session, trades),
+        trades=trades,
+        exposure_trace=exposure_trace,
+    )
+    log.info(
+        "backtest.f.done", trades=len(trades), total_return_pct=str(total_return),
+        maxdd=str(result.max_drawdown_pct), n500=str(n500_ret),
+        sharpe=str(result.sharpe),
+    )
+    return result
