@@ -20,7 +20,9 @@ from backend.backtest.cost_model import (
     round_trip_cost_pct,
 )
 from backend.backtest.engine import (
+    BacktestConfig,
     Trade,
+    apply_trailing_stop,
     avg_loss_pct,
     avg_win_pct,
     beta,
@@ -28,6 +30,7 @@ from backend.backtest.engine import (
     compute_trade_return,
     max_drawdown_pct,
     period_returns,
+    position_weights,
     profit_factor,
     select_top_n,
     sharpe_ratio,
@@ -500,3 +503,58 @@ async def test_composite_without_fundamentals_renormalized(
 def test_composite_renorm_weights_sum_to_one() -> None:
     # 0.583 + 0.417 = 1.000 (T and M absorb the fundamentals weight exactly).
     assert Decimal("1.000") == _scores._W_TECH_ABSENT + _scores._W_MACRO_ABSENT
+
+
+# ---------------------------------------------------------------------------
+# Config D consistency techniques (Chunk 5.2c): sector cap, score-weighted
+# sizing, trailing stop. Backward-compat defaults must leave A/B/C unchanged.
+# ---------------------------------------------------------------------------
+def test_max_per_sector_caps_holdings() -> None:
+    scores = {f"CG{i}": Decimal(90 - i) for i in range(6)}  # 6 Capital Goods
+    scores.update({f"X{i}": Decimal(80 - i) for i in range(6)})  # 6 other sectors
+    sector_by = {f"CG{i}": "Capital Goods" for i in range(6)}
+    sector_by.update({f"X{i}": f"S{i}" for i in range(6)})
+    picks = select_top_n(
+        scores, 8, Decimal("0"), sector_by=sector_by, max_per_sector=3
+    )
+    cg = [p for p in picks if sector_by[p] == "Capital Goods"]
+    assert len(cg) == 3  # capped at 3 despite 6 top scorers being Cap Goods
+    assert len(picks) == 8  # remaining slots filled from other sectors
+
+
+def test_score_weighted_sizing() -> None:
+    picks = [f"S{i}" for i in range(20)]
+    scores = {f"S{i}": Decimal(100 - i) for i in range(20)}  # 100..81
+    w = position_weights(picks, scores, "score_weighted", Decimal("0.10"))
+    assert abs(sum(w.values(), Decimal(0)) - Decimal("1")) < Decimal("0.0001")
+    assert max(w.values()) <= Decimal("0.10") + Decimal("0.0001")  # 10% clamp
+    assert w["S0"] > w["S19"]  # higher score -> more capital
+
+
+def test_trailing_stop_triggers() -> None:
+    # entry 100, peak 120, then 100 = -16.7% from peak -> stop fires at 100.
+    path = [(date(2024, 1, 2), Decimal("120")), (date(2024, 1, 3), Decimal("100"))]
+    ed, ep, stopped = apply_trailing_stop(Decimal("100"), path, Decimal("15"))
+    assert stopped is True
+    assert ep == Decimal("100") and ed == date(2024, 1, 3)
+
+
+def test_trailing_stop_not_triggered() -> None:
+    # peak 120, dip to 110.4 = -8% from peak -> held; exit at the last close.
+    path = [(date(2024, 1, 2), Decimal("120")), (date(2024, 1, 3), Decimal("110.4"))]
+    ed, ep, stopped = apply_trailing_stop(Decimal("100"), path, Decimal("15"))
+    assert stopped is False
+    assert ep == Decimal("110.4") and ed == date(2024, 1, 3)
+
+
+def test_config_abc_unchanged() -> None:
+    c = BacktestConfig(start_date=date(2024, 1, 1), end_date=date(2024, 2, 1))
+    assert c.max_per_sector is None
+    assert c.position_sizing == "equal"
+    assert c.trailing_stop_pct is None
+    # select_top_n with no sector args is the original behavior.
+    s = {"A": Decimal("90"), "B": Decimal("80"), "C": Decimal("70")}
+    assert select_top_n(s, 2) == ["A", "B"]
+    # equal sizing is the default weighting (1/n each).
+    w = position_weights(["A", "B", "C", "D"], s, "equal", Decimal("0.10"))
+    assert all(v == Decimal("1") / Decimal("4") for v in w.values())

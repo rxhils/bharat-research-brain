@@ -28,8 +28,10 @@ from backend.backtest.engine import (
     max_drawdown_pct,
     period_returns,
     profit_factor,
+    select_top_n,
     sharpe_ratio,
     simulate_day,
+    simulate_day_d,
     sortino_ratio,
     win_rate_pct,
 )
@@ -83,10 +85,11 @@ _WARMUP_DAYS = 260
 
 
 def _compute_breadth(closes: dict[str, list[float]]) -> Decimal | None:
-    """% of stocks whose last close is above their 200-day EMA.
+    """% of stocks whose yesterday's close is above their 200-day EMA.
 
-    Returns None when there's no data to compute from. Only stocks with
-    enough history (>= 200 bars) are counted.
+    Uses series[-2] (yesterday's close) so the breadth decision never peeks
+    at the rebalance day's close. Returns None when there's no data to
+    compute from. Only stocks with enough history (>= 200 bars) are counted.
     """
     above = 0
     total = 0
@@ -95,7 +98,7 @@ def _compute_breadth(closes: dict[str, list[float]]) -> Decimal | None:
             continue
         total += 1
         e = ema(series, 200)
-        if e is not None and series[-1] > e:
+        if e is not None and series[-2] > e:
             above += 1
     if total == 0:
         return None
@@ -278,6 +281,41 @@ async def _adj_close_on(
     return {i: c for i, c in rows}
 
 
+# Config D: post-entry daily closes per stock (for trailing stops) + sector map.
+_SQL_DAILY_PATHS = text(
+    """
+    SELECT isin, trade_date, adj_close
+    FROM prices_eod_adjusted
+    WHERE trade_date > :start AND trade_date <= :end
+      AND adj_close IS NOT NULL
+      AND isin = ANY(:isins)
+    ORDER BY isin, trade_date
+    """
+).bindparams(bindparam("isins"))
+
+
+async def _daily_paths(
+    session: AsyncSession, isins: list[str], start: date, end: date
+) -> dict[str, list[tuple[date, Decimal]]]:
+    """{isin: [(date, close)...]} for closes strictly AFTER `start` up to `end`."""
+    if not isins:
+        return {}
+    rows = (
+        await session.execute(
+            _SQL_DAILY_PATHS, {"start": start, "end": end, "isins": list(isins)}
+        )
+    ).all()
+    out: dict[str, list[tuple[date, Decimal]]] = {}
+    for isin, td, ac in rows:
+        out.setdefault(isin, []).append((td, ac))
+    return out
+
+
+async def _sectors_map(session: AsyncSession, isins: list[str]) -> dict[str, str]:
+    rows = (await session.execute(_SQL_SECTORS, {"isins": list(isins)})).all()
+    return {i: (s or "(unknown)") for i, s in rows}
+
+
 # ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
@@ -302,6 +340,14 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
 
     history_start = _history_start(days[0])
     isins = await _active_isins(session)
+    # Config D path: sector-capped selection + score-weighted sizing + trailing
+    # stops. Off by default -> A/B/C take the original simulate_day path.
+    advanced = (
+        cfg.max_per_sector is not None
+        or cfg.trailing_stop_pct is not None
+        or cfg.position_sizing != "equal"
+    )
+    sector_by = await _sectors_map(session, isins) if advanced else {}
     log.info(
         "backtest.run.start",
         start=cfg.start_date.isoformat(),
@@ -374,19 +420,41 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
             skipped += 1
             continue
 
-        entry_prices = await _adj_close_on(session, isins, rebalance_date)
-        exit_prices = await _adj_close_on(session, isins, exit_date)
-
-        day_result = simulate_day(
-            rebalance_date,
-            exit_date,
-            scores,
-            entry_prices,
-            exit_prices,
-            n=cfg.top_n,
-            capital=equity,
-            min_score=cfg.min_score,
-        )
+        if advanced:
+            picks = select_top_n(
+                scores, cfg.top_n, cfg.min_score,
+                sector_by=sector_by, max_per_sector=cfg.max_per_sector,
+            )
+            entry_prices = await _adj_close_on(session, picks, rebalance_date)
+            paths = await _daily_paths(session, picks, rebalance_date, exit_date)
+            day_result = simulate_day_d(
+                rebalance_date,
+                exit_date,
+                scores,
+                entry_prices,
+                paths,
+                sector_by,
+                n=cfg.top_n,
+                capital=equity,
+                min_score=cfg.min_score,
+                max_per_sector=cfg.max_per_sector,
+                position_sizing=cfg.position_sizing,
+                max_position_weight=cfg.max_position_weight,
+                trailing_stop_pct=cfg.trailing_stop_pct,
+            )
+        else:
+            entry_prices = await _adj_close_on(session, isins, rebalance_date)
+            exit_prices = await _adj_close_on(session, isins, exit_date)
+            day_result = simulate_day(
+                rebalance_date,
+                exit_date,
+                scores,
+                entry_prices,
+                exit_prices,
+                n=cfg.top_n,
+                capital=equity,
+                min_score=cfg.min_score,
+            )
         all_days.append(day_result)
         all_trades.extend(day_result.trades)
         total_costs += day_result.costs_paid

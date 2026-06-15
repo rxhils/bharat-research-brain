@@ -38,6 +38,16 @@ class BacktestConfig:
     # FIX 2 breadth regime filter (skip rebalance / go to cash when <40% of stocks
     # are above EMA200). True = current behavior; False = always-invested A/B test.
     apply_breadth_filter: bool = True
+    # Config D (consistency) — all default to OFF so A/B/C are byte-identical.
+    # max stocks from one sector held at once (None = uncapped).
+    max_per_sector: int | None = None
+    # "equal" | "score_weighted" (weight by composite score, single-name cap).
+    position_sizing: str = "equal"
+    # single-position cap as a FRACTION of capital for score_weighted (10%).
+    max_position_weight: Decimal = Decimal("0.10")
+    # trailing stop: exit intra-hold if a name falls this % from its post-entry
+    # peak close (None = off, hold to scheduled exit).
+    trailing_stop_pct: Decimal | None = None
 
 
 @dataclass(frozen=True)
@@ -52,6 +62,8 @@ class Trade:
     net_pnl: Decimal
     gross_return_pct: Decimal
     score: Decimal
+    # "rebalance" (held to scheduled exit) or "trailing-stop" (Config D early cut).
+    exit_reason: str = "rebalance"
 
 
 @dataclass
@@ -65,18 +77,41 @@ class DayResult:
 
 
 def select_top_n(
-    scores: dict[str, Decimal], n: int, min_score: Decimal = Decimal("0")
+    scores: dict[str, Decimal],
+    n: int,
+    min_score: Decimal = Decimal("0"),
+    *,
+    sector_by: dict[str, str] | None = None,
+    max_per_sector: int | None = None,
 ) -> list[str]:
     """ISINs scoring >= min_score, highest first.
 
     `n <= 0` means NO cap — return every eligible ISIN (the threshold-portfolio
     mode: hold all stocks above the score floor). `n > 0` caps at the top n.
     Deterministic tiebreak by ISIN ascending so the engine is reproducible.
+
+    Config D: when `sector_by` + `max_per_sector` are given, a stock is skipped if
+    its sector already holds `max_per_sector` picks (the next eligible name fills
+    the slot) — this caps single-sector concentration. Defaults (None) reproduce
+    the original behavior exactly.
     """
     eligible = [(s, isin) for isin, s in scores.items() if s >= min_score]
     eligible.sort(key=lambda x: (-x[0], x[1]))
-    ordered = [isin for _, isin in eligible]
-    return ordered if n <= 0 else ordered[:n]
+    if sector_by is None or max_per_sector is None:
+        ordered = [isin for _, isin in eligible]
+        return ordered if n <= 0 else ordered[:n]
+
+    picked: list[str] = []
+    per_sector: dict[str, int] = {}
+    for _s, isin in eligible:
+        sec = sector_by.get(isin, "(unknown)")
+        if per_sector.get(sec, 0) >= max_per_sector:
+            continue
+        picked.append(isin)
+        per_sector[sec] = per_sector.get(sec, 0) + 1
+        if n > 0 and len(picked) >= n:
+            break
+    return picked
 
 
 def compute_trade_return(entry_price: Decimal, exit_price: Decimal) -> Decimal:
@@ -146,6 +181,140 @@ def simulate_day(
                 net_pnl=net,
                 gross_return_pct=compute_trade_return(entry, exit_p),
                 score=scores.get(isin, Decimal("0")),
+            )
+        )
+        result.gross_pnl += gross
+        result.net_pnl += net
+        result.costs_paid += cost
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Config D consistency techniques (Chunk 5.2c) — pure.
+# ---------------------------------------------------------------------------
+def position_weights(
+    picks: list[str],
+    scores: dict[str, Decimal],
+    sizing: str,
+    max_weight: Decimal,
+) -> dict[str, Decimal]:
+    """Capital weights for `picks`, summing to 1.0.
+
+    "equal" -> 1/n each. "score_weighted" -> proportional to composite score with
+    any single name capped at `max_weight`; the capped excess is redistributed
+    proportionally over the uncapped names so the book stays fully invested. Falls
+    back to equal when scores are non-positive or the cap is infeasible.
+    """
+    n = len(picks)
+    if n == 0:
+        return {}
+    equal = Decimal(1) / Decimal(n)
+    if sizing != "score_weighted":
+        return {p: equal for p in picks}
+    pos = {p: max(scores.get(p, Decimal(0)), Decimal(0)) for p in picks}
+    total = sum(pos.values(), Decimal(0))
+    if total <= 0 or max_weight * Decimal(n) < 1:
+        return {p: equal for p in picks}
+    raw = {p: pos[p] / total for p in picks}
+    over = [p for p in picks if raw[p] > max_weight]
+    if not over:
+        return raw
+    under = [p for p in picks if p not in over]
+    under_raw = sum(raw[p] for p in under)
+    remaining = Decimal(1) - max_weight * Decimal(len(over))
+    w: dict[str, Decimal] = dict.fromkeys(over, max_weight)
+    for p in under:
+        w[p] = (
+            remaining * raw[p] / under_raw
+            if under_raw > 0
+            else remaining / Decimal(len(under))
+        )
+    return w
+
+
+def apply_trailing_stop(
+    entry: Decimal,
+    path: list[tuple[date, Decimal]],
+    stop_pct: Decimal,
+) -> tuple[date, Decimal, bool]:
+    """Walk post-entry daily closes; exit the first day a close is >= stop_pct
+    below the running peak (peak starts at entry). Returns (exit_date,
+    exit_price, stopped). If never triggered, exits at the last close. `path`
+    must be non-empty (the caller appends the scheduled-exit close)."""
+    peak = entry
+    threshold = Decimal(1) - stop_pct / Decimal(100)
+    for d, px in path:
+        if px > peak:
+            peak = px
+        if px <= peak * threshold:
+            return d, px, True
+    return path[-1][0], path[-1][1], False
+
+
+def simulate_day_d(
+    rebalance_date: date,
+    exit_date: date,
+    scores: dict[str, Decimal],
+    entry_prices: dict[str, Decimal],
+    daily_paths: dict[str, list[tuple[date, Decimal]]],
+    sector_by: dict[str, str],
+    *,
+    n: int,
+    capital: Decimal,
+    min_score: Decimal,
+    max_per_sector: int | None,
+    position_sizing: str,
+    max_position_weight: Decimal,
+    trailing_stop_pct: Decimal | None,
+) -> DayResult:
+    """Config-D day: sector-capped selection + score-weighted sizing + trailing
+    stops. Each pick exits at the trailing stop or the scheduled exit, whichever
+    first. Pure given pre-fetched daily paths (closes AFTER entry up to exit_date
+    inclusive). Lookahead guard: exit_date > rebalance_date (assert)."""
+    if exit_date <= rebalance_date:
+        raise AssertionError(
+            f"lookahead: exit_date {exit_date} must be > rebalance_date {rebalance_date}"
+        )
+    picks = select_top_n(
+        scores, n, min_score, sector_by=sector_by, max_per_sector=max_per_sector
+    )
+    tradeable = [p for p in picks if entry_prices.get(p, Decimal(0)) > 0]
+    result = DayResult(date=rebalance_date, positions=tradeable)
+    if not tradeable:
+        return result
+    weights = position_weights(tradeable, scores, position_sizing, max_position_weight)
+    for isin in tradeable:
+        entry = entry_prices[isin]
+        alloc = capital * weights[isin]
+        path = daily_paths.get(isin, [])
+        if trailing_stop_pct is not None and path:
+            ex_date, exit_p, stopped = apply_trailing_stop(
+                entry, path, trailing_stop_pct
+            )
+            reason = "trailing-stop" if stopped else "rebalance"
+        elif path:
+            ex_date, exit_p, reason = path[-1][0], path[-1][1], "rebalance"
+        else:
+            ex_date, exit_p, reason = exit_date, entry, "rebalance"
+        qty = alloc / entry
+        gross = (alloc * (exit_p - entry) / entry).quantize(
+            _Q4, rounding=ROUND_HALF_EVEN
+        )
+        cost = cost_on_notional(alloc)
+        net = (gross - cost).quantize(_Q4, rounding=ROUND_HALF_EVEN)
+        result.trades.append(
+            Trade(
+                isin=isin,
+                entry_date=rebalance_date,
+                exit_date=ex_date,
+                entry_price=entry,
+                exit_price=exit_p,
+                qty=qty,
+                gross_pnl=gross,
+                net_pnl=net,
+                gross_return_pct=compute_trade_return(entry, exit_p),
+                score=scores.get(isin, Decimal("0")),
+                exit_reason=reason,
             )
         )
         result.gross_pnl += gross
