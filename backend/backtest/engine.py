@@ -35,6 +35,9 @@ class BacktestConfig:
     # Chunk 5.2c: benchmark construction — "mcap" (top-N by market cap, weighted
     # by mcap; the fair bar) or "equal" (fixed proxy baskets, equal-weight).
     benchmark_weighting: str = "mcap"
+    # FIX 2 breadth regime filter (skip rebalance / go to cash when <40% of stocks
+    # are above EMA200). True = current behavior; False = always-invested A/B test.
+    apply_breadth_filter: bool = True
 
 
 @dataclass(frozen=True)

@@ -90,7 +90,7 @@ def _compute_breadth(closes: dict[str, list[float]]) -> Decimal | None:
     """
     above = 0
     total = 0
-    for isin, series in closes.items():
+    for series in closes.values():
         if len(series) < 200:
             continue
         total += 1
@@ -330,7 +330,11 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
         # skip this rebalance entirely (move to cash). This avoids major
         # drawdowns during bear markets, crashes, and corrections.
         pct_above_ema200 = _compute_breadth(closes)
-        if pct_above_ema200 is not None and pct_above_ema200 < Decimal("40"):
+        if (
+            cfg.apply_breadth_filter
+            and pct_above_ema200 is not None
+            and pct_above_ema200 < Decimal("40")
+        ):
             skipped += 1
             log.info(
                 "backtest.skipped.bearish",
