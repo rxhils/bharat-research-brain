@@ -27,7 +27,9 @@ from backend.backtest.engine import (
     avg_win_pct,
     beta,
     cagr_pct,
+    classify_defensive_pool,
     compute_trade_return,
+    detect_regime,
     max_drawdown_pct,
     period_returns,
     position_weights,
@@ -36,6 +38,7 @@ from backend.backtest.engine import (
     sharpe_ratio,
     simulate_day,
     sortino_ratio,
+    trailing_window,
     win_rate_pct,
 )
 from backend.backtest.runner import _weighted_ratio
@@ -558,3 +561,87 @@ def test_config_abc_unchanged() -> None:
     # equal sizing is the default weighting (1/n each).
     w = position_weights(["A", "B", "C", "D"], s, "equal", Decimal("0.10"))
     assert all(v == Decimal("1") / Decimal("4") for v in w.values())
+
+
+# ---------------------------------------------------------------------------
+# Config E — regime switching (beta classification + regime detection)
+# ---------------------------------------------------------------------------
+def test_beta_aggressive_stock() -> None:
+    # stock moves 1.5x the index each period -> beta ~ 1.5.
+    idx = [Decimal(str(x)) for x in (0.01, -0.02, 0.03, -0.01, 0.02, -0.015)]
+    stk = [r * Decimal("1.5") for r in idx]
+    b = beta(stk, idx)
+    assert b is not None
+    assert Decimal("1.45") <= b <= Decimal("1.55"), b
+
+
+def test_beta_defensive_stock() -> None:
+    # stock moves 0.5x the index each period -> beta ~ 0.5 (low-beta defensive).
+    idx = [Decimal(str(x)) for x in (0.01, -0.02, 0.03, -0.01, 0.02, -0.015)]
+    stk = [r * Decimal("0.5") for r in idx]
+    b = beta(stk, idx)
+    assert b is not None
+    assert Decimal("0.45") <= b <= Decimal("0.55"), b
+
+
+def test_beta_insufficient_returns() -> None:
+    assert beta([Decimal("0.01")], [Decimal("0.01")]) is None  # <2 points
+
+
+def test_detect_regime_risk_on_uptrend() -> None:
+    # rising series: last close above its 200-DMA AND 50-day return >= 0.
+    closes = [Decimal(str(100 + i)) for i in range(260)]  # strictly increasing
+    assert detect_regime(closes) == "risk_on"
+
+
+def test_detect_regime_risk_off_downtrend() -> None:
+    # falling series: last close below its 200-DMA -> risk_off.
+    closes = [Decimal(str(400 - i)) for i in range(260)]  # strictly decreasing
+    assert detect_regime(closes) == "risk_off"
+
+
+def test_detect_regime_risk_off_negative_momentum() -> None:
+    # above the 200-DMA but the recent 50-day leg is negative -> risk_off.
+    closes = [Decimal(str(100 + i)) for i in range(210)]  # uptrend 100..309
+    closes += [Decimal(str(309 - i)) for i in range(1, 51)]  # gentle 50-day pullback
+    # last close (259) is still ABOVE the 200-DMA (~247) but 50-day return < 0.
+    assert detect_regime(closes) == "risk_off"
+
+
+def test_detect_regime_warmup_defaults_risk_on() -> None:
+    # fewer than 200 closes -> not enough history -> default to full participation.
+    assert detect_regime([Decimal("100")] * 50) == "risk_on"
+
+
+def test_classify_defensive_pool_lowest_beta() -> None:
+    betas = {
+        "LOW1": Decimal("0.4"), "LOW2": Decimal("0.6"),
+        "MID": Decimal("1.0"), "HIGH1": Decimal("1.4"), "HIGH2": Decimal("1.8"),
+    }
+    pool = classify_defensive_pool(betas, Decimal("0.40"))  # lowest 40% = 2 of 5
+    assert pool == {"LOW1", "LOW2"}
+
+
+def test_classify_defensive_pool_empty() -> None:
+    assert classify_defensive_pool({}, Decimal("0.40")) == set()
+
+
+def test_trailing_window_excludes_future() -> None:
+    # the no-lookahead guard: bars dated after as_of must never appear.
+    series = [
+        (date(2020, 1, 1), Decimal("10")),
+        (date(2020, 1, 2), Decimal("11")),
+        (date(2020, 1, 3), Decimal("12")),  # as_of
+        (date(2020, 1, 6), Decimal("99")),  # FUTURE — must be excluded
+    ]
+    win = trailing_window(series, date(2020, 1, 3), 2)
+    assert win == [(date(2020, 1, 2), Decimal("11")), (date(2020, 1, 3), Decimal("12"))]
+    assert all(d <= date(2020, 1, 3) for d, _ in win)
+
+
+def test_config_e_defaults_reproduce_c() -> None:
+    # regime switching is OFF by default -> A/B/C/D configs are untouched.
+    c = BacktestConfig(start_date=date(2024, 1, 1), end_date=date(2024, 2, 1))
+    assert c.regime_switching is False
+    assert c.defensive_pool_pct == Decimal("0.40")
+    assert c.beta_window == 252

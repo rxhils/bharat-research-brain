@@ -23,11 +23,11 @@ _Q2 = Decimal("0.01")
 class BacktestConfig:
     start_date: date
     end_date: date
-    top_n: int = 12
+    top_n: int = 15
     hold_days: int = 20
     rebalance_every: int = 20
     starting_capital: Decimal = Decimal("1000000")
-    min_score: Decimal = Decimal("65")
+    min_score: Decimal = Decimal("55")
     # Week 2 (Chunk 5.2b): score each stock with the full F+T+M composite
     # (fundamentals/macro/sector reconstructed no-lookahead) instead of the
     # technical-only proxy. Default False preserves the Chunk 5.2 baseline.
@@ -48,6 +48,14 @@ class BacktestConfig:
     # trailing stop: exit intra-hold if a name falls this % from its post-entry
     # peak close (None = off, hold to scheduled exit).
     trailing_stop_pct: Decimal | None = None
+    # Config E (regime switching) — all default OFF so A/B/C/D are unchanged.
+    # When True, RISK-OFF rebalances rotate the book to the low-beta defensive pool;
+    # RISK-ON rebalances behave exactly like Config C (full universe).
+    regime_switching: bool = False
+    # fraction of the scoreable universe (lowest beta) forming the defensive pool.
+    defensive_pool_pct: Decimal = Decimal("0.40")
+    # trailing trading-day window for the per-stock beta-vs-index estimate.
+    beta_window: int = 252
 
 
 @dataclass(frozen=True)
@@ -321,6 +329,64 @@ def simulate_day_d(
         result.net_pnl += net
         result.costs_paid += cost
     return result
+
+
+# ---------------------------------------------------------------------------
+# Config E regime switching (Chunk 5.2c) — pure.
+# ---------------------------------------------------------------------------
+def trailing_window(
+    series: list[tuple[date, Decimal]], as_of: date, n: int
+) -> list[tuple[date, Decimal]]:
+    """Last `n` (date, value) pairs with date <= as_of (the no-lookahead guard).
+
+    Any bar dated AFTER `as_of` is dropped before slicing, so a regime/beta window
+    can never peek at a future bar even if the caller passes a longer series.
+    `n <= 0` returns the full past series.
+    """
+    past = [(d, v) for d, v in series if d <= as_of]
+    return past[-n:] if n > 0 else past
+
+
+def detect_regime(
+    index_closes: list[Decimal] | list[float],
+    *,
+    dma_window: int = 200,
+    mom_window: int = 50,
+) -> str:
+    """Market regime from a trend filter on the index close series ENDING at the
+    decision date (the caller guarantees no future bars). Returns "risk_on" when
+    the last close is above its `dma_window`-day moving average AND the
+    `mom_window`-day return is >= 0; otherwise "risk_off".
+
+    Reactive, not predictive: it confirms a sustained trend, so it will NOT dodge
+    the first leg of a sudden crash. Warmup (fewer than `dma_window` closes, or no
+    momentum reference) defaults to "risk_on" (full participation) — never
+    fabricate a regime from thin history.
+    """
+    n = len(index_closes)
+    if n < dma_window or n <= mom_window:
+        return "risk_on"
+    closes = [float(x) for x in index_closes]
+    dma = sum(closes[-dma_window:]) / dma_window
+    last = closes[-1]
+    ref = closes[-mom_window - 1]
+    mom_ok = ref > 0 and (last - ref) / ref >= 0
+    return "risk_on" if (last > dma and mom_ok) else "risk_off"
+
+
+def classify_defensive_pool(
+    betas: dict[str, Decimal], defensive_pct: Decimal
+) -> set[str]:
+    """The lowest-beta `defensive_pct` fraction of names — the defensive pool.
+
+    Ties broken by ISIN for determinism. At least one name is returned when betas
+    are present; an empty set when no beta could be estimated (e.g. thin history).
+    """
+    if not betas:
+        return set()
+    ordered = sorted(betas.items(), key=lambda kv: (kv[1], kv[0]))
+    k = max(1, int(len(ordered) * float(defensive_pct)))
+    return {isin for isin, _b in ordered[:k]}
 
 
 # ---------------------------------------------------------------------------

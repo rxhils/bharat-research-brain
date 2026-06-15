@@ -25,6 +25,8 @@ from backend.backtest.engine import (
     avg_win_pct,
     beta,
     cagr_pct,
+    classify_defensive_pool,
+    detect_regime,
     max_drawdown_pct,
     period_returns,
     profit_factor,
@@ -33,6 +35,7 @@ from backend.backtest.engine import (
     simulate_day,
     simulate_day_d,
     sortino_ratio,
+    trailing_window,
     win_rate_pct,
 )
 from backend.backtest.scores import (
@@ -317,6 +320,84 @@ async def _sectors_map(session: AsyncSession, isins: list[str]) -> dict[str, str
 
 
 # ---------------------------------------------------------------------------
+# Config E: regime detection + per-stock beta vs the REAL Nifty 500 TRI.
+# Every read is bounded by `trade_date <= :as_of` (no lookahead, asserted).
+# ---------------------------------------------------------------------------
+_MIN_BETA_OBS = 60  # min aligned daily returns to trust a beta estimate
+
+_SQL_INDEX_ASOF = text(
+    "SELECT trade_date, index_value FROM benchmark_index "
+    "WHERE index_name = :name AND trade_date <= :as_of "
+    "ORDER BY trade_date DESC LIMIT :n"
+)
+_SQL_DATED_CLOSES = text(
+    """
+    SELECT isin, trade_date, adj_close
+    FROM prices_eod_adjusted
+    WHERE trade_date BETWEEN :start AND :as_of
+      AND adj_close IS NOT NULL
+      AND isin = ANY(:isins)
+    ORDER BY isin, trade_date
+    """
+).bindparams(bindparam("isins"))
+
+
+async def _index_series_asof(
+    session: AsyncSession, name: str, as_of: date, n: int
+) -> list[tuple[date, Decimal]]:
+    """Last `n` (date, value) index rows with trade_date <= as_of, ascending."""
+    rows = (
+        await session.execute(_SQL_INDEX_ASOF, {"name": name, "as_of": as_of, "n": n})
+    ).all()
+    series = [(d, Decimal(v)) for d, v in rows][::-1]
+    for d, _v in series:
+        assert d <= as_of, f"lookahead: index {d} > as_of {as_of}"
+    return series
+
+
+async def _index_closes_asof(
+    session: AsyncSession, name: str, as_of: date, n: int
+) -> list[Decimal]:
+    """Just the close values (ascending) of the last `n` index rows <= as_of."""
+    return [v for _d, v in await _index_series_asof(session, name, as_of, n)]
+
+
+async def _compute_betas(
+    session: AsyncSession, isins: list[str], as_of: date, cfg: BacktestConfig
+) -> dict[str, Decimal]:
+    """Per-stock beta vs the Nifty 500 TRI over the trailing `cfg.beta_window` days,
+    from prices/index values <= as_of (no lookahead; asserted). Stocks with fewer
+    than `_MIN_BETA_OBS` aligned daily returns are omitted (insufficient history)."""
+    idx = await _index_series_asof(session, "nifty500_tri", as_of, cfg.beta_window + 1)
+    idx = trailing_window(idx, as_of, cfg.beta_window + 1)
+    if len(idx) < _MIN_BETA_OBS + 1:
+        return {}
+    idx_dates = [d for d, _ in idx]
+    idx_val = dict(idx)
+    start = as_of - timedelta(days=int(cfg.beta_window * 1.7) + 15)
+    rows = (
+        await session.execute(
+            _SQL_DATED_CLOSES, {"start": start, "as_of": as_of, "isins": list(isins)}
+        )
+    ).all()
+    by_isin: dict[str, dict[date, Decimal]] = {}
+    for isin, td, ac in rows:
+        assert td <= as_of, f"lookahead: price {td} > as_of {as_of}"
+        by_isin.setdefault(isin, {})[td] = ac
+    betas: dict[str, Decimal] = {}
+    for isin, dmap in by_isin.items():
+        common = [d for d in idx_dates if d in dmap]
+        if len(common) < _MIN_BETA_OBS + 1:
+            continue
+        s_returns = period_returns([dmap[d] for d in common])
+        i_returns = period_returns([idx_val[d] for d in common])
+        b = beta(s_returns, i_returns)
+        if b is not None:
+            betas[isin] = b
+    return betas
+
+
+# ---------------------------------------------------------------------------
 # Public entry point
 # ---------------------------------------------------------------------------
 async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestResult:
@@ -416,6 +497,23 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
                 )
                 if score is not None:
                     scores[isin] = score
+
+        # ---- Config E: regime switch — rotate to low-beta defensives in risk-off.
+        # RISK-ON leaves the full universe (= Config C); RISK-OFF restricts the
+        # candidate set to the lowest-beta defensive pool. Always stays invested.
+        if cfg.regime_switching:
+            idx_closes = await _index_closes_asof(
+                session, "nifty500_tri", rebalance_date, max(cfg.beta_window + 5, 260)
+            )
+            if detect_regime(idx_closes) == "risk_off":
+                betas = await _compute_betas(
+                    session, list(scores.keys()), rebalance_date, cfg
+                )
+                defensive = classify_defensive_pool(betas, cfg.defensive_pool_pct)
+                if defensive:
+                    scores = {i: s for i, s in scores.items() if i in defensive}
+        # ------------------------------------------------------------------------
+
         if not scores:
             skipped += 1
             continue
