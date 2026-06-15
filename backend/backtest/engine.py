@@ -67,6 +67,17 @@ class BacktestConfig:
     hold_buffer_rank: int = 40
     # "standard" (A-E: fresh top-N each rebalance) | "low" (F: hold winners in band).
     turnover_mode: str = "standard"
+    # Config F+ — both default OFF so A/B/C/D/E/F are byte-identical.
+    # check regime/exposure every N trading days, decoupled from the name rebalance
+    # (None = exposure only moves at the quarterly name rebalance, i.e. plain F).
+    exposure_check_days: int | None = None
+    # cut a holding the day it falls this FRACTION below entry (or fails quality);
+    # freed capital sits in cash until the next quarterly rebalance. None = off (F).
+    breakdown_exit_pct: Decimal | None = None
+    # data-integrity floor for the history fetch: never read price history before
+    # this date (used to keep 2021-2026 warmup native-only, off the yfinance seam).
+    # None = no floor (A-F unchanged).
+    history_floor: date | None = None
 
 
 @dataclass(frozen=True)
@@ -471,6 +482,31 @@ def low_vol_pass(vols: dict[str, float], exclude_top_frac: float = 1.0 / 3.0) ->
     ordered = sorted(vols.items(), key=lambda kv: (kv[1], kv[0]))
     keep_n = max(1, round(len(ordered) * (1.0 - exclude_top_frac)))
     return {isin for isin, _v in ordered[:keep_n]}
+
+
+def low_vol_cutoff(vols: dict[str, float], exclude_top_frac: float = 1.0 / 3.0) -> float | None:
+    """Boundary vol of the low-vol-kept set (the highest vol still 'quality'). A
+    held name whose trailing vol later exceeds this has broken down on quality.
+    None if no vols."""
+    if not vols:
+        return None
+    ordered = sorted(vols.values())
+    keep_n = max(1, round(len(ordered) * (1.0 - exclude_top_frac)))
+    return ordered[keep_n - 1]
+
+
+def breaks_down(
+    close: Decimal, entry: Decimal, pct_frac: Decimal, fails_quality: bool
+) -> bool:
+    """Config F+ cut-on-breakdown predicate. Sell a holding when it FAILS the
+    quality gate OR has fallen >= `pct_frac` (a fraction, e.g. 0.15) below its
+    ENTRY price. Pure on (close, entry) — uses only the current close and the known
+    entry price, never any future bar (no-lookahead by construction)."""
+    if fails_quality:
+        return True
+    if entry <= 0:
+        return False
+    return close <= entry * (Decimal("1") - pct_frac)
 
 
 # ---------------------------------------------------------------------------

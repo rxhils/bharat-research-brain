@@ -26,10 +26,12 @@ from backend.backtest.engine import (
     avg_loss_pct,
     avg_win_pct,
     beta,
+    breaks_down,
     cagr_pct,
     classify_defensive_pool,
     compute_trade_return,
     detect_regime,
+    low_vol_cutoff,
     low_vol_pass,
     max_drawdown_pct,
     period_returns,
@@ -733,3 +735,42 @@ def test_config_f_defaults_reproduce_abcde() -> None:
     assert c.graded_exposure is False
     assert c.hold_buffer_rank == 40
     assert c.turnover_mode == "standard"
+
+
+# ---------------------------------------------------------------------------
+# Config F+ — decoupled weekly exposure (Change 1) + cut-on-breakdown (Change 2)
+# ---------------------------------------------------------------------------
+def test_breaks_down_price_stop_triggers() -> None:
+    # down 16% from entry (close 84 vs entry 100, 15% stop) -> cut that day.
+    assert breaks_down(Decimal("84"), Decimal("100"), Decimal("0.15"), False) is True
+
+
+def test_breaks_down_price_stop_held() -> None:
+    # down 8% -> still held.
+    assert breaks_down(Decimal("92"), Decimal("100"), Decimal("0.15"), False) is False
+
+
+def test_breaks_down_quality_fail_forces_exit() -> None:
+    # fails the quality gate -> cut regardless of price (even up 5%).
+    assert breaks_down(Decimal("105"), Decimal("100"), Decimal("0.15"), True) is True
+
+
+def test_breaks_down_no_lookahead_uses_only_close_and_entry() -> None:
+    # exactly at the threshold (-15%) triggers; just above does not — pure on (close, entry).
+    assert breaks_down(Decimal("85"), Decimal("100"), Decimal("0.15"), False) is True
+    assert breaks_down(Decimal("85.01"), Decimal("100"), Decimal("0.15"), False) is False
+
+
+def test_low_vol_cutoff_boundary() -> None:
+    # 6 names, drop top tertile (2) -> keep 4 -> boundary = 4th-smallest vol (0.2).
+    vols = {"A": 0.1, "B": 0.12, "C": 0.15, "D": 0.2, "E": 0.5, "F": 0.6}
+    cut = low_vol_cutoff(vols)
+    assert cut is not None and abs(cut - 0.2) < 1e-9, cut
+
+
+def test_config_fplus_defaults_reproduce_f() -> None:
+    # both F+ flags default OFF -> A/B/C/D/E/F are untouched.
+    c = BacktestConfig(start_date=date(2024, 1, 1), end_date=date(2024, 2, 1))
+    assert c.exposure_check_days is None
+    assert c.breakdown_exit_pct is None
+    assert c.history_floor is None

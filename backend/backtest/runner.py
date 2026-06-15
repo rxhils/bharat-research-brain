@@ -25,9 +25,11 @@ from backend.backtest.engine import (
     avg_loss_pct,
     avg_win_pct,
     beta,
+    breaks_down,
     cagr_pct,
     classify_defensive_pool,
     detect_regime,
+    low_vol_cutoff,
     low_vol_pass,
     max_drawdown_pct,
     period_returns,
@@ -431,7 +433,7 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
     rebalance_idx = list(range(0, len(days), cfg.rebalance_every))
     rebalance_idx = [i for i in rebalance_idx if i + cfg.hold_days < len(days)]
 
-    history_start = _history_start(days[0])
+    history_start = _history_start(days[0], cfg.history_floor)
     isins = await _active_isins(session)
     # Config D path: sector-capped selection + score-weighted sizing + trailing
     # stops. Off by default -> A/B/C take the original simulate_day path.
@@ -673,9 +675,15 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
     return result
 
 
-def _history_start(first_rebalance: date) -> date:
-    """A buffer-comfortable start for the history SQL — at least 1 year prior."""
-    return first_rebalance - timedelta(days=_WARMUP_DAYS * 2)
+def _history_start(first_rebalance: date, floor: date | None = None) -> date:
+    """A buffer-comfortable start for the history SQL — at least 1 year prior.
+
+    `floor` (Config F+ history_floor) clamps the start so warmup never reads price
+    history before it — used to keep 2021-2026 warmup native-only, off the
+    2021-05-26 yfinance/native adjustment seam. None = no clamp (A-F unchanged).
+    """
+    start = first_rebalance - timedelta(days=_WARMUP_DAYS * 2)
+    return max(start, floor) if floor is not None else start
 
 
 _SQL_PRICES_ON_DATES = text(
@@ -913,13 +921,16 @@ async def _quality_set(
     as_of: date,
     closes: dict[str, list[float]],
     cfg: BacktestConfig,
-) -> set[str]:
+) -> tuple[set[str], dict[str, float]]:
     """Component 1 quality gate (data <= as_of). Post-2024: ROE > 0 AND debt/equity
     below ceiling. Pre-2024 (no fundamentals): low-volatility proxy — drop the
     highest-vol tertile by trailing-252 realized vol. All isins pass when the gate
-    is off. Fundamentals are read with publication_date <= as_of (SQL-enforced)."""
+    is off. Fundamentals are read with publication_date <= as_of (SQL-enforced).
+
+    Returns (eligible set, no-fundamentals vols) — the vols feed the F+ quality
+    breakdown cutoff."""
     if not cfg.quality_gate:
-        return set(isins)
+        return set(isins), {}
     rows = (
         await session.execute(_SQL_FUND_QUALITY, {"as_of": as_of, "isins": list(isins)})
     ).all()
@@ -949,7 +960,7 @@ async def _quality_set(
         v = realized_vol(rets)
         if v is not None:
             vols[isin] = v
-    return fund_pass | low_vol_pass(vols)
+    return fund_pass | low_vol_pass(vols), vols
 
 
 def _select_target_f(
@@ -983,10 +994,14 @@ def _select_target_f(
     return set(target)
 
 
-def _f_trade(pos: _FPos, isin: str, exit_date: date, exit_price: Decimal) -> Trade:
+def _f_trade(
+    pos: _FPos, isin: str, exit_date: date, exit_price: Decimal,
+    exit_reason: str = "rebalance",
+) -> Trade:
     """A completed round-trip for the trade table. The headline P&L/return/DD come
     from the daily curve; this per-name record is illustrative (price return over
-    the holding, P&L on the exit-date share count)."""
+    the holding, P&L on the exit-date share count). exit_reason is "rebalance" or
+    "breakdown" (Config F+ cut)."""
     pnl = ((exit_price - pos.entry_price) * pos.shares).quantize(
         _Q2, rounding=ROUND_HALF_EVEN
     )
@@ -1001,6 +1016,7 @@ def _f_trade(pos: _FPos, isin: str, exit_date: date, exit_price: Decimal) -> Tra
         isin=isin, entry_date=pos.entry_date, exit_date=exit_date,
         entry_price=pos.entry_price, exit_price=exit_price, qty=pos.shares,
         gross_pnl=pnl, net_pnl=pnl, gross_return_pct=ret, score=Decimal("0"),
+        exit_reason=exit_reason,
     )
 
 
@@ -1018,8 +1034,15 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
         raise ValueError(f"not enough trading days ({len(days)})")
     isins = await _active_isins(session)
     sector_by = await _sectors_map(session, isins)
-    history_start = _history_start(days[0])
+    history_start = _history_start(days[0], cfg.history_floor)
     rebal = [i for i in range(0, len(days), cfg.rebalance_every) if i < len(days) - 1]
+    # Config F+ Change 1: full TRI series (<= end) for the decoupled WEEKLY exposure
+    # check; sliced to <= each check date (no lookahead). Empty unless F+ is on.
+    tri_all = (
+        await _index_series_asof(session, "nifty500_tri", cfg.end_date, 10_000_000)
+        if cfg.exposure_check_days is not None
+        else []
+    )
     log.info(
         "backtest.f.start", start=cfg.start_date.isoformat(),
         end=cfg.end_date.isoformat(), trading_days=len(days),
@@ -1057,7 +1080,14 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
         closes, vols_hist = await _fetch_history(
             session, isins, start=history_start, as_of=rebalance_date
         )
-        quality = await _quality_set(session, isins, rebalance_date, closes, cfg)
+        quality, qvols = await _quality_set(session, isins, rebalance_date, closes, cfg)
+        # F+ quality-breakdown cutoff: a held name whose trailing vol later exceeds
+        # this rebalance-time boundary has broken down on quality (low-vol proxy).
+        qual_cutoff = (
+            low_vol_cutoff(qvols)
+            if (cfg.breakdown_exit_pct is not None and cfg.quality_gate and qvols)
+            else None
+        )
         macro_score = await reconstruct_macro_score(session, rebalance_date)
         sector_sig = await _sector_signals_on(session, isins, rebalance_date)
         scores: dict[str, Decimal] = {}
@@ -1115,15 +1145,109 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
             for dt, px in series:
                 by_date.setdefault(dt, {})[isin] = px
         last_px = {h: price_d.get(h) for h in held}
-        for d in days[i + 1 : end_i + 1]:
-            dmap = by_date.get(d, {})
-            inv = Decimal("0")
-            for h in held:
-                px = dmap.get(h) or last_px.get(h)
-                if px is not None:
-                    last_px[h] = px
-                    inv += positions[h].shares * px
-            daily.append((d, (inv + cash).quantize(_Q2, rounding=ROUND_HALF_EVEN)))
+
+        if cfg.exposure_check_days is None and cfg.breakdown_exit_pct is None:
+            # Plain F: static marking (positions + cash fixed between rebalances).
+            for d in days[i + 1 : end_i + 1]:
+                dmap = by_date.get(d, {})
+                inv = Decimal("0")
+                for h in held:
+                    px = dmap.get(h) or last_px.get(h)
+                    if px is not None:
+                        last_px[h] = px
+                        inv += positions[h].shares * px
+                daily.append((d, (inv + cash).quantize(_Q2, rounding=ROUND_HALF_EVEN)))
+        else:
+            # Config F+: daily breakdown cuts (Change 2) + weekly exposure scaling
+            # (Change 1). positions + cash mutate intra-quarter; names re-selected
+            # only at the quarterly rebalance.
+            cur_exp = target_exp
+            hist = (
+                {h: list(closes.get(h, []))[-_W52_F:] for h in held}
+                if qual_cutoff is not None
+                else {}
+            )
+            since_check = 0
+            for d in days[i + 1 : end_i + 1]:
+                dmap = by_date.get(d, {})
+                since_check += 1
+                for h in list(positions):
+                    px = dmap.get(h) or last_px.get(h)
+                    if px is not None:
+                        last_px[h] = px
+                        if h in hist:
+                            hist[h].append(float(px))
+                # Change 2: daily price breakdown (cut >= breakdown_exit_pct below entry)
+                if cfg.breakdown_exit_pct is not None:
+                    for h in list(positions):
+                        px = last_px.get(h)
+                        if px is not None and breaks_down(
+                            px, positions[h].entry_price, cfg.breakdown_exit_pct, False
+                        ):
+                            proceeds = positions[h].shares * px
+                            c = cost_on_notional(proceeds)
+                            total_costs += c
+                            cash += proceeds - c
+                            trades.append(_f_trade(positions[h], h, d, px, "breakdown"))
+                            del positions[h]
+                # weekly cadence (Change 1): quality breakdown + exposure re-check
+                if (
+                    cfg.exposure_check_days is not None
+                    and since_check >= cfg.exposure_check_days
+                ):
+                    since_check = 0
+                    if qual_cutoff is not None:
+                        for h in list(positions):
+                            ser = hist.get(h, [])
+                            if len(ser) < 30:
+                                continue
+                            w = ser[-(_W52_F + 1):]
+                            rets = [
+                                (w[k] - w[k - 1]) / w[k - 1]
+                                for k in range(1, len(w))
+                                if w[k - 1] != 0
+                            ]
+                            v = realized_vol(rets)
+                            px = last_px.get(h)
+                            if v is not None and v > qual_cutoff and px is not None:
+                                proceeds = positions[h].shares * px
+                                c = cost_on_notional(proceeds)
+                                total_costs += c
+                                cash += proceeds - c
+                                trades.append(
+                                    _f_trade(positions[h], h, d, px, "breakdown")
+                                )
+                                del positions[h]
+                    new_exp = target_exposure_for_regime(
+                        [v for dt, v in tri_all if dt <= d]
+                    )
+                    if new_exp != cur_exp:
+                        inv = sum(
+                            (positions[h].shares * last_px[h]
+                             for h in positions if last_px.get(h)),
+                            Decimal("0"),
+                        )
+                        if inv > 0:
+                            total_now = inv + cash
+                            target_inv, _c = split_capital(total_now, new_exp)
+                            c = cost_on_notional(abs(target_inv - inv))
+                            total_costs += c
+                            cash += (inv - target_inv) - c
+                            factor = target_inv / inv
+                            for h in list(positions):
+                                p = positions[h]
+                                positions[h] = _FPos(
+                                    p.shares * factor, p.entry_date, p.entry_price
+                                )
+                        cur_exp = new_exp
+                        exposure_trace.append((d, new_exp))
+                # daily mark on the (possibly mutated) book
+                inv = sum(
+                    (positions[h].shares * last_px[h]
+                     for h in positions if last_px.get(h)),
+                    Decimal("0"),
+                )
+                daily.append((d, (inv + cash).quantize(_Q2, rounding=ROUND_HALF_EVEN)))
 
     # mark remaining open positions to the final close for the trade table
     final_day = days[-1]
