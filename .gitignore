@@ -23,8 +23,19 @@ ResearchBrain/
 vault_emit.ndjson
 _vault_stage/
 
-docs/
+# Track curated markdown docs (ARCHITECTURE/VALIDATION/STRUCTURE/specs);
+# ignore only the heavy/vendored assets under docs/.
+docs/banner.png
+docs/superpowers/
+docs/fincept-vs-bharat.html
 
 # Operator-downloaded CSV drop dir at the repo root only — must NOT ignore the
 # backend/data/ source package (e.g. scenario_patterns.py, Chunk 4.13).
 /data/
+
+# Diagnostic / scratch scripts are throwaway by convention — never committed.
+# (Validated code lives in backend/; one-off probes do not.) See docs/STRUCTURE.md.
+scripts/diag_*.py
+
+# PowerShell redirect-typo artifacts (e.g. "... > backend;C")
+*;C/
