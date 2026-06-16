@@ -102,3 +102,46 @@ fix ingest before trusting the record (a gappy record is compromised — re-ince
   `FYERS_ACCESS_TOKEN` and switch the score source to `stock_rankings`.
 - Cash earns **0%** in the ledger (conservative; real Indian cash ≈ 6%, so the record
   is shown slightly worse than reality).
+
+---
+
+## 5. Frontend dashboard (Vercel) + the full 24/7 stack
+
+You chose **cloud**. One Neon DB is the single source of truth; the worker writes it,
+Vercel reads it.
+
+```
+   Render/Railway worker ──(writes)──► Neon Postgres ◄──(reads)── Vercel (maven-dashboard)
+   ingest_eod + nightly_run            paper_* tables             real Portfolio + Brain
+```
+
+### Deploy the dashboard (Vercel)
+1. New Project → **root directory `maven-dashboard`** (it's a separate Next.js app).
+2. Env var **`DATABASE_URL`** = the Neon **pooled** URL. NOTE: the dashboard uses the
+   `pg` driver, so use the plain `postgresql://...` form — **not** `+asyncpg` (that's the
+   backend worker's form). SSL is auto-enabled for any non-localhost host.
+3. Deploy. Portfolio + Brain now render the real Neon record. Locally the same is driven
+   by `maven-dashboard/.env.local` (gitignored) → local Docker Postgres.
+
+### The ONE missing piece for production to *move*
+`prices_eod_adjusted` was bulk-backfilled (through 2026-05-26); there is **no daily
+incremental ingest yet**. Until it exists, the cloud portfolio sits frozen at inception.
+Build `scripts/ingest_eod.py` (yfinance EOD for the 507 `stocks.yfinance_symbol`, upsert
+into `prices_eod_adjusted`, idempotent, no NSE scraping) and chain it **before**
+`nightly_run` in the cron (Step 2 already shows the chained command).
+
+### Live Agent board (optional)
+The Brain "Agents" board lights up live when `nightly_run` writes heartbeats. Wire
+`backend/agents/run_log.py::heartbeat()` around the engine steps in `scripts/nightly_run.py`
+(Price Ingest / Daily Mark / Exposure / Rebalance). Until then it honestly shows the
+documented design and `/api/agents` returns the real (empty) `agent_run_log`.
+
+### Before you deploy
+- **Rotate** any API keys pasted into chat (NewsAPI / FMP / indianapi / DeepSeek).
+- `npm i next@14.2` in `maven-dashboard` to clear the pinned-14.2.15 security advisory.
+
+### Is it actually running? (cloud checklist)
+- `SELECT max(trade_date) FROM prices_eod_adjusted;` advances each weekday → ingest works.
+- `SELECT count(*) FROM paper_equity_curve;` grows by one per trading day → nightly_run works.
+- Vercel portfolio value changes after each nightly run. If it never moves, the cron or the
+  ingest isn't running.

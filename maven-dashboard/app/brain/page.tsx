@@ -1,35 +1,28 @@
-import { getABReadout, getEquityCurve, getScores } from "@/lib/data";
-import { ABChart, AgentActivity, Card, ScoreBreakdown, TopScores } from "@/components/client";
+import { getABReadout, getEquityCurve } from "@/lib/data";
+import { ABChart, Card } from "@/components/client";
+import { AgentExplainer } from "@/components/agents";
 
 export const dynamic = "force-dynamic";
 
 export default async function Brain() {
-  const [curve, readout, scores] = await Promise.all([
-    getEquityCurve(), getABReadout(), getScores(),
-  ]);
+  const [curve, readout] = await Promise.all([getEquityCurve(), getABReadout()]);
 
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card title="Is it working?" sub="F+ · mechanical vs agentic">
-          <ABChart data={curve} readout={readout} />
-        </Card>
-        <Card title="Score breakdown" sub="sub-signals to composite" delay={60}>
-          <ScoreBreakdown rows={scores} />
-        </Card>
-      </div>
-
-      <Card title="Top scores" sub="ranked by composite" delay={120}>
-        <TopScores rows={scores} />
+    <div className="space-y-4 pt-2">
+      {/* Agents on top — the main thing: what each one does, in plain English */}
+      <Card title="Agents" sub="the system, in plain English — tap any agent">
+        <AgentExplainer />
       </Card>
 
-      <Card title="Agent activity" sub="live · polls every 4s" delay={160}>
-        <AgentActivity />
+      {/* The honest live record: the frozen F+ paper book vs the index */}
+      <Card title="Is it working?" sub="F+ live paper record vs Nifty 500 TRI" delay={80}>
+        <ABChart data={curve} readout={readout} />
       </Card>
 
-      <p className="px-1 pt-2 text-xs text-dim">
-        The agents produce signals; the frozen F+ engine decides the portfolio. Research
-        tool, not investment advice.
+      <p className="px-1 pt-1 text-xs text-dim">
+        The frozen F+ engine decides the portfolio from real end-of-day prices. The research
+        agents above are built but offline and do NOT affect the live picks. Research tool, not
+        investment advice.
       </p>
     </div>
   );
