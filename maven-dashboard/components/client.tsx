@@ -42,6 +42,7 @@ export function Nav() {
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1 rounded-xl border border-hairline bg-panel/50 p-1">
           {tab("/", "Portfolio")}
+          {tab("/trades", "Trades")}
           {tab("/brain", "Brain")}
         </div>
         <Link

@@ -102,3 +102,30 @@ export interface ABReadout {
   edgePct: number | null;       // agentic - mechanical, full period
   note: string;
 }
+
+// One trade (paper_position row) + its price path, for the Trades page.
+export interface TradePoint {
+  date: string;                 // trade_date
+  close: number;                // adj_close
+}
+export interface Trade {
+  id: number;
+  isin: string;
+  ticker: string;               // stocks.nse_symbol
+  name: string;                 // stocks.company_name
+  sector: string;
+  status: "open" | "closed";
+  entryDate: string;            // entry_date
+  entryPrice: number;           // entry_price
+  exitDate: string | null;      // exit_date
+  exitPrice: number | null;     // exit_price
+  exitReason: string | null;    // exit_reason: breakdown | rebalance
+  currentPrice: number;         // latest adj_close (open) or exit_price (closed)
+  shares: number;
+  pnlPct: number;               // current/entry - 1
+  exposureAtEntry: number;      // exposure_at_entry
+  whyEntry: string;             // plain-English: why F+ bought
+  whyExit: string | null;       // plain-English: why F+ sold (closed only)
+  series: TradePoint[];         // adj_close entry -> exit/latest (sparkline)
+  trendPct: number;             // last vs first of series (day-to-day direction)
+}

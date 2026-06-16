@@ -7,7 +7,7 @@
 import { dbReady, q } from "./db";
 import type {
   ABReadout, AgentBoard, AgentRun, EquityPoint, ExposureState,
-  Holding, KeyStats, PaperAccount, ScoreRow,
+  Holding, KeyStats, PaperAccount, ScoreRow, Trade, TradePoint,
 } from "./types";
 
 const num = (v: unknown): number => (v == null ? 0 : Number(v));
@@ -222,4 +222,79 @@ export async function getAgentBoard(): Promise<AgentBoard> {
     inProgress: agents.some((a) => a.status === "running"),
     agents,
   };
+}
+
+// ------------------------------------------------------------- trades (audit)
+export async function getTrades(): Promise<Trade[]> {
+  if (!dbReady()) return [];
+  const asof = await latestPriceDate();
+  let inception = "";
+  try { inception = (await getAccount()).inceptionDate; } catch { /* no account yet */ }
+
+  const pos = await q<Record<string, unknown>>(
+    `SELECT p.id, p.isin, s.nse_symbol AS ticker, s.company_name AS name, s.sector,
+            p.entry_date::text AS entry_date, p.entry_price, p.shares, p.exposure_at_entry,
+            p.status, p.exit_date::text AS exit_date, p.exit_price, p.exit_reason,
+            (SELECT adj_close FROM prices_eod_adjusted x
+               WHERE x.isin = p.isin AND x.trade_date <= $1
+               ORDER BY x.trade_date DESC LIMIT 1) AS latest_close
+       FROM paper_position p JOIN stocks s ON s.isin = p.isin
+      ORDER BY (p.status = 'open') DESC,
+               COALESCE(p.exit_date, $1::date) DESC, p.entry_date DESC`, [asof]);
+  if (!pos.length) return [];
+
+  // one query for every involved stock's price path, from the earliest entry
+  const isins = Array.from(new Set(pos.map((r) => String(r.isin))));
+  const minEntry = pos.reduce(
+    (m, r) => (String(r.entry_date) < m ? String(r.entry_date) : m),
+    String(pos[0].entry_date));
+  const series = await q<Record<string, unknown>>(
+    `SELECT isin, trade_date::text AS d, adj_close
+       FROM prices_eod_adjusted
+      WHERE isin = ANY($1) AND trade_date >= $2
+      ORDER BY isin, trade_date`, [isins, minEntry]);
+  const byIsin = new Map<string, TradePoint[]>();
+  for (const r of series) {
+    const k = String(r.isin);
+    if (!byIsin.has(k)) byIsin.set(k, []);
+    byIsin.get(k)!.push({ date: String(r.d), close: num(r.adj_close) });
+  }
+
+  return pos.map((r) => {
+    const isin = String(r.isin);
+    const status = (String(r.status) === "open" ? "open" : "closed") as Trade["status"];
+    const entry = num(r.entry_price);
+    const exitPrice = r.exit_price == null ? null : num(r.exit_price);
+    const current = status === "open" ? (num(r.latest_close) || entry) : (exitPrice ?? entry);
+    const entryDate = String(r.entry_date);
+    const exitDate = r.exit_date == null ? null : String(r.exit_date);
+    const exposure = num(r.exposure_at_entry);
+    const all = byIsin.get(isin) ?? [];
+    const hi = exitDate ?? asof;
+    const slice = all.filter((p) => p.date >= entryDate && p.date <= hi);
+    const trendPct = slice.length >= 2
+      ? (slice[slice.length - 1].close / slice[0].close - 1) * 100 : 0;
+
+    const isInception = entryDate === inception;
+    const whyEntry = `${isInception ? "F+ inception pick" : "F+ quarterly rebalance pick"} on `
+      + `${entryDate}: ranked in the top names by the mechanical composite (momentum + quality `
+      + `+ low-volatility), within the ≤4-per-sector cap, bought at ${exposure} exposure.`;
+    let whyExit: string | null = null;
+    if (status === "closed") {
+      const reason = String(r.exit_reason ?? "");
+      whyExit = reason === "breakdown"
+        ? `Stop hit on ${exitDate}: fell ≥15% below entry (cut-on-breakdown) to protect capital.`
+        : reason === "rebalance"
+          ? `Sold on ${exitDate}: dropped out of the F+ top names at the quarterly rebalance.`
+          : `Closed on ${exitDate}${reason ? ` (${reason})` : ""}.`;
+    }
+    return {
+      id: num(r.id), isin, ticker: String(r.ticker ?? isin), name: String(r.name ?? isin),
+      sector: String(r.sector ?? "—"), status, entryDate, entryPrice: entry, exitDate, exitPrice,
+      exitReason: r.exit_reason == null ? null : String(r.exit_reason),
+      currentPrice: current, shares: num(r.shares),
+      pnlPct: entry > 0 ? (current / entry - 1) * 100 : 0,
+      exposureAtEntry: exposure, whyEntry, whyExit, series: slice, trendPct,
+    };
+  });
 }
