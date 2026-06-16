@@ -62,6 +62,9 @@ function TradeRow({ t }: { t: Trade }) {
             </span>
           </div>
           <div className="truncate text-xs text-muted">{t.name} · {t.sector}</div>
+          <div className="mt-0.5 font-mono text-[10px] text-dim">
+            opened {t.entryDate}{t.exitDate ? ` · closed ${t.exitDate}` : ""}
+          </div>
         </div>
         {/* sparkline (day-to-day) */}
         <div className="flex items-center gap-2">

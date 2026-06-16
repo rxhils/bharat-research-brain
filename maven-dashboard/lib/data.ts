@@ -298,3 +298,23 @@ export async function getTrades(): Promise<Trade[]> {
     };
   });
 }
+
+// ----------------------------------------------------- data provenance (proof)
+// A live "this is real" stamp: counts + latest date read straight from the DB on
+// every page load. The latest date advances each time ingest_eod runs — mock can't.
+export async function getDataStatus(): Promise<{
+  source: string; priceRows: number; stocks: number; latestPrice: string;
+}> {
+  if (!dbReady()) return { source: "not connected", priceRows: 0, stocks: 0, latestPrice: "" };
+  const r = await q<Record<string, unknown>>(
+    `SELECT (SELECT count(*) FROM prices_eod_adjusted) AS rows,
+            (SELECT count(DISTINCT isin) FROM prices_eod_adjusted) AS stocks,
+            (SELECT max(trade_date)::text FROM prices_eod_adjusted) AS latest`);
+  const a = r[0] ?? {};
+  return {
+    source: "Postgres · prices_eod_adjusted (yfinance EOD)",
+    priceRows: num(a.rows),
+    stocks: num(a.stocks),
+    latestPrice: String(a.latest ?? ""),
+  };
+}
