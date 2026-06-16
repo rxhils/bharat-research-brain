@@ -31,14 +31,29 @@ export function Nav() {
     );
   };
   return (
-    <nav className="flex items-center justify-between py-6">
+    <nav className="sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between border-b border-hairline bg-bg/85 px-5 py-4 backdrop-blur-md sm:-mx-8 sm:px-8">
       <Link href="/" className="flex items-center gap-2.5">
         <span className="grid h-7 w-7 place-items-center rounded-md bg-emerald/15 font-mono text-sm text-emerald">M</span>
         <span className="text-sm tracking-[0.2em] text-muted">MAVEN</span>
+        <span className="rounded-full border border-amber/30 bg-amber/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber">
+          demo data
+        </span>
       </Link>
-      <div className="flex items-center gap-1 rounded-xl border border-hairline bg-panel/50 p-1">
-        {tab("/", "Portfolio")}
-        {tab("/brain", "Brain")}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 rounded-xl border border-hairline bg-panel/50 p-1">
+          {tab("/", "Portfolio")}
+          {tab("/brain", "Brain")}
+        </div>
+        <Link
+          href="/backtest"
+          className={`rounded-lg border px-3.5 py-1.5 text-sm transition-colors ${
+            path === "/backtest"
+              ? "border-emerald/50 bg-emerald/15 text-emerald"
+              : "border-emerald/30 text-emerald hover:bg-emerald/10"
+          }`}
+        >
+          ★ F+ Backtest
+        </Link>
       </div>
     </nav>
   );
