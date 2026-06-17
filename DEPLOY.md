@@ -93,16 +93,20 @@ python -m scripts.paper_inception              # dry-run preview first
 python -m scripts.paper_inception --commit     # inception_date = today's EOD
 ```
 
-### cron (daily, after NSE close + your EOD price ingest)
-NSE closes 15:30 IST; run after your price-ingest job finishes (say 19:00 IST):
+### cron (daily, after NSE close — one entrypoint does everything)
+NSE closes 15:30 IST; today's EOD bar is published a few hours later, so run at 19:00 IST.
+Use the single **`scripts.run_daily`** entrypoint — it does, in strict order:
+ingest_eod (fetch today's real EOD) → **freshness gate** (abort if prices didn't advance
+to the expected last NSE trading day — never run F+ on stale data) → nightly_run (F+) →
+one `DAILY RUN OK …` log line.
 ```cron
 # m h  dom mon dow   command   (server TZ = Asia/Kolkata)
-0 19 * * 1-5  cd /home/ubuntu/bharat && . .venv/bin/activate && python -m scripts.nightly_run >> /var/log/paper_nightly.log 2>&1
+0 19 * * 1-5  cd /home/ubuntu/bharat && . .venv/bin/activate && python -m scripts.run_daily >> /var/log/paper_daily.log 2>&1
 ```
 The weekly (5-trading-day) and quarterly (63-trading-day) logic **self-triggers inside
-`nightly_run.py`** by trading-day count since inception — no extra cron entries.
-Price ingest (yfinance EOD) must run **before** this; chain it in the same cron line or
-an earlier entry.
+`nightly_run.py`** by trading-day count since inception — no extra cron entries. The
+freshness gate exits non-zero on stale data, so a failed run is visible in the log and
+F+ is NOT advanced on a missing day (the gap is logged for the next run to surface).
 
 ## 2. Option B — Railway scheduled job
 - Deploy the repo as a Railway service; set the env vars above in the Railway dashboard.
@@ -164,12 +168,14 @@ Vercel reads it.
 3. Deploy. Portfolio + Brain now render the real Neon record. Locally the same is driven
    by `maven-dashboard/.env.local` (gitignored) → local Docker Postgres.
 
-### The ONE missing piece for production to *move*
-`prices_eod_adjusted` was bulk-backfilled (through 2026-05-26); there is **no daily
-incremental ingest yet**. Until it exists, the cloud portfolio sits frozen at inception.
-Build `scripts/ingest_eod.py` (yfinance EOD for the 507 `stocks.yfinance_symbol`, upsert
-into `prices_eod_adjusted`, idempotent, no NSE scraping) and chain it **before**
-`nightly_run` in the cron (Step 2 already shows the chained command).
+### Daily fresh-data chain (built)
+`scripts/ingest_eod.py` (yfinance EOD for the active universe, append-only via
+`ON CONFLICT DO NOTHING`, no NSE scraping) + `scripts/run_daily.py` (ingest →
+freshness gate → F+) are in place. Point the cron at `scripts.run_daily` (above).
+The freshness gate guarantees the cloud portfolio only advances on **genuinely fresh
+real prices** — if the latest price date hasn't reached the expected last NSE session
+(e.g. yfinance hasn't published yet, or a day was missed), it **aborts** with a clear
+error and does NOT produce trades on stale data.
 
 ### Live Agent board + Telegram (now wired)
 `scripts/nightly_run.py` already writes an `agent_run_log` heartbeat
