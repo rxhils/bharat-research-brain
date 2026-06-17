@@ -1,197 +1,243 @@
-# DEPLOY.md — Forward F+ paper-trading engine (always-on)
+# DEPLOY.md — Bharat Brain forward worker on a VPS (Ubuntu 24.04)
 
-Runs the **frozen F+ engine** (commit `57e72d5`) forward as a paper portfolio
-(₹10,00,000), one nightly job, against a hosted Postgres. This is a **paper, forward,
-out-of-sample** track record — it starts at inception and only grows forward, never
-backfilled.
+Runs the **FROZEN F+ paper engine** (commit `57e72d5`) 24/7 via cron, writing to
+**Supabase**. **Deployment only — F+ logic is untouched.** You are `root`, SSH'd into the
+Hostinger VPS (2 vCPU / 8 GB, Mumbai). Copy-paste each block in order.
 
-> Prereq: hosted Postgres provisioned + schema/data loaded — see **HOSTED_DB.md** first.
+**Nightly job** = `scripts.run_daily`:
+`ingest today's EOD prices → assert freshness (ABORT on stale, never trade on old data) →
+F+ mark / exposure / rebalance → one verifiable log line`.
 
----
+**Architecture:** VPS (cron worker) → writes → **Supabase Postgres** ← reads ← Vercel (dashboard).
 
-## 0. Cloud data strategy (free-tier safe — keep history local)
-
-The local DB is **545 MB** (over Supabase's 500 MB free tier), but that is **96%
-backtest history**: `prices_eod` (276 MB) + the full `prices_eod_adjusted`
-(247 MB, 1.06M rows back to 2015). **The forward system does not need any of that.**
-
-The 24/7 forward system needs only ~**50–80 MB**:
-- the **last ~400 trading days** of `prices_eod_adjusted` (≈195k rows ≈ 45 MB) for scoring
-- `stocks`, `benchmark_index`, `{fundamental,macro,sector}_signals_historical`,
-  `stock_rankings` (composite inputs)
-- support: `trading_calendar`, `index_constituents`, `stock_identifiers`
-- the F+ portfolio state: `paper_account/position/equity_curve/event_log` (~0.14 MB)
-
-**Plan: keep the 1.06M historical rows LOCAL (backtest is done), push only the
-forward slice to Supabase.** No need for Supabase Pro.
-
-```bash
-# A. Create the Supabase project, grab its connection string. Then create the schema:
-FORWARD_TARGET_URL='postgresql://USER:PASS@HOST:5432/postgres?sslmode=require'
-alembic upgrade head        # run with POSTGRES_URL pointed at Supabase (the +asyncpg form)
-
-# B. Preview the forward footprint (no target needed — confirms it fits 500 MB):
-python -m scripts.migrate_forward_to_supabase --dry-run
-
-# C. Migrate ONLY the forward data (idempotent, ON CONFLICT DO NOTHING, re-runnable):
-FORWARD_SOURCE_URL='postgresql://bharat:PASS@localhost:5432/bharat' \
-FORWARD_TARGET_URL="$FORWARD_TARGET_URL" \
-python -m scripts.migrate_forward_to_supabase
-```
-
-After this, the VM/worker and Vercel both point `POSTGRES_URL`/`DATABASE_URL` at
-Supabase, and the daily ingest keeps the recent-price window fresh going forward.
+> The Supabase DB already has the schema + 507 stocks + benchmark + the F+ paper account
+> (incepted 2026-04-15, migrated). **Do NOT run `paper_inception` on the VPS** — the worker
+> only continues the record forward.
 
 ---
 
-## 1. Resource sizing (measure before you pick a VM)
+## 0. What reads what (so you fill the right env var)
 
-| Workload | What it needs | RAM |
+The **only** env var the nightly worker needs is **`POSTGRES_URL`** (read by `ingest_eod`,
+`nightly_run`, `run_daily` via the backend config → `SessionLocal`). Use the **asyncpg**
+form with **`?ssl=require`** (NOT `sslmode` — asyncpg rejects it).
+
+| Var | Read by | Needed on VPS? |
 |---|---|---|
-| **Paper engine + mechanical composite** (today's setup) | Python + pandas + asyncpg + yfinance EOD; LLM = **DeepSeek API** (cloud, no local model) | **< 1 GB** → smallest VM is fine |
-| **+ Agentic pipeline once keys exist** | adds FinBERT sentiment — `transformers`/`torch` loaded **in-process** in the backend image (AGENTS.md §5), lazy-loaded on first sentiment run | torch resident ≈ **1.5–2 GB** → size the VM at **4 GB** |
-
-**Today we run the mechanical-composite engine only** (News/FII/Fundamental agents
-are dormant — keys empty), so a **1–2 GB VM (or a Railway scheduled job)** is enough.
-NOTE: I did not boot FinBERT this session, so the 1.5–2 GB figure is the typical
-`torch`+FinBERT resident set, not a measured number on this host — measure with
-`docker stats` the first time you enable the sentiment agent before committing to VM size.
-
-DeepSeek is a **cloud API** (`DEEPSEEK_API_KEY`) — no GPU, no local model server
-(Ollama was retired, AGENTS.md §5).
+| `POSTGRES_URL` | ingest_eod / nightly_run / run_daily | ✅ **YES** |
+| `DATABASE_URL` | Maven dashboard (`pg`) only | ❌ no (set it on Vercel) |
+| `NEWSAPI_KEY` / `DEEPSEEK_API_KEY` / `INDIANAPI_KEY` | dormant agentic layer only | ❌ no (config ignores them) |
 
 ---
 
-## 2. Option A — small Linux VM (Hetzner CX22 / DigitalOcean basic, ~2 GB)
+## 1. System setup
+```bash
+apt update && apt -y upgrade
+apt -y install python3 python3-venv python3-pip git
+python3 --version          # Ubuntu 24.04 -> 3.12, satisfies the project's "3.11+"
+```
+psycopg/asyncpg ship binary wheels, so no build deps are needed. (Only if a source build
+is ever forced: `apt -y install build-essential libpq-dev`.)
+
+**venv over Docker** on a 2-core box: a cron worker in a venv is lighter (no daemon, no
+image builds), logs are immediate, and there's nothing running between nightly fires.
+
+---
+
+## 2. Get the code
+```bash
+cd /root
+git clone https://github.com/rxhils/bharat-research-brain.git
+cd bharat-research-brain
+python3 -m venv .venv
+. .venv/bin/activate
+pip install --upgrade pip
+pip install -e .           # installs the project + deps (yfinance, asyncpg, sqlalchemy, ...)
+```
+
+### Create `.env` — TEMPLATE (fill in your NEW password; this file is gitignored)
+```bash
+cat > /root/bharat-research-brain/.env <<'EOF'
+# REQUIRED - the ONLY var the nightly worker reads (backend config -> SessionLocal).
+# asyncpg form + ?ssl=require  (Supabase Session Pooler, IPv4, Mumbai).
+POSTGRES_URL=postgresql+asyncpg://postgres.jsztodaxbchuoyjwpblq:NEW_PASSWORD_HERE@aws-1-ap-south-1.pooler.supabase.com:5432/postgres?ssl=require
+
+TZ=Asia/Kolkata
+
+# OPTIONAL - NOT read by the F+ nightly chain (leave blank here):
+#   DATABASE_URL   -> dashboard only (set on Vercel, plain postgresql:// no +asyncpg)
+#   NEWSAPI_KEY / DEEPSEEK_API_KEY / INDIANAPI_KEY -> dormant agentic layer only
+EOF
+chmod 600 /root/bharat-research-brain/.env
+```
+- Replace `NEW_PASSWORD_HERE` with your rotated password.
+- If the password has special chars, URL-encode them: `@`->`%40`, `:`->`%3A`, `/`->`%2F`, `#`->`%23`.
+
+---
+
+## 3. Connectivity tests (from the VPS)
+```bash
+cd /root/bharat-research-brain && . .venv/bin/activate
+
+# (A) Supabase reachable + the worker's real DB path (SQLAlchemy+asyncpg):
+python - <<'PY'
+import asyncio
+from backend.db.session import SessionLocal
+from sqlalchemy import text
+async def m():
+    async with SessionLocal() as s:
+        v = (await s.execute(text("select version()"))).scalar_one()
+        n = (await s.execute(text("select count(*) from stocks"))).scalar_one()
+        print("SUPABASE OK:", v[:40], "| stocks:", n)
+asyncio.run(m())
+PY
+```
+**PASS** = `SUPABASE OK: PostgreSQL 17.x ... | stocks: 507`.
+If `failed to resolve host` -> you used the IPv6 direct host; keep the
+`aws-1-ap-south-1.pooler.supabase.com` pooler host. If `password authentication failed` ->
+re-check the rotated password / URL-encoding.
 
 ```bash
-# on the VM (Ubuntu 24.04)
-sudo apt update && sudo apt install -y git python3.11 python3.11-venv postgresql-client
-git clone <your-private-repo> bharat && cd bharat
-python3.11 -m venv .venv && . .venv/bin/activate
-pip install -e .            # or: pip install -r requirements + the [dev] group
-
-# env — NEVER commit this file
-cat > .env <<'EOF'
-POSTGRES_URL=postgresql+asyncpg://<user>:<pass>@<supabase-host>:5432/postgres?ssl=require
-DEEPSEEK_API_KEY=sk-...        # rotate the one printed in chat
-TZ=Asia/Kolkata
-# Optional but recommended — nightly_run pings here on success/failure:
-TELEGRAM_BOT_TOKEN=            # from @BotFather
-TELEGRAM_CHAT_ID=             # your chat/channel id
-# (leave NEWSAPI_KEY / FMP_KEY / FYERS_ACCESS_TOKEN empty until you enable agents)
-EOF
-
-# one-time: apply migrations to the hosted DB (idempotent)
-alembic upgrade head
-
-# verify connectivity + data
-python -m scripts.test_hosted_db
-
-# GO LIVE (once, after a clean dry-run) — sets inception at the latest EOD close
-python -m scripts.paper_inception              # dry-run preview first
-python -m scripts.paper_inception --commit     # inception_date = today's EOD
+# (B) yfinance / NSE EOD fetch works from this datacenter (not geo-blocked):
+python - <<'PY'
+import yfinance as yf
+df = yf.Ticker("RELIANCE.NS").history(period="5d", auto_adjust=False)
+print("YFINANCE OK rows:", len(df),
+      "| last close:", round(float(df['Close'].iloc[-1]), 2) if len(df) else "NONE")
+PY
 ```
-
-### cron (daily, after NSE close — one entrypoint does everything)
-NSE closes 15:30 IST; today's EOD bar is published a few hours later, so run at 19:00 IST.
-Use the single **`scripts.run_daily`** entrypoint — it does, in strict order:
-ingest_eod (fetch today's real EOD) → **freshness gate** (abort if prices didn't advance
-to the expected last NSE trading day — never run F+ on stale data) → nightly_run (F+) →
-one `DAILY RUN OK …` log line.
-```cron
-# m h  dom mon dow   command   (server TZ = Asia/Kolkata)
-0 19 * * 1-5  cd /home/ubuntu/bharat && . .venv/bin/activate && python -m scripts.run_daily >> /var/log/paper_daily.log 2>&1
-```
-The weekly (5-trading-day) and quarterly (63-trading-day) logic **self-triggers inside
-`nightly_run.py`** by trading-day count since inception — no extra cron entries. The
-freshness gate exits non-zero on stale data, so a failed run is visible in the log and
-F+ is NOT advanced on a missing day (the gap is logged for the next run to surface).
-
-## 2. Option B — Railway scheduled job
-- Deploy the repo as a Railway service; set the env vars above in the Railway dashboard.
-- Add a **Cron schedule** `0 19 * * 1-5` (set service TZ to Asia/Kolkata) running
-  `python -m scripts.nightly_run`.
-- Use Railway's managed Postgres **or** point `POSTGRES_URL` at Neon (one DB for both
-  the job and any future Vercel dashboard).
+**PASS** = `YFINANCE OK rows: 5 ...`. If `rows: 0`, yfinance is blocked from this IP (rare on
+a Mumbai DC) — tell me and we'll switch the price source.
 
 ---
 
-## 3. Verify a successful nightly run
-1. **Exit code 0** and a log line `nightly.done as_of=YYYY-MM-DD`.
-2. **A new row in `paper_equity_curve`** for the latest trading date:
-   ```sql
-   SELECT trade_date, total_equity, cash_value, exposure_level, drawdown_pct
-   FROM paper_equity_curve ORDER BY trade_date DESC LIMIT 3;
-   ```
-3. **Event log** shows the day's actions:
-   ```sql
-   SELECT trade_date, event_type, detail FROM paper_event_log
-   ORDER BY id DESC LIMIT 10;
-   ```
-4. On weekly/quarterly days, expect an `exposure_change` / `rebalance` event.
-A run that produces no new `paper_equity_curve` row = the EOD price ingest didn't land;
-fix ingest before trusting the record (a gappy record is compromised — re-incept if so).
+## 4. Test the nightly chain manually (the real test)
+```bash
+cd /root/bharat-research-brain && . .venv/bin/activate
+
+# BEFORE - note the latest price date + curve length:
+python - <<'PY'
+import asyncio
+from backend.db.session import SessionLocal
+from sqlalchemy import text
+async def m():
+    async with SessionLocal() as s:
+        print("latest price BEFORE:", (await s.execute(text("select max(trade_date) from prices_eod_adjusted"))).scalar_one())
+        print("curve rows  BEFORE :", (await s.execute(text("select count(*) from paper_equity_curve"))).scalar_one())
+asyncio.run(m())
+PY
+
+# RUN the full chained job (ingest -> freshness assert -> F+):
+python -m scripts.run_daily ; echo "EXIT=$?"
+
+# AFTER:
+python - <<'PY'
+import asyncio
+from backend.db.session import SessionLocal
+from sqlalchemy import text
+async def m():
+    async with SessionLocal() as s:
+        print("latest price AFTER:", (await s.execute(text("select max(trade_date) from prices_eod_adjusted"))).scalar_one())
+        print("curve rows  AFTER :", (await s.execute(text("select count(*) from paper_equity_curve"))).scalar_one())
+asyncio.run(m())
+PY
+```
+**PASS criteria:**
+- `STEP 1 ingest_eod ...` fetches the latest EOD; **latest price date advances** to the last NSE session.
+- `FRESHNESS OK: prices as of <date> == expected last NSE session <date>`.
+- `STEP 3 nightly_run (F+)...` then `DAILY RUN OK - ... equity Rs ...`.
+- **curve rows AFTER > BEFORE** (a new `paper_equity_curve` row) — unless the market was
+  closed today, in which case it's a correct no-op.
+- `EXIT=0`.
+
+> The bare `ingest_eod && nightly_run` you mentioned also works, but **`run_daily` is
+> strictly safer** — it inserts the freshness gate between them (step 5). Use `run_daily`.
 
 ---
 
-## 4. Honesty / operating notes
-- The record is **PAPER, forward, starts at inception** — not backfilled, label it so.
-- It is **not meaningful for ~6–12 months** and won't see a real crash until one happens.
-- F+ is the validated **risk-managed** engine (index-like return, ~half the drawdown).
-  Today the forward test measures **F+ itself** on the mechanical composite. It tests
-  **whether the agents add value** only after you add `NEWSAPI_KEY`/`FMP_KEY`/
-  `FYERS_ACCESS_TOKEN` and switch the score source to `stock_rankings`.
-- Cash earns **0%** in the ledger (conservative; real Indian cash ≈ 6%, so the record
-  is shown slightly worse than reality).
+## 5. Freshness guard (already built — verify it)
+`run_daily` STEP 2 asserts `max(price_date) == expected last NSE trading day` (from the
+`trading_calendar`). If prices did **not** advance (yfinance returned nothing, or the EOD
+bar isn't published yet), it **ABORTS with `EXIT=1` and F+ never runs** — so it can never
+produce fake trades on stale data. It also logs any missed-day gaps in the record.
+
+Verify the gate (run without re-ingesting):
+```bash
+python -m scripts.run_daily --no-ingest ; echo "EXIT=$?"
+```
+- Stored data already at the expected session -> `FRESHNESS OK` + an F+ no-op (no duplicate
+  trade). `EXIT=0`.
+- Stored data behind the expected session -> `FRESHNESS ABORT: prices are STALE ... F+ NOT
+  run on stale data`. `EXIT=1`.
+
+Both outcomes are correct: **each trading day is marked exactly once; stale data never marks.**
 
 ---
 
-## 5. Frontend dashboard (Vercel) + the full 24/7 stack
+## 6. Cron (daily, after NSE close, Asia/Kolkata)
+```bash
+# 1) set the VPS clock to IST so cron + logs are in market time:
+timedatectl set-timezone Asia/Kolkata
+timedatectl | grep "Time zone"
 
-You chose **cloud**. One Neon DB is the single source of truth; the worker writes it,
-Vercel reads it.
+# 2) logs dir:
+mkdir -p /root/bharat-research-brain/logs
 
+# 3) install the crontab (19:00 IST, Mon-Fri - EOD is published well before 19:00):
+( crontab -l 2>/dev/null; \
+  echo 'CRON_TZ=Asia/Kolkata'; \
+  echo '0 19 * * 1-5 cd /root/bharat-research-brain && /root/bharat-research-brain/.venv/bin/python -m scripts.run_daily >> /root/bharat-research-brain/logs/nightly.log 2>&1' \
+) | crontab -
+
+crontab -l        # verify both lines are present
 ```
-   Render/Railway worker ──(writes)──► Neon Postgres ◄──(reads)── Vercel (maven-dashboard)
-   ingest_eod + nightly_run            paper_* tables             real Portfolio + Brain
+- `CRON_TZ=Asia/Kolkata` makes `0 19` fire at **19:00 IST**.
+- `run_daily` self-skips weekends/holidays (freshness abort / no-op), so `1-5` is safe.
+- **Log file:** `/root/bharat-research-brain/logs/nightly.log`.
+
+---
+
+## 7. Verify a run / re-run a missed night
+**Check the last run:**
+```bash
+tail -n 30 /root/bharat-research-brain/logs/nightly.log
+# success looks like:  FRESHNESS OK ...   ->   DAILY RUN OK - prices as of ... equity Rs ...
 ```
+**Confirm on Supabase (new equity row):**
+```bash
+cd /root/bharat-research-brain && . .venv/bin/activate
+python - <<'PY'
+import asyncio
+from backend.db.session import SessionLocal
+from sqlalchemy import text
+async def m():
+    async with SessionLocal() as s:
+        for r in (await s.execute(text(
+            "select trade_date,total_equity,exposure_level from paper_equity_curve "
+            "order by trade_date desc limit 3"))).all():
+            print(r)
+asyncio.run(m())
+PY
+```
+**Dashboard (Vercel):** the "Real data" latest date advances after each successful run.
 
-### Deploy the dashboard (Vercel)
-1. New Project → **root directory `maven-dashboard`** (it's a separate Next.js app).
-2. Env var **`DATABASE_URL`** = the Supabase **pooled** URL, ideally a **read-only**
-   role (the dashboard only SELECTs — create a `readonly` Postgres role with `GRANT
-   SELECT` and use its credentials so a leaked Vercel env var can't write). NOTE: the
-   dashboard uses the `pg` driver, so use the plain `postgresql://...` form — **not**
-   `+asyncpg` (that's the backend worker's form). SSL is auto-enabled for any
-   non-localhost host.
-3. Deploy. Portfolio + Brain now render the real Neon record. Locally the same is driven
-   by `maven-dashboard/.env.local` (gitignored) → local Docker Postgres.
+**Missed a night?** The chain is **idempotent** — just run it by hand; it fetches + marks
+forward to the latest session:
+```bash
+cd /root/bharat-research-brain && . .venv/bin/activate && python -m scripts.run_daily ; echo "EXIT=$?"
+```
+(ingest is `ON CONFLICT DO NOTHING`; F+ marks each trading day once — re-runs on an
+already-marked day are no-ops.)
 
-### Daily fresh-data chain (built)
-`scripts/ingest_eod.py` (yfinance EOD for the active universe, append-only via
-`ON CONFLICT DO NOTHING`, no NSE scraping) + `scripts/run_daily.py` (ingest →
-freshness gate → F+) are in place. Point the cron at `scripts.run_daily` (above).
-The freshness gate guarantees the cloud portfolio only advances on **genuinely fresh
-real prices** — if the latest price date hasn't reached the expected last NSE session
-(e.g. yfinance hasn't published yet, or a day was missed), it **aborts** with a clear
-error and does NOT produce trades on stale data.
+---
 
-### Live Agent board + Telegram (now wired)
-`scripts/nightly_run.py` already writes an `agent_run_log` heartbeat
-(`running`→`done`/`error`, agent `NightlyRun`) via `backend/agents/run_log.py::heartbeat()`,
-so the Brain "Agents" board lights up the moment a run happens. It also sends a Telegram
-ping on success/failure when `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` are set, e.g.
-`✅ Run complete, latest 2026-06-17, F+ holds 25, exposure 1.0, equity Rs …` or
-`❌ Nightly run FAILED: <error>`. Both are best-effort — neither can alter or block the
-F+ decisions.
+## Appendix A — dashboard on Vercel (separate from this worker)
+Root directory `maven-dashboard`. Env var `DATABASE_URL` = the Supabase **pooler** string
+in **plain** `postgresql://` form (NO `+asyncpg`; the `pg` driver enables SSL automatically
+for non-localhost). Deploy. Patch Next first: `npm i next@14.2` in `maven-dashboard`.
 
-### Before you deploy
-- **Rotate** any API keys pasted into chat (NewsAPI / FMP / indianapi / DeepSeek).
-- `npm i next@14.2` in `maven-dashboard` to clear the pinned-14.2.15 security advisory.
-
-### Is it actually running? (cloud checklist)
-- `SELECT max(trade_date) FROM prices_eod_adjusted;` advances each weekday → ingest works.
-- `SELECT count(*) FROM paper_equity_curve;` grows by one per trading day → nightly_run works.
-- Vercel portfolio value changes after each nightly run. If it never moves, the cron or the
-  ingest isn't running.
+## Appendix B — security
+- `.env` is gitignored and `chmod 600`. **Never commit it.**
+- Keep the rotated DB password only in this `.env` and in Vercel's env settings.
+- Read-only intent: the worker only writes its own `paper_*` and `prices_eod_adjusted`
+  rows. No broker keys, no order placement (this is paper-trading research).
