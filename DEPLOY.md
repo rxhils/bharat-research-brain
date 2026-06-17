@@ -9,6 +9,41 @@ backfilled.
 
 ---
 
+## 0. Cloud data strategy (free-tier safe — keep history local)
+
+The local DB is **545 MB** (over Supabase's 500 MB free tier), but that is **96%
+backtest history**: `prices_eod` (276 MB) + the full `prices_eod_adjusted`
+(247 MB, 1.06M rows back to 2015). **The forward system does not need any of that.**
+
+The 24/7 forward system needs only ~**50–80 MB**:
+- the **last ~400 trading days** of `prices_eod_adjusted` (≈195k rows ≈ 45 MB) for scoring
+- `stocks`, `benchmark_index`, `{fundamental,macro,sector}_signals_historical`,
+  `stock_rankings` (composite inputs)
+- support: `trading_calendar`, `index_constituents`, `stock_identifiers`
+- the F+ portfolio state: `paper_account/position/equity_curve/event_log` (~0.14 MB)
+
+**Plan: keep the 1.06M historical rows LOCAL (backtest is done), push only the
+forward slice to Supabase.** No need for Supabase Pro.
+
+```bash
+# A. Create the Supabase project, grab its connection string. Then create the schema:
+FORWARD_TARGET_URL='postgresql://USER:PASS@HOST:5432/postgres?sslmode=require'
+alembic upgrade head        # run with POSTGRES_URL pointed at Supabase (the +asyncpg form)
+
+# B. Preview the forward footprint (no target needed — confirms it fits 500 MB):
+python -m scripts.migrate_forward_to_supabase --dry-run
+
+# C. Migrate ONLY the forward data (idempotent, ON CONFLICT DO NOTHING, re-runnable):
+FORWARD_SOURCE_URL='postgresql://bharat:PASS@localhost:5432/bharat' \
+FORWARD_TARGET_URL="$FORWARD_TARGET_URL" \
+python -m scripts.migrate_forward_to_supabase
+```
+
+After this, the VM/worker and Vercel both point `POSTGRES_URL`/`DATABASE_URL` at
+Supabase, and the daily ingest keeps the recent-price window fresh going forward.
+
+---
+
 ## 1. Resource sizing (measure before you pick a VM)
 
 | Workload | What it needs | RAM |
@@ -38,9 +73,12 @@ pip install -e .            # or: pip install -r requirements + the [dev] group
 
 # env — NEVER commit this file
 cat > .env <<'EOF'
-POSTGRES_URL=postgresql+asyncpg://<user>:<pass>@<neon-host>/<db>?ssl=require
+POSTGRES_URL=postgresql+asyncpg://<user>:<pass>@<supabase-host>:5432/postgres?ssl=require
 DEEPSEEK_API_KEY=sk-...        # rotate the one printed in chat
 TZ=Asia/Kolkata
+# Optional but recommended — nightly_run pings here on success/failure:
+TELEGRAM_BOT_TOKEN=            # from @BotFather
+TELEGRAM_CHAT_ID=             # your chat/channel id
 # (leave NEWSAPI_KEY / FMP_KEY / FYERS_ACCESS_TOKEN empty until you enable agents)
 EOF
 
@@ -117,9 +155,12 @@ Vercel reads it.
 
 ### Deploy the dashboard (Vercel)
 1. New Project → **root directory `maven-dashboard`** (it's a separate Next.js app).
-2. Env var **`DATABASE_URL`** = the Neon **pooled** URL. NOTE: the dashboard uses the
-   `pg` driver, so use the plain `postgresql://...` form — **not** `+asyncpg` (that's the
-   backend worker's form). SSL is auto-enabled for any non-localhost host.
+2. Env var **`DATABASE_URL`** = the Supabase **pooled** URL, ideally a **read-only**
+   role (the dashboard only SELECTs — create a `readonly` Postgres role with `GRANT
+   SELECT` and use its credentials so a leaked Vercel env var can't write). NOTE: the
+   dashboard uses the `pg` driver, so use the plain `postgresql://...` form — **not**
+   `+asyncpg` (that's the backend worker's form). SSL is auto-enabled for any
+   non-localhost host.
 3. Deploy. Portfolio + Brain now render the real Neon record. Locally the same is driven
    by `maven-dashboard/.env.local` (gitignored) → local Docker Postgres.
 
@@ -130,11 +171,14 @@ Build `scripts/ingest_eod.py` (yfinance EOD for the 507 `stocks.yfinance_symbol`
 into `prices_eod_adjusted`, idempotent, no NSE scraping) and chain it **before**
 `nightly_run` in the cron (Step 2 already shows the chained command).
 
-### Live Agent board (optional)
-The Brain "Agents" board lights up live when `nightly_run` writes heartbeats. Wire
-`backend/agents/run_log.py::heartbeat()` around the engine steps in `scripts/nightly_run.py`
-(Price Ingest / Daily Mark / Exposure / Rebalance). Until then it honestly shows the
-documented design and `/api/agents` returns the real (empty) `agent_run_log`.
+### Live Agent board + Telegram (now wired)
+`scripts/nightly_run.py` already writes an `agent_run_log` heartbeat
+(`running`→`done`/`error`, agent `NightlyRun`) via `backend/agents/run_log.py::heartbeat()`,
+so the Brain "Agents" board lights up the moment a run happens. It also sends a Telegram
+ping on success/failure when `TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID` are set, e.g.
+`✅ Run complete, latest 2026-06-17, F+ holds 25, exposure 1.0, equity Rs …` or
+`❌ Nightly run FAILED: <error>`. Both are best-effort — neither can alter or block the
+F+ decisions.
 
 ### Before you deploy
 - **Rotate** any API keys pasted into chat (NewsAPI / FMP / indianapi / DeepSeek).

@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     live_feed_mode: str = "demo"  # 'demo' (synthetic ticks) | 'fyers' (broker WS)
     newsapi_key: str = ""  # optional; RSS works without it
     marketaux_key: str = ""  # optional; RSS works without it
+    telegram_bot_token: str = ""  # optional; nightly_run pings here if set
+    telegram_chat_id: str = ""  # optional; target chat for the nightly ping
     yfinance_price_fallback: bool = True  # nightly EOD fill when bhavcopy absent
 
     model_config = SettingsConfigDict(
