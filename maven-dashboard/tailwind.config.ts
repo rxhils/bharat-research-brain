@@ -19,11 +19,17 @@ const config: Config = {
         "emerald-deep": "#10b981",
         rose: "#fb7185",
         amber: "#fbbf24",
+        // muted gold — premium accent used only on the explainer "story" page
+        gold: "#c9a961",
+        "gold-soft": "#e3cb8f",
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
+        // editorial serif — explainer headlines only (loaded on /how-it-works)
+        serif: ["var(--font-serif)", "Georgia", "serif"],
       },
+      letterSpacing: { label: "0.28em" },
       borderRadius: { xl2: "16px" },
       keyframes: {
         fadeUp: {
@@ -34,10 +40,25 @@ const config: Config = {
           "0%,100%": { opacity: "1" },
           "50%": { opacity: "0.35" },
         },
+        spinSlow: {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        spinReverse: {
+          "0%": { transform: "rotate(360deg)" },
+          "100%": { transform: "rotate(0deg)" },
+        },
+        floatY: {
+          "0%,100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
       },
       animation: {
         fadeUp: "fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both",
         pulseDot: "pulseDot 1.4s ease-in-out infinite",
+        spinSlow: "spinSlow 34s linear infinite",
+        spinReverse: "spinReverse 48s linear infinite",
+        floatY: "floatY 7s ease-in-out infinite",
       },
     },
   },

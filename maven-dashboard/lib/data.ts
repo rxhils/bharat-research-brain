@@ -71,7 +71,7 @@ export async function getExposure(): Promise<ExposureState> {
   const r = await q<Record<string, unknown>>(
     `SELECT exposure_level, cash_value, total_equity
        FROM paper_equity_curve ORDER BY trade_date DESC LIMIT 1`);
-  if (!r.length) return { level: 0, regime: "risk_off", cashPct: 0 };
+  if (!r.length) return { level: 0.25, regime: "risk_off", cashPct: 0 };
   const level = num(r[0].exposure_level);
   const eq = num(r[0].total_equity);
   return {

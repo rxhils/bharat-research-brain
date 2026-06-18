@@ -272,8 +272,8 @@ export default function BacktestPage() {
           F+ Backtest — the proof
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted">
-          The engine running the paper account, tested two ways: through the 2018–2020 stress era
-          (the COVID crash) and across the 2021–2026 bull run. No-lookahead walk-forward plus a
+          The engine running the paper account, tested two ways: across the 2021–2026 bull run and
+          through the 2018–2020 stress era (the COVID crash). No-lookahead walk-forward plus a
           ₹10,00,000 capital simulation against the Nifty 500 Total-Return Index.
         </p>
       </header>
@@ -304,11 +304,52 @@ export default function BacktestPage() {
         </div>
       </Panel>
 
-      {/* ERA 1 */}
+      {/* ERA 2 — shown first: the 2021–2026 bull run */}
       <div className="flex items-center gap-3 pt-2">
         <div className="h-px flex-1 bg-hairline" />
         <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
-          Era 1 · 2017–2020 stress test
+          Era 1 · 2021–2026 bull run
+        </span>
+        <div className="h-px flex-1 bg-hairline" />
+      </div>
+
+      <Panel
+        title="Walk-forward — beat the index 4 / 4"
+        sub="Every window cleared the Nifty 500 TRI on return, with positive alpha and a Sharpe above 1.0 in the two strongest windows."
+      >
+        <WFTable rows={E2_WF} />
+        <div className="mt-5">
+          <WindowReturns rows={E2_WF} />
+        </div>
+      </Panel>
+
+      <Panel
+        title="₹10,00,000 simulated — 2021-06-01 → 2026-05-26"
+        sub="On raw return F+ effectively matched the index (+81.6% vs +82.2%) — but with lower drawdown and 275 trades vs Config C's 460. F+ is a risk-managed engine, not a return-maximiser. Config C posts higher raw returns at higher drawdown and with no downside protection."
+      >
+        <CapTable rows={E2_CAP} />
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Stat label="Trades" value={`${E2_TRADES.trades}`} />
+          <Stat label="Win rate" value={`${E2_TRADES.win.toFixed(1)}%`} tone="text-emerald" />
+          <Stat label="Avg win" value={pc(E2_TRADES.avgWin)} tone="text-emerald" />
+          <Stat label="Avg loss" value={pc(E2_TRADES.avgLoss)} tone="text-rose" />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {E2_WINNERS.map((w) => (
+            <span key={w.t} className="rounded-lg border border-emerald/25 bg-emerald/[0.06] px-3 py-1.5 text-xs">
+              <span className="font-mono font-semibold text-ink">{w.t}</span>{" "}
+              <span className="font-mono text-emerald">+{w.ret}%</span>{" "}
+              <span className="text-muted">· {w.note}</span>
+            </span>
+          ))}
+        </div>
+      </Panel>
+
+      {/* ERA 1 — shown second: the 2017–2020 stress test */}
+      <div className="flex items-center gap-3 pt-2">
+        <div className="h-px flex-1 bg-hairline" />
+        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
+          Era 2 · 2017–2020 stress test
         </span>
         <div className="h-px flex-1 bg-hairline" />
       </div>
@@ -358,47 +399,6 @@ export default function BacktestPage() {
         sub="F+ ended ahead of both Config C and the un-improved Config F, while taking the least drawdown of the lot."
       >
         <CapTable rows={E1_CAP} />
-      </Panel>
-
-      {/* ERA 2 */}
-      <div className="flex items-center gap-3 pt-2">
-        <div className="h-px flex-1 bg-hairline" />
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
-          Era 2 · 2021–2026 bull run
-        </span>
-        <div className="h-px flex-1 bg-hairline" />
-      </div>
-
-      <Panel
-        title="Walk-forward — beat the index 4 / 4"
-        sub="Every window cleared the Nifty 500 TRI on return, with positive alpha and a Sharpe above 1.0 in the two strongest windows."
-      >
-        <WFTable rows={E2_WF} />
-        <div className="mt-5">
-          <WindowReturns rows={E2_WF} />
-        </div>
-      </Panel>
-
-      <Panel
-        title="₹10,00,000 simulated — 2021-06-01 → 2026-05-26"
-        sub="On raw return F+ effectively matched the index (+81.6% vs +82.2%) — but with lower drawdown and 275 trades vs Config C's 460. F+ is a risk-managed engine, not a return-maximiser. Config C posts higher raw returns at higher drawdown and with no downside protection."
-      >
-        <CapTable rows={E2_CAP} />
-        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="Trades" value={`${E2_TRADES.trades}`} />
-          <Stat label="Win rate" value={`${E2_TRADES.win.toFixed(1)}%`} tone="text-emerald" />
-          <Stat label="Avg win" value={pc(E2_TRADES.avgWin)} tone="text-emerald" />
-          <Stat label="Avg loss" value={pc(E2_TRADES.avgLoss)} tone="text-rose" />
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {E2_WINNERS.map((w) => (
-            <span key={w.t} className="rounded-lg border border-emerald/25 bg-emerald/[0.06] px-3 py-1.5 text-xs">
-              <span className="font-mono font-semibold text-ink">{w.t}</span>{" "}
-              <span className="font-mono text-emerald">+{w.ret}%</span>{" "}
-              <span className="text-muted">· {w.note}</span>
-            </span>
-          ))}
-        </div>
       </Panel>
 
       {/* methodology */}

@@ -15,6 +15,27 @@ import { ago, fmtDate, inrCompact, pct, plain, signClass } from "@/lib/format";
 // ---------------------------------------------------------------------------
 // Primitives
 // ---------------------------------------------------------------------------
+// Brand mark. Uses /public/logo.png when present; falls back to an inline
+// SVG of the Maven mark (white peaks + emerald check + dot) until the file
+// is dropped in. Rendered on a dark rounded tile to match the supplied logo.
+// The Maven mark, baked in as inline SVG (a faithful recreation of the supplied
+// logo: dark squircle, white mountain "M", emerald check "V", emerald dot).
+// Vector → always crisp, no asset file or network request needed.
+function Logo({ size = 30 }: { size?: number }) {
+  return (
+    <span
+      className="grid shrink-0 place-items-center rounded-[30%]"
+      style={{ width: size, height: size, background: "#0d0e11" }}
+    >
+      <svg width={size} height={size} viewBox="0 0 100 100" fill="none" role="img" aria-label="Maven">
+        <path d="M15 77 L30 29 L44 59 L55 34" stroke="#f4f4f1" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M59 37 L71 67 L89 19" stroke="#34d399" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="89" cy="17" r="8" fill="#34d399" />
+      </svg>
+    </span>
+  );
+}
+
 export function Nav() {
   const path = usePathname();
   const tab = (href: string, label: string) => {
@@ -33,7 +54,7 @@ export function Nav() {
   return (
     <nav className="sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between border-b border-hairline bg-bg/85 px-5 py-4 backdrop-blur-md sm:-mx-8 sm:px-8">
       <Link href="/" className="flex items-center gap-2.5">
-        <span className="grid h-7 w-7 place-items-center rounded-md bg-emerald/15 font-mono text-sm text-emerald">M</span>
+        <Logo size={28} />
         <span className="text-sm tracking-[0.2em] text-muted">MAVEN</span>
         <span className="rounded-full border border-amber/30 bg-amber/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber">
           demo data
@@ -41,7 +62,8 @@ export function Nav() {
       </Link>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1 rounded-xl border border-hairline bg-panel/50 p-1">
-          {tab("/", "Portfolio")}
+          {tab("/", "How it works")}
+          {tab("/portfolio", "Portfolio")}
           {tab("/trades", "Trades")}
           {tab("/brain", "Brain")}
         </div>
