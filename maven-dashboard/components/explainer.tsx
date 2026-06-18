@@ -211,8 +211,136 @@ function IllustrativeTag() {
   );
 }
 
+// Live recreation of the Maven "Market Mode" app screen (image 4), rendered
+// inside a device frame instead of a screenshot file.
+function MarketModeScreen() {
+  const rows = [
+    { ic: "trend", t: "Why is Nifty up today?" },
+    { ic: "bars", t: "Reliance Q4 — what changed" },
+    { ic: "swap", t: "HDFC Bank vs Kotak" },
+  ];
+  return (
+    <div
+      className="absolute inset-0 flex flex-col px-3 pb-2 pt-7 text-left"
+      style={{
+        backgroundColor: "#08090b",
+        backgroundImage: "radial-gradient(85% 38% at 50% 0%, rgba(52,211,153,0.12), transparent 62%)",
+      }}
+    >
+      {/* header */}
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-1.5">
+          <svg width="17" height="17" viewBox="0 0 100 100" fill="none" aria-hidden>
+            <path d="M15 77 L30 29 L44 59 L55 34" stroke="#f4f4f1" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M59 37 L71 67 L89 19" stroke="#34d399" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="89" cy="17" r="8" fill="#34d399" />
+          </svg>
+          <div className="leading-none">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Maven</div>
+            <div className="mt-1 flex items-center gap-1 text-[6px] text-muted">
+              <span className="h-1 w-1 rounded-full bg-emerald" />Indian markets · live
+            </div>
+          </div>
+        </div>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden className="text-gold">
+          <path d="M3 12a9 9 0 1 0 2.5-6.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M3 4v4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12 8v4.5l3 1.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </div>
+
+      {/* headline */}
+      <h4 className="mt-3 font-serif text-[17px] font-light leading-[1.06] text-ink">
+        Good morning. What are the <span className="italic text-emerald">markets</span> telling you?
+      </h4>
+      <p className="mt-1.5 text-[7px] leading-relaxed text-muted">Grounded in NSE/BSE data, filings &amp; your portfolio.</p>
+
+      {/* insight */}
+      <p className="mt-2 text-[8px] leading-relaxed text-ink">
+        <span className="text-emerald">✦</span> Banking is leading — HDFC Bank{" "}
+        <span className="rounded bg-emerald/15 px-1 text-emerald">+2.4%</span>, and FIIs turned{" "}
+        <span className="rounded bg-emerald/15 px-1 text-emerald">net buyers</span> today.
+      </p>
+
+      <div className="my-2 h-px bg-hairline" />
+
+      {/* nifty pill */}
+      <span className="inline-flex w-fit items-center gap-1 rounded-full border border-emerald/30 px-2 py-0.5 text-[8px]">
+        <svg width="10" height="6" viewBox="0 0 16 10" aria-hidden>
+          <path d="M1 8 L5 4 L8 6 L15 1" stroke="#34d399" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span className="text-muted">NIFTY</span> <span className="font-semibold text-ink">23,140</span>{" "}
+        <span className="text-emerald">▲ 0.8%</span>
+      </span>
+
+      {/* suggestion rows */}
+      <div className="mt-2 divide-y divide-hairline">
+        {rows.map((r) => (
+          <div key={r.t} className="flex items-center justify-between py-[7px]">
+            <div className="flex items-center gap-2">
+              <RowIcon kind={r.ic} />
+              <span className="font-serif text-[11px] text-ink">{r.t}</span>
+            </div>
+            <span className="text-[10px] text-gold/80">›</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex-1" />
+
+      {/* ask bar */}
+      <div className="rounded-xl border border-gold/25 p-1.5">
+        <p className="px-1 pb-1.5 pt-0.5 font-serif text-[9px] italic text-muted">Ask Maven…</p>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/5 px-1.5 py-[3px] text-[6px] font-bold tracking-wide text-emerald">
+            <span className="h-1 w-1 rounded-full bg-emerald" />MARKET <span className="text-[5px]">▲</span>
+          </span>
+          <div className="flex items-center gap-1.5 text-muted">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M21 11l-9 9a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" /><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald">
+              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 19V5M5 12l7-7 7 7" stroke="#08090b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* tab bar */}
+      <div className="mt-1.5 flex items-center justify-around border-t border-hairline pt-1.5">
+        {[
+          { t: "Ask AI", a: true },
+          { t: "Portfolios", a: false },
+          { t: "Focus", a: false },
+          { t: "Broker", a: false },
+        ].map((tb) => (
+          <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}>
+            <TabIcon name={tb.t} active={tb.a} />
+            {tb.t}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function RowIcon({ kind }: { kind: string }) {
+  const c = { width: 11, height: 11, viewBox: "0 0 24 24", fill: "none", stroke: "#c9a961", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (kind === "trend") return <svg {...c} aria-hidden><path d="M3 17l6-6 4 4 8-8" /><path d="M21 7v4h-4" /></svg>;
+  if (kind === "bars") return <svg {...c} aria-hidden><path d="M5 21V10M12 21V4M19 21v-7" /></svg>;
+  return <svg {...c} aria-hidden><path d="M7 4L4 7l3 3M4 7h13M17 20l3-3-3-3M20 17H7" /></svg>;
+}
+
+function TabIcon({ name, active }: { name: string; active: boolean }) {
+  const col = active ? "#34d399" : "#5a616a";
+  const c = { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: col, strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (name === "Ask AI") return <svg {...c} aria-hidden><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" /></svg>;
+  if (name === "Portfolios") return <svg {...c} aria-hidden><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>;
+  if (name === "Focus") return <svg {...c} aria-hidden><circle cx="12" cy="12" r="8" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>;
+  return <svg {...c} aria-hidden><path d="M9 15l6-6M10 6l1-1a4 4 0 016 6l-1 1M14 18l-1 1a4 4 0 01-6-6l1-1" /></svg>;
+}
+
 // device-framed phone mockup with graceful placeholder
-function Device({ src, label, small = false }: { src: string; label: string; small?: boolean }) {
+function Device({ src, label, small = false, mock }: { src: string; label: string; small?: boolean; mock?: ReactNode }) {
   const [err, setErr] = useState(false);
   const w = small ? "w-[150px]" : "w-[250px] sm:w-[272px]";
   return (
@@ -221,7 +349,9 @@ function Device({ src, label, small = false }: { src: string; label: string; sma
       <div className={`relative mx-auto ${w} rounded-[2.4rem] border border-border bg-panel2 p-2.5`} style={{ boxShadow: "0 24px 60px -30px rgba(0,0,0,0.8)" }}>
         <div className="relative aspect-[390/844] overflow-hidden rounded-[1.9rem] bg-bg ring-1 ring-black/60">
           <div className="absolute left-1/2 top-2 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-black/85" />
-          {!err ? (
+          {mock ? (
+            mock
+          ) : !err ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`/screenshots/${src}`} alt={label} onError={() => setErr(true)} className="h-full w-full object-cover object-top" />
           ) : (
@@ -250,12 +380,15 @@ function EngineCore() {
       <div className="absolute h-[78%] w-[78%] animate-spinSlow rounded-full border border-emerald/15 motion-reduce:animate-none" style={{ borderTopColor: "rgba(52,211,153,0.6)" }} />
       <div className="absolute h-[58%] w-[58%] animate-spinReverse rounded-full border border-emerald/10 motion-reduce:animate-none" style={{ borderBottomColor: "rgba(52,211,153,0.45)" }} />
       <div className="absolute h-[38%] w-[38%] animate-spinSlow rounded-full border border-dashed border-emerald/20 motion-reduce:animate-none" />
-      {/* core orb with the Quant bell-curve motif */}
-      <div className="relative grid h-[34%] w-[34%] place-items-center rounded-[28%] border border-emerald/30 bg-panel2/80" style={{ boxShadow: "inset 0 0 40px rgba(52,211,153,0.25), 0 0 60px -8px rgba(52,211,153,0.4)" }}>
-        <svg viewBox="0 0 80 60" className="h-1/2 w-1/2" fill="none" aria-hidden>
-          <path d="M6 50 C26 50 30 14 40 14 C50 14 54 50 74 50" stroke="#e9ebed" strokeWidth="2.5" strokeLinecap="round" opacity="0.8" />
-          {[12, 26, 40, 54, 68].map((x) => <line key={x} x1={x} y1="50" x2={x} y2="54" stroke="#8b9298" strokeWidth="1.5" />)}
-          <circle cx="40" cy="14" r="3.4" fill="#6ee7b7" />
+      {/* core: the Maven mark (white peaks + emerald check + dot) */}
+      <div
+        className="relative grid h-[37%] w-[37%] animate-floatY place-items-center rounded-[30%] border border-emerald/30 bg-[#0d0e11] motion-reduce:animate-none"
+        style={{ boxShadow: "inset 0 0 44px rgba(52,211,153,0.22), 0 0 80px -6px rgba(52,211,153,0.5)" }}
+      >
+        <svg viewBox="0 0 100 100" className="h-[60%] w-[60%]" fill="none" role="img" aria-label="Maven">
+          <path d="M15 77 L30 29 L44 59 L55 34" stroke="#f4f4f1" strokeWidth="8.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M59 37 L71 67 L89 19" stroke="#34d399" strokeWidth="9.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="89" cy="17" r="7.5" fill="#34d399" className="animate-pulseDot motion-reduce:animate-none" />
         </svg>
       </div>
     </div>
@@ -383,7 +516,7 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
       <div className={flip ? "lg:order-1" : ""}>
         {layer.gallery.length > 0 ? (
           <div className="flex flex-col items-center gap-6">
-            <Device src={layer.screenshot} label={layer.name} />
+            <Device src={layer.screenshot} label={layer.name} mock={layer.n === 1 ? <MarketModeScreen /> : undefined} />
             <div className="flex justify-center gap-3">
               {layer.gallery.map((g) => (
                 <div key={g.file} className="flex flex-col items-center gap-2">
@@ -394,7 +527,7 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
             </div>
           </div>
         ) : (
-          <Device src={layer.screenshot} label={layer.name} />
+          <Device src={layer.screenshot} label={layer.name} mock={layer.n === 1 ? <MarketModeScreen /> : undefined} />
         )}
       </div>
     </div>
