@@ -327,6 +327,9 @@ function RowIcon({ kind }: { kind: string }) {
   const c = { width: 11, height: 11, viewBox: "0 0 24 24", fill: "none", stroke: "#c9a961", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   if (kind === "trend") return <svg {...c} aria-hidden><path d="M3 17l6-6 4 4 8-8" /><path d="M21 7v4h-4" /></svg>;
   if (kind === "bars") return <svg {...c} aria-hidden><path d="M5 21V10M12 21V4M19 21v-7" /></svg>;
+  if (kind === "pie") return <svg {...c} aria-hidden><path d="M12 3a9 9 0 1 0 9 9h-9z" /><path d="M12 3v9" /></svg>;
+  if (kind === "updown") return <svg {...c} aria-hidden><path d="M7 5v14M7 5L4 8M7 5l3 3M17 19V5M17 19l-3-3M17 19l3-3" /></svg>;
+  if (kind === "doc") return <svg {...c} aria-hidden><path d="M6 2h8l4 4v16H6zM14 2v4h4M9 13h6M9 17h4" /></svg>;
   return <svg {...c} aria-hidden><path d="M7 4L4 7l3 3M4 7h13M17 20l3-3-3-3M20 17H7" /></svg>;
 }
 
@@ -337,6 +340,193 @@ function TabIcon({ name, active }: { name: string; active: boolean }) {
   if (name === "Portfolios") return <svg {...c} aria-hidden><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>;
   if (name === "Focus") return <svg {...c} aria-hidden><circle cx="12" cy="12" r="8" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>;
   return <svg {...c} aria-hidden><path d="M9 15l6-6M10 6l1-1a4 4 0 016 6l-1 1M14 18l-1 1a4 4 0 01-6-6l1-1" /></svg>;
+}
+
+// Live recreation of the "Portfolio Mode" Ask-AI screen (image 4).
+function PortfolioAskScreen() {
+  const rows = [
+    { ic: "pie", t: "How did my portfolio do today?" },
+    { ic: "updown", t: "Which holdings moved the most?" },
+    { ic: "doc", t: "Any new filings on my holdings?" },
+  ];
+  return (
+    <div
+      className="absolute inset-0 flex flex-col px-3 pb-2 pt-7 text-left"
+      style={{ backgroundColor: "#08090b", backgroundImage: "radial-gradient(85% 38% at 50% 0%, rgba(52,211,153,0.12), transparent 62%)" }}
+    >
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-1.5">
+          <svg width="17" height="17" viewBox="0 0 100 100" fill="none" aria-hidden>
+            <path d="M15 77 L30 29 L44 59 L55 34" stroke="#f4f4f1" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M59 37 L71 67 L89 19" stroke="#34d399" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+            <circle cx="89" cy="17" r="8" fill="#34d399" />
+          </svg>
+          <div className="leading-none">
+            <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-gold">Maven</div>
+            <div className="mt-1 flex items-center gap-1 text-[6px] text-muted"><span className="h-1 w-1 rounded-full bg-emerald" />Indian markets · live</div>
+          </div>
+        </div>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden className="text-gold">
+          <path d="M3 12a9 9 0 1 0 2.5-6.3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M3 4v4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M12 8v4.5l3 1.8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </div>
+
+      <h4 className="mt-3 font-serif text-[17px] font-light leading-[1.06] text-ink">
+        Good morning. What is your <span className="italic text-emerald">portfolio</span> telling you?
+      </h4>
+      <p className="mt-1.5 text-[7px] leading-relaxed text-muted">Grounded in your holdings, live prices &amp; filings.</p>
+
+      <p className="mt-2 text-[8px] leading-relaxed text-ink">
+        <span className="text-emerald">✦</span> Your portfolio is{" "}
+        <span className="rounded bg-emerald/15 px-1 text-emerald">+1.2%</span> today —{" "}
+        <span className="rounded bg-emerald/15 px-1 text-emerald">Financials lead</span>, with 2 new filings.
+      </p>
+
+      <div className="my-2 h-px bg-hairline" />
+
+      <span className="inline-flex w-fit items-center gap-1 rounded-full border border-emerald/30 px-2 py-0.5 text-[8px]">
+        <svg width="10" height="6" viewBox="0 0 16 10" aria-hidden><path d="M1 8 L5 4 L8 6 L15 1" stroke="#34d399" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        <span className="text-muted">NIFTY</span> <span className="font-semibold text-ink">23,140</span> <span className="text-emerald">▲ 0.8%</span>
+      </span>
+
+      <div className="mt-2 divide-y divide-hairline">
+        {rows.map((r) => (
+          <div key={r.t} className="flex items-center justify-between py-[7px]">
+            <div className="flex items-center gap-2"><RowIcon kind={r.ic} /><span className="font-serif text-[11px] text-ink">{r.t}</span></div>
+            <span className="text-[10px] text-gold/80">›</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex-1" />
+
+      <div className="rounded-xl border border-gold/25 p-1.5">
+        <p className="px-1 pb-1.5 pt-0.5 font-serif text-[9px] italic text-muted">Ask Maven…</p>
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1 rounded-full border border-emerald/30 bg-emerald/5 px-1.5 py-[3px] text-[6px] font-bold tracking-wide text-emerald">
+            <span className="h-1 w-1 rounded-full bg-emerald" />PORTFOLIO <span className="text-[5px]">▲</span>
+          </span>
+          <div className="flex items-center gap-1.5 text-muted">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M21 11l-9 9a5 5 0 01-7-7l9-9a3.5 3.5 0 015 5l-9 9a2 2 0 01-3-3l8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" aria-hidden><rect x="9" y="2" width="6" height="12" rx="3" stroke="currentColor" strokeWidth="2" /><path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald"><svg width="7" height="7" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M12 19V5M5 12l7-7 7 7" stroke="#08090b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-1.5 flex items-center justify-around border-t border-hairline pt-1.5">
+        {[{ t: "Ask AI", a: true }, { t: "Portfolios", a: false }, { t: "Focus", a: false }, { t: "Broker", a: false }].map((tb) => (
+          <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}>
+            <TabIcon name={tb.t} active={tb.a} />{tb.t}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// "Models, ranked." list screens (images 1-3), shown in the small gallery frames.
+type PCard = { letter: string; color: string; name: string; crown?: boolean; ret: string; alpha: string; holdings: number; risk: "High" | "Medium" };
+const PF_DATA: Record<string, { section: string; sub: string; featured?: boolean; cards: PCard[] }> = {
+  Stable: {
+    section: "Stable", sub: "Lower drawdown, steadier", featured: true,
+    cards: [
+      { letter: "C", color: "#7aa2ff", name: "Core", crown: true, ret: "+14.6%", alpha: "+1.1%", holdings: 42, risk: "High" },
+      { letter: "Q", color: "#c084fc", name: "Quality", ret: "+13.2%", alpha: "−0.3%", holdings: 25, risk: "High" },
+    ],
+  },
+  Balanced: {
+    section: "Balanced", sub: "Broad coverage, medium risk",
+    cards: [
+      { letter: "G", color: "#34d399", name: "Growth", crown: true, ret: "+23.5%", alpha: "+10.0%", holdings: 24, risk: "Medium" },
+      { letter: "M", color: "#fb923c", name: "Momentum", ret: "+20.8%", alpha: "+7.3%", holdings: 18, risk: "Medium" },
+      { letter: "I", color: "#c9a961", name: "Income", ret: "+15.3%", alpha: "+1.8%", holdings: 26, risk: "High" },
+    ],
+  },
+  Bold: {
+    section: "Bold", sub: "Higher turnover, higher risk/reward",
+    cards: [
+      { letter: "Q", color: "#34d399", name: "Quant", crown: true, ret: "+31.7%", alpha: "+18.2%", holdings: 12, risk: "Medium" },
+      { letter: "V", color: "#facc15", name: "Value", ret: "+24.5%", alpha: "+11.0%", holdings: 16, risk: "Medium" },
+      { letter: "C", color: "#fb7185", name: "Contrarian", ret: "+20.2%", alpha: "+6.7%", holdings: 14, risk: "Medium" },
+    ],
+  },
+};
+
+function Risk({ level }: { level: string }) {
+  const on = level === "High";
+  return <span className={`shrink-0 rounded-full px-1 py-[0.5px] text-[5px] font-semibold ${on ? "bg-emerald/15 text-emerald" : "border border-border text-muted"}`}>{level}</span>;
+}
+
+function PortfolioCard({ c }: { c: PCard }) {
+  return (
+    <div className="rounded-md border border-border bg-panel/50 p-1">
+      <div className="flex items-center gap-1">
+        <span className="grid h-3.5 w-3.5 place-items-center rounded text-[6px] font-bold" style={{ color: c.color, background: "rgba(255,255,255,0.05)" }}>{c.letter}</span>
+        <span className="text-[7px] font-bold text-ink">{c.name}</span>
+        {c.crown && <span className="text-[6px] text-gold">♛</span>}
+      </div>
+      <div className="mt-0.5 flex items-center justify-between">
+        <span className="text-[11px] font-bold text-emerald">{c.ret}</span>
+        <Risk level={c.risk} />
+      </div>
+      <div className="text-[5px] text-muted">α {c.alpha} vs NIFTY · {c.holdings} holdings</div>
+    </div>
+  );
+}
+
+function FeaturedQuant() {
+  return (
+    <div className="relative grid place-items-center rounded-xl border border-emerald/20 py-2.5" style={{ backgroundImage: "radial-gradient(60% 60% at 50% 42%, rgba(52,211,153,0.20), transparent 70%)" }}>
+      <span className="absolute right-1.5 top-1.5 rounded-full bg-emerald px-1 py-[1px] text-[5px] font-bold text-black">↗ +31.7%</span>
+      <div className="grid h-8 w-8 place-items-center rounded-lg border border-emerald/30 bg-[#0d0e11]" style={{ boxShadow: "0 0 22px -4px rgba(52,211,153,0.55)" }}>
+        <svg viewBox="0 0 80 60" className="h-5 w-5" fill="none" aria-hidden>
+          <path d="M6 50 C26 50 30 14 40 14 C50 14 54 50 74 50" stroke="#e9ebed" strokeWidth="3" strokeLinecap="round" opacity="0.85" />
+          <circle cx="40" cy="14" r="4" fill="#6ee7b7" />
+        </svg>
+      </div>
+      <div className="mt-1 text-[5px] font-semibold uppercase tracking-wide text-emerald">● Featured</div>
+      <div className="font-serif text-[12px] text-ink">Quant</div>
+      <div className="text-[5px] text-muted">by Maven · Bold</div>
+    </div>
+  );
+}
+
+function PortfoliosScreen({ variant }: { variant: string }) {
+  const d = PF_DATA[variant];
+  return (
+    <div className="absolute inset-0 flex flex-col gap-1.5 overflow-hidden px-2 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
+      <div>
+        <div className="flex items-center justify-between">
+          <span className="text-[6px] font-bold uppercase tracking-[0.2em] text-gold">AI Portfolios</span>
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" aria-hidden className="text-gold"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2.5" /><path d="M21 21l-4-4" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" /></svg>
+        </div>
+        <h4 className="font-serif text-[14px] leading-tight text-ink">Models, ranked.</h4>
+        <div className="mt-0.5 flex items-center gap-1 text-[5px] text-muted"><span className="h-[3px] w-[3px] rounded-full bg-emerald" />NSE/BSE · live</div>
+      </div>
+      {d.featured && <FeaturedQuant />}
+      <div>
+        <h5 className="font-serif text-[11px] text-ink">{d.section}</h5>
+        <p className="text-[5px] text-muted">{d.sub}</p>
+      </div>
+      <div className="flex flex-col gap-1">
+        {d.cards.map((c) => <PortfolioCard key={c.name} c={c} />)}
+      </div>
+    </div>
+  );
+}
+
+// pick the right live screen for a given layer / gallery slot
+function mainMock(layer: (typeof LAYERS)[number]): ReactNode {
+  if (layer.n === 1) return <MarketModeScreen />;
+  if (layer.n === 2) return <PortfolioAskScreen />;
+  return undefined;
+}
+function galleryMock(layer: (typeof LAYERS)[number], cap: string): ReactNode {
+  if (layer.n === 2) return <PortfoliosScreen variant={cap} />;
+  return undefined;
 }
 
 // device-framed phone mockup with graceful placeholder
@@ -516,18 +706,18 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
       <div className={flip ? "lg:order-1" : ""}>
         {layer.gallery.length > 0 ? (
           <div className="flex flex-col items-center gap-6">
-            <Device src={layer.screenshot} label={layer.name} mock={layer.n === 1 ? <MarketModeScreen /> : undefined} />
+            <Device src={layer.screenshot} label={layer.name} mock={mainMock(layer)} />
             <div className="flex justify-center gap-3">
               {layer.gallery.map((g) => (
                 <div key={g.file} className="flex flex-col items-center gap-2">
-                  <Device src={g.file} label={g.cap} small />
+                  <Device src={g.file} label={g.cap} small mock={galleryMock(layer, g.cap)} />
                   <span className="text-[0.6rem] text-dim">{g.cap}</span>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <Device src={layer.screenshot} label={layer.name} mock={layer.n === 1 ? <MarketModeScreen /> : undefined} />
+          <Device src={layer.screenshot} label={layer.name} mock={mainMock(layer)} />
         )}
       </div>
     </div>
