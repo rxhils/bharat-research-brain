@@ -56,9 +56,6 @@ export function Nav() {
       <Link href="/" className="flex items-center gap-2.5">
         <Logo size={28} />
         <span className="text-sm tracking-[0.2em] text-muted">MAVEN</span>
-        <span className="rounded-full border border-amber/30 bg-amber/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber">
-          demo data
-        </span>
       </Link>
       <div className="flex items-center gap-2">
         <div className="flex items-center gap-1 rounded-xl border border-hairline bg-panel/50 p-1">

@@ -18,6 +18,7 @@ import {
   motion,
   useInView,
   useReducedMotion,
+  useScroll,
   animate,
   type Variants,
 } from "framer-motion";
@@ -89,8 +90,8 @@ const LAYERS = [
     note: "Read-only. No trading. Maven never places, modifies, or cancels an order.",
     illustrative: false,
     gallery: [
-      { file: "broker-connect.png", cap: "Connect" },
-      { file: "broker-sync.png", cap: "Sync" },
+      { file: "broker-connect.png", cap: "Brokers" },
+      { file: "broker-sync.png", cap: "Sign-in" },
     ],
   },
 ];
@@ -600,15 +601,133 @@ function FocusScreen() {
   );
 }
 
+// ── Broker screens (images 4 / 3 / 5) ──
+function MiniMark({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden>
+      <path d="M15 77 L30 29 L44 59 L55 34" stroke="#f4f4f1" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M59 37 L71 67 L89 19" stroke="#34d399" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="89" cy="17" r="8" fill="#34d399" />
+    </svg>
+  );
+}
+function BrokerHeader() {
+  return (
+    <div>
+      <h4 className="font-serif text-[17px] font-light leading-none text-ink">Connect your broker</h4>
+      <p className="mt-1 text-[6px] text-muted">Securely linked. Read-only, no trading.</p>
+    </div>
+  );
+}
+function BrokerTabBar() {
+  return (
+    <div className="flex items-center justify-around border-t border-hairline pt-1.5">
+      {[{ t: "Ask AI", a: false }, { t: "Portfolios", a: false }, { t: "Focus", a: false }, { t: "Broker", a: true }].map((tb) => (
+        <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}><TabIcon name={tb.t} active={tb.a} />{tb.t}</div>
+      ))}
+    </div>
+  );
+}
+type Brk = { name: string; sub: string; color: string; connected?: boolean; synced?: string; status?: string };
+function BrokerRow({ b }: { b: Brk }) {
+  return (
+    <div className="rounded-md border border-border bg-panel/50 p-1">
+      <div className="flex items-center gap-1.5">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[8px] font-bold text-white" style={{ backgroundColor: b.color }}>{b.name[0]}</span>
+        <div className="min-w-0 flex-1">
+          <div className="text-[7px] font-bold text-ink">{b.name}</div>
+          <div className="truncate text-[5px] text-muted">{b.sub}</div>
+          {b.synced && <div className="text-[4.5px] text-muted">{b.synced}</div>}
+        </div>
+        {b.connected
+          ? <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[6px] font-bold text-ink">Disconnect</span>
+          : <span className="shrink-0 rounded bg-emerald px-2.5 py-0.5 text-[6px] font-bold text-black">Connect</span>}
+      </div>
+      {b.status && <div className="mt-1 border-t border-hairline pt-1 text-[4.5px] text-muted"><span className="text-emerald">●</span> {b.status}</div>}
+    </div>
+  );
+}
+
+function BrokerConnectScreen() {
+  return (
+    <div className="absolute inset-0 flex flex-col gap-1.5 overflow-hidden px-2.5 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
+      <BrokerHeader />
+      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">Account</div>
+      <div className="rounded-lg border border-border bg-panel/60 p-1.5">
+        <div className="flex items-center gap-1.5"><MiniMark size={18} /><div><div className="font-serif text-[10px] leading-none text-ink">Make Maven yours</div><div className="mt-0.5 text-[5px] text-muted">Brokers, preferences & history — saved to you, private to you.</div></div></div>
+        <div className="mt-1.5 rounded-md bg-emerald py-1 text-center text-[7px] font-bold text-black">Log in / Sign up</div>
+        <div className="mt-1 flex items-center justify-center gap-1 rounded-md bg-white py-1 text-[7px] font-bold text-[#1f1f1f]"><span style={{ color: "#4285F4" }}>G</span> Continue with Google</div>
+        <p className="mt-1 text-center text-[4.5px] text-dim">No account needed — Market Mode works without one.</p>
+      </div>
+      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">Appearance</div>
+      <div className="flex rounded-md border border-border bg-panel/50 p-0.5 text-[6px]">
+        <div className="flex-1 rounded bg-panel2 py-0.5 text-center font-semibold text-ink">System</div>
+        <div className="flex-1 py-0.5 text-center text-muted">Light</div>
+        <div className="flex-1 py-0.5 text-center text-muted">Dark</div>
+      </div>
+      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">Brokers</div>
+      <BrokerRow b={{ name: "Zerodha", sub: "Connect via Zerodha Kite", color: "#ef4444", connected: true, synced: "6 holdings synced", status: "Connected · Synced 2026-06-11 18:10" }} />
+      <BrokerRow b={{ name: "Groww", sub: "Connect your Groww account", color: "#00b386" }} />
+      <div className="mt-auto"><BrokerTabBar /></div>
+    </div>
+  );
+}
+
+function BrokerListScreen() {
+  const brokers: Brk[] = [
+    { name: "Zerodha", sub: "Connect via Zerodha Kite", color: "#ef4444", connected: true, synced: "6 holdings synced", status: "Connected · Synced 2026-06-11 18:10" },
+    { name: "Groww", sub: "Connect your Groww account", color: "#00b386" },
+    { name: "Upstox", sub: "Connect via Upstox API", color: "#7c3aed" },
+    { name: "Angel One", sub: "Connect via Angel One SmartAPI", color: "#2563eb" },
+    { name: "HDFC Sky", sub: "Connect via HDFC Sky", color: "#0ea5e9" },
+    { name: "Anand Rathi", sub: "Connect via Anand Rathi", color: "#a16207" },
+  ];
+  return (
+    <div className="absolute inset-0 flex flex-col gap-1.5 overflow-hidden px-2.5 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
+      <BrokerHeader />
+      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">Brokers</div>
+      <div className="flex flex-col gap-1">{brokers.map((b) => <BrokerRow key={b.name} b={b} />)}</div>
+      <div className="mt-auto"><BrokerTabBar /></div>
+    </div>
+  );
+}
+
+function HdfcLoginScreen() {
+  return (
+    <div className="absolute inset-0 flex flex-col bg-white text-left">
+      <div className="flex items-center justify-between bg-[#efefef] px-2 pb-1.5 pt-6">
+        <span className="grid h-4 w-4 place-items-center rounded-full bg-white text-[7px] text-gray-600">✕</span>
+        <span className="text-[7px] font-medium text-gray-800">developer.hdfcsky.com</span>
+        <span className="grid h-4 w-4 place-items-center rounded-full bg-white text-[7px] text-gray-600">▭</span>
+      </div>
+      <div className="flex-1 px-3 pt-4" style={{ backgroundImage: "linear-gradient(180deg,#eef2f8,#ffffff 40%)" }}>
+        <div className="flex items-center gap-1">
+          <span className="grid h-5 w-5 place-items-center rounded-full text-[8px] font-bold text-white" style={{ backgroundImage: "linear-gradient(135deg,#2f7de1,#0a2a6b)" }}>S</span>
+          <span className="text-[7px] font-extrabold leading-[1.05] text-[#0a2a6b]">HDFC<br />SKY</span>
+        </div>
+        <h4 className="mt-4 text-[19px] font-extrabold leading-[1.05] text-[#0f1b33]">Login To<br />maven</h4>
+        <p className="mt-1.5 text-[5.5px] text-gray-500">Please enter Client ID / Mobile Number / Email ID to get started</p>
+        <div className="mt-3 rounded-md border border-gray-300 bg-white px-2 py-2 text-[6px] text-gray-400">Enter Client ID / Mobile Number / Email ID</div>
+        <div className="mt-2 rounded-md py-2 text-center text-[8px] font-bold text-white" style={{ backgroundColor: "#0a66ff" }}>Get Started</div>
+      </div>
+    </div>
+  );
+}
+
 // pick the right live screen for a given layer / gallery slot
 function mainMock(layer: (typeof LAYERS)[number]): ReactNode {
   if (layer.n === 1) return <MarketModeScreen />;
   if (layer.n === 2) return <PortfolioAskScreen />;
   if (layer.n === 3) return <FocusScreen />;
+  if (layer.n === 4) return <BrokerConnectScreen />;
   return undefined;
 }
 function galleryMock(layer: (typeof LAYERS)[number], cap: string): ReactNode {
   if (layer.n === 2) return <PortfoliosScreen variant={cap} />;
+  if (layer.n === 4) {
+    if (cap === "Brokers") return <BrokerListScreen />;
+    if (cap === "Sign-in") return <HdfcLoginScreen />;
+  }
   return undefined;
 }
 
@@ -807,13 +926,41 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
   );
 }
 
+// Thin scroll-progress bar — a quiet "you are here" cue (Jakub: subtle polish).
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const reduce = useReducedMotion();
+  if (reduce) return null;
+  return (
+    <motion.div
+      aria-hidden
+      className="fixed inset-x-0 top-0 z-[60] h-[2px] origin-left"
+      style={{ scaleX: scrollYProgress, background: "linear-gradient(90deg,#34d399,#c9a961)" }}
+    />
+  );
+}
+
 export function Explainer() {
   const reduce = useReducedMotion();
   return (
     <div className="relative">
+      <ScrollProgress />
       {/* ── Hero ── */}
       <section className="relative grid min-h-[78vh] items-center gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "radial-gradient(55% 50% at 30% 40%,rgba(52,211,153,0.10),transparent 70%)" }} />
+        {!reduce && (
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 -z-10"
+            animate={{ backgroundPosition: ["0% 0%", "100% 60%", "0% 0%"] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              backgroundImage:
+                "radial-gradient(38% 46% at 28% 42%, rgba(52,211,153,0.12), transparent 60%), radial-gradient(34% 42% at 76% 62%, rgba(16,185,129,0.10), transparent 60%)",
+              backgroundSize: "200% 200%",
+            }}
+          />
+        )}
         <div>
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mb-6 flex items-center gap-3">
             <LivePill>Indian markets · live</LivePill>
@@ -860,7 +1007,7 @@ export function Explainer() {
         <RevealGroup className="mt-16 grid gap-4 md:grid-cols-3">
           {PRINCIPLES.map((p, i) => (
             <Item key={p.k}>
-              <div className="group h-full rounded-xl2 border border-border bg-panel/60 p-6 transition-colors hover:border-emerald/30">
+              <div className="group h-full rounded-xl2 border border-border bg-panel/60 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-emerald/30 hover:shadow-[0_22px_50px_-24px_rgba(52,211,153,0.45)]">
                 <div className="flex items-center justify-between">
                   <span className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-panel2"><PrincipleIcon k={p.k} /></span>
                   <span className="font-serif text-2xl text-border">0{i + 1}</span>
