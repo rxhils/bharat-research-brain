@@ -61,7 +61,8 @@ def _compute_nifty_return(closes_by_isin: dict[str, list[float]]) -> float | Non
     for isin, series in closes_by_isin.items():
         if isin not in _NIFTY_PROXY_ISINS or len(series) < _W52 + 1:
             continue
-        ret = (series[-1] - series[-_W52]) / series[-_W52]
+        # Use closes[-2] (yesterday) so decision never sees rebalance day's close
+        ret = (series[-2] - series[-_W52]) / series[-_W52]
         returns.append(ret)
     if len(returns) < 3:
         return None
@@ -89,9 +90,9 @@ def compute_score_from_history(
     if len(closes) < 200:  # need at least 200 bars for EMA200
         return None
 
-    # ---- FIX 4: Trend filter (non-negotiable) -------------------------------
+    # ---- FIX 4: Trend filter (non-negotiable) — based on yesterday's close ----
     ema200 = ema(closes, 200)
-    if ema200 is None or closes[-1] < ema200:
+    if ema200 is None or closes[-2] < ema200:
         return Decimal("0")
     # -------------------------------------------------------------------------
 
@@ -99,9 +100,9 @@ def compute_score_from_history(
     if rsi_14 is None:
         return None
 
-    # ---- Momentum score (60% weight) ----------------------------------------
-    # 52-week return of this stock
-    stock_ret = (closes[-1] - closes[-_W52]) / closes[-_W52] if len(closes) > _W52 else 0.0
+    # ---- Momentum score (60% weight) — based on yesterday's close -------------
+    # 52-week return of this stock (yesterday's close, not rebalance day)
+    stock_ret = (closes[-2] - closes[-_W52]) / closes[-_W52] if len(closes) > _W52 else 0.0
 
     # 52-week return of the Nifty proxy (or fallback to mean of all stocks)
     nifty_ret = _compute_nifty_return(all_closes) if all_closes is not None else None
@@ -112,7 +113,7 @@ def compute_score_from_history(
         if all_closes:
             for s in all_closes.values():
                 if len(s) >= _W52 + 1:
-                    stock_returns.append((s[-1] - s[-_W52]) / s[-_W52])
+                    stock_returns.append((s[-2] - s[-_W52]) / s[-_W52])
         if not stock_returns:
             stock_returns = [stock_ret]
         nifty_ret = sum(stock_returns) / len(stock_returns)
@@ -141,9 +142,9 @@ def compute_score_from_history(
     else:
         tech_score = 30.0
 
-    # 2) EMA200 position (+15 above / -10 below)
+    # 2) EMA200 position (+15 above / -10 below) — based on yesterday's close
     if ema200 > 0:
-        last = closes[-1]
+        last = closes[-2]
         if last > ema200 * 1.005:
             tech_score += 15.0
         elif last < ema200 * 0.995:
@@ -164,12 +165,12 @@ def compute_score_from_history(
         elif hist < 0:
             tech_score -= 5.0
 
-    # 5) 52-week proximity
-    window = closes[-_W52:]
+    # 5) 52-week proximity — based on yesterday's close
+    window = closes[-_W52:-1]  # exclude rebalance day
     if window:
         hi = max(window)
         lo = min(window)
-        last = closes[-1]
+        last = closes[-2]
         if hi > 0 and last / hi >= 0.97:
             if 55.0 <= rsi_14 <= 70.0:
                 tech_score += 8.0
@@ -178,10 +179,10 @@ def compute_score_from_history(
         if lo > 0 and last / lo <= 1.05:
             tech_score -= 8.0
 
-    # 6) Volume trend
-    if volumes and len(volumes) >= _AVG_VOL_DAYS + 1:
-        current = volumes[-1]
-        avg30 = sum(volumes[-(_AVG_VOL_DAYS + 1): -1]) / _AVG_VOL_DAYS
+    # 6) Volume trend — based on yesterday's data
+    if volumes and len(volumes) >= _AVG_VOL_DAYS + 2:
+        current = volumes[-2]
+        avg30 = sum(volumes[-(_AVG_VOL_DAYS + 2): -2]) / _AVG_VOL_DAYS
         if avg30 > 0:
             ratio = current / avg30
             if ratio >= 3:
@@ -205,7 +206,7 @@ def compute_score_from_history(
         all_alphas: list[float] = []
         for isin, s in all_closes.items():
             if len(s) >= _W52 + 1 and isin not in _NIFTY_PROXY_ISINS:
-                r = (s[-1] - s[-_W52]) / s[-_W52]
+                r = (s[-2] - s[-_W52]) / s[-_W52]
                 all_alphas.append(r - nifty_ret)
         if all_alphas:
             # How does this stock rank? Top 20% = alpha >= 80th percentile
