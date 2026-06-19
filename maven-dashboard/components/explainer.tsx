@@ -739,19 +739,17 @@ function galleryMock(layer: (typeof LAYERS)[number], cap: string): ReactNode {
 
 // device-framed phone mockup with graceful placeholder
 function Device({ src, label, small = false, mock }: { src: string; label: string; small?: boolean; mock?: ReactNode }) {
-  const [err, setErr] = useState(false);
-  const w = small ? "w-[150px]" : "w-[250px] sm:w-[272px]";
+  const [imgOk, setImgOk] = useState(false);
+  // Responsive widths — comfortable on phones, full size from sm up.
+  const w = small ? "w-[118px] sm:w-[150px]" : "w-[218px] sm:w-[272px]";
   return (
     <div className="relative animate-floatY motion-reduce:animate-none">
       <div className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] opacity-70 blur-2xl" style={{ background: "radial-gradient(50% 45% at 50% 40%,rgba(52,211,153,0.20),transparent 70%)" }} />
       <div className={`relative mx-auto ${w} rounded-[2.4rem] border border-border bg-panel2 p-2.5`} style={{ boxShadow: "0 24px 60px -30px rgba(0,0,0,0.8)" }}>
         <div className="relative aspect-[390/844] overflow-hidden rounded-[1.9rem] bg-bg ring-1 ring-black/60">
-          <div className="absolute left-1/2 top-2 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-black/85" />
-          {!err ? (
-            // Real screenshot wins when the file exists in /public/screenshots.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={`/screenshots/${src}`} alt={label} onError={() => setErr(true)} className="h-full w-full object-cover object-top" />
-          ) : mock ? (
+          {/* Base layer — rendered server-side so it shows instantly on every device
+              (this is what fixes blank/broken frames on iOS & Android). */}
+          {mock ? (
             mock
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4 text-center" style={{ background: "radial-gradient(60% 50% at 50% 30%,rgba(52,211,153,0.12),transparent 70%)" }}>
@@ -765,6 +763,19 @@ function Device({ src, label, small = false, mock }: { src: string; label: strin
               {!small && <code className="rounded bg-panel px-2 py-1 text-[0.6rem] text-dim">/screenshots/{src}</code>}
             </div>
           )}
+          {/* Real screenshot overlay — fades in only once it actually loads; a missing
+              or 404 file stays invisible so the base layer shows through. No onError
+              broken-image flash, which is what iOS was choking on. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`/screenshots/${src}`}
+            alt={label}
+            loading="lazy"
+            onLoad={() => setImgOk(true)}
+            className={`absolute inset-0 z-10 h-full w-full object-cover object-top transition-opacity duration-300 ${imgOk ? "opacity-100" : "opacity-0"}`}
+          />
+          {/* notch */}
+          <div className="absolute left-1/2 top-2 z-30 h-4 w-20 -translate-x-1/2 rounded-full bg-black/85" />
         </div>
       </div>
     </div>
@@ -916,7 +927,7 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
         {layer.gallery.length > 0 ? (
           <div className="flex flex-col items-center gap-6">
             <Device src={layer.screenshot} label={layer.name} mock={mainMock(layer)} />
-            <div className="flex justify-center gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               {layer.gallery.map((g) => (
                 <div key={g.file} className="flex flex-col items-center gap-2">
                   <Device src={g.file} label={g.cap} small mock={galleryMock(layer, g.cap)} />
@@ -950,7 +961,7 @@ function ScrollProgress() {
 export function Explainer() {
   const reduce = useReducedMotion();
   return (
-    <div className="relative">
+    <div className="relative overflow-x-clip">
       <ScrollProgress />
       {/* ── Hero ── */}
       <section className="relative grid min-h-[78vh] items-center gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr]">
