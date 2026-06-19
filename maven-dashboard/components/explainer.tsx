@@ -826,10 +826,13 @@ export function Explainer() {
           <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }} className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
             An AI research engine for Indian equities — built on a strategy validated across two market eras, including covid.
           </motion.p>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.95 }} className="mt-10 flex flex-wrap items-baseline gap-x-7 gap-y-3">
-            <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-emerald tnum">−27%</span><span className="text-sm text-dim">F+ in covid</span></span>
-            <span className="text-dim">vs</span>
-            <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-muted tnum">−38%</span><span className="text-sm text-dim">market in covid</span></span>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.95 }} className="mt-10">
+            <div className="flex flex-wrap items-baseline gap-x-7 gap-y-3">
+              <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-emerald tnum">+41%</span><span className="text-sm text-dim">F+ · 2021–26</span></span>
+              <span className="text-dim">vs</span>
+              <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-muted tnum">+36%</span><span className="text-sm text-dim">Nifty 500</span></span>
+            </div>
+            <p className="mt-3 text-xs text-dim">Avg per walk-forward window, 2021–2026 — beat the index 4 / 4 · backtested, illustrative</p>
           </motion.div>
         </div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, delay: 0.3 }} className="flex justify-center">
