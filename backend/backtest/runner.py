@@ -93,6 +93,49 @@ _NIFTY_200_PROXY_ISINS = (
 # Need ~1y of bars to seed EMA200 + a 252d window before the first rebalance.
 _WARMUP_DAYS = 260
 
+# Test 1 (Phase-2 branch) — per-stock 52-week momentum metric, precomputed once
+# per rebalance and threaded into compute_full_composite (frozen F+ never does
+# this, so its momentum sub-signal is inert). All reads use closes[-2] (yesterday)
+# to honor the no-lookahead invariant, matching the scorer.
+_MOM_W52 = 252
+_MOM_TYPICAL_VOL = 0.30  # annualized; keeps vol-adj momentum in return-units
+_MOM_VOL_FLOOR = 0.05
+
+
+def _momentum_metric(
+    closes_by_isin: dict[str, list[float]], mode: str
+) -> dict[str, float]:
+    """Per-isin 52-week momentum metric for Test 1.
+
+    mode "raw"    -> 52-week return (yesterday's close).
+    mode "voladj" -> that return * (TYPICAL_VOL / realized annual vol): return per
+                     unit of risk, kept in return-units so the scorer's existing
+                     linear map is unchanged (a fair raw-vs-voladj comparison).
+    Stocks without a full 52w+1 history are omitted (treated as no momentum).
+    """
+    out: dict[str, float] = {}
+    for isin, s in closes_by_isin.items():
+        if len(s) <= _MOM_W52 or s[-_MOM_W52] <= 0:
+            continue
+        raw = (s[-2] - s[-_MOM_W52]) / s[-_MOM_W52]
+        if mode != "voladj":
+            out[isin] = raw
+            continue
+        window = s[-(_MOM_W52 + 1):-1]  # ~252 closes ending yesterday (no lookahead)
+        rets = [
+            window[k] / window[k - 1] - 1.0
+            for k in range(1, len(window))
+            if window[k - 1] > 0
+        ]
+        if len(rets) < 2:
+            out[isin] = raw
+            continue
+        mean = sum(rets) / len(rets)
+        var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
+        vol = (var ** 0.5) * (_MOM_W52 ** 0.5)
+        out[isin] = raw * (_MOM_TYPICAL_VOL / max(vol, _MOM_VOL_FLOOR))
+    return out
+
 
 def _compute_breadth(closes: dict[str, list[float]]) -> Decimal | None:
     """% of stocks whose yesterday's close is above their 200-day EMA.
@@ -1080,6 +1123,13 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
         closes, vols_hist = await _fetch_history(
             session, isins, start=history_start, as_of=rebalance_date
         )
+        # Test 1 (Phase-2 branch): precompute the momentum metric once per rebalance
+        # (None for frozen F+ where momentum_mode == "off" -> scorer stays neutral).
+        mom_metric = (
+            _momentum_metric(closes, cfg.momentum_mode)
+            if cfg.momentum_mode != "off"
+            else None
+        )
         quality, qvols = await _quality_set(session, isins, rebalance_date, closes, cfg)
         # F+ quality-breakdown cutoff: a held name whose trailing vol later exceeds
         # this rebalance-time boundary has broken down on quality (low-vol proxy).
@@ -1096,6 +1146,7 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
                 session, isin, rebalance_date, closes.get(isin, []),
                 vols_hist.get(isin), macro_score=macro_score,
                 sector_signal=sector_sig.get(isin, "neutral"),
+                mom_metric=mom_metric,
             )
             if sc is not None:
                 scores[isin] = sc

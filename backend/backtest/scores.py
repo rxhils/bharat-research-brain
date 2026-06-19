@@ -74,6 +74,8 @@ def compute_score_from_history(
     volumes: list[int] | None = None,
     *,
     all_closes: dict[str, list[float]] | None = None,
+    mom_metric: dict[str, float] | None = None,
+    self_metric: float | None = None,
 ) -> Decimal | None:
     """Decimal 0..100 with momentum-primary scoring.
 
@@ -101,22 +103,35 @@ def compute_score_from_history(
         return None
 
     # ---- Momentum score (60% weight) — based on yesterday's close -------------
-    # 52-week return of this stock (yesterday's close, not rebalance day)
-    stock_ret = (closes[-2] - closes[-_W52]) / closes[-_W52] if len(closes) > _W52 else 0.0
+    if mom_metric is not None:
+        # Test 1 (Phase-2 branch): ACTIVATED momentum from a precomputed per-isin
+        # metric (raw 52w return, or vol-adjusted return/vol — chosen by the
+        # runner). Control (mom_metric=None) keeps the original neutral path below,
+        # which in F+ pins momentum at 50 because all_closes is never threaded.
+        stock_ret = self_metric if self_metric is not None else 0.0
+        proxy_vals = [mom_metric[i] for i in _NIFTY_PROXY_ISINS if i in mom_metric]
+        if len(proxy_vals) >= 3:
+            nifty_ret = sum(proxy_vals) / len(proxy_vals)
+        else:
+            _allv = list(mom_metric.values())
+            nifty_ret = (sum(_allv) / len(_allv)) if _allv else stock_ret
+    else:
+        # 52-week return of this stock (yesterday's close, not rebalance day)
+        stock_ret = (closes[-2] - closes[-_W52]) / closes[-_W52] if len(closes) > _W52 else 0.0
 
-    # 52-week return of the Nifty proxy (or fallback to mean of all stocks)
-    nifty_ret = _compute_nifty_return(all_closes) if all_closes is not None else None
-    if nifty_ret is None:
-        # Fallback: use the average 52-week return of all available stocks as
-        # a pseudo-benchmark (not as good as Nifty, but still relative).
-        stock_returns: list[float] = []
-        if all_closes:
-            for s in all_closes.values():
-                if len(s) >= _W52 + 1:
-                    stock_returns.append((s[-2] - s[-_W52]) / s[-_W52])
-        if not stock_returns:
-            stock_returns = [stock_ret]
-        nifty_ret = sum(stock_returns) / len(stock_returns)
+        # 52-week return of the Nifty proxy (or fallback to mean of all stocks)
+        nifty_ret = _compute_nifty_return(all_closes) if all_closes is not None else None
+        if nifty_ret is None:
+            # Fallback: use the average 52-week return of all available stocks as
+            # a pseudo-benchmark (not as good as Nifty, but still relative).
+            stock_returns: list[float] = []
+            if all_closes:
+                for s in all_closes.values():
+                    if len(s) >= _W52 + 1:
+                        stock_returns.append((s[-2] - s[-_W52]) / s[-_W52])
+            if not stock_returns:
+                stock_returns = [stock_ret]
+            nifty_ret = sum(stock_returns) / len(stock_returns)
 
     # Relative strength alpha
     rs_alpha = stock_ret - nifty_ret
@@ -201,9 +216,22 @@ def compute_score_from_history(
 
     # FIX 4 bonus: only stocks in TOP 20% relative strength can score above 50.
     # This ensures we're really picking the strongest, not lucky stocks.
-    if all_closes is not None and len(all_closes) > 5:
+    if mom_metric is not None and len(mom_metric) > 5:
+        # Test 1: top-20% gate over the ACTIVATED momentum metric (same units as
+        # rs_alpha above), so raw/voladj are gated consistently with how they score.
+        all_alphas = [
+            v - nifty_ret for i, v in mom_metric.items()
+            if i not in _NIFTY_PROXY_ISINS
+        ]
+        if all_alphas:
+            all_alphas.sort(reverse=True)
+            threshold_idx = max(1, int(len(all_alphas) * 0.20))
+            threshold = all_alphas[threshold_idx - 1]
+            if rs_alpha < threshold:
+                composite = min(composite, 50.0)
+    elif all_closes is not None and len(all_closes) > 5:
         # Compute percentile of this stock's relative strength
-        all_alphas: list[float] = []
+        all_alphas = []
         for isin, s in all_closes.items():
             if len(s) >= _W52 + 1 and isin not in _NIFTY_PROXY_ISINS:
                 r = (s[-2] - s[-_W52]) / s[-_W52]
@@ -405,6 +433,7 @@ async def compute_full_composite(
     *,
     macro_score: Decimal | None = None,
     sector_signal: str | None = None,
+    mom_metric: dict[str, float] | None = None,
 ) -> Decimal | None:
     """Full F+T+M composite (0..100) for one stock at `as_of`.
 
@@ -420,7 +449,11 @@ async def compute_full_composite(
     fetches macro once per date and sector classes in one batched query per date,
     avoiding N identical queries); when omitted they are fetched here.
     """
-    t = compute_score_from_history(closes, volumes)
+    t = compute_score_from_history(
+        closes, volumes,
+        mom_metric=mom_metric,
+        self_metric=(mom_metric.get(isin) if mom_metric is not None else None),
+    )
     if t is None:
         return None
     f = await reconstruct_fundamental_score(session, isin, as_of)

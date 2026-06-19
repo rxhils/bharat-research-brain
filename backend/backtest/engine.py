@@ -78,6 +78,12 @@ class BacktestConfig:
     # this date (used to keep 2021-2026 warmup native-only, off the yfinance seam).
     # None = no floor (A-F unchanged).
     history_floor: date | None = None
+    # Test 1 (Phase-2 branch) — per-stock 52-week momentum activation. Frozen F+
+    # never threads `all_closes`, so its momentum sub-signal is pinned neutral (50).
+    #   "off"    = frozen F+ (momentum inert) — DEFAULT, keeps F+ byte-identical.
+    #   "raw"    = activate raw 52-week relative-strength momentum.
+    #   "voladj" = activate vol-adjusted momentum (return / realized vol).
+    momentum_mode: str = "off"
 
 
 @dataclass(frozen=True)
