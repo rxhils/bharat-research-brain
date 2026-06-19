@@ -90,8 +90,8 @@ const LAYERS = [
     note: "Read-only. No trading. Maven never places, modifies, or cancels an order.",
     illustrative: false,
     gallery: [
-      { file: "broker-connect.png", cap: "Brokers" },
-      { file: "broker-sync.png", cap: "Sign-in" },
+      { file: "broker-list.png", cap: "Brokers" },
+      { file: "broker-hdfc.png", cap: "Sign-in" },
     ],
   },
 ];
@@ -741,11 +741,12 @@ function Device({ src, label, small = false, mock }: { src: string; label: strin
       <div className={`relative mx-auto ${w} rounded-[2.4rem] border border-border bg-panel2 p-2.5`} style={{ boxShadow: "0 24px 60px -30px rgba(0,0,0,0.8)" }}>
         <div className="relative aspect-[390/844] overflow-hidden rounded-[1.9rem] bg-bg ring-1 ring-black/60">
           <div className="absolute left-1/2 top-2 z-20 h-4 w-20 -translate-x-1/2 rounded-full bg-black/85" />
-          {mock ? (
-            mock
-          ) : !err ? (
+          {!err ? (
+            // Real screenshot wins when the file exists in /public/screenshots.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={`/screenshots/${src}`} alt={label} onError={() => setErr(true)} className="h-full w-full object-cover object-top" />
+          ) : mock ? (
+            mock
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4 text-center" style={{ background: "radial-gradient(60% 50% at 50% 30%,rgba(52,211,153,0.12),transparent 70%)" }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
