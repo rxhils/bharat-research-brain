@@ -631,42 +631,48 @@ function BrokerTabBar() {
 type Brk = { name: string; sub: string; color: string; connected?: boolean; synced?: string; status?: string };
 function BrokerRow({ b }: { b: Brk }) {
   return (
-    <div className="rounded-md border border-border bg-panel/50 p-1">
-      <div className="flex items-center gap-1.5">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md text-[8px] font-bold text-white" style={{ backgroundColor: b.color }}>{b.name[0]}</span>
+    <div className="rounded-md border border-border bg-panel/50 p-1.5">
+      <div className="flex items-center gap-2">
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-[10px] font-bold text-white" style={{ backgroundColor: b.color }}>{b.name[0]}</span>
         <div className="min-w-0 flex-1">
-          <div className="text-[7px] font-bold text-ink">{b.name}</div>
-          <div className="truncate text-[5px] text-muted">{b.sub}</div>
-          {b.synced && <div className="text-[4.5px] text-muted">{b.synced}</div>}
+          <div className="text-[9px] font-bold text-ink">{b.name}</div>
+          <div className="truncate text-[6px] text-muted">{b.sub}</div>
+          {b.synced && <div className="text-[5.5px] text-muted">{b.synced}</div>}
         </div>
         {b.connected
-          ? <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[6px] font-bold text-ink">Disconnect</span>
-          : <span className="shrink-0 rounded bg-emerald px-2.5 py-0.5 text-[6px] font-bold text-black">Connect</span>}
+          ? <span className="shrink-0 rounded border border-border px-2 py-0.5 text-[7px] font-bold text-ink">Disconnect</span>
+          : <span className="shrink-0 rounded bg-emerald px-3 py-1 text-[7px] font-bold text-black">Connect</span>}
       </div>
-      {b.status && <div className="mt-1 border-t border-hairline pt-1 text-[4.5px] text-muted"><span className="text-emerald">●</span> {b.status}</div>}
+      {b.status && <div className="mt-1.5 border-t border-hairline pt-1 text-[5.5px] text-muted"><span className="text-emerald">●</span> {b.status}</div>}
     </div>
   );
 }
 
 function BrokerConnectScreen() {
   return (
-    <div className="absolute inset-0 flex flex-col gap-1.5 overflow-hidden px-2.5 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
+    <div className="absolute inset-0 flex flex-col gap-2 overflow-hidden px-3 pb-4 pt-7" style={{ backgroundColor: "#08090b" }}>
       <BrokerHeader />
-      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">Account</div>
-      <div className="rounded-lg border border-border bg-panel/60 p-1.5">
-        <div className="flex items-center gap-1.5"><MiniMark size={18} /><div><div className="font-serif text-[10px] leading-none text-ink">Make Maven yours</div><div className="mt-0.5 text-[5px] text-muted">Brokers, preferences & history — saved to you, private to you.</div></div></div>
-        <div className="mt-1.5 rounded-md bg-emerald py-1 text-center text-[7px] font-bold text-black">Log in / Sign up</div>
-        <div className="mt-1 flex items-center justify-center gap-1 rounded-md bg-white py-1 text-[7px] font-bold text-[#1f1f1f]"><span style={{ color: "#4285F4" }}>G</span> Continue with Google</div>
-        <p className="mt-1 text-center text-[4.5px] text-dim">No account needed — Market Mode works without one.</p>
+      <div className="text-[6px] font-bold uppercase tracking-[0.2em] text-dim">Account</div>
+      <div className="rounded-xl border border-border bg-panel/60 p-2.5">
+        <div className="flex items-center gap-2">
+          <MiniMark size={22} />
+          <div className="min-w-0">
+            <div className="font-serif text-[12px] leading-none text-ink">Make Maven yours</div>
+            <div className="mt-1 text-[6.5px] leading-snug text-muted">Brokers &amp; preferences — private to you.</div>
+          </div>
+        </div>
+        <div className="mt-2.5 rounded-md bg-emerald py-1.5 text-center text-[10px] font-bold text-black">Log in / Sign up</div>
+        <div className="mt-1.5 flex items-center justify-center gap-1.5 rounded-md bg-white py-1.5 text-[10px] font-bold text-[#1f1f1f]"><span style={{ color: "#4285F4" }}>G</span> Continue with Google</div>
+        <p className="mt-2 text-center text-[6px] text-dim">No account needed — Market Mode works without one.</p>
       </div>
-      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">Appearance</div>
-      <div className="flex rounded-md border border-border bg-panel/50 p-0.5 text-[6px]">
-        <div className="flex-1 rounded bg-panel2 py-0.5 text-center font-semibold text-ink">System</div>
-        <div className="flex-1 py-0.5 text-center text-muted">Light</div>
-        <div className="flex-1 py-0.5 text-center text-muted">Dark</div>
+      <div className="text-[6px] font-bold uppercase tracking-[0.2em] text-dim">Appearance</div>
+      <div className="flex rounded-md border border-border bg-panel/50 p-0.5 text-[8px]">
+        <div className="flex-1 rounded bg-panel2 py-1 text-center font-semibold text-ink">System</div>
+        <div className="flex-1 py-1 text-center text-muted">Light</div>
+        <div className="flex-1 py-1 text-center text-muted">Dark</div>
       </div>
-      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">Brokers</div>
-      <BrokerRow b={{ name: "Zerodha", sub: "Connect via Zerodha Kite", color: "#ef4444", connected: true, synced: "6 holdings synced", status: "Connected · Synced 2026-06-11 18:10" }} />
+      <div className="text-[6px] font-bold uppercase tracking-[0.2em] text-dim">Brokers</div>
+      <BrokerRow b={{ name: "Zerodha", sub: "Connect via Zerodha Kite", color: "#ef4444", connected: true }} />
       <BrokerRow b={{ name: "Groww", sub: "Connect your Groww account", color: "#00b386" }} />
       <div className="mt-auto"><BrokerTabBar /></div>
     </div>
