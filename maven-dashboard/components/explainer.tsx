@@ -986,7 +986,7 @@ export function Explainer() {
           </motion.div>
           <h1 className="font-serif text-[clamp(2.5rem,6.5vw,4.6rem)] font-light leading-[0.98] tracking-[-0.02em] text-ink">
             <motion.span className="block" initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}>Matches the market.</motion.span>
-            <motion.span className="block italic" style={GRAD_EMERALD} initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}>Half the fall.</motion.span>
+            <motion.span className="block italic" style={GRAD_EMERALD} initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}>Beats the market.</motion.span>
           </h1>
           <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }} className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
             An AI research engine for Indian equities — built on a strategy validated across two market eras, including covid.
