@@ -518,10 +518,93 @@ function PortfoliosScreen({ variant }: { variant: string }) {
   );
 }
 
+// Live recreation of the "Focus" thematic-baskets screen (image 1).
+type Basket = { name: string; sub: string; ret: string; risk: string; color: string; icon: string };
+const BASKETS: Basket[] = [
+  { name: "Green Energy", sub: "500GW clean-power by 2030", ret: "+94%", risk: "Med-High", color: "#34d399", icon: "leaf" },
+  { name: "PSU Banks", sub: "NPAs down 40% since 2021", ret: "+89%", risk: "Medium", color: "#c9a961", icon: "bank" },
+  { name: "Infrastructure", sub: "₹11.1L Cr capex supercycle", ret: "+52%", risk: "Medium", color: "#fb923c", icon: "build" },
+  { name: "AI & Data", sub: "$2B AI spend by 2027", ret: "+62%", risk: "High", color: "#7aa2ff", icon: "chip" },
+];
+
+function FocusIcon({ name, color }: { name: string; color: string }) {
+  const c = { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (name === "leaf") return <svg {...c} aria-hidden><path d="M4 20s0-8 8-11c4-1.5 8-1 8-1s.5 4-1 8c-3 8-11 8-11 8M4 20c3-3 6-5 9-6" /></svg>;
+  if (name === "bank") return <svg {...c} aria-hidden><path d="M3 9l9-5 9 5M4 9v9M9 9v9M15 9v9M20 9v9M3 19h18" /></svg>;
+  if (name === "build") return <svg {...c} aria-hidden><path d="M5 21V5a1 1 0 011-1h6a1 1 0 011 1v16M13 9h5a1 1 0 011 1v11M8 8h2M8 12h2M8 16h2M16 13h0M16 17h0" /></svg>;
+  return <svg {...c} aria-hidden><rect x="7" y="7" width="10" height="10" rx="1.5" /><path d="M10 2v3M14 2v3M10 19v3M14 19v3M2 10h3M2 14h3M19 10h3M19 14h3" /></svg>;
+}
+
+function FocusRisk({ level }: { level: string }) {
+  const cls =
+    level === "High" ? "bg-rose/15 text-rose"
+      : level === "Medium" ? "bg-emerald/15 text-emerald"
+        : "bg-gold/15 text-gold-soft"; // Med-High
+  return <span className={`shrink-0 rounded-full px-1 py-[0.5px] text-[5px] font-semibold ${cls}`}>{level}</span>;
+}
+
+function FocusScreen() {
+  return (
+    <div className="absolute inset-0 flex flex-col gap-1.5 overflow-hidden px-2.5 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
+      <div>
+        <div className="text-[7px] font-bold uppercase tracking-[0.2em] text-gold">Focus</div>
+        <h4 className="font-serif text-[14px] leading-tight text-ink">One sector, every cap.</h4>
+        <div className="mt-0.5 flex items-center gap-1 text-[5px] text-muted"><span className="h-[3px] w-[3px] rounded-full bg-emerald" />Thematic baskets · NSE/BSE</div>
+      </div>
+
+      {/* featured basket */}
+      <div
+        className="relative overflow-hidden rounded-lg border border-gold/25 p-2"
+        style={{ backgroundImage: "linear-gradient(155deg, rgba(11,40,33,0.9), rgba(10,11,13,0.95)), radial-gradient(60% 80% at 75% 55%, rgba(52,211,153,0.28), transparent 60%)" }}
+      >
+        <span className="absolute right-1.5 top-1.5 rounded-full bg-emerald px-1 py-[1px] text-[5px] font-bold text-black">↗ +78%</span>
+        <span className="inline-flex items-center gap-1 rounded-full border border-emerald/40 bg-black/30 px-1 py-[1px] text-[5px] font-bold uppercase tracking-wide text-emerald"><span className="h-[3px] w-[3px] rounded-full bg-emerald" />Featured</span>
+        <div className="mt-2.5 font-serif text-[14px] leading-none text-ink">Digital Payments</div>
+        <div className="mt-0.5 text-[5px] text-muted">Financial Technology · High risk</div>
+        <div className="mt-1 flex gap-1">
+          {["20% sleeve", "5 stocks", "Quarterly"].map((x) => (
+            <span key={x} className="rounded border border-white/15 bg-black/20 px-1 py-[1px] text-[5px] text-muted">{x}</span>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">All baskets</div>
+      <div className="flex flex-col gap-1">
+        {BASKETS.map((b) => (
+          <div key={b.name} className="flex items-center gap-1.5 overflow-hidden rounded-md border border-border bg-panel/50 p-1" style={{ borderLeft: `2px solid ${b.color}` }}>
+            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md" style={{ backgroundColor: `${b.color}1f` }}><FocusIcon name={b.icon} color={b.color} /></span>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-[7px] font-bold text-ink">{b.name}</div>
+              <div className="truncate text-[5px] text-muted">{b.sub}</div>
+              <svg viewBox="0 0 80 16" className="mt-0.5 h-2 w-full" preserveAspectRatio="none" aria-hidden>
+                <path d="M0 12 C12 12 16 6 26 8 C36 10 40 4 52 7 C64 10 70 3 80 5" fill="none" stroke={b.color} strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </div>
+            <div className="flex flex-col items-end gap-0.5">
+              <span className="text-[10px] font-bold text-emerald">{b.ret}</span>
+              <FocusRisk level={b.risk} />
+            </div>
+            <span className="text-[8px] text-gold/70">›</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-auto flex items-center justify-around border-t border-hairline pt-1.5">
+        {[{ t: "Ask AI", a: false }, { t: "Portfolios", a: false }, { t: "Focus", a: true }, { t: "Broker", a: false }].map((tb) => (
+          <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}>
+            <TabIcon name={tb.t} active={tb.a} />{tb.t}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // pick the right live screen for a given layer / gallery slot
 function mainMock(layer: (typeof LAYERS)[number]): ReactNode {
   if (layer.n === 1) return <MarketModeScreen />;
   if (layer.n === 2) return <PortfolioAskScreen />;
+  if (layer.n === 3) return <FocusScreen />;
   return undefined;
 }
 function galleryMock(layer: (typeof LAYERS)[number], cap: string): ReactNode {
