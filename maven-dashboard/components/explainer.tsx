@@ -741,7 +741,7 @@ function galleryMock(layer: (typeof LAYERS)[number], cap: string): ReactNode {
 function Device({ src, label, small = false, mock }: { src: string; label: string; small?: boolean; mock?: ReactNode }) {
   const [imgOk, setImgOk] = useState(false);
   // Responsive widths — comfortable on phones, full size from sm up.
-  const w = small ? "w-[118px] sm:w-[150px]" : "w-[218px] sm:w-[272px]";
+  const w = small ? "w-[100px] sm:w-[150px]" : "w-[256px] sm:w-[272px]";
   return (
     <div className="relative animate-floatY motion-reduce:animate-none">
       <div className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] opacity-70 blur-2xl" style={{ background: "radial-gradient(50% 45% at 50% 40%,rgba(52,211,153,0.20),transparent 70%)" }} />
@@ -785,7 +785,7 @@ function Device({ src, label, small = false, mock }: { src: string; label: strin
 // CSS/SVG "engine core" — concentric rotating rings + emerald glow + bell-curve apex
 function EngineCore() {
   return (
-    <div className="relative grid aspect-square w-full max-w-[420px] place-items-center">
+    <div className="relative grid aspect-square w-full max-w-[300px] place-items-center sm:max-w-[420px]">
       <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle at 50% 45%,rgba(52,211,153,0.30),rgba(16,185,129,0.10) 42%,transparent 70%)" }} />
       <div className="absolute h-[78%] w-[78%] animate-spinSlow rounded-full border border-emerald/15 motion-reduce:animate-none" style={{ borderTopColor: "rgba(52,211,153,0.6)" }} />
       <div className="absolute h-[58%] w-[58%] animate-spinReverse rounded-full border border-emerald/10 motion-reduce:animate-none" style={{ borderBottomColor: "rgba(52,211,153,0.45)" }} />
@@ -896,7 +896,7 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
     <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
       <div className={flip ? "lg:order-2" : ""}>
         <div className="flex items-center gap-4">
-          <span className="font-serif text-5xl font-light text-emerald/30">0{layer.n}</span>
+          <span className="font-serif text-4xl font-light text-emerald/30 sm:text-5xl">0{layer.n}</span>
           <div>
             <p className="text-[0.6rem] font-semibold uppercase tracking-label text-dim">Layer {layer.n} · {layer.nav}</p>
             <h3 className="font-serif text-3xl tracking-tight text-ink">{layer.name}</h3>
