@@ -86,9 +86,12 @@ def test_breakdown_holds_position_at_minus8() -> None:
     assert breaks_down(Decimal("92"), Decimal("100"), BREAKDOWN_PCT, False) is False
 
 
-# --- Regression: the paper engine runs the FROZEN F+ parameter set ----------
-def test_paper_config_is_frozen_fplus() -> None:
+# --- Regression: the paper engine runs the ENHANCED F+ parameter set --------
+# Same F+ skeleton (so the validated structure is intact) PLUS the two adopted
+# gauntlet winners: vol-adjusted momentum + idle-cash yield @ 6.5%/yr.
+def test_paper_config_is_enhanced_fplus() -> None:
     c = fplus_cfg(date(2026, 6, 15))
+    # F+ skeleton unchanged
     assert c.graded_exposure is True
     assert c.quality_gate is True
     assert c.breakdown_exit_pct == Decimal("0.15")
@@ -97,3 +100,6 @@ def test_paper_config_is_frozen_fplus() -> None:
     assert c.max_per_sector == 4
     assert c.hold_buffer_rank == 40
     assert c.turnover_mode == "low"
+    # Enhanced adoptions
+    assert c.momentum_mode == "voladj"
+    assert c.cash_yield_annual == Decimal("0.065")

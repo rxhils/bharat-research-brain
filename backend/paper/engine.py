@@ -43,19 +43,25 @@ STARTING_CAPITAL = Decimal("1000000")
 EXPOSURE_CHECK_DAYS = 5
 REBALANCE_DAYS = 63
 BREAKDOWN_PCT = Decimal("0.15")
+# Enhanced-F+ adoption (commit 6ced078): the two gauntlet winners, applied live.
+MOMENTUM_MODE = "voladj"               # vol-adjusted 52w momentum in the composite
+CASH_YIELD_ANNUAL = Decimal("0.065")   # idle cash earns 6.5%/yr, accrued daily
 
-# FROZEN F+ parameters (commit 57e72d5) — must match diag_fplus / the validated run.
+# ENHANCED F+ parameters — F+ classic skeleton (== commit 6417a74) + vol-adjusted
+# momentum. Cash yield is applied in daily_mark (the engine hand-rolls cash, so it
+# is NOT auto-read from cfg). F+ classic stays available in backend/backtest/configs.py.
 _FPLUS = dict(
     top_n=25, hold_days=REBALANCE_DAYS, rebalance_every=REBALANCE_DAYS,
     min_score=Decimal("0"), use_full_composite=True, benchmark_weighting="equal",
     apply_breadth_filter=False, quality_gate=True, graded_exposure=True,
     hold_buffer_rank=40, max_per_sector=4, turnover_mode="low",
     exposure_check_days=EXPOSURE_CHECK_DAYS, breakdown_exit_pct=BREAKDOWN_PCT,
+    momentum_mode=MOMENTUM_MODE, cash_yield_annual=CASH_YIELD_ANNUAL,
 )
 
 
 def fplus_cfg(as_of: date) -> BacktestConfig:
-    """A frozen-F+ BacktestConfig for single-date scoring (start/end are nominal)."""
+    """An Enhanced-F+ BacktestConfig for single-date scoring (start/end are nominal)."""
     return BacktestConfig(
         start_date=as_of - timedelta(days=1), end_date=as_of,
         starting_capital=STARTING_CAPITAL, **_FPLUS,
@@ -117,6 +123,11 @@ async def compute_fplus_snapshot(
     sector_by = await R._sectors_map(session, isins)
     hist_start = R._history_start(as_of, None)  # forward dates: native, no seam
     closes, vols = await R._fetch_history(session, isins, start=hist_start, as_of=as_of)
+    # Enhanced F+: vol-adjusted 52w momentum metric, precomputed once per snapshot
+    # (no-lookahead — uses closes[-2]; identical to run_backtest_f's threading).
+    mom_metric = (
+        R._momentum_metric(closes, MOMENTUM_MODE) if MOMENTUM_MODE != "off" else None
+    )
     quality, _qvols = await R._quality_set(session, isins, as_of, closes, cfg)
     macro = await reconstruct_macro_score(session, as_of)
     sector_sig = await R._sector_signals_on(session, isins, as_of)
@@ -125,6 +136,7 @@ async def compute_fplus_snapshot(
         sc = await compute_full_composite(
             session, isin, as_of, closes.get(isin, []), vols.get(isin),
             macro_score=macro, sector_signal=sector_sig.get(isin, "neutral"),
+            mom_metric=mom_metric,
         )
         if sc is not None:
             scores[isin] = sc
@@ -260,8 +272,9 @@ async def inception(
     invested = STARTING_CAPITAL - cash
     await _write_curve(session, as_of, invested, cash, snap.exposure)
     await _log_event(session, as_of, "inception",
-                     f"F+ inception: {len(rows)} names, exposure {snap.exposure}, "
-                     f"cash {cash:.0f}, Rs {STARTING_CAPITAL:.0f} (commit 57e72d5)")
+                     f"Enhanced F+ inception: {len(rows)} names, exposure {snap.exposure}, "
+                     f"cash {cash:.0f}, Rs {STARTING_CAPITAL:.0f} "
+                     f"(vol-adj momentum + 6.5% cash yield, commit 6ced078)")
     log.info("paper.inception", as_of=str(as_of), names=len(rows), exposure=str(snap.exposure))
     await session.commit()
     return result | {"account_id": acct_id}
@@ -276,6 +289,13 @@ async def daily_mark(session: AsyncSession, as_of: date) -> dict:
     positions = await _open_positions(session)
     prices = await _prices_on(session, [p["isin"] for p in positions], as_of)
     cash = acct["cash"]
+    # Enhanced F+: credit idle cash one trading day of interest (6.5%/yr) before
+    # marking. Accrued here only (the once-per-day entry point) so weekly/quarterly
+    # steps that read the account see the post-accrual balance — no double count.
+    if CASH_YIELD_ANNUAL:
+        cash = (cash * (Decimal("1") + CASH_YIELD_ANNUAL / Decimal("252"))).quantize(
+            _Q2, rounding=ROUND_HALF_EVEN
+        )
     cuts = 0
     for p in positions:
         px = prices.get(p["isin"])
