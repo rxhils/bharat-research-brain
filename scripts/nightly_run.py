@@ -1,28 +1,21 @@
 #!/usr/bin/env python
-"""Nightly orchestration for the forward F+ paper portfolio (the '24/7' engine).
+"""Nightly orchestration for the Maven multi-portfolio paper books (the '24/7' engine).
 
-Runs AFTER market close + EOD price ingest. Idempotent and logged — safe to re-run.
+Runs AFTER market close + EOD price ingest (cron ~19:30 IST). Idempotent and logged.
 
-Steps:
-  1. (Agentic pipeline) — DEFERRED: live News/FII/Fundamental agents need API keys
-     (NEWSAPI_KEY/FMP_KEY/FYERS_ACCESS_TOKEN are empty). Until those exist, the F+
-     score is the MECHANICAL composite (the validated signal), computed inside the
-     paper engine. When keys are added, swap the score source to stock_rankings here.
-  2. Paper engine, as due by trading-day count since inception:
-       - DAILY  : mark-to-market + cut-on-breakdown (every run)
-       - WEEKLY : every 5 trading days — regime -> exposure rescale
-       - QUARTERLY: every 63 trading days — full F+ name rebalance
-  3. The equity curve + drawdown are updated by the daily step.
-  4. Observability: writes an agent_run_log heartbeat (running/done/error) and, if
-     TELEGRAM_BOT_TOKEN/CHAT_ID are set, sends a success/failure ping with the date
-     + F+ status. Both are best-effort — they never alter or block the F+ decisions.
+Loops over every LIVE portfolio (currently just "Quant" = Enhanced F+ 6ced078) and,
+per book, does exactly what is due:
+  - book not yet started AND as_of >= inception  -> FIRST ALLOCATION (first real picks)
+  - already started                              -> DAILY mark + cut-on-breakdown,
+      + WEEKLY (every 5 trading days) exposure rescale,
+      + QUARTERLY (every 63 trading days) full Enhanced-F+ re-pick
+Books with status != 'live' (coming_soon / archived) are skipped — they have no engine.
 
-No-lookahead: as_of = the latest trading date that has EOD prices; every decision
-reads only data <= as_of. Does nothing (cleanly) until inception has been committed.
-Idempotent: daily_mark/weekly/quarterly upsert ON CONFLICT, and the run is gated to
-as_of > inception, so a re-run on the same day is a no-op on the ledger.
+No-lookahead: as_of = the latest trading date with EOD prices; every decision reads
+only data <= as_of. Idempotent: first_allocation is guarded by 'has the book started',
+daily upserts ON CONFLICT, and the run is gated to as_of >= inception.
 
-Usage:  python -m scripts.nightly_run        (cron: daily ~19:00 IST)
+Usage:  python -m scripts.nightly_run        (cron: daily ~19:30 IST)
 """
 from __future__ import annotations
 
@@ -47,7 +40,6 @@ _TD_SINCE = text(
     "SELECT COUNT(DISTINCT trade_date) FROM prices_eod_adjusted "
     "WHERE trade_date >= :inception AND trade_date <= :as_of"
 )
-_HOLDINGS = text("SELECT COUNT(*) FROM paper_position WHERE status = 'open'")
 
 
 async def _notify(msg: str) -> None:
@@ -68,60 +60,61 @@ async def _notify(msg: str) -> None:
         log.warning("nightly.telegram.failed", error=str(exc))
 
 
+async def _run_one(s, port: dict, as_of) -> str:  # noqa: ANN001
+    """Advance ONE live portfolio by one trading day. Returns a status line."""
+    pid, name, inc = port["id"], port["name"], port["inception_date"]
+    if inc is None:
+        return f"{name}: live but no inception_date set — skipped"
+    acct = await E.get_account(s, pid)
+    if acct is None:
+        return f"{name}: no book yet (run create_book) — skipped"
+    if as_of < inc:
+        return f"{name}: as_of {as_of} < inception {inc} — waiting for Monday's run"
+
+    if not await E.has_started(s, pid):
+        res = await E.first_allocation(s, pid, as_of)
+        return (f"{name}: FIRST ALLOCATION on {as_of} — {res['n']} names, "
+                f"exposure {res['exposure']}, cash Rs {float(res['cash']):,.0f}")
+
+    td = (await s.execute(_TD_SINCE, {"inception": inc, "as_of": as_of})).scalar_one()
+    daily = await E.daily_mark(s, pid, as_of)
+    extra = ""
+    if td % E.EXPOSURE_CHECK_DAYS == 0:
+        wk = await E.weekly_exposure(s, pid, as_of)
+        extra += f", exposure {wk['exposure']} (changed={wk['changed']})"
+    if td % E.REBALANCE_DAYS == 0:
+        q = await E.quarterly_rebalance(s, pid, as_of)
+        extra += f", QUARTERLY re-pick {q['names']} names @ {q['exposure']}"
+    return (f"{name}: daily {as_of} (td#{td}) equity Rs {float(daily['equity']):,.0f}, "
+            f"cash Rs {float(daily['cash']):,.0f}, cuts {daily['breakdown_cuts']}{extra}")
+
+
 async def main() -> None:
     run_id = "nightly-" + datetime.now(IST).strftime("%Y%m%d-%H%M%S")
     started = datetime.now(IST)
     async with SessionLocal() as s:
         await heartbeat(s, run_id, RUN_AGENT, "running", started_at=started)
         try:
-            acct = await E.get_account(s)
-            if acct is None:
-                msg = ("No paper_account yet — inception not committed. Nothing to do. "
-                       "(Run scripts.paper_inception --commit on the cloud to go live.)")
+            ports = await E.live_portfolios(s)
+            if not ports:
+                msg = "No live portfolios — nothing to do."
                 print(msg)
                 await heartbeat(s, run_id, RUN_AGENT, "waiting", headline=msg,
                                 started_at=started, finished_at=datetime.now(IST))
                 return
             as_of = (await s.execute(_LATEST)).scalar_one()
-            if as_of <= acct["inception_date"]:
-                msg = (f"Latest price date {as_of} <= inception {acct['inception_date']}; "
-                       "waiting for the next EOD. Nothing to do.")
-                print(msg)
-                await heartbeat(s, run_id, RUN_AGENT, "waiting", headline=msg,
-                                started_at=started, finished_at=datetime.now(IST))
-                return
-            td = (await s.execute(
-                _TD_SINCE, {"inception": acct["inception_date"], "as_of": as_of})).scalar_one()
-
-            log.info("nightly.start", as_of=str(as_of), trading_days_since_inception=td)
-            daily = await E.daily_mark(s, as_of)
-            print(f"DAILY  {as_of}: equity Rs {float(daily['equity']):,.0f}, "
-                  f"cash Rs {float(daily['cash']):,.0f}, breakdown_cuts {daily['breakdown_cuts']}")
-
-            exposure = None
-            if td % E.EXPOSURE_CHECK_DAYS == 0:
-                wk = await E.weekly_exposure(s, as_of)
-                exposure = wk["exposure"]
-                print(f"WEEKLY {as_of}: regime exposure {wk['exposure']} "
-                      f"(changed={wk['changed']})")
-            if td % E.REBALANCE_DAYS == 0:
-                q = await E.quarterly_rebalance(s, as_of)
-                exposure = q["exposure"]
-                print(f"QUARTERLY {as_of}: re-picked {q['names']} names at exposure "
-                      f"{q['exposure']}")
+            log.info("nightly.start", as_of=str(as_of), live=len(ports))
+            lines = []
+            for port in ports:
+                line = await _run_one(s, port, as_of)
+                print(line)
+                lines.append(line)
             log.info("nightly.done", as_of=str(as_of))
-            print(f"Nightly run complete for {as_of} (trading day #{td} since inception).")
-
-            holds = (await s.execute(_HOLDINGS)).scalar_one()
-            exp_txt = f"{exposure}" if exposure is not None else "unchanged"
-            ok = (f"✅ Run complete, latest {as_of}, F+ holds {holds}, "
-                  f"exposure {exp_txt}, equity Rs {float(daily['equity']):,.0f}, "
-                  f"cash Rs {float(daily['cash']):,.0f}, breakdown_cuts "
-                  f"{daily['breakdown_cuts']} (td #{td})")
-            await heartbeat(s, run_id, RUN_AGENT, "done", headline=ok, started_at=started,
-                            finished_at=datetime.now(IST),
+            ok = f"✅ Nightly {as_of} | " + " | ".join(lines)
+            await heartbeat(s, run_id, RUN_AGENT, "done", headline=ok[:480],
+                            started_at=started, finished_at=datetime.now(IST),
                             duration_ms=int((datetime.now(IST) - started).total_seconds() * 1000))
-            await _notify(ok)
+            await _notify(ok[:1000])
         except Exception as exc:  # noqa: BLE001 - surface failure loudly, then re-raise
             err = f"❌ Nightly run FAILED: {type(exc).__name__}: {exc}"
             log.error("nightly.failed", error=str(exc), traceback=traceback.format_exc())

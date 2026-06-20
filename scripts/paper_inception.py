@@ -1,65 +1,58 @@
 #!/usr/bin/env python
-"""Inception of the forward F+ paper portfolio (Rs 10,00,000).
+"""Create an EMPTY-CASH paper book for a portfolio (Maven multi-portfolio).
 
-DRY-RUN by default: computes what the FROZEN F+ engine would buy at the latest real
-EOD close and prints the book WITHOUT persisting. Pass --commit to actually set
-inception (writes paper_account/paper_position/paper_equity_curve). Inception is
-once-only and is meant to run on the always-on cloud infra, not casually.
-
-Score source = mechanical composite (the validated F+ signal). NO LOOKAHEAD: the
-book is built from data <= as_of only.
+The book is full capital in cash, 0 holdings, inception dated per the registry. The
+FIRST real picks happen automatically at the nightly run on/after inception (NO
+backfill, NO pre-picks). DRY-RUN by default; pass --commit to persist.
 
 Usage:
-    python -m scripts.paper_inception                 # dry-run, latest price date
-    python -m scripts.paper_inception --as-of 2026-05-26
-    python -m scripts.paper_inception --commit        # GO LIVE (cloud only)
+    python -m scripts.paper_inception                      # dry-run, portfolio=Quant
+    python -m scripts.paper_inception --portfolio Quant --commit   # create empty book
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
-from datetime import date
-
-from sqlalchemy import bindparam, text
 
 from backend.db.session import SessionLocal
 from backend.paper import engine as E
 
-_LATEST = text("SELECT MAX(trade_date) FROM prices_eod_adjusted")
-_SYMS = text(
-    "SELECT isin, nse_symbol FROM stocks WHERE isin = ANY(:isins)"
-).bindparams(bindparam("isins"))
-
 
 async def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(description="F+ paper inception (Rs 10L).")
-    p.add_argument("--as-of", default=None, help="YYYY-MM-DD (default: latest price date)")
-    p.add_argument("--commit", action="store_true", help="persist inception (GO LIVE)")
+    p = argparse.ArgumentParser(description="Create an empty-cash paper book.")
+    p.add_argument("--portfolio", default="Quant", help="portfolio name (default Quant)")
+    p.add_argument("--commit", action="store_true", help="persist (create the book)")
     args = p.parse_args(argv)
 
     async with SessionLocal() as s:
-        as_of = (
-            date.fromisoformat(args.as_of) if args.as_of
-            else (await s.execute(_LATEST)).scalar_one()
-        )
-        res = await E.inception(s, as_of, dry_run=not args.commit)
-        syms = {i: sym for i, sym in (await s.execute(
-            _SYMS, {"isins": [r["isin"] for r in res["rows"]]})).all()}
-
-    mode = "COMMITTED (LIVE)" if args.commit else "DRY-RUN (preview, not persisted)"
-    print(f"\n=== F+ PAPER INCEPTION — {mode} ===")
-    print(f"as_of (EOD close): {res['as_of']}   |   engine: Enhanced F+ commit 6ced078 "
-          f"(vol-adj momentum + 6.5% cash yield, mechanical composite)")
-    print(f"capital Rs {E.STARTING_CAPITAL:,.0f}   regime exposure: {res['exposure']}"
-          f"   scoreable universe: {res['scoreable']}")
-    print(f"invested Rs {res['invested']:,.0f}   cash Rs {res['cash']:,.0f}   "
-          f"names: {res['n']}\n")
-    print(f"{'#':>2} {'symbol':<12}{'sector':<18}{'entryRs':>10}{'shares':>10}{'valueRs':>11}")
-    for i, r in enumerate(sorted(res["rows"], key=lambda x: -x["value"]), 1):
-        print(f"{i:>2} {syms.get(r['isin'], r['isin']):<12}{r['sector']:<18}"
-              f"{float(r['px']):>10.2f}{float(r['shares']):>10.2f}{float(r['value']):>11.0f}")
-    if not args.commit:
-        print("\n(DRY-RUN — nothing written. Re-run with --commit on cloud to go live.)")
+        port = await E.get_portfolio(s, args.portfolio)
+        if port is None:
+            print(f"No portfolio named {args.portfolio!r} in the registry.")
+            return
+        if port["status"] != "live":
+            print(f"Portfolio {args.portfolio!r} status={port['status']} (not live) — "
+                  "go live by flipping status to 'live' after its gauntlet passes.")
+            return
+        if port["inception_date"] is None:
+            print(f"Portfolio {args.portfolio!r} has no inception_date set.")
+            return
+        cap = port["starting_capital"] or E.STARTING_CAPITAL
+        existing = await E.get_account(s, port["id"])
+        mode = "COMMITTED" if args.commit else "DRY-RUN (not persisted)"
+        print(f"=== CREATE EMPTY-CASH BOOK — {mode} ===")
+        print(f"portfolio: {args.portfolio} (id {port['id']}, status {port['status']})")
+        print(f"engine: Enhanced F+ commit 6ced078 | inception {port['inception_date']} "
+              f"| capital Rs {float(cap):,.0f} (100% cash, 0 holdings)")
+        if existing is not None:
+            print("Book ALREADY EXISTS — nothing to do (inception is once-only).")
+            return
+        if not args.commit:
+            print("(DRY-RUN — re-run with --commit to create. First picks happen at the "
+                  "nightly run on/after inception.)")
+            return
+        res = await E.create_book(s, port["id"], port["inception_date"], cap)
+        print(f"Created: account {res['account_id']}, Rs {float(res['cash']):,.0f} cash, "
+              f"0 holdings. Awaiting first nightly run on/after {port['inception_date']}.")
 
 
 if __name__ == "__main__":
