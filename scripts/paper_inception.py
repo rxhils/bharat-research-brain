@@ -48,8 +48,8 @@ async def main(argv: list[str] | None = None) -> None:
 
     mode = "COMMITTED (LIVE)" if args.commit else "DRY-RUN (preview, not persisted)"
     print(f"\n=== F+ PAPER INCEPTION — {mode} ===")
-    print(f"as_of (EOD close): {res['as_of']}   |   engine: F+ commit 57e72d5 "
-          f"(mechanical composite)")
+    print(f"as_of (EOD close): {res['as_of']}   |   engine: Enhanced F+ commit 6ced078 "
+          f"(vol-adj momentum + 6.5% cash yield, mechanical composite)")
     print(f"capital Rs {E.STARTING_CAPITAL:,.0f}   regime exposure: {res['exposure']}"
           f"   scoreable universe: {res['scoreable']}")
     print(f"invested Rs {res['invested']:,.0f}   cash Rs {res['cash']:,.0f}   "

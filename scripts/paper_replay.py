@@ -42,7 +42,7 @@ async def main() -> None:
         inception = acct["inception_date"]
         dates = [r[0] for r in (await s.execute(_DATES, {"inception": inception})).all()]
         print(f"Replaying {len(dates)} trading days forward from inception {inception} "
-              f"(engine: F+ commit 57e72d5, mechanical composite)...")
+              f"(engine: Enhanced F+ commit 6ced078, mechanical composite)...")
         last = None
         for i, d in enumerate(dates, 1):
             last = await E.daily_mark(s, d)
