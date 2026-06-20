@@ -402,7 +402,10 @@ def _patch_components(
     m: Decimal,
     sector: str,
 ) -> None:
-    monkeypatch.setattr(_scores, "compute_score_from_history", lambda _c, _v=None: t)
+    # Accept the Enhanced-F+ kwargs (mom_metric/self_metric) the engine now passes.
+    monkeypatch.setattr(
+        _scores, "compute_score_from_history", lambda _c, _v=None, **_k: t
+    )
 
     async def _f(*_a: object, **_k: object) -> Decimal | None:
         return f
