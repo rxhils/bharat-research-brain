@@ -84,6 +84,18 @@ class BacktestConfig:
     #   "raw"    = activate raw 52-week relative-strength momentum.
     #   "voladj" = activate vol-adjusted momentum (return / realized vol).
     momentum_mode: str = "off"
+    # Phase-2 Test 3 — credit idle cash at an annual liquid/overnight-fund rate
+    # (e.g. 0.065 = 6.5%/yr), accrued daily (rate/252) on the cash sleeve in the F+
+    # daily loop. 0 = cash earns nothing (frozen F+ default, byte-identical).
+    cash_yield_annual: Decimal = Decimal("0")
+    # Phase-2 Test 2 — deploy this FRACTION of the cash sleeve into rupee-gold
+    # (GOLDBEES.NS, gold_prices_eod) whenever F+ is risk-off (target exposure < 1.0).
+    # Equity stock-picking is UNCHANGED. 0 = no gold (frozen F+ default).
+    gold_cash_frac: Decimal = Decimal("0")
+    # Phase-2 Test 4 — restrict the tradeable universe to these ISINs (e.g. the
+    # mid-cap cut) for a STANDALONE satellite book. None = full active universe
+    # (frozen F+ default, unchanged).
+    restrict_isins: tuple[str, ...] | None = None
 
 
 @dataclass(frozen=True)

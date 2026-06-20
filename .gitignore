@@ -39,3 +39,4 @@ scripts/diag_*.py
 
 # PowerShell redirect-typo artifacts (e.g. "... > backend;C")
 *;C/
+gauntlet_out/

@@ -7,6 +7,7 @@ same rebalance window (operator's large-cap proxy basket).
 """
 from __future__ import annotations
 
+from bisect import bisect_right
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from decimal import ROUND_HALF_EVEN, Decimal
@@ -260,6 +261,47 @@ async def _active_isins(session: AsyncSession) -> list[str]:
     return [r[0] for r in rows]
 
 
+async def _universe(session: AsyncSession, cfg: BacktestConfig) -> list[str]:
+    """Active ISINs, optionally restricted to cfg.restrict_isins (Test 4 satellite).
+
+    Intersection preserves only names that are BOTH active and in the requested cut,
+    so a stale/typo ISIN can never inject a name absent from the price table.
+    """
+    active = await _active_isins(session)
+    if cfg.restrict_isins is None:
+        return active
+    keep = set(cfg.restrict_isins)
+    return [i for i in active if i in keep]
+
+
+# Phase-2 Test 2 — rupee-gold (GOLDBEES.NS) adj-close series for the cash-sleeve
+# hedge. Single dedicated table; never touches the equity universe.
+_SQL_GOLD_SERIES = text(
+    "SELECT trade_date, adj_close FROM gold_prices_eod "
+    "WHERE trade_date BETWEEN :start AND :end ORDER BY trade_date"
+)
+
+
+async def _gold_series(
+    session: AsyncSession, start: date, end: date
+) -> tuple[list[date], list[Decimal]]:
+    """(dates, adj_closes) ascending for gold over [start, end]. Empty if unloaded."""
+    rows = (
+        await session.execute(_SQL_GOLD_SERIES, {"start": start, "end": end})
+    ).all()
+    return [d for d, _ in rows], [Decimal(v) for _d, v in rows]
+
+
+def _gold_px_asof(
+    gdates: list[date], gvals: list[Decimal], d: date
+) -> Decimal | None:
+    """Gold adj-close on-or-before d (no lookahead). None if d precedes all data."""
+    if not gdates:
+        return None
+    i = bisect_right(gdates, d)
+    return gvals[i - 1] if i > 0 else None
+
+
 # Latest sector-momentum class per sector as-of a date — ONE DISTINCT ON query
 # for all 19 sectors, not one per stock (postgres-patterns: no N identical reads).
 _SQL_SECTOR_CLASS_ASOF = text(
@@ -477,7 +519,7 @@ async def run_backtest(session: AsyncSession, cfg: BacktestConfig) -> BacktestRe
     rebalance_idx = [i for i in rebalance_idx if i + cfg.hold_days < len(days)]
 
     history_start = _history_start(days[0], cfg.history_floor)
-    isins = await _active_isins(session)
+    isins = await _universe(session, cfg)
     # Config D path: sector-capped selection + score-weighted sizing + trailing
     # stops. Off by default -> A/B/C take the original simulate_day path.
     advanced = (
@@ -1075,7 +1117,7 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
     days = await _trading_days(session, cfg.start_date, cfg.end_date)
     if len(days) < 2:
         raise ValueError(f"not enough trading days ({len(days)})")
-    isins = await _active_isins(session)
+    isins = await _universe(session, cfg)
     sector_by = await _sectors_map(session, isins)
     history_start = _history_start(days[0], cfg.history_floor)
     rebal = [i for i in range(0, len(days), cfg.rebalance_every) if i < len(days) - 1]
@@ -1099,11 +1141,53 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
     total_costs = Decimal("0")
     exposure_trace: list[tuple[date, Decimal]] = []
 
+    # Phase-2 Test 2/3 cash-sleeve enhancements (both inert when their cfg is 0).
+    # Test 3: per-trading-day interest factor on idle cash (annual/252).
+    cash_day_factor = Decimal("1") + cfg.cash_yield_annual / Decimal("252")
+    # Test 2: rupee-gold series + a separate gold holding (units), marked daily.
+    gdates: list[date] = []
+    gvals: list[Decimal] = []
+    if cfg.gold_cash_frac > 0:
+        gdates, gvals = await _gold_series(session, days[0], days[-1])
+    gold_units = Decimal("0")
+
+    def _rebalance_gold(exp: Decimal, d: date) -> None:
+        """Set gold to gold_cash_frac of the cash sleeve when risk-off (exp<1), else
+        flat. Mutates cash/gold_units/total_costs. No-lookahead: gold price on-or-
+        before d. The 'cash sleeve' = current cash + current gold value."""
+        nonlocal cash, gold_units, total_costs
+        if cfg.gold_cash_frac <= 0:
+            return
+        gp = _gold_px_asof(gdates, gvals, d)
+        if gp is None or gp <= 0:
+            return
+        gold_val = gold_units * gp
+        sleeve = cash + gold_val
+        target = (cfg.gold_cash_frac * sleeve) if exp < Decimal("1.0") else Decimal("0")
+        diff = target - gold_val  # >0 buy gold; <0 sell gold
+        if abs(diff) < Decimal("1"):
+            return
+        c = cost_on_notional(abs(diff))
+        total_costs += c
+        cash -= diff + c
+        gold_units += diff / gp
+
     for ri, i in enumerate(rebal):
         rebalance_date = days[i]
         end_i = rebal[ri + 1] if ri + 1 < len(rebal) else len(days) - 1
         d_end = days[end_i]
         price_d = await _adj_close_on(session, isins, rebalance_date)
+        # Test 2: liquidate any gold back to cash at the quarterly rebalance so the
+        # exposure sizing below operates on the FULL wealth (gold re-established after
+        # the equity book is set, via _rebalance_gold on the new target exposure).
+        if cfg.gold_cash_frac > 0 and gold_units > 0:
+            gp = _gold_px_asof(gdates, gvals, rebalance_date)
+            if gp is not None and gp > 0:
+                proceeds = gold_units * gp
+                c = cost_on_notional(proceeds)
+                total_costs += c
+                cash += proceeds - c
+                gold_units = Decimal("0")
         invested_val = sum(
             (positions[h].shares * price_d[h] for h in positions if h in price_d),
             Decimal("0"),
@@ -1188,6 +1272,10 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
                 prev.entry_price if prev else px,
             )
 
+        # Test 2: re-establish the gold sleeve from cash for this quarter's regime
+        # (no-op when gold_cash_frac == 0 or fully risk-on).
+        _rebalance_gold(target_exp, rebalance_date)
+
         # daily blended curve: each trading day after D through the next rebalance
         held = list(positions.keys())
         paths = await _daily_paths(session, held, rebalance_date, d_end)
@@ -1200,6 +1288,8 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
         if cfg.exposure_check_days is None and cfg.breakdown_exit_pct is None:
             # Plain F: static marking (positions + cash fixed between rebalances).
             for d in days[i + 1 : end_i + 1]:
+                if cfg.cash_yield_annual:
+                    cash *= cash_day_factor
                 dmap = by_date.get(d, {})
                 inv = Decimal("0")
                 for h in held:
@@ -1207,7 +1297,14 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
                     if px is not None:
                         last_px[h] = px
                         inv += positions[h].shares * px
-                daily.append((d, (inv + cash).quantize(_Q2, rounding=ROUND_HALF_EVEN)))
+                gv = (
+                    gold_units * _gold_px_asof(gdates, gvals, d)
+                    if (cfg.gold_cash_frac > 0 and _gold_px_asof(gdates, gvals, d))
+                    else Decimal("0")
+                )
+                daily.append(
+                    (d, (inv + cash + gv).quantize(_Q2, rounding=ROUND_HALF_EVEN))
+                )
         else:
             # Config F+: daily breakdown cuts (Change 2) + weekly exposure scaling
             # (Change 1). positions + cash mutate intra-quarter; names re-selected
@@ -1220,6 +1317,8 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
             )
             since_check = 0
             for d in days[i + 1 : end_i + 1]:
+                if cfg.cash_yield_annual:
+                    cash *= cash_day_factor  # Test 3: daily interest on idle cash
                 dmap = by_date.get(d, {})
                 since_check += 1
                 for h in list(positions):
@@ -1273,6 +1372,16 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
                         [v for dt, v in tri_all if dt <= d]
                     )
                     if new_exp != cur_exp:
+                        # Test 2: fold gold back to cash so the equity rescale sizes
+                        # on full wealth; gold re-established at new_exp just below.
+                        if cfg.gold_cash_frac > 0 and gold_units > 0:
+                            gp = _gold_px_asof(gdates, gvals, d)
+                            if gp is not None and gp > 0:
+                                proceeds = gold_units * gp
+                                gc = cost_on_notional(proceeds)
+                                total_costs += gc
+                                cash += proceeds - gc
+                                gold_units = Decimal("0")
                         inv = sum(
                             (positions[h].shares * last_px[h]
                              for h in positions if last_px.get(h)),
@@ -1292,13 +1401,21 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
                                 )
                         cur_exp = new_exp
                         exposure_trace.append((d, new_exp))
-                # daily mark on the (possibly mutated) book
+                        _rebalance_gold(new_exp, d)
+                # daily mark on the (possibly mutated) book (+ gold sleeve, Test 2)
                 inv = sum(
                     (positions[h].shares * last_px[h]
                      for h in positions if last_px.get(h)),
                     Decimal("0"),
                 )
-                daily.append((d, (inv + cash).quantize(_Q2, rounding=ROUND_HALF_EVEN)))
+                gv = (
+                    gold_units * _gold_px_asof(gdates, gvals, d)
+                    if (cfg.gold_cash_frac > 0 and _gold_px_asof(gdates, gvals, d))
+                    else Decimal("0")
+                )
+                daily.append(
+                    (d, (inv + cash + gv).quantize(_Q2, rounding=ROUND_HALF_EVEN))
+                )
 
     # mark remaining open positions to the final close for the trade table
     final_day = days[-1]

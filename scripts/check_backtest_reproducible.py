@@ -36,17 +36,13 @@ os.environ.setdefault("PYTHONHASHSEED", "0")
 _GUARDED_PATHS = ("backend/backtest/", "backend/agents/")
 
 
-def _frozen_fplus_cfg():
-    """The canonical frozen F+ config (must match the live paper engine)."""
-    from backend.backtest.engine import BacktestConfig
+def _configs():
+    """The named canonical configs to gate: ENHANCED F+ (adopted default) and
+    F+ CLASSIC (preserved fallback). Both must be byte-identical run-to-run."""
+    from backend.backtest.configs import enhanced_fplus, fplus_classic
 
-    return BacktestConfig(
-        start_date=date(2023, 6, 1), end_date=date(2025, 6, 1),
-        history_floor=date(2021, 5, 26), top_n=25, hold_days=63, rebalance_every=63,
-        starting_capital=Decimal("1000000"), min_score=Decimal("0"),
-        use_full_composite=True, benchmark_weighting="equal", apply_breadth_filter=False,
-        quality_gate=True, graded_exposure=True, hold_buffer_rank=40, max_per_sector=4,
-        turnover_mode="low", exposure_check_days=5, breakdown_exit_pct=Decimal("0.15"))
+    return [("ENHANCED F+ (canonical)", enhanced_fplus()),
+            ("F+ CLASSIC (fallback)", fplus_classic())]
 
 
 def _dirty_paths() -> list[str]:
@@ -57,19 +53,22 @@ def _dirty_paths() -> list[str]:
     return [ln for ln in out.splitlines() if ln.strip()]
 
 
-async def _run_twice() -> tuple:
-    """Run frozen F+ twice in ONE event loop/session (asyncio.run twice would
-    reuse pooled connections bound to a dead loop and crash)."""
+async def _run_all_twice() -> list[tuple]:
+    """Run EACH named config twice in ONE event loop/session (asyncio.run twice would
+    reuse pooled connections bound to a dead loop and crash). Returns one
+    (name, run1, run2) per config."""
     from backend.backtest import runner as R
     from backend.db.session import SessionLocal
 
+    out: list[tuple] = []
     async with SessionLocal() as sess:
-        a = await R.run_backtest(sess, _frozen_fplus_cfg())
-        b = await R.run_backtest(sess, _frozen_fplus_cfg())
-    return (
-        (a.total_return_pct, a.max_drawdown_pct, a.total_trades),
-        (b.total_return_pct, b.max_drawdown_pct, b.total_trades),
-    )
+        for name, cfg in _configs():
+            a = await R.run_backtest(sess, cfg)
+            b = await R.run_backtest(sess, cfg)
+            sig_a = (a.total_return_pct, a.max_drawdown_pct, a.total_trades)
+            sig_b = (b.total_return_pct, b.max_drawdown_pct, b.total_trades)
+            out.append((name, sig_a, sig_b))
+    return out
 
 
 def main() -> int:
@@ -89,13 +88,13 @@ def main() -> int:
     else:
         print("OK  gate 1: backtest working tree is clean (committed code only)")
 
-    # GATE 2 — frozen F+ byte-identical across two consecutive runs.
-    r1, r2 = asyncio.run(_run_twice())
-    if r1 != r2:
-        fails.append(f"NON-DETERMINISTIC — frozen F+ differs across runs: {r1} != {r2}")
-    else:
-        print(f"OK  gate 2: frozen F+ reproducible across 2 runs -> "
-              f"ret {r1[0]}% maxDD {r1[1]}% trades {r1[2]}")
+    # GATE 2 — each named config byte-identical across two consecutive runs.
+    for name, r1, r2 in asyncio.run(_run_all_twice()):
+        if r1 != r2:
+            fails.append(f"NON-DETERMINISTIC — {name} differs across runs: {r1} != {r2}")
+        else:
+            print(f"OK  gate 2: {name} reproducible across 2 runs -> "
+                  f"ret {r1[0]}% maxDD {r1[1]}% trades {r1[2]}")
 
     if fails:
         print("\nREPRODUCIBILITY GATE FAILED:\n- " + "\n- ".join(fails), file=sys.stderr)
