@@ -540,30 +540,51 @@ const WATCH: Watch[] = [
   { sym: "ANANTRAJ", name: "Anant Raj Ltd.", price: "₹535", chg: "+4.19%" },
 ];
 
-// Portfolio strategies — the plain-English engine behind each MAVEN book.
-type Strat = { name: string; tag: string; oneLine: string; strategy: string; buys: string; signature?: boolean };
-const STRATEGIES: Strat[] = [
-  { name: "Defensive", tag: "Stable", oneLine: "Built to fall less in bad markets.",
-    strategy: "Leans toward steadier businesses that tend to hold up better when markets turn weak or uncertain.",
-    buys: "Prefers stocks with calmer, more resilient behaviour and lower downside than the aggressive books." },
-  { name: "Growth", tag: "Aggressive", oneLine: "Higher upside, higher swings.",
-    strategy: "Backs companies with real expansion potential — where revenue, earnings, or the market itself may still be compounding.",
-    buys: "Looks for businesses that can outgrow the market, accepting bigger price swings to get there." },
-  { name: "Momentum", tag: "Trend", oneLine: "Buy what is already strong.",
-    strategy: "Follows market leadership — it aims to own the names already showing real price strength and staying power.",
-    buys: "Ranks stocks by strength and favours the ones already moving well; the weaker names quietly fall out." },
-  { name: "Income", tag: "Yield", oneLine: "Built to generate cash flow.",
-    strategy: "Focuses on companies that can pay out more healthily and more dependably over time.",
-    buys: "Seeks businesses where dividends and cash generation look sustainable — not just the highest headline yield." },
-  { name: "Quant", tag: "Systematic", signature: true, oneLine: "The rules-based, signal-driven book.",
-    strategy: "MAVEN's signature portfolio, powered by the enhanced F+ model — the most systematic book, run on defined signals, ranking logic, and disciplined selection rules.",
-    buys: "Instead of instinct, it scores every stock through the enhanced F+ framework and holds the names that fit the model best." },
-  { name: "Value", tag: "Mispriced", oneLine: "Buy good companies on sale.",
-    strategy: "Looks for businesses priced below what their fundamentals seem to justify.",
-    buys: "Hunts for stocks that look cheap against earnings, cash flow, or quality — while sidestepping the obvious value traps." },
-  { name: "Constrained", tag: "Controlled", oneLine: "A rules book with strict limits.",
-    strategy: "Follows a systematic approach, but inside tighter guardrails on weights, exposure, concentration, and risk.",
-    buys: "Even a high-scoring stock can be left out if it would break a position limit or a risk rule." },
+// Portfolio strategies — the plain-English engine behind each MAVEN book, by tier.
+type Strat = { name: string; tag: string; oneLine: string; how: string; looks: string; bestFor: string; signature?: boolean };
+const STRAT_TIERS: { tier: string; items: Strat[] }[] = [
+  { tier: "Stable", items: [
+    { name: "Core", tag: "Foundation", oneLine: "Your long-term base portfolio.",
+      how: "The foundation basket — broad market exposure through a steadier, benchmark-aware approach rather than one extreme style bet.",
+      looks: "Starts from a broad universe and aims for balance, durability, and cleaner overall exposure.",
+      bestFor: "A main long-term portfolio to build around." },
+    { name: "Quality", tag: "Durable", oneLine: "Strong businesses, chosen for durability.",
+      how: "Favours companies with healthier business strength, better returns on capital, and cleaner balance sheets.",
+      looks: "Stronger fundamentals and steadier quality signals over weak businesses that only look cheap or exciting.",
+      bestFor: "Steadier compounding through stronger companies." },
+    { name: "Defensive", tag: "Defensive", oneLine: "Built to fall less in bad markets.",
+      how: "Designed to hold up better when markets are weak, uncertain, or volatile — resilience over excitement.",
+      looks: "Steadier businesses, lower downside risk, and more stable behaviour through rougher periods.",
+      bestFor: "A calmer profile and smaller drawdowns." },
+  ] },
+  { tier: "Balanced", items: [
+    { name: "Growth", tag: "Aggressive", oneLine: "Higher upside, higher volatility.",
+      how: "Backs companies with real expansion potential — where revenue, earnings, or opportunity may still be compounding faster than the market.",
+      looks: "Leans into faster growers and accepts more volatility in exchange for stronger upside.",
+      bestFor: "More return potential, if you can handle bigger swings." },
+    { name: "Momentum", tag: "Trend", oneLine: "Buy what is already strong.",
+      how: "Follows market leadership — it aims to own names already showing real price strength and trend persistence.",
+      looks: "Ranks stocks by strength and favours the ones already moving well; fading trends fall out.",
+      bestFor: "Trend-following over turnaround investing." },
+    { name: "Income", tag: "Yield", oneLine: "Built to generate cash flow.",
+      how: "Focuses on businesses that may offer healthier, more dependable payouts and better cash generation.",
+      looks: "Sustainable dividend and cash-return profiles rather than simply chasing the highest yield.",
+      bestFor: "Steadier cash flow and a more income-oriented style." },
+  ] },
+  { tier: "Bold", items: [
+    { name: "Quant", tag: "Signature Model", signature: true, oneLine: "MAVEN's signature rules-based model.",
+      how: "Powered by the enhanced F+ model — the most systematic book in MAVEN, built on defined signals, ranking logic, and disciplined selection rules.",
+      looks: "Instead of picking by feel, it scores names through the enhanced F+ framework and selects the stocks that fit the model best.",
+      bestFor: "MAVEN's strongest model-driven strategy." },
+    { name: "Value", tag: "Mispriced", oneLine: "Buy undervalued stocks.",
+      how: "Looks for companies priced below what their business fundamentals seem to justify.",
+      looks: "Stocks that look cheap against earnings, cash flow, or quality — while avoiding the obvious traps.",
+      bestFor: "Buying mispriced businesses over chasing hot trends." },
+    { name: "Contrarian", tag: "Re-rating", oneLine: "Back quality when sentiment gets too weak.",
+      how: "Looks for situations where the market may be overreacting, but the underlying business still has enough quality to justify attention.",
+      looks: "Names where sentiment or price has weakened, but the business still supports a possible recovery or re-rating.",
+      bestFor: "Selective recovery opportunities rather than pure momentum." },
+  ] },
 ];
 
 function WatchlistScreen() {
@@ -1075,32 +1096,83 @@ export function Explainer() {
       {/* ── Portfolio strategies ── */}
       <section className="border-t border-hairline py-20 sm:py-28">
         <p className="text-[0.6rem] font-semibold uppercase tracking-label text-gold">Portfolio strategies</p>
-        <Reveal><h2 className="mt-6 max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Every portfolio has a different engine.</h2></Reveal>
-        <Reveal delay={0.05}><p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">MAVEN portfolios aren&apos;t just different baskets. Each one runs a different strategy, goal, and stock-selection logic — some built to protect capital, some to ride trend strength, some to follow strict model rules.</p></Reveal>
-        <div className="mt-14 grid gap-5 sm:grid-cols-2">
-          {STRATEGIES.map((s, i) => (
-            <Reveal key={s.name} y={20} delay={(i % 2) * 0.05}>
-              <div className={`group relative h-full overflow-hidden rounded-xl2 border p-6 transition-all duration-300 hover:-translate-y-0.5 ${s.signature ? "border-emerald/40 bg-panel/60 sm:col-span-2" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}>
-                {s.signature && <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.22),transparent 70%)" }} />}
-                <div className="relative flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    {s.signature && (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 8l4 3 5-7 5 7 4-3-2 11H5z" /></svg>
-                    )}
-                    <h3 className="font-serif text-xl text-ink">{s.name}</h3>
-                  </div>
-                  <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[0.58rem] font-semibold uppercase tracking-label ${s.signature ? "border-emerald/40 text-emerald" : "border-border text-dim"}`}>{s.signature ? `Signature · ${s.tag}` : s.tag}</span>
+        <Reveal><h2 className="mt-6 max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Every model has a different engine.</h2></Reveal>
+        <Reveal delay={0.05}><p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">MAVEN portfolios aren&apos;t just different baskets of stocks. Each one follows a distinct strategy, risk profile, and selection logic — some built for steadier performance, some for stronger upside, some for tighter model discipline.</p></Reveal>
+        <Reveal delay={0.1}>
+          <p className="mt-6 max-w-3xl rounded-xl2 border border-border bg-panel/40 p-5 text-sm leading-relaxed text-muted">
+            Each portfolio is designed to solve a different job. <span className="text-ink">Defensive</span> aims to hold up better in weaker markets, <span className="text-ink">Growth</span> looks for faster compounding, <span className="text-ink">Momentum</span> follows strength, <span className="text-ink">Income</span> focuses on cash generation, <span className="text-ink">Value</span> looks for mispricing, and <span className="text-ink">Quant</span> uses MAVEN&apos;s enhanced F+ engine to rank and select stocks systematically.
+          </p>
+        </Reveal>
+
+        <div className="mt-16 flex flex-col gap-14">
+          {STRAT_TIERS.map((grp) => (
+            <div key={grp.tier}>
+              <Reveal>
+                <div className="flex items-center gap-3">
+                  <span className="text-[0.6rem] font-semibold uppercase tracking-label text-gold-soft">{grp.tier}</span>
+                  <span className="h-px flex-1 bg-hairline" />
                 </div>
-                <p className="relative mt-2 text-sm italic text-emerald/90">{s.oneLine}</p>
-                <p className="relative mt-3 max-w-xl text-sm leading-relaxed text-muted">{s.strategy}</p>
-                <div className="relative mt-4 border-t border-hairline pt-3">
-                  <p className="text-[0.55rem] font-semibold uppercase tracking-label text-dim">How it buys</p>
-                  <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted">{s.buys}</p>
-                </div>
+              </Reveal>
+              <div className="mt-5 grid gap-5 lg:grid-cols-3">
+                {grp.items.map((s, i) => (
+                  <Reveal key={s.name} y={16} delay={i * 0.05}>
+                    <div className={`group relative flex h-full flex-col overflow-hidden rounded-xl2 border p-6 transition-all duration-300 hover:-translate-y-1 ${s.signature ? "border-emerald/40 bg-panel/60" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}>
+                      {s.signature && <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.22),transparent 70%)" }} />}
+                      <div className="relative flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          {s.signature && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 8l4 3 5-7 5 7 4-3-2 11H5z" /></svg>}
+                          <h3 className="font-serif text-xl text-ink">{s.name}</h3>
+                        </div>
+                        <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-label ${s.signature ? "border-emerald/40 text-emerald" : "border-border text-dim"}`}>{s.tag}</span>
+                      </div>
+                      <p className="relative mt-2 text-sm italic text-emerald/90">{s.oneLine}</p>
+                      <div className="relative mt-4 space-y-3">
+                        <div>
+                          <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">How it works</p>
+                          <p className="mt-1 text-[0.84rem] leading-relaxed text-muted">{s.how}</p>
+                        </div>
+                        <div>
+                          <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">What it looks for</p>
+                          <p className="mt-1 text-[0.84rem] leading-relaxed text-muted">{s.looks}</p>
+                        </div>
+                      </div>
+                      <div className="relative mt-4 border-t border-hairline pt-3">
+                        <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">Best for</p>
+                        <p className="mt-1 text-[0.84rem] leading-relaxed text-ink/90">{s.bestFor}</p>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
               </div>
-            </Reveal>
+            </div>
           ))}
         </div>
+
+        {/* selection + overlap explainers */}
+        <div className="mt-16 grid gap-5 sm:grid-cols-2">
+          <Reveal y={16}>
+            <div className="h-full rounded-xl2 border border-border bg-panel/40 p-6">
+              <h4 className="font-serif text-lg text-ink">How selection works</h4>
+              <p className="mt-3 text-sm leading-relaxed text-muted">Each portfolio starts with a stock universe, applies strategy-specific filters, ranks the eligible names, sets target weights, and updates through rebalances when the strategy changes. That&apos;s why the portfolios can look different even inside the same product.</p>
+            </div>
+          </Reveal>
+          <Reveal y={16} delay={0.05}>
+            <div className="h-full rounded-xl2 border border-border bg-panel/40 p-6">
+              <h4 className="font-serif text-lg text-ink">Why portfolios can overlap</h4>
+              <p className="mt-3 text-sm leading-relaxed text-muted">A stock can fit more than one strategy at once. One company might be strong enough for Quality, growing fast enough for Growth, and trending well enough for Momentum. Overlap is normal when several strategies independently like the same business.</p>
+            </div>
+          </Reveal>
+        </div>
+        <Reveal y={16} delay={0.1}>
+          <div className="relative mt-5 overflow-hidden rounded-xl2 border border-emerald/30 bg-panel/50 p-6 sm:p-8">
+            <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.2),transparent 70%)" }} />
+            <div className="relative flex items-center gap-2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 8l4 3 5-7 5 7 4-3-2 11H5z" /></svg>
+              <h4 className="font-serif text-lg text-ink">Why Quant stands out</h4>
+            </div>
+            <p className="relative mt-3 max-w-2xl text-sm leading-relaxed text-muted">Quant is MAVEN&apos;s signature engine. It uses the enhanced F+ framework to rank, score, and select stocks systematically — making it the most disciplined and model-led portfolio in the stack.</p>
+          </div>
+        </Reveal>
       </section>
 
       {/* ── Validation ── */}
