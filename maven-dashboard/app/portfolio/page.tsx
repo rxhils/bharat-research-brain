@@ -38,8 +38,10 @@ export default async function Portfolio() {
             </div>
           </div>
           <div className="text-right text-xs text-dim">
-            <div>Paper-traded since {fmtDate(acct.inceptionDate)}</div>
-            <div className="mt-0.5">{stats.daysLive} days live · {acct.engineVersion}</div>
+            <div>{stats.daysLive > 0
+              ? `Paper-traded since ${fmtDate(acct.inceptionDate)}`
+              : `Live from ${fmtDate(acct.inceptionDate)} — awaiting first session`}</div>
+            <div className="mt-0.5">{stats.daysLive > 0 ? `${stats.daysLive} days live · ` : ""}{acct.engineVersion}</div>
             <div className="mt-2 inline-block rounded-md bg-emerald/10 px-2 py-1 text-[11px] text-emerald">
               Goal: index-like return, ~half the drawdown
             </div>
@@ -49,7 +51,7 @@ export default async function Portfolio() {
 
       {/* Curve + exposure */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Equity curve" sub="F+ vs Nifty 500 TRI" className="lg:col-span-2" delay={60}>
+        <Card title="Equity curve" sub="Enhanced F+ vs Nifty 500 TRI" className="lg:col-span-2" delay={60}>
           <EquityChart data={curve} />
         </Card>
         <Card title="Exposure" sub="cash sleeve" delay={120}>

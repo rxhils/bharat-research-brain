@@ -46,17 +46,17 @@ const LIVE: Doc[] = [
   {
     name: "Quarterly Rebalance",
     one: "Rebuilds the 25-stock book every quarter.",
-    long: "Every ~63 trading days it re-ranks the whole universe with the F+ score, sells "
+    long: "Every ~63 trading days it re-ranks the whole universe with the Enhanced F+ score, sells "
       + "names that dropped out, buys new leaders, and keeps existing winners (hold buffer). "
       + "Redeploys cash at the current exposure level.",
     cadence: "Quarterly",
   },
   {
-    name: "F+ Composite Scorer",
+    name: "Enhanced F+ Composite Scorer",
     one: "The actual brain that picks the stocks.",
-    long: "Scores every stock on momentum + quality + low-volatility (the mechanical "
+    long: "Scores every stock on vol-adjusted momentum + quality + low-volatility (the Enhanced F+ "
       + "composite), capped at 4 per sector, and the top 25 become the book. This is the "
-      + "exact logic that passed every backtest (commit 57e72d5) — nothing else picks names.",
+      + "exact logic that passed every backtest (commit 6ced078) — nothing else picks names.",
     cadence: "At each rebalance",
   },
 ];
@@ -94,7 +94,7 @@ const OFFLINE: Doc[] = [
     name: "Macro",
     one: "Watches USD/INR, crude, India VIX and rates.",
     long: "Tracks the big-picture backdrop. Some data exists, but macro is not part of the "
-      + "live F+ signal — only the market-regime check (in Exposure) is.",
+      + "live Enhanced F+ signal — only the market-regime check (in Exposure) is.",
     offlineReason: "not in the live signal",
   },
   {
@@ -199,7 +199,7 @@ export function AgentExplainer() {
 
       <div>
         <div className="mb-2 text-[11px] font-medium uppercase tracking-widest text-muted">
-          Live — the F+ engine (decides your money)
+          Live — the Enhanced F+ engine (decides your money)
         </div>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {LIVE.map((d) => <AgentCard key={d.name} doc={d} live run={runFor(d.name)} />)}

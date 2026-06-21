@@ -72,7 +72,7 @@ export function Nav() {
               : "border-emerald/30 text-emerald hover:bg-emerald/10"
           }`}
         >
-          ★ F+ Backtest
+          ★ Backtest
         </Link>
       </div>
     </nav>
@@ -138,7 +138,7 @@ export function EquityChart({ data }: { data: EquityPoint[] }) {
         <YAxis tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(v) => inrCompact(v)} width={56} axisLine={false} tickLine={false} domain={["dataMin", "dataMax"]} />
         <Tooltip content={<ChartTip />} />
         <Line type="monotone" dataKey="nifty500" name="Nifty 500 TRI" stroke="#5a616a" strokeWidth={1.5} dot={false} />
-        <Line type="monotone" dataKey="fplus" name="F+" stroke="#34d399" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="fplus" name="Enhanced F+" stroke="#34d399" strokeWidth={2} dot={false} />
       </LineChart>
     </ResponsiveContainer>
   );
@@ -162,7 +162,7 @@ export function ABChart({ data, readout }: { data: EquityPoint[]; readout: ABRea
           <XAxis dataKey="date" tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(d) => fmtDate(d).slice(0, 6)} minTickGap={40} axisLine={false} tickLine={false} />
           <YAxis tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(v) => inrCompact(v)} width={56} axisLine={false} tickLine={false} domain={["dataMin", "dataMax"]} />
           <Tooltip content={<ChartTip />} />
-          <Line type="monotone" dataKey="fplus" name="F+ · mechanical" stroke="#34d399" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="fplus" name="Enhanced F+" stroke="#34d399" strokeWidth={2} dot={false} />
           {readout.hasAgentic && (
             <Line type="monotone" dataKey="fplusAgentic" name="F+ · agentic" stroke="#fbbf24" strokeWidth={2} dot={false} />
           )}
@@ -182,7 +182,7 @@ export function ExposureGauge({ state }: { state: ExposureState }) {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <span className="font-mono text-2xl tnum text-emerald">{invested}%</span>
+        <span className="font-mono text-2xl tnum text-emerald">{plain(invested, 1)}%</span>
         <span className={`rounded-md px-2 py-0.5 text-[11px] font-medium ${riskOff ? "bg-amber/12 text-amber" : "bg-emerald/12 text-emerald"}`}>
           {riskOff ? "Risk-off" : "Risk-on"}
         </span>
@@ -192,8 +192,8 @@ export function ExposureGauge({ state }: { state: ExposureState }) {
         <div className="bg-white/10" style={{ width: `${state.cashPct}%` }} />
       </div>
       <div className="mt-2 flex justify-between text-xs text-muted">
-        <span>Invested {invested}%</span>
-        <span>Cash {state.cashPct}%</span>
+        <span>Invested {plain(invested, 1)}%</span>
+        <span>Cash {plain(state.cashPct, 1)}%</span>
       </div>
       <div className="mt-4 flex gap-1.5">
         {[100, 50, 25].map((lvl) => (
@@ -443,7 +443,7 @@ export function AgentActivity() {
         );
       })}
       <p className="mt-2 border-t border-hairline pt-3 text-xs text-dim">
-        These scores feed <span className="text-muted">F+</span> (frozen risk engine) — agents produce signals, F+ decides the portfolio.
+        These scores feed <span className="text-muted">Enhanced F+</span> (frozen risk engine) — agents produce signals, Enhanced F+ decides the portfolio.
       </p>
     </div>
   );

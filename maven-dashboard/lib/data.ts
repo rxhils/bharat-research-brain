@@ -23,14 +23,25 @@ async function latestPriceDate(): Promise<string> {
   return r[0]?.d ?? "";
 }
 
+// The dashboard always shows the LIVE portfolio (currently "Quant" = Enhanced F+).
+// After the multi-portfolio migration (0032) paper_* rows are tagged by portfolio_id,
+// so every book query is scoped to this id — never the archived F+ classic book.
+async function livePortfolioId(): Promise<number | null> {
+  const r = await q<{ id: number }>(
+    "SELECT id FROM portfolios WHERE status = 'live' ORDER BY id LIMIT 1");
+  return r[0]?.id == null ? null : Number(r[0].id);
+}
+
 // ----------------------------------------------------------------- account
 export async function getAccount(): Promise<PaperAccount> {
   if (!dbReady()) throw new NotConnected("account");
+  const pid = await livePortfolioId();
+  if (pid == null) throw new NotConnected("account (no live portfolio)");
   const r = await q<Record<string, unknown>>(
     `SELECT inception_date::text AS inception_date, starting_capital, current_cash,
             current_equity, last_updated, engine_version, score_source
-       FROM paper_account ORDER BY id LIMIT 1`);
-  if (!r.length) throw new NotConnected("account (inception not committed)");
+       FROM paper_account WHERE portfolio_id = $1 ORDER BY id LIMIT 1`, [pid]);
+  if (!r.length) throw new NotConnected("account (no live book yet)");
   const a = r[0];
   return {
     inceptionDate: String(a.inception_date),
@@ -46,9 +57,11 @@ export async function getAccount(): Promise<PaperAccount> {
 // ------------------------------------------------------------- equity curve
 export async function getEquityCurve(): Promise<EquityPoint[]> {
   if (!dbReady()) return [];
+  const pid = await livePortfolioId();
+  if (pid == null) return [];
   const rows = await q<Record<string, unknown>>(
     `SELECT trade_date::text AS d, total_equity, nifty500_tri, exposure_level
-       FROM paper_equity_curve ORDER BY trade_date`);
+       FROM paper_equity_curve WHERE portfolio_id = $1 ORDER BY trade_date`, [pid]);
   if (!rows.length) return [];
   const base = num(rows[0].total_equity);
   const triBase = num(rows[0].nifty500_tri) || null;
@@ -68,10 +81,13 @@ export async function getEquityCurve(): Promise<EquityPoint[]> {
 // ----------------------------------------------------------------- exposure
 export async function getExposure(): Promise<ExposureState> {
   if (!dbReady()) return { level: 0.5, regime: "risk_off", cashPct: 0 };
+  const pid = await livePortfolioId();
+  // No live book / no curve row yet = created but first allocation hasn't run → 100% cash.
+  if (pid == null) return { level: 0.25, regime: "risk_off", cashPct: 100 };
   const r = await q<Record<string, unknown>>(
     `SELECT exposure_level, cash_value, total_equity
-       FROM paper_equity_curve ORDER BY trade_date DESC LIMIT 1`);
-  if (!r.length) return { level: 0.25, regime: "risk_off", cashPct: 0 };
+       FROM paper_equity_curve WHERE portfolio_id = $1 ORDER BY trade_date DESC LIMIT 1`, [pid]);
+  if (!r.length) return { level: 0.25, regime: "risk_off", cashPct: 100 };
   const level = num(r[0].exposure_level);
   const eq = num(r[0].total_equity);
   return {
@@ -86,9 +102,10 @@ export async function getKeyStats(): Promise<KeyStats> {
   if (!dbReady()) {
     return { totalReturnPct: 0, alphaVsNifty500Pct: 0, maxDrawdownPct: 0, sharpe: 0, holdings: 0, winRatePct: 0, daysLive: 0 };
   }
-  const curve = await q<Record<string, unknown>>(
+  const pid = await livePortfolioId();
+  const curve = pid == null ? [] : await q<Record<string, unknown>>(
     `SELECT total_equity, nifty500_tri, drawdown_pct
-       FROM paper_equity_curve ORDER BY trade_date`);
+       FROM paper_equity_curve WHERE portfolio_id = $1 ORDER BY trade_date`, [pid]);
   if (curve.length < 1) {
     return { totalReturnPct: 0, alphaVsNifty500Pct: 0, maxDrawdownPct: 0, sharpe: 0, holdings: 0, winRatePct: 0, daysLive: 0 };
   }
@@ -116,8 +133,8 @@ export async function getKeyStats(): Promise<KeyStats> {
            (SELECT adj_close FROM prices_eod_adjusted x
              WHERE x.isin = p.isin AND x.trade_date <= $1
              ORDER BY x.trade_date DESC LIMIT 1) AS cur
-         FROM paper_position p WHERE p.status = 'open'
-       ) z`, [asof]);
+         FROM paper_position p WHERE p.status = 'open' AND p.portfolio_id = $2
+       ) z`, [asof, pid]);
   const total = num(wr[0]?.total);
   const wins = num(wr[0]?.wins);
   return {
@@ -136,15 +153,16 @@ export async function getHoldings(): Promise<Holding[]> {
   if (!dbReady()) return [];
   const acct = await getAccount();
   const asof = await latestPriceDate();
-  const rows = await q<Record<string, unknown>>(
+  const pid = await livePortfolioId();
+  const rows = pid == null ? [] : await q<Record<string, unknown>>(
     `SELECT p.isin, s.nse_symbol AS ticker, s.company_name AS name, s.sector,
             p.entry_date::text AS entry_date, p.entry_price, p.shares,
             (SELECT adj_close FROM prices_eod_adjusted x
                WHERE x.isin = p.isin AND x.trade_date <= $1
                ORDER BY x.trade_date DESC LIMIT 1) AS current_price
        FROM paper_position p JOIN stocks s ON s.isin = p.isin
-      WHERE p.status = 'open'
-      ORDER BY (p.shares * p.entry_price) DESC`, [asof]);
+      WHERE p.status = 'open' AND p.portfolio_id = $2
+      ORDER BY (p.shares * p.entry_price) DESC`, [asof, pid]);
   const eq = acct.currentEquity || 1;
   const holdings: Holding[] = rows.map((r) => {
     const entry = num(r.entry_price);
@@ -179,7 +197,7 @@ export async function getABReadout(): Promise<ABReadout> {
   return {
     hasAgentic: false,
     edgePct: null,
-    note: "Live signal = the FROZEN F+ mechanical composite (the only version that passed "
+    note: "Live signal = the FROZEN Enhanced F+ composite (the only version that passed "
       + "every backtest). The News / Sentiment / Fundamental agents are built but offline and "
       + "are NOT part of the live decision — so there is no agentic book to A/B against yet.",
   };
@@ -228,6 +246,8 @@ export async function getAgentBoard(): Promise<AgentBoard> {
 export async function getTrades(): Promise<Trade[]> {
   if (!dbReady()) return [];
   const asof = await latestPriceDate();
+  const pid = await livePortfolioId();
+  if (pid == null) return [];
   let inception = "";
   try { inception = (await getAccount()).inceptionDate; } catch { /* no account yet */ }
 
@@ -239,8 +259,9 @@ export async function getTrades(): Promise<Trade[]> {
                WHERE x.isin = p.isin AND x.trade_date <= $1
                ORDER BY x.trade_date DESC LIMIT 1) AS latest_close
        FROM paper_position p JOIN stocks s ON s.isin = p.isin
+      WHERE p.portfolio_id = $2
       ORDER BY (p.status = 'open') DESC,
-               COALESCE(p.exit_date, $1::date) DESC, p.entry_date DESC`, [asof]);
+               COALESCE(p.exit_date, $1::date) DESC, p.entry_date DESC`, [asof, pid]);
   if (!pos.length) return [];
 
   // one query for every involved stock's price path, from the earliest entry
@@ -276,8 +297,8 @@ export async function getTrades(): Promise<Trade[]> {
       ? (slice[slice.length - 1].close / slice[0].close - 1) * 100 : 0;
 
     const isInception = entryDate === inception;
-    const whyEntry = `${isInception ? "F+ inception pick" : "F+ quarterly rebalance pick"} on `
-      + `${entryDate}: ranked in the top names by the mechanical composite (momentum + quality `
+    const whyEntry = `${isInception ? "Enhanced F+ inception pick" : "Enhanced F+ quarterly rebalance pick"} on `
+      + `${entryDate}: ranked in the top names by the Enhanced F+ composite (vol-adjusted momentum + quality `
       + `+ low-volatility), within the ≤4-per-sector cap, bought at ${exposure} exposure.`;
     let whyExit: string | null = null;
     if (status === "closed") {
@@ -285,7 +306,7 @@ export async function getTrades(): Promise<Trade[]> {
       whyExit = reason === "breakdown"
         ? `Stop hit on ${exitDate}: fell ≥15% below entry (cut-on-breakdown) to protect capital.`
         : reason === "rebalance"
-          ? `Sold on ${exitDate}: dropped out of the F+ top names at the quarterly rebalance.`
+          ? `Sold on ${exitDate}: dropped out of the Enhanced F+ top names at the quarterly rebalance.`
           : `Closed on ${exitDate}${reason ? ` (${reason})` : ""}.`;
     }
     return {

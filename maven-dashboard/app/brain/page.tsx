@@ -15,12 +15,12 @@ export default async function Brain() {
       </Card>
 
       {/* The honest live record: the frozen F+ paper book vs the index */}
-      <Card title="Is it working?" sub="F+ live paper record vs Nifty 500 TRI" delay={80}>
+      <Card title="Is it working?" sub="Enhanced F+ live paper record vs Nifty 500 TRI" delay={80}>
         <ABChart data={curve} readout={readout} />
       </Card>
 
       <p className="px-1 pt-1 text-xs text-dim">
-        The frozen F+ engine decides the portfolio from real end-of-day prices. The research
+        The frozen Enhanced F+ engine decides the portfolio from real end-of-day prices. The research
         agents above are built but offline and do NOT affect the live picks. Research tool, not
         investment advice.
       </p>

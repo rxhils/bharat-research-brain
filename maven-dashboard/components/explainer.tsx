@@ -9,9 +9,11 @@
  * CSS/SVG piece (no WebGL bundle in the research app). prefers-reduced-motion
  * is respected throughout.
  *
- * HONESTY CONTRACT: edge = risk (index-like return at ~half the drawdown;
- * covid F+ -27% vs market -38%). Every return/alpha figure is tagged
- * "Illustrative". Broker is read-only. No proprietary thresholds anywhere.
+ * HONESTY CONTRACT: edge = risk (Enhanced F+ beats Nifty 500 +129.97% vs
+ * +82.17% 2021-26 at lower drawdown 14.05% vs 18.59%; covid -13.88% vs market
+ * ~-38%). Every figure is backtested, not a live track record; universe is
+ * current constituents (survivorship → absolute returns optimistic). Broker is
+ * read-only. No proprietary thresholds anywhere.
  */
 
 import {
@@ -23,6 +25,18 @@ import {
   type Variants,
 } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+
+/** Hydration-safe reduced-motion: returns false on the server AND the first client
+ *  render (so the element tree is identical and hydration matches), then the real
+ *  prefers-reduced-motion value after mount. Without this, reduced-motion users hit
+ *  a hydration error wherever `reduce` changes which elements render (e.g. the
+ *  ScrollProgress bar, which returns null when reduced). */
+function useReducedMotionSafe(): boolean {
+  const reduce = useReducedMotion();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  return mounted ? !!reduce : false;
+}
 
 // ───────────────────────────── content ─────────────────────────────
 
@@ -49,7 +63,7 @@ const LAYERS = [
     oneLine: "What should my portfolio do about it?",
     mental: "Portfolio Mode = what to do about it?",
     summary:
-      "Turns market intelligence into portfolio action — holdings, weights, cash level, rebalance decisions, risk control — all driven by the same validated F+ engine. Each style is the same engine with a different tilt, not a separate product.",
+      "Turns market intelligence into portfolio action — holdings, weights, cash level, rebalance decisions, risk control — all driven by the same validated Enhanced F+ engine. Each style is the same engine with a different tilt, not a separate product.",
     screenshot: "portfolio-mode.png",
     chips: ["Core", "Quality", "Growth", "Momentum", "Income", "Quant", "Value", "Contrarian"],
     chipLabel: "Eight styles, one engine",
@@ -106,7 +120,7 @@ const TIMELINE = [
   { t: "Two market eras", b: "Tested across distinct regimes — including the covid crash — not a single lucky stretch." },
   { t: "Pre-registered targets", b: "Success criteria were written down before the test, so a good result couldn't be invented after the fact." },
   { t: "No look-ahead", b: "Decisions used only the data available on that day. No future knowledge leaked backwards." },
-  { t: "Many tried, one passed", b: "A long list of approaches was built and rejected. F+ is the one that survived the discipline." },
+  { t: "Many tried, one passed", b: "A long list of approaches was built and rejected. Enhanced F+ is the one that survived the discipline." },
 ];
 
 const REJECTED = [
@@ -132,7 +146,7 @@ const GRAD_EMERALD: React.CSSProperties = {
 };
 
 function Reveal({ children, delay = 0, y = 22, className = "" }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   return (
     <motion.div
       className={className}
@@ -155,7 +169,7 @@ function RevealGroup({ children, className = "" }: { children: ReactNode; classN
   );
 }
 function Item({ children, className = "" }: { children: ReactNode; className?: string }) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const v: Variants = {
     hidden: reduce ? { opacity: 0 } : { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
@@ -166,7 +180,7 @@ function Item({ children, className = "" }: { children: ReactNode; className?: s
 function CountUp({ to, suffix = "", duration = 1.5 }: { to: number; suffix?: string; duration?: number }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-15% 0px" });
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const [v, setV] = useState(reduce ? to : 0);
   useEffect(() => {
     if (!inView) return;
@@ -810,7 +824,7 @@ function EngineCore() {
 const W = 740, H = 400, padL = 50, padR = 18, padT = 28, padB = 46, Y_MIN = -42;
 const MONTHS = [0, 0.08, 0.16, 0.22, 0.28, 0.34, 0.4, 0.5, 0.62, 0.78, 0.9, 1];
 const MARKET = [0, -2, -5, -14, -28, -38, -33, -24, -16, -9, -4, -1];
-const FPLUS = [0, -1, -3, -8, -16, -27, -23, -16, -11, -6, -2, 0];
+const FPLUS = [0, -1, -2, -5, -10, -14, -12, -8, -5, -3, -1, 0];
 const xs = (m: number) => padL + m * (W - padL - padR);
 const ys = (d: number) => padT + (-d / -Y_MIN) * (H - padT - padB);
 type P = readonly [number, number];
@@ -831,7 +845,7 @@ const band = smooth(fPts) + ` L ${lastM[0]},${lastM[1]}` + smooth([...mPts].reve
 function DrawdownChart() {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-20% 0px" });
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   const drawn = reduce ? true : inView;
   return (
     <div ref={ref} className="rounded-xl2 border border-border bg-panel/60 p-5 sm:p-6">
@@ -842,10 +856,10 @@ function DrawdownChart() {
         </div>
         <div className="flex items-center gap-4 text-xs text-muted">
           <span className="flex items-center gap-2"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#5a616a" strokeWidth="2.4" strokeDasharray="4 3" /></svg>Market</span>
-          <span className="flex items-center gap-2"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#34d399" strokeWidth="2.8" /></svg>F+ engine</span>
+          <span className="flex items-center gap-2"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#34d399" strokeWidth="2.8" /></svg>Enhanced F+</span>
         </div>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Drawdown comparison: market troughs at -38%, F+ at -27%.">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Drawdown comparison: market troughs at -38%, Enhanced F+ at -13.88%.">
         <defs>
           <linearGradient id="xdband" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#34d399" stopOpacity="0.16" />
@@ -874,8 +888,8 @@ function DrawdownChart() {
           <p className="mt-1 font-serif text-3xl text-muted">{drawn ? <CountUp to={-38} suffix="%" duration={1.6} /> : "0%"}</p>
         </div>
         <div className="rounded-xl border border-emerald/30 bg-emerald/[0.06] p-4">
-          <p className="text-[0.56rem] font-semibold uppercase tracking-label text-dim">F+ fell</p>
-          <p className="mt-1 font-serif text-3xl text-emerald">{drawn ? <CountUp to={-27} suffix="%" duration={1.6} /> : "0%"}</p>
+          <p className="text-[0.56rem] font-semibold uppercase tracking-label text-dim">Enhanced F+ fell</p>
+          <p className="mt-1 font-serif text-3xl text-emerald tnum">{drawn ? "−13.88%" : "0%"}</p>
         </div>
       </div>
     </div>
@@ -947,7 +961,7 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
 // Thin scroll-progress bar — a quiet "you are here" cue (Jakub: subtle polish).
 function ScrollProgress() {
   const { scrollYProgress } = useScroll();
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   if (reduce) return null;
   return (
     <motion.div
@@ -959,7 +973,7 @@ function ScrollProgress() {
 }
 
 export function Explainer() {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotionSafe();
   return (
     <div className="relative overflow-x-clip">
       <ScrollProgress />
@@ -985,19 +999,19 @@ export function Explainer() {
             <span className="text-[0.7rem] font-semibold uppercase tracking-label text-gold">How it works</span>
           </motion.div>
           <h1 className="font-serif text-[clamp(2.5rem,6.5vw,4.6rem)] font-light leading-[0.98] tracking-[-0.02em] text-ink">
-            <motion.span className="block" initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}>Matches the market.</motion.span>
-            <motion.span className="block italic" style={GRAD_EMERALD} initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}>Beats the market.</motion.span>
+            <motion.span className="block" initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}>Beats the market.</motion.span>
+            <motion.span className="block italic" style={GRAD_EMERALD} initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}>Half the fall.</motion.span>
           </h1>
           <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }} className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
             An AI research engine for Indian equities — built on a strategy validated across two market eras, including covid.
           </motion.p>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.95 }} className="mt-10">
             <div className="flex flex-wrap items-baseline gap-x-7 gap-y-3">
-              <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-emerald tnum">+41%</span><span className="text-sm text-dim">F+ · 2021–26</span></span>
+              <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-emerald tnum">+129.97%</span><span className="text-sm text-dim">Enhanced F+ · 2021–26</span></span>
               <span className="text-dim">vs</span>
-              <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-muted tnum">+36%</span><span className="text-sm text-dim">Nifty 500</span></span>
+              <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-muted tnum">+82.17%</span><span className="text-sm text-dim">Nifty 500</span></span>
             </div>
-            <p className="mt-3 text-xs text-dim">Avg per walk-forward window, 2021–2026 — beat the index 4 / 4 · backtested, illustrative</p>
+            <p className="mt-3 text-xs text-dim">Full-period total return, 2021–2026 — at lower drawdown 14.05% vs 18.59% · Backtested, not a live track record</p>
           </motion.div>
         </div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, delay: 0.3 }} className="flex justify-center">
@@ -1016,7 +1030,7 @@ export function Explainer() {
               </h2>
             </Reveal>
             <div className="mt-6 max-w-lg space-y-4 text-lg leading-relaxed text-muted">
-              <Reveal><p>Most strategies chase return. The F+ engine chases survival first — and lets return follow.</p></Reveal>
+              <Reveal><p>Most strategies chase return. The Enhanced F+ engine chases survival first — and lets return follow.</p></Reveal>
               <Reveal delay={0.05}><p>Across a full crash it participated on the way up and stepped aside on the way down. The result wasn&apos;t a bigger number. It was a smaller hole.</p></Reveal>
             </div>
           </div>
@@ -1082,7 +1096,8 @@ export function Explainer() {
           <div className="relative mt-16 overflow-hidden rounded-xl2 border border-emerald/25 p-8 sm:p-10" style={{ background: "linear-gradient(135deg,rgba(52,211,153,0.08),rgba(17,19,22,0.5) 60%)" }}>
             <div className="pointer-events-none absolute -right-10 -top-10 h-44 w-44 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.3),transparent 70%)" }} />
             <p className="text-[0.6rem] font-semibold uppercase tracking-label text-emerald">The honest claim</p>
-            <p className="mt-4 max-w-3xl font-serif text-2xl leading-snug text-ink">F+ matched the index with roughly half the drawdown, and survived covid at −27% versus −38%. Its edge is risk management — earned through rigorous testing, not marketing.</p>
+            <p className="mt-4 max-w-3xl font-serif text-2xl leading-snug text-ink">Enhanced F+ beat the Nifty 500 (+129.97% vs +82.17%, 2021–26) at lower drawdown (14.05% vs 18.59%), and survived covid at −13.88% versus the market&apos;s ~−38%. Its edge is risk management — earned through rigorous testing, not marketing.</p>
+            <p className="mt-3 text-xs text-dim">Backtested results — not a live track record. Universe is current index constituents, so absolute returns are optimistic; the return-vs-drawdown edge is the durable signal.</p>
           </div>
         </Reveal>
         <Reveal><p className="mt-16 font-serif text-xl text-muted">We tried plenty that didn&apos;t work — and kept the receipts.</p></Reveal>
@@ -1116,7 +1131,7 @@ export function Explainer() {
             </Item>
           ))}
         </RevealGroup>
-        <Reveal><p className="mx-auto mt-16 max-w-md font-serif text-xl italic text-muted">Matches the market. Half the fall.</p></Reveal>
+        <Reveal><p className="mx-auto mt-16 max-w-md font-serif text-xl italic text-muted">Beats the market. Half the fall.</p></Reveal>
       </section>
     </div>
   );

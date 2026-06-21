@@ -16,8 +16,8 @@ const serif = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Maven — Bharat Brain F+",
-  description: "Forward paper-trading dashboard for the F+ risk engine.",
+  title: "Maven — Bharat Brain",
+  description: "Forward paper-trading dashboard for the Enhanced F+ risk engine.",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <footer className="mt-4 border-t border-hairline py-6 text-xs leading-relaxed text-dim">
             Research tool. Not investment advice. Paper-traded results, not real money.
             <br />
-            F+ engine commit 57e72d5 (frozen). Built for personal research; not registered
+            Enhanced F+ engine commit 6ced078 (frozen). Built for personal research; not registered
             with SEBI.
           </footer>
         </div>

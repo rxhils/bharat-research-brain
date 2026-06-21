@@ -15,11 +15,11 @@ export default async function Trades() {
         <span>· {status.priceRows.toLocaleString("en-IN")} price rows · {status.stocks} stocks</span>
         <span>· latest <span className="font-mono text-ink">{status.latestPrice}</span></span>
       </div>
-      <Card title="Trades" sub="every position F+ has taken — price path + why">
+      <Card title="Trades" sub="every position Enhanced F+ has taken — price path + why">
         <TradesView trades={trades} />
       </Card>
       <p className="px-1 text-xs text-dim">
-        Every trade is a mechanical F+ decision from real end-of-day prices (no discretion). The
+        Every trade is a mechanical Enhanced F+ decision from real end-of-day prices (no discretion). The
         sparkline is the stock's real adjusted close, entry → today. Research tool, not investment
         advice.
       </p>
