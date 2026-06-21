@@ -77,17 +77,17 @@ const LAYERS = [
   },
   {
     n: 3,
-    name: "Focus",
-    nav: "Focus",
-    oneLine: "Back one theme with precision.",
-    mental: "Focus = one conviction, done with rules.",
+    name: "Watchlist",
+    nav: "Watchlist",
+    oneLine: "Track what matters, personally.",
+    mental: "Watchlist = your live layer between curiosity and conviction.",
     summary:
-      "Turns a single idea — Digital Payments, Green Energy, PSU Banks, Infrastructure, AI & Data — into a concentrated basket, still run through the same portfolio discipline. The theme decides the universe; the engine decides the basket.",
-    screenshot: "focus.png",
-    chips: ["Digital Payments", "Green Energy", "PSU Banks", "Infrastructure", "AI & Data"],
-    chipLabel: "Themes",
-    note: "Thematic references are illustrative, not promises. Concentrated baskets carry higher risk — labelled as such in-app.",
-    illustrative: true,
+      "Watchlist is your personal tracking layer — the names you're studying before you commit. Save the stocks you care about, watch how they move, see where they overlap with MAVEN portfolios, and follow their signals without buying into a portfolio yet. Some may be future buys, some you already hold at your broker, some you just want to follow closely — MAVEN keeps the list alive with movement, overlap, and what changed today.",
+    screenshot: "watchlist.png",
+    chips: ["Saved names", "Price moves", "Portfolio overlap", "Alerts", "Earnings", "Signals"],
+    chipLabel: "Tracks",
+    note: "Watchlist data is for tracking and research — it helps you follow names more closely before acting.",
+    illustrative: false,
     gallery: [] as { file: string; cap: string }[],
   },
   {
@@ -325,7 +325,7 @@ function MarketModeScreen() {
         {[
           { t: "Ask AI", a: true },
           { t: "Portfolios", a: false },
-          { t: "Focus", a: false },
+          { t: "Watchlist", a: false },
           { t: "Broker", a: false },
         ].map((tb) => (
           <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}>
@@ -353,7 +353,7 @@ function TabIcon({ name, active }: { name: string; active: boolean }) {
   const c = { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: col, strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   if (name === "Ask AI") return <svg {...c} aria-hidden><path d="M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z" /></svg>;
   if (name === "Portfolios") return <svg {...c} aria-hidden><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2" /></svg>;
-  if (name === "Focus") return <svg {...c} aria-hidden><circle cx="12" cy="12" r="8" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></svg>;
+  if (name === "Watchlist") return <svg {...c} aria-hidden><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 18.7l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" /></svg>;
   return <svg {...c} aria-hidden><path d="M9 15l6-6M10 6l1-1a4 4 0 016 6l-1 1M14 18l-1 1a4 4 0 01-6-6l1-1" /></svg>;
 }
 
@@ -432,7 +432,7 @@ function PortfolioAskScreen() {
       </div>
 
       <div className="mt-1.5 flex items-center justify-around border-t border-hairline pt-1.5">
-        {[{ t: "Ask AI", a: true }, { t: "Portfolios", a: false }, { t: "Focus", a: false }, { t: "Broker", a: false }].map((tb) => (
+        {[{ t: "Ask AI", a: true }, { t: "Portfolios", a: false }, { t: "Watchlist", a: false }, { t: "Broker", a: false }].map((tb) => (
           <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}>
             <TabIcon name={tb.t} active={tb.a} />{tb.t}
           </div>
@@ -533,79 +533,75 @@ function PortfoliosScreen({ variant }: { variant: string }) {
   );
 }
 
-// Live recreation of the "Focus" thematic-baskets screen (image 1).
-type Basket = { name: string; sub: string; ret: string; risk: string; color: string; icon: string };
-const BASKETS: Basket[] = [
-  { name: "Green Energy", sub: "500GW clean-power by 2030", ret: "+94%", risk: "Med-High", color: "#34d399", icon: "leaf" },
-  { name: "PSU Banks", sub: "NPAs down 40% since 2021", ret: "+89%", risk: "Medium", color: "#c9a961", icon: "bank" },
-  { name: "Infrastructure", sub: "₹11.1L Cr capex supercycle", ret: "+52%", risk: "Medium", color: "#fb923c", icon: "build" },
-  { name: "AI & Data", sub: "$2B AI spend by 2027", ret: "+62%", risk: "High", color: "#7aa2ff", icon: "chip" },
+// Live recreation of the "Watchlist" personal-tracking screen (image 2).
+type Watch = { sym: string; name: string; price: string; chg: string };
+const WATCH: Watch[] = [
+  { sym: "LTTS", name: "L&T Technology Services Ltd.", price: "₹3,351", chg: "+1.82%" },
+  { sym: "ANANTRAJ", name: "Anant Raj Ltd.", price: "₹535", chg: "+4.19%" },
 ];
 
-function FocusIcon({ name, color }: { name: string; color: string }) {
-  const c = { width: 13, height: 13, viewBox: "0 0 24 24", fill: "none", stroke: color, strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (name === "leaf") return <svg {...c} aria-hidden><path d="M4 20s0-8 8-11c4-1.5 8-1 8-1s.5 4-1 8c-3 8-11 8-11 8M4 20c3-3 6-5 9-6" /></svg>;
-  if (name === "bank") return <svg {...c} aria-hidden><path d="M3 9l9-5 9 5M4 9v9M9 9v9M15 9v9M20 9v9M3 19h18" /></svg>;
-  if (name === "build") return <svg {...c} aria-hidden><path d="M5 21V5a1 1 0 011-1h6a1 1 0 011 1v16M13 9h5a1 1 0 011 1v11M8 8h2M8 12h2M8 16h2M16 13h0M16 17h0" /></svg>;
-  return <svg {...c} aria-hidden><rect x="7" y="7" width="10" height="10" rx="1.5" /><path d="M10 2v3M14 2v3M10 19v3M14 19v3M2 10h3M2 14h3M19 10h3M19 14h3" /></svg>;
-}
+// Portfolio strategies — the plain-English engine behind each MAVEN book.
+type Strat = { name: string; tag: string; oneLine: string; strategy: string; buys: string; signature?: boolean };
+const STRATEGIES: Strat[] = [
+  { name: "Defensive", tag: "Stable", oneLine: "Built to fall less in bad markets.",
+    strategy: "Leans toward steadier businesses that tend to hold up better when markets turn weak or uncertain.",
+    buys: "Prefers stocks with calmer, more resilient behaviour and lower downside than the aggressive books." },
+  { name: "Growth", tag: "Aggressive", oneLine: "Higher upside, higher swings.",
+    strategy: "Backs companies with real expansion potential — where revenue, earnings, or the market itself may still be compounding.",
+    buys: "Looks for businesses that can outgrow the market, accepting bigger price swings to get there." },
+  { name: "Momentum", tag: "Trend", oneLine: "Buy what is already strong.",
+    strategy: "Follows market leadership — it aims to own the names already showing real price strength and staying power.",
+    buys: "Ranks stocks by strength and favours the ones already moving well; the weaker names quietly fall out." },
+  { name: "Income", tag: "Yield", oneLine: "Built to generate cash flow.",
+    strategy: "Focuses on companies that can pay out more healthily and more dependably over time.",
+    buys: "Seeks businesses where dividends and cash generation look sustainable — not just the highest headline yield." },
+  { name: "Quant", tag: "Systematic", signature: true, oneLine: "The rules-based, signal-driven book.",
+    strategy: "MAVEN's signature portfolio, powered by the enhanced F+ model — the most systematic book, run on defined signals, ranking logic, and disciplined selection rules.",
+    buys: "Instead of instinct, it scores every stock through the enhanced F+ framework and holds the names that fit the model best." },
+  { name: "Value", tag: "Mispriced", oneLine: "Buy good companies on sale.",
+    strategy: "Looks for businesses priced below what their fundamentals seem to justify.",
+    buys: "Hunts for stocks that look cheap against earnings, cash flow, or quality — while sidestepping the obvious value traps." },
+  { name: "Constrained", tag: "Controlled", oneLine: "A rules book with strict limits.",
+    strategy: "Follows a systematic approach, but inside tighter guardrails on weights, exposure, concentration, and risk.",
+    buys: "Even a high-scoring stock can be left out if it would break a position limit or a risk rule." },
+];
 
-function FocusRisk({ level }: { level: string }) {
-  const cls =
-    level === "High" ? "bg-rose/15 text-rose"
-      : level === "Medium" ? "bg-emerald/15 text-emerald"
-        : "bg-gold/15 text-gold-soft"; // Med-High
-  return <span className={`shrink-0 rounded-full px-1 py-[0.5px] text-[5px] font-semibold ${cls}`}>{level}</span>;
-}
-
-function FocusScreen() {
+function WatchlistScreen() {
   return (
-    <div className="absolute inset-0 flex flex-col gap-1.5 overflow-hidden px-2.5 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
-      <div>
-        <div className="text-[7px] font-bold uppercase tracking-[0.2em] text-gold">Focus</div>
-        <h4 className="font-serif text-[14px] leading-tight text-ink">One sector, every cap.</h4>
-        <div className="mt-0.5 flex items-center gap-1 text-[5px] text-muted"><span className="h-[3px] w-[3px] rounded-full bg-emerald" />Thematic baskets · NSE/BSE</div>
-      </div>
-
-      {/* featured basket */}
-      <div
-        className="relative overflow-hidden rounded-lg border border-gold/25 p-2"
-        style={{ backgroundImage: "linear-gradient(155deg, rgba(11,40,33,0.9), rgba(10,11,13,0.95)), radial-gradient(60% 80% at 75% 55%, rgba(52,211,153,0.28), transparent 60%)" }}
-      >
-        <span className="absolute right-1.5 top-1.5 rounded-full bg-emerald px-1 py-[1px] text-[5px] font-bold text-black">↗ +78%</span>
-        <span className="inline-flex items-center gap-1 rounded-full border border-emerald/40 bg-black/30 px-1 py-[1px] text-[5px] font-bold uppercase tracking-wide text-emerald"><span className="h-[3px] w-[3px] rounded-full bg-emerald" />Featured</span>
-        <div className="mt-2.5 font-serif text-[14px] leading-none text-ink">Digital Payments</div>
-        <div className="mt-0.5 text-[5px] text-muted">Financial Technology · High risk</div>
-        <div className="mt-1 flex gap-1">
-          {["20% sleeve", "5 stocks", "Quarterly"].map((x) => (
-            <span key={x} className="rounded border border-white/15 bg-black/20 px-1 py-[1px] text-[5px] text-muted">{x}</span>
-          ))}
+    <div className="absolute inset-0 flex flex-col gap-2 overflow-hidden px-2.5 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="text-[7px] font-bold uppercase tracking-[0.2em] text-gold">Watchlist</div>
+          <h4 className="mt-0.5 font-serif text-[15px] leading-none text-ink">Names you track.</h4>
+          <div className="mt-1 text-[5px] text-muted">Signals that matter — saved to this device.</div>
         </div>
+        <span className="grid h-4 w-4 shrink-0 place-items-center rounded-full border border-gold/40 text-[8px] leading-none text-gold-soft">+</span>
       </div>
 
-      <div className="text-[5px] font-bold uppercase tracking-[0.2em] text-dim">All baskets</div>
-      <div className="flex flex-col gap-1">
-        {BASKETS.map((b) => (
-          <div key={b.name} className="flex items-center gap-1.5 overflow-hidden rounded-md border border-border bg-panel/50 p-1" style={{ borderLeft: `2px solid ${b.color}` }}>
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md" style={{ backgroundColor: `${b.color}1f` }}><FocusIcon name={b.icon} color={b.color} /></span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-[7px] font-bold text-ink">{b.name}</div>
-              <div className="truncate text-[5px] text-muted">{b.sub}</div>
-              <svg viewBox="0 0 80 16" className="mt-0.5 h-2 w-full" preserveAspectRatio="none" aria-hidden>
-                <path d="M0 12 C12 12 16 6 26 8 C36 10 40 4 52 7 C64 10 70 3 80 5" fill="none" stroke={b.color} strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+      <div className="flex items-baseline justify-between">
+        <span className="text-[10px] font-bold text-ink">2 tracked</span>
+        <span className="text-[5px] text-muted">2 up · 0 down today</span>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        {WATCH.map((w) => (
+          <div key={w.sym} className="rounded-lg border border-border bg-panel/50 p-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] font-bold text-ink">{w.sym}</span>
+              <span className="text-[8px] font-semibold text-ink">{w.price}</span>
             </div>
-            <div className="flex flex-col items-end gap-0.5">
-              <span className="text-[10px] font-bold text-emerald">{b.ret}</span>
-              <FocusRisk level={b.risk} />
+            <div className="mt-0.5 flex items-center justify-between gap-1">
+              <span className="truncate text-[5px] text-muted">{w.name}</span>
+              <span className="shrink-0 text-[6px] font-semibold text-emerald">{w.chg}</span>
             </div>
-            <span className="text-[8px] text-gold/70">›</span>
           </div>
         ))}
       </div>
 
+      <p className="text-[5px] leading-relaxed text-dim">Last close from NSE/BSE end-of-day data — live prices resume when the market opens. Overlap shows smart-money portfolios that hold the name.</p>
+
       <div className="mt-auto flex items-center justify-around border-t border-hairline pt-1.5">
-        {[{ t: "Ask AI", a: false }, { t: "Portfolios", a: false }, { t: "Focus", a: true }, { t: "Broker", a: false }].map((tb) => (
+        {[{ t: "Ask AI", a: false }, { t: "Portfolios", a: false }, { t: "Watchlist", a: true }, { t: "Broker", a: false }].map((tb) => (
           <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}>
             <TabIcon name={tb.t} active={tb.a} />{tb.t}
           </div>
@@ -636,7 +632,7 @@ function BrokerHeader() {
 function BrokerTabBar() {
   return (
     <div className="flex items-center justify-around border-t border-hairline pt-1.5">
-      {[{ t: "Ask AI", a: false }, { t: "Portfolios", a: false }, { t: "Focus", a: false }, { t: "Broker", a: true }].map((tb) => (
+      {[{ t: "Ask AI", a: false }, { t: "Portfolios", a: false }, { t: "Watchlist", a: false }, { t: "Broker", a: true }].map((tb) => (
         <div key={tb.t} className={`flex flex-col items-center gap-0.5 text-[6px] ${tb.a ? "text-emerald" : "text-dim"}`}><TabIcon name={tb.t} active={tb.a} />{tb.t}</div>
       ))}
     </div>
@@ -738,7 +734,7 @@ function HdfcLoginScreen() {
 function mainMock(layer: (typeof LAYERS)[number]): ReactNode {
   if (layer.n === 1) return <MarketModeScreen />;
   if (layer.n === 2) return <PortfolioAskScreen />;
-  if (layer.n === 3) return <FocusScreen />;
+  if (layer.n === 3) return <WatchlistScreen />;
   if (layer.n === 4) return <BrokerConnectScreen />;
   return undefined;
 }
@@ -1074,6 +1070,37 @@ export function Explainer() {
             <p className="mt-7 text-center font-serif text-2xl italic text-muted">Insight, then action.</p>
           </div>
         </Reveal>
+      </section>
+
+      {/* ── Portfolio strategies ── */}
+      <section className="border-t border-hairline py-20 sm:py-28">
+        <p className="text-[0.6rem] font-semibold uppercase tracking-label text-gold">Portfolio strategies</p>
+        <Reveal><h2 className="mt-6 max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Every portfolio has a different engine.</h2></Reveal>
+        <Reveal delay={0.05}><p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">MAVEN portfolios aren&apos;t just different baskets. Each one runs a different strategy, goal, and stock-selection logic — some built to protect capital, some to ride trend strength, some to follow strict model rules.</p></Reveal>
+        <div className="mt-14 grid gap-5 sm:grid-cols-2">
+          {STRATEGIES.map((s, i) => (
+            <Reveal key={s.name} y={20} delay={(i % 2) * 0.05}>
+              <div className={`group relative h-full overflow-hidden rounded-xl2 border p-6 transition-all duration-300 hover:-translate-y-0.5 ${s.signature ? "border-emerald/40 bg-panel/60 sm:col-span-2" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}>
+                {s.signature && <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.22),transparent 70%)" }} />}
+                <div className="relative flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    {s.signature && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 8l4 3 5-7 5 7 4-3-2 11H5z" /></svg>
+                    )}
+                    <h3 className="font-serif text-xl text-ink">{s.name}</h3>
+                  </div>
+                  <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[0.58rem] font-semibold uppercase tracking-label ${s.signature ? "border-emerald/40 text-emerald" : "border-border text-dim"}`}>{s.signature ? `Signature · ${s.tag}` : s.tag}</span>
+                </div>
+                <p className="relative mt-2 text-sm italic text-emerald/90">{s.oneLine}</p>
+                <p className="relative mt-3 max-w-xl text-sm leading-relaxed text-muted">{s.strategy}</p>
+                <div className="relative mt-4 border-t border-hairline pt-3">
+                  <p className="text-[0.55rem] font-semibold uppercase tracking-label text-dim">How it buys</p>
+                  <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted">{s.buys}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
       </section>
 
       {/* ── Validation ── */}
