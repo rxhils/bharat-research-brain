@@ -1029,6 +1029,19 @@ export function Explainer() {
               <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-muted tnum">+82.17%</span><span className="text-sm text-dim">Nifty 500</span></span>
             </div>
             <p className="mt-3 text-xs text-dim">Full-period total return, 2021–2026 — at lower drawdown 14.05% vs 18.59% · Backtested, not a live track record</p>
+            <motion.button
+              type="button"
+              onClick={() => document.getElementById("strategies")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+              className="group mt-8 inline-flex items-center gap-3 rounded-full border border-border bg-panel/50 py-2.5 pl-5 pr-2.5 text-sm text-muted transition-all duration-300 hover:border-emerald/40 hover:bg-panel/70 hover:text-ink"
+            >
+              <span>See how every model works</span>
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald/10 text-emerald transition-colors duration-300 group-hover:bg-emerald/20">
+                <motion.svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden animate={{ y: [0, 3, 0] }} transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}><path d="M6 9l6 6 6-6" /></motion.svg>
+              </span>
+            </motion.button>
           </motion.div>
         </div>
         <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, delay: 0.3 }} className="flex justify-center">
@@ -1094,7 +1107,7 @@ export function Explainer() {
       </section>
 
       {/* ── Portfolio strategies ── */}
-      <section className="border-t border-hairline py-20 sm:py-28">
+      <section id="strategies" className="scroll-mt-24 border-t border-hairline py-20 sm:py-28">
         <p className="text-[0.6rem] font-semibold uppercase tracking-label text-gold">Portfolio strategies</p>
         <Reveal><h2 className="mt-6 max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Every model has a different engine.</h2></Reveal>
         <Reveal delay={0.05}><p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">MAVEN portfolios aren&apos;t just different baskets of stocks. Each one follows a distinct strategy, risk profile, and selection logic — some built for steadier performance, some for stronger upside, some for tighter model discipline.</p></Reveal>
