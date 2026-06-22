@@ -1,8 +1,14 @@
-import { getAccount, getEquityCurve, getExposure, getHoldings, getKeyStats } from "@/lib/data";
+import {
+  getAccount, getEquityCurve, getExposure, getHoldings, getKeyStats, getLivePortfolios,
+} from "@/lib/data";
 import { Card, EquityChart, ExposureGauge, HoldingsTable } from "@/components/client";
 import { fmtDate, inrCompact, pct, plain, signClass } from "@/lib/format";
+import type { EquityPoint, ExposureState, Holding, KeyStats, PaperAccount } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+// "Quant" is shown as its strategy name on the public site.
+const displayName = (n: string) => (n === "Quant" ? "Enhanced F+" : n);
 
 function Stat({ label, value, tone = "text-ink", hint }: {
   label: string; value: string; tone?: string; hint?: string;
@@ -10,69 +16,97 @@ function Stat({ label, value, tone = "text-ink", hint }: {
   return (
     <div>
       <div className="text-[11px] uppercase tracking-wider text-dim">{label}</div>
-      <div className={`mt-1 font-mono text-xl tnum ${tone}`}>{value}</div>
+      <div className={`mt-1 font-mono text-lg tnum ${tone}`}>{value}</div>
       {hint && <div className="mt-0.5 text-[11px] text-dim">{hint}</div>}
     </div>
   );
 }
 
-export default async function Portfolio() {
-  const [acct, curve, exposure, stats, holdings] = await Promise.all([
-    getAccount(), getEquityCurve(), getExposure(), getKeyStats(), getHoldings(),
-  ]);
+type Panel = {
+  name: string; acct: PaperAccount; curve: EquityPoint[];
+  exposure: ExposureState; stats: KeyStats; holdings: Holding[];
+};
 
+/** One live paper book — its own headline, curve, exposure, stats, holdings. */
+function PortfolioPanel({ name, acct, curve, exposure, stats, holdings }: Panel) {
+  const isDefensive = name === "Defensive";
+  const dn = displayName(name);
   return (
     <div className="space-y-4">
-      {/* Headline */}
       <Card className="!p-6">
-        <div className="flex flex-wrap items-end justify-between gap-6">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-dim">Paper portfolio value</div>
-            <div className="mt-1 flex items-baseline gap-3">
-              <span className="font-mono text-4xl tnum text-ink">{inrCompact(acct.currentEquity)}</span>
-              <span className={`font-mono text-lg tnum ${signClass(stats.totalReturnPct)}`}>{pct(stats.totalReturnPct)}</span>
+            <div className="text-[11px] uppercase tracking-wider text-dim">{dn}</div>
+            <div className="mt-1 flex items-baseline gap-2.5">
+              <span className="font-mono text-3xl tnum text-ink">{inrCompact(acct.currentEquity)}</span>
+              <span className={`font-mono text-base tnum ${signClass(stats.totalReturnPct)}`}>{pct(stats.totalReturnPct)}</span>
             </div>
-            <div className="mt-2 text-xs text-muted">
+            <div className="mt-1.5 text-xs text-muted">
               from {inrCompact(acct.startingCapital)} · alpha vs Nifty 500
               <span className={`ml-1 font-mono tnum ${signClass(stats.alphaVsNifty500Pct)}`}>{pct(stats.alphaVsNifty500Pct)}</span>
             </div>
           </div>
-          <div className="text-right text-xs text-dim">
-            <div>{stats.daysLive > 0
-              ? `Paper-traded since ${fmtDate(acct.inceptionDate)}`
-              : `Live from ${fmtDate(acct.inceptionDate)} — awaiting first session`}</div>
-            <div className="mt-0.5">{stats.daysLive > 0 ? `${stats.daysLive} days live · ` : ""}{acct.engineVersion}</div>
-            <div className="mt-2 inline-block rounded-md bg-emerald/10 px-2 py-1 text-[11px] text-emerald">
-              Goal: index-like return, ~half the drawdown
-            </div>
-          </div>
+          <span className="shrink-0 rounded-md bg-emerald/10 px-2 py-1 text-[10px] text-emerald">{acct.engineVersion}</span>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-dim">
+          <span>{stats.daysLive > 0
+            ? `Paper-traded since ${fmtDate(acct.inceptionDate)}`
+            : `Live from ${fmtDate(acct.inceptionDate)} — awaiting first session`}</span>
+          <span className="rounded-md bg-emerald/10 px-2 py-0.5 text-emerald">
+            {isDefensive ? "Capital protection, smaller drawdowns" : "Index-like return, ~half the drawdown"}
+          </span>
         </div>
       </Card>
 
-      {/* Curve + exposure */}
-      <div className="grid gap-4 lg:grid-cols-3">
-        <Card title="Equity curve" sub="Enhanced F+ vs Nifty 500 TRI" className="lg:col-span-2" delay={60}>
-          <EquityChart data={curve} />
-        </Card>
-        <Card title="Exposure" sub="cash sleeve" delay={120}>
-          <ExposureGauge state={exposure} />
-        </Card>
-      </div>
+      <Card title="Equity curve" sub={`${dn} vs Nifty 500 TRI`} delay={60}>
+        <EquityChart data={curve} />
+      </Card>
 
-      {/* Key stats — RISK first */}
-      <Card title="Key stats" sub="risk-first" delay={160}>
-        <div className="grid grid-cols-2 gap-5 sm:grid-cols-4">
+      <Card title="Exposure" sub="cash sleeve" delay={100}>
+        <ExposureGauge state={exposure} />
+      </Card>
+
+      <Card title="Key stats" sub="risk-first" delay={140}>
+        <div className="grid grid-cols-2 gap-4">
           <Stat label="Max drawdown" value={plain(stats.maxDrawdownPct) + "%"} tone="text-amber" hint="the headline metric" />
-          <Stat label="Sharpe" value={plain(stats.sharpe)} tone="text-ink" />
-          <Stat label="Holdings" value={String(stats.holdings)} tone="text-ink" hint="+ cash sleeve" />
-          <Stat label="Win rate" value={plain(stats.winRatePct, 0) + "%"} tone="text-ink" />
+          <Stat label="Sharpe" value={plain(stats.sharpe)} />
+          <Stat label="Holdings" value={String(stats.holdings)} hint="+ cash sleeve" />
+          <Stat label="Win rate" value={plain(stats.winRatePct, 0) + "%"} />
         </div>
       </Card>
 
-      {/* Holdings */}
-      <Card title="Holdings" sub={`${stats.holdings} positions + cash`} delay={200}>
+      <Card title="Holdings" sub={`${stats.holdings} positions + cash`} delay={180}>
         <HoldingsTable rows={holdings} />
       </Card>
+    </div>
+  );
+}
+
+export default async function Portfolio() {
+  const ports = await getLivePortfolios();
+  const panels = await Promise.all(
+    ports.map(async (p): Promise<Panel> => {
+      const [acct, curve, exposure, stats, holdings] = await Promise.all([
+        getAccount(p.id), getEquityCurve(p.id), getExposure(p.id), getKeyStats(p.id), getHoldings(p.id),
+      ]);
+      return { name: p.name, acct, curve, exposure, stats, holdings };
+    }),
+  );
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="text-[11px] uppercase tracking-wider text-dim">Paper portfolios</div>
+        <h1 className="mt-1 font-serif text-2xl text-ink">Two live books, two engines.</h1>
+        <p className="mt-1 text-sm text-muted">
+          Enhanced F+ trades vol-adjusted momentum; Defensive trades low-volatility with sooner, harder
+          de-risking. Both ₹10L paper, side by side.
+        </p>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        {panels.map((panel) => <PortfolioPanel key={panel.name} {...panel} />)}
+      </div>
 
       <p className="px-1 pt-2 text-xs text-dim">
         Research tool. Not investment advice. Paper-traded results, not real money.

@@ -32,10 +32,18 @@ async function livePortfolioId(): Promise<number | null> {
   return r[0]?.id == null ? null : Number(r[0].id);
 }
 
+/** All live portfolios (for the portfolio switcher), in display order. */
+export async function getLivePortfolios(): Promise<{ id: number; name: string }[]> {
+  if (!dbReady()) return [];
+  const r = await q<{ id: number; name: string }>(
+    "SELECT id, name FROM portfolios WHERE status = 'live' ORDER BY id");
+  return r.map((x) => ({ id: Number(x.id), name: String(x.name) }));
+}
+
 // ----------------------------------------------------------------- account
-export async function getAccount(): Promise<PaperAccount> {
+export async function getAccount(portfolioId?: number): Promise<PaperAccount> {
   if (!dbReady()) throw new NotConnected("account");
-  const pid = await livePortfolioId();
+  const pid = portfolioId ?? (await livePortfolioId());
   if (pid == null) throw new NotConnected("account (no live portfolio)");
   const r = await q<Record<string, unknown>>(
     `SELECT inception_date::text AS inception_date, starting_capital, current_cash,
@@ -55,9 +63,9 @@ export async function getAccount(): Promise<PaperAccount> {
 }
 
 // ------------------------------------------------------------- equity curve
-export async function getEquityCurve(): Promise<EquityPoint[]> {
+export async function getEquityCurve(portfolioId?: number): Promise<EquityPoint[]> {
   if (!dbReady()) return [];
-  const pid = await livePortfolioId();
+  const pid = portfolioId ?? (await livePortfolioId());
   if (pid == null) return [];
   const rows = await q<Record<string, unknown>>(
     `SELECT trade_date::text AS d, total_equity, nifty500_tri, exposure_level
@@ -79,9 +87,9 @@ export async function getEquityCurve(): Promise<EquityPoint[]> {
 }
 
 // ----------------------------------------------------------------- exposure
-export async function getExposure(): Promise<ExposureState> {
+export async function getExposure(portfolioId?: number): Promise<ExposureState> {
   if (!dbReady()) return { level: 0.5, regime: "risk_off", cashPct: 0 };
-  const pid = await livePortfolioId();
+  const pid = portfolioId ?? (await livePortfolioId());
   // No live book / no curve row yet = created but first allocation hasn't run → 100% cash.
   if (pid == null) return { level: 0.25, regime: "risk_off", cashPct: 100 };
   const r = await q<Record<string, unknown>>(
@@ -98,18 +106,18 @@ export async function getExposure(): Promise<ExposureState> {
 }
 
 // ---------------------------------------------------------------- key stats
-export async function getKeyStats(): Promise<KeyStats> {
+export async function getKeyStats(portfolioId?: number): Promise<KeyStats> {
   if (!dbReady()) {
     return { totalReturnPct: 0, alphaVsNifty500Pct: 0, maxDrawdownPct: 0, sharpe: 0, holdings: 0, winRatePct: 0, daysLive: 0 };
   }
-  const pid = await livePortfolioId();
+  const pid = portfolioId ?? (await livePortfolioId());
   const curve = pid == null ? [] : await q<Record<string, unknown>>(
     `SELECT total_equity, nifty500_tri, drawdown_pct
        FROM paper_equity_curve WHERE portfolio_id = $1 ORDER BY trade_date`, [pid]);
   if (curve.length < 1) {
     return { totalReturnPct: 0, alphaVsNifty500Pct: 0, maxDrawdownPct: 0, sharpe: 0, holdings: 0, winRatePct: 0, daysLive: 0 };
   }
-  const acct = await getAccount();
+  const acct = await getAccount(pid ?? undefined);
   const eq = curve.map((r) => num(r.total_equity));
   const last = eq[eq.length - 1];
   const totalReturnPct = (last / acct.startingCapital - 1) * 100;
@@ -149,11 +157,11 @@ export async function getKeyStats(): Promise<KeyStats> {
 }
 
 // ----------------------------------------------------------------- holdings
-export async function getHoldings(): Promise<Holding[]> {
+export async function getHoldings(portfolioId?: number): Promise<Holding[]> {
   if (!dbReady()) return [];
-  const acct = await getAccount();
+  const pid = portfolioId ?? (await livePortfolioId());
+  const acct = await getAccount(pid ?? undefined);
   const asof = await latestPriceDate();
-  const pid = await livePortfolioId();
   const rows = pid == null ? [] : await q<Record<string, unknown>>(
     `SELECT p.isin, s.nse_symbol AS ticker, s.company_name AS name, s.sector,
             p.entry_date::text AS entry_date, p.entry_price, p.shares,
@@ -243,13 +251,13 @@ export async function getAgentBoard(): Promise<AgentBoard> {
 }
 
 // ------------------------------------------------------------- trades (audit)
-export async function getTrades(): Promise<Trade[]> {
+export async function getTrades(portfolioId?: number): Promise<Trade[]> {
   if (!dbReady()) return [];
   const asof = await latestPriceDate();
-  const pid = await livePortfolioId();
+  const pid = portfolioId ?? (await livePortfolioId());
   if (pid == null) return [];
   let inception = "";
-  try { inception = (await getAccount()).inceptionDate; } catch { /* no account yet */ }
+  try { inception = (await getAccount(pid)).inceptionDate; } catch { /* no account yet */ }
 
   const pos = await q<Record<string, unknown>>(
     `SELECT p.id, p.isin, s.nse_symbol AS ticker, s.company_name AS name, s.sector,
