@@ -62,7 +62,7 @@ export function Nav() {
           {tab("/", "How it works")}
           {tab("/portfolio", "Portfolio")}
           {tab("/trades", "Trades")}
-          {tab("/brain", "Brain")}
+          {tab("/strategies", "Strategies")}
         </div>
         <Link
           href="/backtest"
