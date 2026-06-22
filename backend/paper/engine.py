@@ -34,6 +34,7 @@ from backend.backtest.cost_model import cost_on_notional
 from backend.backtest.engine import (
     BacktestConfig,
     breaks_down,
+    defensive_target_exposure_for_regime,
     split_capital,
     target_exposure_for_regime,
 )
@@ -64,11 +65,59 @@ _FPLUS = dict(
 )
 
 
-def fplus_cfg(as_of: date) -> BacktestConfig:
-    """An Enhanced-F+ BacktestConfig for single-date scoring (start/end are nominal)."""
+# ---------------------------------------------------------------------------
+# Per-portfolio engine dispatch. The SAME risk-managed F+ chassis (quality gate,
+# graded cash sleeve, 15% breakdown stop, weekly exposure check, 6.5% cash yield)
+# runs every book; only the SCORING tilt + de-risk ladder differ per portfolio.
+#   Quant      = Enhanced F+ (vol-adj momentum, standard exposure ladder) — UNCHANGED.
+#   Defensive  = low-vol scoring + sooner/harder de-risking (defensive_exposure).
+# Unknown/other slots default to Enhanced F+ so adding a slot can NEVER silently
+# change Quant. growth() is deliberately ABSENT — it failed validation, never live.
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True)
+class EngineSpec:
+    momentum_mode: str
+    defensive_exposure: bool
+    version: str  # written to paper_account.engine_version + event log
+
+
+_DEFAULT_ENGINE = EngineSpec(MOMENTUM_MODE, False, "Enhanced F+ 6ced078")
+_ENGINE_BY_NAME = {
+    "Quant": _DEFAULT_ENGINE,
+    "Defensive": EngineSpec("lowvol", True, "Defensive (low-vol + sooner/harder de-risk)"),
+}
+
+
+def _exposure_fn(spec: EngineSpec):
+    """The regime->exposure ladder for this engine (defensive de-risks sooner/harder)."""
+    return (
+        defensive_target_exposure_for_regime
+        if spec.defensive_exposure
+        else target_exposure_for_regime
+    )
+
+
+_SQL_PORTFOLIO_NAME_BY_ID = text("SELECT name FROM portfolios WHERE id = :pid")
+
+
+async def _engine_spec(session: AsyncSession, portfolio_id: int) -> EngineSpec:
+    """Resolve the engine for a portfolio by name. Default = Enhanced F+ (so an
+    unmapped slot can never alter Quant's behaviour or accidentally run a non-config)."""
+    name = (
+        await session.execute(_SQL_PORTFOLIO_NAME_BY_ID, {"pid": portfolio_id})
+    ).scalar()
+    return _ENGINE_BY_NAME.get(name, _DEFAULT_ENGINE)
+
+
+def fplus_cfg(as_of: date, spec: EngineSpec | None = None) -> BacktestConfig:
+    """A BacktestConfig for single-date scoring (start/end nominal). `spec` selects the
+    per-portfolio tilt; default = Enhanced F+ so existing callers are byte-identical."""
+    spec = spec or _DEFAULT_ENGINE
     return BacktestConfig(
         start_date=as_of - timedelta(days=1), end_date=as_of,
-        starting_capital=STARTING_CAPITAL, **_FPLUS,
+        starting_capital=STARTING_CAPITAL,
+        defensive_exposure=spec.defensive_exposure,
+        **{**_FPLUS, "momentum_mode": spec.momentum_mode},
     )
 
 
@@ -115,19 +164,23 @@ class Snapshot:
 
 
 async def compute_fplus_snapshot(
-    session: AsyncSession, as_of: date, current_isins: set[str]
+    session: AsyncSession, as_of: date, current_isins: set[str],
+    spec: EngineSpec | None = None,
 ) -> Snapshot:
-    """Run the ENHANCED F+ selection + exposure for `as_of` (mechanical composite,
-    vol-adjusted momentum ON). Reuses the runner's F+ helpers verbatim. NO LOOKAHEAD:
-    every fetch is bounded <= as_of. (Reads price/index tables only — not paper_*.)"""
-    cfg = fplus_cfg(as_of)
+    """Run the per-portfolio selection + exposure for `as_of` (mechanical composite).
+    `spec` selects the scoring tilt (Quant=vol-adj momentum; Defensive=low-vol) and the
+    de-risk ladder; default = Enhanced F+ so existing callers are byte-identical. Reuses
+    the runner's F+ helpers verbatim. NO LOOKAHEAD: every fetch is bounded <= as_of."""
+    spec = spec or _DEFAULT_ENGINE
+    cfg = fplus_cfg(as_of, spec)
     isins = await R._active_isins(session)
     sector_by = await R._sectors_map(session, isins)
     hist_start = R._history_start(as_of, None)  # forward dates: native, no seam
     closes, vols = await R._fetch_history(session, isins, start=hist_start, as_of=as_of)
-    # Enhanced F+: vol-adjusted 52w momentum metric, precomputed once per snapshot.
+    # per-portfolio 52w momentum metric (voladj for Quant, lowvol for Defensive).
     mom_metric = (
-        R._momentum_metric(closes, MOMENTUM_MODE) if MOMENTUM_MODE != "off" else None
+        R._momentum_metric(closes, spec.momentum_mode)
+        if spec.momentum_mode != "off" else None
     )
     quality, _qvols = await R._quality_set(session, isins, as_of, closes, cfg)
     macro = await reconstruct_macro_score(session, as_of)
@@ -151,7 +204,7 @@ async def compute_fplus_snapshot(
     idx_closes = await R._index_closes_asof(
         session, "nifty500_tri", as_of, max(cfg.beta_window + 5, 260)
     )
-    exposure = target_exposure_for_regime(idx_closes)
+    exposure = _exposure_fn(spec)(idx_closes)
     prices = await R._adj_close_on(session, target, as_of)
     return Snapshot(as_of, target, scores, exposure, prices, sector_by)
 
@@ -302,13 +355,14 @@ async def create_book(
               "cash": starting_capital, "holdings": 0}
     if dry_run:
         return result
+    spec = await _engine_spec(session, portfolio_id)
     acct_id = (await session.execute(_SQL_INS_ACCOUNT, {
         "pid": portfolio_id, "d": inception_date, "cap": starting_capital.quantize(_Q2),
         "cash": starting_capital.quantize(_Q2), "eq": starting_capital.quantize(_Q2),
-        "ev": "Enhanced F+ 6ced078", "src": "mechanical"})).scalar_one()
+        "ev": spec.version, "src": "mechanical"})).scalar_one()
     await _log_event(session, portfolio_id, inception_date, "book_created",
                      f"Empty-cash book created: Rs {starting_capital:.0f}, 0 holdings, "
-                     f"inception {inception_date} (Enhanced F+ 6ced078). Awaiting first run.")
+                     f"inception {inception_date} ({spec.version}). Awaiting first run.")
     await session.commit()
     return result | {"account_id": acct_id}
 
@@ -323,7 +377,8 @@ async def first_allocation(
         raise RuntimeError(f"no book for portfolio {portfolio_id} — run create_book first")
     if await has_started(session, portfolio_id) and not dry_run:
         raise RuntimeError(f"portfolio {portfolio_id} already started (has a curve)")
-    snap = await compute_fplus_snapshot(session, as_of, current_isins=set())
+    spec = await _engine_spec(session, portfolio_id)
+    snap = await compute_fplus_snapshot(session, as_of, current_isins=set(), spec=spec)
     book, cash = size_book(acct["cash"], snap.exposure, snap.prices)
     rows = [{"isin": isin, "px": snap.prices[isin], "shares": shares, "value": value,
              "sector": snap.sector_by.get(isin, "?")}
@@ -342,8 +397,8 @@ async def first_allocation(
         "cash": cash.quantize(_Q2), "eq": acct["cash"].quantize(_Q2), "id": acct["id"]})
     await _write_curve(session, portfolio_id, as_of, invested, cash, snap.exposure)
     await _log_event(session, portfolio_id, as_of, "first_allocation",
-                     f"Enhanced F+ first picks: {len(rows)} names, exposure {snap.exposure}, "
-                     f"cash {cash:.0f}, Rs {acct['cash']:.0f} (commit 6ced078)")
+                     f"{spec.version} first picks: {len(rows)} names, exposure {snap.exposure}, "
+                     f"cash {cash:.0f}, Rs {acct['cash']:.0f}")
     log.info("paper.first_allocation", pid=portfolio_id, as_of=str(as_of),
              names=len(rows), exposure=str(snap.exposure))
     await session.commit()
@@ -392,9 +447,10 @@ async def weekly_exposure(session: AsyncSession, portfolio_id: int, as_of: date)
     """Weekly: re-check regime; scale the invested sleeve to the new target exposure,
     moving the diff to/from cash (cost on the resized portion)."""
     acct = await get_account(session, portfolio_id)
+    spec = await _engine_spec(session, portfolio_id)
     positions = await _open_positions(session, portfolio_id)
     idx = await R._index_closes_asof(session, "nifty500_tri", as_of, 260)
-    new_exp = target_exposure_for_regime(idx)
+    new_exp = _exposure_fn(spec)(idx)
     prices = await _prices_on(session, [p["isin"] for p in positions], as_of)
     invested = sum((p["shares"] * prices.get(p["isin"], p["entry_price"]) for p in positions),
                    Decimal("0"))
@@ -422,7 +478,8 @@ async def quarterly_rebalance(session: AsyncSession, portfolio_id: int, as_of: d
     acct = await get_account(session, portfolio_id)
     positions = await _open_positions(session, portfolio_id)
     held = {p["isin"] for p in positions}
-    snap = await compute_fplus_snapshot(session, as_of, current_isins=held)
+    spec = await _engine_spec(session, portfolio_id)
+    snap = await compute_fplus_snapshot(session, as_of, current_isins=held, spec=spec)
     target = set(snap.target)
     prices = await _prices_on(session, list(held | target), as_of)
     cash = acct["cash"]
@@ -452,7 +509,7 @@ async def quarterly_rebalance(session: AsyncSession, portfolio_id: int, as_of: d
     await session.execute(_SQL_UPD_ACCOUNT, {
         "cash": cash.quantize(_Q2), "eq": total.quantize(_Q2), "id": acct["id"]})
     await _log_event(session, portfolio_id, as_of, "rebalance",
-                     f"quarterly Enhanced-F+ rebalance: {len(tradeable)} names, "
+                     f"quarterly {spec.version} rebalance: {len(tradeable)} names, "
                      f"exposure {snap.exposure}")
     await session.commit()
     return {"date": as_of, "names": len(tradeable), "exposure": snap.exposure}

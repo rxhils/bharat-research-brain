@@ -73,3 +73,39 @@ def enhanced_fplus(
 
 # The adopted default. Anything asking "the canonical strategy" gets Enhanced F+.
 CANONICAL = enhanced_fplus
+
+
+# ---------------------------------------------------------------------------
+# DEFENSIVE — research-only, SEPARATE named config (Phase-2 follow-up).
+#
+# Same risk-managed F+ chassis (quality gate, sector cap 4, top-25, 63-day hold,
+# weekly exposure check, 15% breakdown stop, graded cash) but tilted for SAFETY,
+# not return:
+#   * scoring favors LOW realized volatility (momentum_mode="lowvol"), NOT
+#     momentum — the core difference from Enhanced F+ (which uses "voladj");
+#   * de-risks SOONER and HARDER (defensive_exposure=True -> faster 100-DMA,
+#     -5% deep trigger, 0.35/0.15 risk-off floors);
+#   * idle-cash yield kept @ 6.5%/yr (identical honest accounting to Enhanced F+).
+#
+# Built ALONGSIDE enhanced_fplus()/fplus_classic(); it never replaces or edits
+# them. NOT wired to the reproducibility gate's CANONICAL set, the live paper
+# engine, the Quant live book, or the VPS cron — this is a backtest config only.
+# ---------------------------------------------------------------------------
+DEFENSIVE_MOMENTUM_MODE = "lowvol"
+DEFENSIVE_CASH_YIELD = Decimal("0.065")
+
+
+def defensive(
+    start: date = CANONICAL_START,
+    end: date = CANONICAL_END,
+    history_floor: date | None = CANONICAL_FLOOR,
+) -> BacktestConfig:
+    """Research-only DEFENSIVE engine — F+ chassis + low-vol scoring + sooner/harder
+    de-risking + cash-yield @ 6.5%/yr. Isolated from Enhanced F+ (no shared mutable
+    state; only new default-off BacktestConfig knobs)."""
+    return BacktestConfig(
+        start_date=start, end_date=end, history_floor=history_floor,
+        momentum_mode=DEFENSIVE_MOMENTUM_MODE, cash_yield_annual=DEFENSIVE_CASH_YIELD,
+        defensive_exposure=True,
+        **_FPLUS_BASE,
+    )

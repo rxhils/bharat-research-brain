@@ -96,6 +96,12 @@ class BacktestConfig:
     # mid-cap cut) for a STANDALONE satellite book. None = full active universe
     # (frozen F+ default, unchanged).
     restrict_isins: tuple[str, ...] | None = None
+    # DEFENSIVE config (research-only; SEPARATE from Enhanced F+). When True,
+    # run_backtest_f sizes the cash sleeve with defensive_target_exposure_for_regime
+    # (faster 100-DMA trend filter, shallower -5% deep trigger, lower risk-off
+    # floors 0.35/0.15) instead of the standard ladder — it de-risks SOONER and
+    # HARDER. False = Enhanced F+/F+ unchanged, byte-identical.
+    defensive_exposure: bool = False
 
 
 @dataclass(frozen=True)
@@ -478,6 +484,51 @@ def target_exposure_for_regime(
         return Decimal("0.25")
     if below:
         return Decimal("0.50")
+    if mom_pct >= 0:
+        return Decimal("1.00")
+    return Decimal("0.50")
+
+
+def defensive_target_exposure_for_regime(
+    index_closes: list[Decimal] | list[float],
+    *,
+    dma_window: int = 100,
+    mom_window: int = 50,
+    deep_pct: Decimal = Decimal("-5"),
+) -> Decimal:
+    """DEFENSIVE graded exposure — de-risks SOONER and HARDER than the standard
+    F+ ladder (target_exposure_for_regime). The defensive-config counterpart; the
+    standard ladder is left untouched so Enhanced F+ stays byte-identical.
+
+    Differences from the standard ladder (all in the safety direction):
+      * faster 100-DMA trend filter (vs 200) — drops to cash sooner on weakness;
+      * shallower deep-risk trigger (-5% 50-day vs -8%) — hits max cash sooner;
+      * lower risk-off floors (0.35 mild / 0.15 deep vs 0.50 / 0.25) — holds more
+        cash when risk-off (the 6.5% idle-cash yield cushions the drag).
+
+      above DMA AND 50-day return >= 0          -> 1.00 (healthy, fully invested)
+      above DMA but 50-day return < 0           -> 0.50 (not fully healthy)
+      below DMA                                 -> 0.35 (mild risk-off, 65% cash)
+      below DMA AND 50-day return < deep_pct    -> 0.15 (deep risk-off, 85% cash)
+
+    STILL REACTIVE (a faster DMA reacts quicker but it is the same family of trend
+    filter): it confirms downtrends, so it cannot dodge the FIRST leg of a sudden
+    crash — the same structural limit as Enhanced F+ (see the gold-sleeve lesson).
+    Warmup (< dma_window closes) defaults to 1.00 — never fabricate a regime.
+    """
+    n = len(index_closes)
+    if n < dma_window or n <= mom_window:
+        return Decimal("1.00")
+    closes = [float(x) for x in index_closes]
+    dma = sum(closes[-dma_window:]) / dma_window
+    last = closes[-1]
+    ref = closes[-mom_window - 1]
+    mom_pct = (last - ref) / ref * 100 if ref > 0 else 0.0
+    below = last < dma
+    if below and mom_pct < float(deep_pct):
+        return Decimal("0.15")
+    if below:
+        return Decimal("0.35")
     if mom_pct >= 0:
         return Decimal("1.00")
     return Decimal("0.50")

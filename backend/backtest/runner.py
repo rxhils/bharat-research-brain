@@ -29,6 +29,7 @@ from backend.backtest.engine import (
     breaks_down,
     cagr_pct,
     classify_defensive_pool,
+    defensive_target_exposure_for_regime,
     detect_regime,
     low_vol_cutoff,
     low_vol_pass,
@@ -112,6 +113,10 @@ def _momentum_metric(
     mode "voladj" -> that return * (TYPICAL_VOL / realized annual vol): return per
                      unit of risk, kept in return-units so the scorer's existing
                      linear map is unchanged (a fair raw-vs-voladj comparison).
+    mode "lowvol" -> DEFENSIVE: (TYPICAL_VOL - realized annual vol), independent of
+                     return/momentum. Higher metric = LOWER volatility, so the
+                     scorer's linear map ranks the steadiest names highest and its
+                     top-20% gate admits only the lowest-vol quintile above 50.
     Stocks without a full 52w+1 history are omitted (treated as no momentum).
     """
     out: dict[str, float] = {}
@@ -119,22 +124,29 @@ def _momentum_metric(
         if len(s) <= _MOM_W52 or s[-_MOM_W52] <= 0:
             continue
         raw = (s[-2] - s[-_MOM_W52]) / s[-_MOM_W52]
-        if mode != "voladj":
+        if mode == "raw":
             out[isin] = raw
             continue
-        window = s[-(_MOM_W52 + 1):-1]  # ~252 closes ending yesterday (no lookahead)
+        # Realized annualized vol of the ~252-day window ending yesterday (no
+        # lookahead). Shared by "voladj" (return/vol) and "lowvol" (defensive).
+        window = s[-(_MOM_W52 + 1):-1]
         rets = [
             window[k] / window[k - 1] - 1.0
             for k in range(1, len(window))
             if window[k - 1] > 0
         ]
         if len(rets) < 2:
-            out[isin] = raw
+            # Insufficient history: voladj falls back to raw; lowvol treats it as
+            # typical-vol (neutral metric 0.0) so it is neither rewarded nor punished.
+            out[isin] = raw if mode == "voladj" else 0.0
             continue
         mean = sum(rets) / len(rets)
         var = sum((r - mean) ** 2 for r in rets) / (len(rets) - 1)
         vol = (var ** 0.5) * (_MOM_W52 ** 0.5)
-        out[isin] = raw * (_MOM_TYPICAL_VOL / max(vol, _MOM_VOL_FLOOR))
+        if mode == "lowvol":
+            out[isin] = _MOM_TYPICAL_VOL - vol
+        else:  # voladj
+            out[isin] = raw * (_MOM_TYPICAL_VOL / max(vol, _MOM_VOL_FLOOR))
     return out
 
 
@@ -1134,6 +1146,15 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
         rebalances=len(rebal), active_isins=len(isins),
     )
 
+    # DEFENSIVE config dispatch: size the cash sleeve with the sooner/harder
+    # defensive ladder. Default (cfg.defensive_exposure False) = the standard F+
+    # ladder, so Enhanced F+/F+ are byte-identical.
+    exp_fn = (
+        defensive_target_exposure_for_regime
+        if cfg.defensive_exposure
+        else target_exposure_for_regime
+    )
+
     cash = cfg.starting_capital
     positions: dict[str, _FPos] = {}
     daily: list[tuple[date, Decimal]] = [(days[0], cfg.starting_capital)]
@@ -1198,7 +1219,7 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
             session, "nifty500_tri", rebalance_date, max(cfg.beta_window + 5, 260)
         )
         target_exp = (
-            target_exposure_for_regime(idx_closes)
+            exp_fn(idx_closes)
             if cfg.graded_exposure
             else Decimal("1.0")
         )
@@ -1368,7 +1389,7 @@ async def run_backtest_f(session: AsyncSession, cfg: BacktestConfig) -> Backtest
                                     _f_trade(positions[h], h, d, px, "breakdown")
                                 )
                                 del positions[h]
-                    new_exp = target_exposure_for_regime(
+                    new_exp = exp_fn(
                         [v for dt, v in tri_all if dt <= d]
                     )
                     if new_exp != cur_exp:
