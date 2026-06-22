@@ -86,13 +86,13 @@ function TradeRow({ t }: { t: Trade }) {
         <div className="space-y-3 border-t border-hairline px-3 pb-3 pt-3">
           {/* WHY F+ bought */}
           <div className="rounded-lg border border-emerald/20 bg-emerald/[0.05] p-3">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald">Why Enhanced F+ bought</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald">Why it was bought</div>
             <p className="mt-1 text-xs leading-relaxed text-muted">{t.whyEntry}</p>
           </div>
           {/* WHY F+ sold */}
           {t.whyExit && (
             <div className="rounded-lg border border-rose/20 bg-rose/[0.05] p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-rose">Why Enhanced F+ sold</div>
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-rose">Why it was sold</div>
               <p className="mt-1 text-xs leading-relaxed text-muted">{t.whyExit}</p>
             </div>
           )}
@@ -118,7 +118,7 @@ function TradeRow({ t }: { t: Trade }) {
   );
 }
 
-export function TradesView({ trades }: { trades: Trade[] }) {
+export function TradesView({ trades, engineLabel = "Enhanced F+" }: { trades: Trade[]; engineLabel?: string }) {
   const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
   if (!trades.length) {
     return (
@@ -146,7 +146,7 @@ export function TradesView({ trades }: { trades: Trade[] }) {
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted">
           {trades.length} trades · <span className="text-emerald">{openN} open</span> ·{" "}
-          {closedN} closed. Tap a trade for the price path + why Enhanced F+ took it.
+          {closedN} closed. Tap a trade for the price path + why {engineLabel} took it.
         </p>
         <div className="flex items-center gap-1 rounded-lg border border-hairline bg-panel/50 p-1">
           {tab("all", "All")}

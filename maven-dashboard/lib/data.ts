@@ -258,6 +258,13 @@ export async function getTrades(portfolioId?: number): Promise<Trade[]> {
   if (pid == null) return [];
   let inception = "";
   try { inception = (await getAccount(pid)).inceptionDate; } catch { /* no account yet */ }
+  // Engine label + scoring phrase for the per-portfolio trade rationale.
+  const pname = (await q<{ name: string }>(
+    "SELECT name FROM portfolios WHERE id = $1", [pid]))[0]?.name ?? "";
+  const engineLabel = pname === "Quant" ? "Enhanced F+" : (pname || "Enhanced F+");
+  const composite = pname === "Defensive"
+    ? "low-volatility + quality, with sooner, harder de-risking"
+    : "vol-adjusted momentum + quality + low-volatility";
 
   const pos = await q<Record<string, unknown>>(
     `SELECT p.id, p.isin, s.nse_symbol AS ticker, s.company_name AS name, s.sector,
@@ -305,16 +312,16 @@ export async function getTrades(portfolioId?: number): Promise<Trade[]> {
       ? (slice[slice.length - 1].close / slice[0].close - 1) * 100 : 0;
 
     const isInception = entryDate === inception;
-    const whyEntry = `${isInception ? "Enhanced F+ inception pick" : "Enhanced F+ quarterly rebalance pick"} on `
-      + `${entryDate}: ranked in the top names by the Enhanced F+ composite (vol-adjusted momentum + quality `
-      + `+ low-volatility), within the ≤4-per-sector cap, bought at ${exposure} exposure.`;
+    const whyEntry = `${isInception ? `${engineLabel} inception pick` : `${engineLabel} quarterly rebalance pick`} on `
+      + `${entryDate}: ranked in the top names by the ${engineLabel} composite (${composite}), `
+      + `within the ≤4-per-sector cap, bought at ${exposure} exposure.`;
     let whyExit: string | null = null;
     if (status === "closed") {
       const reason = String(r.exit_reason ?? "");
       whyExit = reason === "breakdown"
         ? `Stop hit on ${exitDate}: fell ≥15% below entry (cut-on-breakdown) to protect capital.`
         : reason === "rebalance"
-          ? `Sold on ${exitDate}: dropped out of the Enhanced F+ top names at the quarterly rebalance.`
+          ? `Sold on ${exitDate}: dropped out of the ${engineLabel} top names at the quarterly rebalance.`
           : `Closed on ${exitDate}${reason ? ` (${reason})` : ""}.`;
     }
     return {
