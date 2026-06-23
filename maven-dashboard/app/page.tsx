@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Explainer } from "@/components/explainer";
+import { IntroOverlay } from "@/components/intro";
 
 export const metadata: Metadata = {
   title: "Maven — How It Works",
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 
 // "How it works" is the landing page. The live paper portfolio lives at /portfolio.
 export default function HomePage() {
-  return <Explainer />;
+  return (
+    <>
+      <IntroOverlay />
+      <Explainer />
+    </>
+  );
 }
