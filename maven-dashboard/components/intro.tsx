@@ -44,21 +44,22 @@ export function IntroOverlay() {
           {/* dim + blur the page (How it works) behind */}
           <div className="absolute inset-0 bg-bg/90 backdrop-blur-md" />
 
-          {/* video card */}
+          {/* video card — bounded by BOTH width and height so it never overflows
+              on phones (portrait = full width strip; landscape = capped height). */}
           <motion.div
-            className="relative w-full max-w-5xl"
+            className="relative flex w-full max-w-5xl items-center justify-center"
             initial={{ opacity: 0, scale: 0.96, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.985 }}
             transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           >
             <div
-              className="pointer-events-none absolute -inset-6 -z-10 rounded-[2rem] opacity-70 blur-3xl"
+              className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] opacity-70 blur-3xl sm:-inset-6"
               style={{ background: "radial-gradient(closest-side, rgba(52,211,153,0.22), transparent 75%)" }}
             />
             <video
               ref={videoRef}
-              className="w-full rounded-2xl border border-white/10 shadow-[0_50px_140px_-40px_rgba(52,211,153,0.5)]"
+              className="max-h-[78svh] max-w-full rounded-xl border border-white/10 shadow-[0_40px_120px_-40px_rgba(52,211,153,0.5)] sm:rounded-2xl"
               src="/intro.mp4"
               autoPlay
               muted
@@ -69,14 +70,18 @@ export function IntroOverlay() {
             />
           </motion.div>
 
-          {/* skip */}
+          {/* skip — positioned clear of the iOS home indicator (safe-area), large tap target */}
           <motion.button
             type="button"
             onClick={dismiss}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.9, duration: 0.5 }}
-            className="group absolute bottom-7 right-7 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2 text-sm text-muted backdrop-blur-md transition-colors hover:border-emerald/40 hover:text-ink sm:bottom-9 sm:right-9"
+            style={{
+              bottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)",
+              right: "calc(env(safe-area-inset-right, 0px) + 1.25rem)",
+            }}
+            className="group absolute inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm text-muted backdrop-blur-md transition-colors hover:border-emerald/40 hover:text-ink active:scale-95 sm:px-5"
           >
             Skip intro
             <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
