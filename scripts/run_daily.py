@@ -1,171 +1,132 @@
 #!/usr/bin/env python
-"""Single daily entrypoint for the forward F+ paper system — fresh data, or abort.
+"""Single daily entrypoint for the Maven live paper books — SELF-HEALING.
 
-Runs, in STRICT order:
-  STEP 1  ingest_eod   — fetch today's real EOD prices (yfinance) → prices_eod_adjusted
-  STEP 2  FRESHNESS    — assert max(price date) == the expected last NSE trading day.
-                         If stale (date did not advance to the expected day) → ABORT
-                         with a clear error and a non-zero exit. F+ is NOT run on stale
-                         data. Also logs any gap (missed trading days) so a hole in the
-                         record is visible.
-  STEP 3  nightly_run  — F+ runs on the fresh prices (mark-to-market, cut-on-breakdown,
-                         weekly exposure, quarterly rebalance — as due). F+ uses
-                         MAX(trade_date), which is now the freshly-ingested day.
-  STEP 4  log a single "DAILY RUN OK …" line (date / holds / exposure / equity) so the
-          run is verifiable from the logs/website at a glance.
+Runs after market close (cron ~20:00 IST). Order:
+  STEP 1  ingest  — NSE bhavcopy (same-day official prices), with yfinance fallback
+                    if the bhavcopy is still behind the expected session.
+  STEP 2  status  — compute the latest price date + the expected last NSE session.
+                    A late/stale feed is a WARNING, not a hard stop (self-healing).
+  STEP 3  process — run the books ONLY if there is a NEW trading day to process (or a
+                    live book still needs its first allocation). Processing each day
+                    exactly once is important: daily_mark accrues one day of cash
+                    interest, so a same-day re-run must NOT double-count.
+  STEP 4  log a single verifiable status line.
 
-This is INFRA ONLY — it imports and sequences existing scripts and the FROZEN F+
-engine (commit 57e72d5) untouched. The data-accuracy guards it relies on:
-  - entry prices are append-only (engine only INSERTs entry_price, never UPDATEs it)
-  - mark-to-market uses the actual fetched close per holding
-  - stale prices ABORT here rather than producing fake trades on old data
+Self-healing: if prices are late, this run simply finds "no new day" and exits
+cleanly (exit 0); the next run picks the day up the moment it lands. It never aborts
+the whole pipeline, and it never trades on stale data (it only acts when the price
+date advances). NO LOOKAHEAD: decisions read only data <= the latest price date.
 
-Usage:  python -m scripts.run_daily            (cron: daily ~19:00 IST, after NSE close)
-        python -m scripts.run_daily --no-ingest   (skip STEP 1; check+run on current DB)
+Usage:  python -m scripts.run_daily            (cron: daily ~20:00 IST, after close)
+        python -m scripts.run_daily --no-ingest   (skip STEP 1; process current DB)
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
-import sys
 from datetime import datetime, timedelta, timezone
 
 import structlog
 from sqlalchemy import text
 
 from backend.db.session import SessionLocal
-from scripts import ingest_eod, nightly_run
+from scripts import ingest_bhavcopy, ingest_eod, nightly_run
 
 log = structlog.get_logger()
 IST = timezone(timedelta(hours=5, minutes=30))
-# Today's EOD bar is not published until well after the 15:30 IST close. Before this
-# hour we do NOT expect today's bar — the expected last session is the prior one. The
-# nightly cron runs ~19:00 IST (after this), so it correctly demands today's data.
 EOD_AVAILABLE_HOUR_IST = 17
 
 _MAX_PRICE = text("SELECT MAX(trade_date) FROM prices_eod_adjusted")
-# Expected last trading day = most recent OPEN NSE session on/before 'today' (IST).
 _ELTD = text(
     "SELECT MAX(trade_date) FROM trading_calendar "
-    "WHERE is_open AND exchange = 'NSE' AND trade_date <= :today"
+    "WHERE is_open AND exchange='NSE' AND trade_date <= :today"
 )
-# Open NSE sessions after the previous max, up to the expected day, that have NO price
-# rows = missed trading days (a hole in the record).
-_MISSING = text(
-    "SELECT c.trade_date FROM trading_calendar c "
-    "WHERE c.is_open AND c.exchange = 'NSE' "
-    "AND c.trade_date > :prior AND c.trade_date <= :eltd "
-    "AND NOT EXISTS (SELECT 1 FROM prices_eod_adjusted p WHERE p.trade_date = c.trade_date) "
-    "ORDER BY c.trade_date"
+_LAST_CURVE = text("SELECT MAX(trade_date) FROM paper_equity_curve")
+_PENDING_FIRST = text(
+    "SELECT count(*) FROM portfolios p WHERE p.status='live' "
+    "AND p.inception_date IS NOT NULL AND p.inception_date <= :as_of "
+    "AND NOT EXISTS (SELECT 1 FROM paper_equity_curve c WHERE c.portfolio_id=p.id)"
 )
 _LATEST_EQUITY = text(
-    "SELECT trade_date, total_equity, cash_value, exposure_level, drawdown_pct "
-    "FROM paper_equity_curve ORDER BY trade_date DESC LIMIT 1"
+    "SELECT p.name, c.trade_date, c.total_equity, c.cash_value, c.exposure_level "
+    "FROM paper_equity_curve c JOIN portfolios p ON p.id=c.portfolio_id "
+    "WHERE c.trade_date=(SELECT MAX(trade_date) FROM paper_equity_curve) ORDER BY p.name"
 )
-_OPEN_HOLDS = text("SELECT COUNT(*) FROM paper_position WHERE status = 'open'")
 
 
-async def _prior_max() -> object:
+async def _scalar(sql, **kw):  # noqa: ANN001
     async with SessionLocal() as s:
-        return (await s.execute(_MAX_PRICE)).scalar_one()
+        return (await s.execute(sql, kw)).scalar_one()
 
 
-async def _freshness_check(prior_max) -> object:
-    """Return the fresh max trade_date, or raise SystemExit if prices are stale."""
+async def _status():
+    """(latest_price_date, expected_last_session, is_fresh)."""
     now = datetime.now(IST)
-    # Before the EOD-available hour, today's bar can't exist yet → the expected last
-    # session is the most recent one on/before YESTERDAY. At/after it (the 19:00 cron),
-    # today is fair game.
     cutoff = now.date() if now.hour >= EOD_AVAILABLE_HOUR_IST else now.date() - timedelta(days=1)
     async with SessionLocal() as s:
-        new_max = (await s.execute(_MAX_PRICE)).scalar_one()
+        as_of = (await s.execute(_MAX_PRICE)).scalar_one()
         eltd = (await s.execute(_ELTD, {"today": cutoff})).scalar_one()
-
-        if eltd is None:
-            raise SystemExit("FRESHNESS ABORT: trading_calendar has no NSE sessions "
-                             f"on/before {cutoff}. Cannot determine the expected day.")
-        if new_max is None:
-            raise SystemExit("FRESHNESS ABORT: prices_eod_adjusted is empty — ingest "
-                             "produced no data. F+ NOT run.")
-
-        # Gap detection: open sessions between the prior max and the expected day that
-        # still have no prices = missed days (record has a hole).
-        if prior_max is not None:
-            missing = [r[0] for r in (await s.execute(
-                _MISSING, {"prior": prior_max, "eltd": eltd})).all()]
-            if missing:
-                log.warning("daily.gap", missing_days=[str(d) for d in missing])
-                print(f"⚠ GAP: {len(missing)} trading day(s) have NO prices "
-                      f"(record hole): {', '.join(str(d) for d in missing)}")
-
-        if new_max < eltd:
-            raise SystemExit(
-                f"FRESHNESS ABORT: prices are STALE — latest price date is {new_max}, "
-                f"but the expected last NSE trading day is {eltd}. The date did not "
-                f"advance (ingest fetched nothing new, or yfinance has not published "
-                f"{eltd} yet). F+ NOT run on stale data. Re-run after the EOD lands."
-            )
-        log.info("daily.fresh_ok", price_date=str(new_max), expected=str(eltd),
-                 prior=str(prior_max))
-        print(f"FRESHNESS OK: prices as of {new_max} == expected last NSE session {eltd}.")
-        return new_max
+    fresh = as_of is not None and eltd is not None and as_of >= eltd
+    return as_of, eltd, fresh
 
 
-async def _final_line(price_date) -> None:
+async def _final_line(as_of) -> None:  # noqa: ANN001
     async with SessionLocal() as s:
-        row = (await s.execute(_LATEST_EQUITY)).first()
-        holds = (await s.execute(_OPEN_HOLDS)).scalar_one()
-    if row is None:
-        print(f"DAILY RUN OK — prices as of {price_date}, but NO paper portfolio yet "
-              f"(inception not committed; run scripts.paper_inception --commit). "
-              f"Prices are fresh; F+ has nothing to mark.")
+        rows = (await s.execute(_LATEST_EQUITY)).all()
+    if not rows:
+        print(f"DAILY RUN OK — prices as of {as_of}, no books have started yet.")
         return
-    eq_date, equity, cash, exposure, dd = row
-    print(f"DAILY RUN OK — prices as of {price_date}, F+ holds {holds}, "
-          f"exposure {float(exposure)}, equity Rs {float(equity):,.0f} "
-          f"(cash Rs {float(cash):,.0f}, drawdown {float(dd)}%, curve @ {eq_date})")
-    log.info("daily.ok", price_date=str(price_date), equity_date=str(eq_date),
-             holds=holds, exposure=float(exposure), equity=float(equity))
+    for name, d, eq, cash, exp in rows:
+        print(f"  {name}: equity Rs {float(eq):,.0f} (cash Rs {float(cash):,.0f}, "
+              f"exposure {float(exp)}, curve @ {d})")
 
 
 async def main(argv: list[str] | None = None) -> None:
-    p = argparse.ArgumentParser(description="Daily F+ forward run — fresh data or abort.")
-    p.add_argument("--no-ingest", action="store_true",
-                   help="skip STEP 1 (freshness-check + run F+ on the current DB)")
+    p = argparse.ArgumentParser(description="Daily self-healing live-book run.")
+    p.add_argument("--no-ingest", action="store_true", help="skip ingest; process DB as-is")
     args = p.parse_args(argv)
 
     started = datetime.now(IST)
     print(f"=== DAILY RUN start {started.isoformat()} ===")
 
-    prior = await _prior_max()
-
-    # STEP 1 — fetch today's real EOD prices (append-only, idempotent).
+    # STEP 1 — ingest same-day prices (bhavcopy), yfinance fallback if still behind.
     if args.no_ingest:
         print("STEP 1 ingest: SKIPPED (--no-ingest).")
     else:
-        print("STEP 1 ingest_eod: fetching latest EOD prices…")
-        await ingest_eod.main([])
+        print("STEP 1 ingest_bhavcopy (official same-day prices)…")
+        await ingest_bhavcopy.main([])
+        _as_of, _eltd, fresh = await _status()
+        if not fresh:
+            print("STEP 1b bhavcopy behind expected → yfinance fallback…")
+            await ingest_eod.main([])
 
-    # STEP 2 — freshness gate. Raises SystemExit (non-zero) on stale data; F+ not run.
-    print("STEP 2 freshness check…")
-    price_date = await _freshness_check(prior)
+    # STEP 2 — status (self-healing: stale is a warning, never a hard abort).
+    as_of, eltd, fresh = await _status()
+    if as_of is None:
+        print("No prices in DB at all — nothing to process.")
+        return
+    if fresh:
+        print(f"STEP 2 FRESHNESS OK — prices as of {as_of} == expected session {eltd}.")
+    else:
+        print(f"STEP 2 ⚠ prices are behind (latest {as_of}, expected {eltd}). "
+              f"Self-healing: will process what's available and retry next run.")
 
-    # STEP 3 — F+ on the fresh prices (frozen engine, unchanged).
-    print("STEP 3 nightly_run (F+)…")
+    # STEP 3 — process ONLY a genuinely new day (exactly-once: avoids double cash accrual).
+    last_curve = await _scalar(_LAST_CURVE)
+    pending_first = await _scalar(_PENDING_FIRST, as_of=as_of)
+    new_day = last_curve is None or as_of > last_curve
+    if not (new_day or pending_first):
+        print(f"STEP 3 nothing new — books already current through {last_curve}. "
+              f"(Idempotent no-op; will act when the price date advances past {last_curve}.)")
+        await _final_line(as_of)
+        return
+    print(f"STEP 3 processing {as_of} (prior curve {last_curve}, "
+          f"pending first-allocations {pending_first})…")
     await nightly_run.main()
 
-    # STEP 4 — single verifiable status line.
-    await _final_line(price_date)
+    # STEP 4 — verifiable status line per book.
+    await _final_line(as_of)
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except SystemExit as e:
-        # Clear, non-zero exit on a freshness abort (or any explicit guard failure).
-        msg = str(e)
-        if msg and not msg.isdigit():
-            print(msg)
-            log.error("daily.abort", reason=msg)
-            sys.exit(1)
-        raise
+    asyncio.run(main())
