@@ -32,3 +32,19 @@ body {
 
 /* recharts: kill the default focus outline */
 .recharts-surface:focus { outline: none; }
+
+/* iOS/phones: a fixed background attachment janks scroll on mobile Safari —
+   use scroll on small screens; keep the parallax-ish fixed wash on desktop. */
+@media (max-width: 767px) {
+  body { background-attachment: scroll; }
+}
+
+/* Honour reduced-motion globally: damp every animation/transition. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

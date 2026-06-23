@@ -1,11 +1,13 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+import { useReducedMotionSafe } from "./motion";
 import type {
   ABReadout, AgentBoard as TBoard, AgentRun, EquityPoint, ExposureState,
   Holding, ScoreRow,
@@ -84,10 +86,14 @@ export function Card({
 }: {
   title?: string; sub?: string; children: React.ReactNode; className?: string; delay?: number;
 }) {
+  const reduce = useReducedMotionSafe();
   return (
-    <section
-      className={`animate-fadeUp rounded-xl2 border border-border bg-panel/60 p-5 ${className}`}
-      style={{ animationDelay: `${delay}ms` }}
+    <motion.section
+      className={`rounded-xl2 border border-border bg-panel/60 p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-emerald/25 hover:shadow-[0_18px_50px_-28px_rgba(52,211,153,0.45)] ${className}`}
+      initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-6% 0px" }}
+      transition={{ duration: 0.55, delay: delay / 1000, ease: [0.22, 1, 0.36, 1] }}
     >
       {title && (
         <div className="mb-4 flex items-baseline justify-between gap-3">
@@ -96,7 +102,7 @@ export function Card({
         </div>
       )}
       {children}
-    </section>
+    </motion.section>
   );
 }
 

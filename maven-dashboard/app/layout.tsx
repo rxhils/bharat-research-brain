@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { type ReactNode } from "react";
 import { Hanken_Grotesk, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
@@ -18,6 +18,11 @@ const serif = Fraunces({
 export const metadata: Metadata = {
   title: "Maven — Bharat Brain",
   description: "Forward paper-trading dashboard for the Enhanced F+ risk engine.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

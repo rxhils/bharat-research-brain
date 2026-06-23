@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import type { Trade } from "@/lib/types";
+import { Reveal } from "./motion";
 
 const pc = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
 const rs = (n: number) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
@@ -155,7 +156,7 @@ export function TradesView({ trades, engineLabel = "Enhanced F+" }: { trades: Tr
         </div>
       </div>
       <div className="space-y-2">
-        {shown.map((t) => <TradeRow key={t.id} t={t} />)}
+        {shown.map((t, i) => <Reveal key={t.id} y={10} delay={Math.min(i, 8) * 0.035}><TradeRow t={t} /></Reveal>)}
       </div>
     </div>
   );

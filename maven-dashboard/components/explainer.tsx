@@ -976,6 +976,38 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
 }
 
 // Thin scroll-progress bar — a quiet "you are here" cue (Jakub: subtle polish).
+// A subtle, ambient "snake" that lives BEHIND the whole UI (fixed, full-screen,
+// -z-10). A big serpentine weaves across the viewport and DRAWS as you scroll
+// down / retracts as you scroll up. Faint emerald→gold glow — sensed more than
+// seen. Visible at all widths. Reduced-motion → static faint path.
+function SnakeScrollLine() {
+  const { scrollYProgress } = useScroll();
+  const reduce = useReducedMotionSafe();
+  const D = "M180 -40 C 180 240, 1260 320, 1260 560 S 180 760, 180 1000 S 1260 1180, 1260 1420 S 360 1580, 720 1720";
+  const draw = reduce ? 1 : scrollYProgress;
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+      <svg className="h-full w-full" viewBox="0 0 1440 1600" preserveAspectRatio="none" fill="none">
+        <defs>
+          <linearGradient id="snakeGrad" x1="0" y1="0" x2="0.4" y2="1">
+            <stop offset="0%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#c9a961" />
+          </linearGradient>
+          <filter id="snakeGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="10" />
+          </filter>
+        </defs>
+        {/* faint full-path track */}
+        <path d={D} stroke="rgba(52,211,153,0.05)" strokeWidth="2" strokeLinecap="round" />
+        {/* blurred ambient glow that draws with scroll */}
+        <motion.path d={D} stroke="url(#snakeGrad)" strokeOpacity="0.45" strokeWidth="6" strokeLinecap="round" filter="url(#snakeGlow)" style={{ pathLength: draw }} />
+        {/* faint crisp core that draws with scroll */}
+        <motion.path d={D} stroke="url(#snakeGrad)" strokeOpacity="0.16" strokeWidth="1.5" strokeLinecap="round" style={{ pathLength: draw }} />
+      </svg>
+    </div>
+  );
+}
+
 function ScrollProgress() {
   const { scrollYProgress } = useScroll();
   const reduce = useReducedMotionSafe();
@@ -994,6 +1026,7 @@ export function Explainer() {
   return (
     <div className="relative overflow-x-clip">
       <ScrollProgress />
+      <SnakeScrollLine />
       {/* ── Hero ── */}
       <section className="relative grid min-h-[78vh] items-center gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "radial-gradient(55% 50% at 30% 40%,rgba(52,211,153,0.10),transparent 70%)" }} />

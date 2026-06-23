@@ -6,6 +6,7 @@
 // validated figures verbatim — nothing invented, nothing rounded differently.
 
 import { animate, motion, useInView, useReducedMotion } from "framer-motion";
+import { useReducedMotionSafe } from "@/components/motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
 function Reveal({ children, y = 16, delay = 0 }: { children: ReactNode; y?: number; delay?: number }) {
@@ -89,10 +90,15 @@ function Crown() {
 }
 
 function LiveCard({ p, delay }: { p: Live; delay: number }) {
+  const reduce = useReducedMotionSafe();
   return (
     <Reveal y={18} delay={delay}>
-      <div className={`group relative h-full overflow-hidden rounded-xl2 border p-6 transition-all duration-300 hover:-translate-y-1 sm:p-7 ${p.flagship ? "border-emerald/40 bg-panel/60" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}>
-        {p.flagship && <div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.2),transparent 70%)" }} />}
+      <motion.div
+        whileHover={reduce ? undefined : { y: -6, scale: 1.012 }}
+        transition={{ type: "spring", stiffness: 300, damping: 22 }}
+        className={`group relative h-full overflow-hidden rounded-xl2 border p-6 transition-colors duration-300 sm:p-7 ${p.flagship ? "border-emerald/40 bg-panel/60" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}
+      >
+        {p.flagship && <motion.div className="pointer-events-none absolute -right-16 -top-16 h-52 w-52 rounded-full blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.2),transparent 70%)" }} animate={reduce ? { opacity: 0.55 } : { opacity: [0.4, 0.72, 0.4], scale: [1, 1.09, 1] }} transition={reduce ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" }} />}
         <div className="relative flex items-start justify-between gap-3">
           <div className="flex items-center gap-2">
             {p.flagship && <Crown />}
@@ -123,7 +129,7 @@ function LiveCard({ p, delay }: { p: Live; delay: number }) {
           <p className="mt-1 text-sm text-ink/90">{p.forWho}</p>
         </div>
         <p className="relative mt-4 text-[0.6rem] text-dim">Backtested ({p.period}) — not a live track record.</p>
-      </div>
+      </motion.div>
     </Reveal>
   );
 }
@@ -131,14 +137,14 @@ function LiveCard({ p, delay }: { p: Live; delay: number }) {
 function SoonCard({ name, style, delay }: { name: string; style: string; delay: number }) {
   return (
     <Reveal y={14} delay={delay}>
-      <div className="h-full rounded-xl2 border border-hairline bg-panel/25 p-5 opacity-80 transition-opacity duration-300 hover:opacity-100">
+      <motion.div whileHover={{ y: -4 }} transition={{ type: "spring", stiffness: 300, damping: 24 }} className="h-full rounded-xl2 border border-hairline bg-panel/25 p-5 opacity-80 transition-[opacity,border-color] duration-300 hover:border-emerald/20 hover:opacity-100">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-serif text-lg text-muted">{name}</h3>
           <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[0.55rem] font-medium uppercase tracking-label text-dim">Coming soon</span>
         </div>
         <p className="mt-2 text-[0.82rem] leading-relaxed text-dim">{style}</p>
         <p className="mt-3 text-[0.55rem] uppercase tracking-label text-dim/70">In validation</p>
-      </div>
+      </motion.div>
     </Reveal>
   );
 }
