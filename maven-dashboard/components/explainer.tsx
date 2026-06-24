@@ -1056,7 +1056,7 @@ export function Explainer() {
             An AI research engine for Indian equities — built on a strategy validated across two market eras, including covid.
           </motion.p>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.95 }} className="mt-10">
-            <div className="flex flex-wrap items-baseline gap-x-7 gap-y-3">
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-3 sm:gap-x-7">
               <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-emerald tnum">+129.97%</span><span className="text-sm text-dim">Enhanced F+ · 2021–26</span></span>
               <span className="text-dim">vs</span>
               <span className="flex items-baseline gap-2.5"><span className="font-serif text-4xl text-muted tnum">+82.17%</span><span className="text-sm text-dim">Nifty 500</span></span>

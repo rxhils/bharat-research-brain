@@ -45,7 +45,7 @@ export function Nav() {
     return (
       <Link
         href={href}
-        className={`rounded-lg px-3.5 py-1.5 text-sm transition-colors ${
+        className={`whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
           active ? "bg-emerald/10 text-emerald" : "text-muted hover:text-ink"
         }`}
       >
@@ -54,13 +54,13 @@ export function Nav() {
     );
   };
   return (
-    <nav className="sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between border-b border-hairline bg-bg/85 px-5 py-4 backdrop-blur-md sm:-mx-8 sm:px-8">
-      <Link href="/" className="flex items-center gap-2.5">
+    <nav className="sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between gap-2 border-b border-hairline bg-bg/85 px-5 py-4 backdrop-blur-md sm:-mx-8 sm:px-8">
+      <Link href="/" className="flex shrink-0 items-center gap-2.5">
         <Logo size={28} />
-        <span className="text-sm tracking-[0.2em] text-muted">MAVEN</span>
+        <span className="hidden text-sm tracking-[0.2em] text-muted sm:inline">MAVEN</span>
       </Link>
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 rounded-xl border border-hairline bg-panel/50 p-1">
+      <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+        <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-hairline bg-panel/50 p-1 [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
           {tab("/", "How it works")}
           {tab("/portfolio", "Portfolio")}
           {tab("/trades", "Trades")}
@@ -68,7 +68,7 @@ export function Nav() {
         </div>
         <Link
           href="/backtest"
-          className={`rounded-lg border px-3.5 py-1.5 text-sm transition-colors ${
+          className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1 text-[11px] transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
             path === "/backtest"
               ? "border-emerald/50 bg-emerald/15 text-emerald"
               : "border-emerald/30 text-emerald hover:bg-emerald/10"

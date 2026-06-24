@@ -9,6 +9,8 @@
 html, body {
   background-color: #0a0b0d;
   color: #e9ebed;
+  /* never allow sideways document scroll (mobile); clip keeps sticky nav working */
+  overflow-x: clip;
 }
 
 body {
