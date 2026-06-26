@@ -92,7 +92,7 @@ _ENGINE_BY_NAME = {
     # ON via graded_exposure) concentrated to the TOP-10. The ONLY difference from
     # Quant is top_n (25 -> 10). It is NOT the no-brakes ALL-IN variant.
     "Concentrated": EngineSpec(
-        MOMENTUM_MODE, False, "Concentrated (Enhanced F+ top-10) 6ced078", top_n=10
+        MOMENTUM_MODE, False, "Concentrated top-10 6ced078", top_n=10  # <=32 chars
     ),
 }
 
