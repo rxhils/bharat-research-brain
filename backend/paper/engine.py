@@ -79,12 +79,21 @@ class EngineSpec:
     momentum_mode: str
     defensive_exposure: bool
     version: str  # written to paper_account.engine_version + event log
+    top_n: int = 25  # holdings count; 25 = Enhanced F+ default (Quant + Defensive).
+    #                  Default keeps every EXISTING spec byte-identical — only the
+    #                  named "Concentrated" book overrides it (to 10).
 
 
-_DEFAULT_ENGINE = EngineSpec(MOMENTUM_MODE, False, "Enhanced F+ 6ced078")
+_DEFAULT_ENGINE = EngineSpec(MOMENTUM_MODE, False, "Enhanced F+ 6ced078")  # top_n=25
 _ENGINE_BY_NAME = {
     "Quant": _DEFAULT_ENGINE,
     "Defensive": EngineSpec("lowvol", True, "Defensive (low-vol + sooner/harder de-risk)"),
+    # Concentrated = Enhanced F+ (vol-adj momentum, standard exposure ladder => BRAKES
+    # ON via graded_exposure) concentrated to the TOP-10. The ONLY difference from
+    # Quant is top_n (25 -> 10). It is NOT the no-brakes ALL-IN variant.
+    "Concentrated": EngineSpec(
+        MOMENTUM_MODE, False, "Concentrated (Enhanced F+ top-10) 6ced078", top_n=10
+    ),
 }
 
 
@@ -117,7 +126,9 @@ def fplus_cfg(as_of: date, spec: EngineSpec | None = None) -> BacktestConfig:
         start_date=as_of - timedelta(days=1), end_date=as_of,
         starting_capital=STARTING_CAPITAL,
         defensive_exposure=spec.defensive_exposure,
-        **{**_FPLUS, "momentum_mode": spec.momentum_mode},
+        # spec.top_n defaults to 25 -> Quant/Defensive configs are byte-identical;
+        # only the Concentrated spec (top_n=10) changes the holdings count.
+        **{**_FPLUS, "momentum_mode": spec.momentum_mode, "top_n": spec.top_n},
     )
 
 
