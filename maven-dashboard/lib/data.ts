@@ -264,7 +264,9 @@ export async function getTrades(portfolioId?: number): Promise<Trade[]> {
   const engineLabel = pname === "Quant" ? "Enhanced F+" : (pname || "Enhanced F+");
   const composite = pname === "Defensive"
     ? "low-volatility + quality, with sooner, harder de-risking"
-    : "vol-adjusted momentum + quality + low-volatility";
+    : pname === "Concentrated"
+      ? "vol-adjusted momentum + quality, concentrated to the top 10 names"
+      : "vol-adjusted momentum + quality + low-volatility";
 
   const pos = await q<Record<string, unknown>>(
     `SELECT p.id, p.isin, s.nse_symbol AS ticker, s.company_name AS name, s.sector,

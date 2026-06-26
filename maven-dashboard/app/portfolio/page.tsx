@@ -53,7 +53,11 @@ function PortfolioPanel({ name, acct, curve, exposure, stats, holdings }: Panel)
             ? `Paper-traded since ${fmtDate(acct.inceptionDate)}`
             : `Live from ${fmtDate(acct.inceptionDate)} — awaiting first session`}</span>
           <span className="rounded-md bg-emerald/10 px-2 py-0.5 text-emerald">
-            {isDefensive ? "Capital protection, smaller drawdowns" : "Index-like return, ~half the drawdown"}
+            {isDefensive
+              ? "Capital protection, smaller drawdowns"
+              : name === "Concentrated"
+                ? "Concentrated top-10, higher conviction"
+                : "Index-like return, ~half the drawdown"}
           </span>
         </div>
       </Card>
