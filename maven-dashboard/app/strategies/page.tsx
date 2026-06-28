@@ -69,6 +69,18 @@ const LIVE: Live[] = [
     forWho: "Cautious investors prioritising capital protection.",
     period: "2021–26",
   },
+  {
+    name: "Concentrated",
+    oneLiner: "Enhanced F+, concentrated to the top 10.",
+    stats: [
+      { label: "Total return", value: 152.66, prefix: "+", suffix: "%", decimals: 2, tone: "emerald" },
+      { label: "Max drawdown", value: 12.63, suffix: "%", decimals: 2, tone: "amber" },
+      { label: "COVID drawdown", value: 21, prefix: "~", suffix: "%", decimals: 0, tone: "emerald", note: "vs market ~38%" },
+    ],
+    edge: "Highest return of the three — +152.66% vs the index's +82.17% — by holding only the top 10. Same crash brakes as Quant, but more single-name risk (a deeper ~21% COVID drawdown).",
+    forWho: "Investors who want maximum conviction and upside, and can accept more concentration risk.",
+    period: "2021–26",
+  },
 ];
 
 const SOON: { name: string; style: string }[] = [
@@ -163,7 +175,7 @@ export default function StrategiesPage() {
           <span className="text-[0.6rem] font-semibold uppercase tracking-label text-gold-soft">Live &amp; validated</span>
           <span className="h-px flex-1 bg-hairline" />
         </div>
-        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+        <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {LIVE.map((p, i) => <LiveCard key={p.name} p={p} delay={i * 0.06} />)}
         </div>
       </section>
