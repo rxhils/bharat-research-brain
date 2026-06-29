@@ -61,6 +61,18 @@ export function Nav() {
       </Link>
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
         <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-hairline bg-panel/50 p-1 [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
+          <Link
+            href="/chat"
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
+              path === "/chat" ? "bg-emerald/10 text-emerald" : "text-muted hover:text-ink"
+            }`}
+          >
+            <span className="relative flex h-1.5 w-1.5" aria-hidden>
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald/70" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald" />
+            </span>
+            Chat
+          </Link>
           {tab("/", "How it works")}
           {tab("/portfolio", "Portfolio")}
           {tab("/trades", "Trades")}
