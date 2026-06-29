@@ -5,11 +5,11 @@ import { SYSTEM_PROMPT, RETRIEVAL_PACK } from "./india-context";
 // time so it is NEVER bundled to the client. Returns null on missing key/any error so
 // callers fall back to the mock - the page never breaks.
 export function deepseekEnabled(): boolean {
-  return !!process.env.DEEPSEEK_API_KEY;
+  return !!(process.env.DEEPSEEK_API_KEY || process.env.DEEPSEEK || process.env.deepseek);
 }
 
 async function chat(messages: { role: string; content: string }[], maxTokens = 900): Promise<string | null> {
-  const key = process.env.DEEPSEEK_API_KEY;
+  const key = process.env.DEEPSEEK_API_KEY || process.env.DEEPSEEK || process.env.deepseek;
   if (!key) return null;
   const base = (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com").replace(/\/$/, "");
   const model = process.env.DEEPSEEK_MODEL || "deepseek-chat";
