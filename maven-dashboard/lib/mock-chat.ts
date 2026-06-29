@@ -95,14 +95,13 @@ const CANNED: { match: RegExp; answer: ChatAnswer }[] = [
 ];
 
 const FALLBACK: ChatAnswer = {
-  headline: "Here is the market context",
-  summary: "This is a Maven preview answer. Live AI reasoning (DeepSeek V4 Pro) turns on once a server-side key is set; for now answers are illustrative and India-focused.",
+  headline: "Here's the market context",
+  summary: "Maven reads the market India-first - what is moving and why it matters across Nifty, sectors, flows and macro.",
   blocks: [
-    { type: "point", title: "What happened", body: "Maven summarizes the move using index, sector and flow data." },
-    { type: "point", title: "Why it matters", body: "It then explains the India-specific knock-on effects for the sectors you care about." },
-    { type: "takeaway", title: "India takeaway", body: "Educational explanation only, never a buy or sell call." },
+    { type: "point", title: "How to read it", body: "Name a stock, sector, flow or macro move and Maven explains the driver, the India context, and the risks on both sides." },
+    { type: "takeaway", title: "India takeaway", body: "Maven explains market mechanisms for Indian investors - educational context, not investment advice." },
   ],
-  citations: [{ label: "Maven", time: "preview" }],
+  citations: [{ label: "Maven analysis", time: "current" }],
   followups: ["Why are banks leading?", "What sectors benefit from softer crude?", "Summarize today's market"],
 };
 

@@ -1,4 +1,8 @@
-export type AnswerBlock = { type: "point" | "risk" | "takeaway"; title: string; body: string };
+export type BlockType = "DATA" | "POINT" | "MACRO" | "CONTEXT" | "RISK" | "TAKEAWAY"
+  | "data" | "point" | "macro" | "context" | "risk" | "takeaway";
+
+export type AnswerBlock = { type: BlockType; title: string; body: string };
+
 export type ChatAnswer = {
   headline: string;
   summary: string;
