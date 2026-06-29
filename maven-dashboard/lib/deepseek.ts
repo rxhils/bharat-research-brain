@@ -49,7 +49,7 @@ export async function deepseekAnswer(query: string, subject?: string): Promise<C
     ]),
   );
   if (!out || typeof out.headline !== "string" || !Array.isArray(out.blocks)) return null;
-  const types = ["point", "risk", "takeaway"];
+  const types = ["point", "data", "macro", "context", "risk", "takeaway", "DATA", "POINT", "MACRO", "CONTEXT", "RISK", "TAKEAWAY"];
   return {
     headline: String(out.headline),
     summary: String(out.summary ?? ""),

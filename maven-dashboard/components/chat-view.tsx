@@ -234,8 +234,12 @@ function ReasoningLoader() {
 }
 
 function blockGlyph(type: string): { dot: string; label: string } {
-  if (type === "risk") return { dot: "bg-amber shadow-[0_0_8px_rgba(251,191,36,0.7)]", label: "text-amber" };
-  if (type === "takeaway") return { dot: "bg-gold shadow-[0_0_8px_rgba(201,169,97,0.7)]", label: "text-gold-soft" };
+  const t = (type || "").toLowerCase();
+  if (t === "risk") return { dot: "bg-amber shadow-[0_0_8px_rgba(251,191,36,0.7)]", label: "text-amber" };
+  if (t === "takeaway") return { dot: "bg-gold shadow-[0_0_8px_rgba(201,169,97,0.7)]", label: "text-gold-soft" };
+  if (t === "data") return { dot: "bg-emerald-deep shadow-[0_0_8px_rgba(16,185,129,0.7)]", label: "text-emerald" };
+  if (t === "macro") return { dot: "bg-gold-soft shadow-[0_0_8px_rgba(201,169,97,0.6)]", label: "text-gold-soft" };
+  if (t === "context") return { dot: "bg-white/50", label: "text-muted" };
   return { dot: "bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.8)]", label: "text-emerald" };
 }
 
@@ -254,7 +258,7 @@ function AnswerCard({ a, onFollow }: { a: ChatAnswer; onFollow: (q: string) => v
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-dim">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.9)]" />Maven
             </div>
-            <span className={"shrink-0 rounded-md px-2 py-0.5 text-[10px] uppercase tracking-wider " + (a.demo ? "bg-gold/10 text-gold-soft" : "bg-emerald/12 text-emerald")}>{a.demo ? "preview" : "DeepSeek"}</span>
+            <span className="shrink-0 rounded-md bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-dim">India markets</span>
           </div>
           <h3 className="mt-2.5 font-serif text-[1.45rem] leading-snug text-ink sm:text-[1.6rem]">{a.headline}</h3>
           <p className="mt-2 text-sm leading-relaxed text-ink/70">{a.summary}</p>
@@ -322,7 +326,7 @@ function Composer({ input, setInput, send, active, setActive, empty }: {
         </form>
       </div>
       <div className="px-1 pb-1 pt-2 text-[10px] leading-relaxed text-dim">
-        Maven gives educational market context, not investment advice. Preview answers until DeepSeek is connected.
+        Maven gives educational market context for Indian markets - mechanisms, not investment advice.
       </div>
     </div>
   );
