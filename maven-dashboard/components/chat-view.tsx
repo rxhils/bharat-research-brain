@@ -299,7 +299,7 @@ function Composer({ input, setInput, send, active, setActive, empty }: {
 }) {
   const toggle = (c: string) => setActive((a) => (a.includes(c) ? a.filter((x) => x !== c) : [...a, c]));
   return (
-    <div className={(empty ? "mt-6 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+    <div className={(empty ? "mt-10 sm:mt-14 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
       {!empty && (
         <div className="mb-2.5 flex flex-nowrap gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {CHIPS.map((c) => (
