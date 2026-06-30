@@ -61,3 +61,7 @@ export async function deepseekAnswer(query: string, subject?: string): Promise<C
     demo: false,
   };
 }
+// Generic JSON completion for the research layer (reuses the cached-prefix chat + parser).
+export async function deepseekJSON(system: string, user: string, maxTokens = 1400): Promise<any | null> {
+  return safeParse(await chat([{ role: "system", content: system }, { role: "user", content: user }], maxTokens));
+}
