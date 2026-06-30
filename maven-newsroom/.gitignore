@@ -1,0 +1,16 @@
+# Backend runtime data (rebuilt from artifacts on startup)
+backend/data/
+*.db
+*.db-wal
+*.db-shm
+
+# Frontend
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/.env*.local
+npm-debug.log*
+
+# Python
+__pycache__/
+*.pyc
