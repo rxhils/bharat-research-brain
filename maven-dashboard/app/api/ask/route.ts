@@ -72,5 +72,6 @@ export async function POST(req: Request) {
   }
   fixed.type = answerType;
   fixed.disclaimerLevel = disclaimerLevel;
+  fixed.limitations = pack.limitations;
   return NextResponse.json(fixed);
 }

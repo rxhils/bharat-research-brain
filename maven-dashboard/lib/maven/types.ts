@@ -58,4 +58,5 @@ export type MavenAnswer = {
   headline: string; summary: string;
   keyData: MavenKeyData[]; charts: ChartSpec[]; blocks: MavenBlock[];
   sources: MavenSource[]; followUps: string[]; disclaimer: string;
+  limitations?: string[];
 };

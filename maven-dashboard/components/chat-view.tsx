@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { useReducedMotionSafe } from "./motion";
-import type { ChatAnswer } from "@/lib/chat-types";
+import { MavenChartRenderer } from "./maven-charts";
+import type { MavenAskResponse } from "@/lib/maven-types";
 
 const SUGGESTIONS = [
   { t: "Why are banks leading this week?", k: "Sector leadership" },
@@ -13,7 +14,7 @@ const SUGGESTIONS = [
 const CHIPS = ["Nifty", "Banks", "FII Flows", "RIL", "Oil", "Macro", "RBI"];
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: ChatAnswer; loading?: boolean };
+type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean };
 
 function MavenMark({ size = 26, draw = false }: { size?: number; draw?: boolean }) {
   const reduce = useReducedMotionSafe();
@@ -111,9 +112,9 @@ export function ChatView() {
     const aid = idRef.current++;
     setMsgs((m) => [...m, { id: uid, role: "user", text }, { id: aid, role: "assistant", loading: true }]);
     try {
-      const r = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text, subject: active[0] ?? null }) });
-      const answer: ChatAnswer = await r.json();
-      setTimeout(() => setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, answer } : x))), 900);
+      const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text }) });
+      const answer: MavenAskResponse = await r.json();
+      setTimeout(() => setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, answer } : x))), 600);
     } catch {
       setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, text: "Could not reach Maven." } : x)));
     }
@@ -207,7 +208,7 @@ function UserBubble({ text }: { text: string }) {
 }
 
 function ReasoningLoader() {
-  const steps = ["Reviewing index moves", "Checking sector leadership", "Scanning flows and macro", "Composing the answer"];
+  const steps = ["Reading market context", "Checking sector drivers", "Building mechanism chain", "Preparing Maven view"];
   const [i, setI] = useState(0);
   const reduce = useReducedMotionSafe();
   useEffect(() => {
@@ -243,8 +244,16 @@ function blockGlyph(type: string): { dot: string; label: string } {
   return { dot: "bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.8)]", label: "text-emerald" };
 }
 
-function AnswerCard({ a, onFollow }: { a: ChatAnswer; onFollow: (q: string) => void }) {
+function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string) => void }) {
   const reduce = useReducedMotionSafe();
+  const answerType = a.answerType ?? a.type ?? "market_mechanism";
+  const minimal = answerType === "greeting" || answerType === "out_of_scope";
+  const blocks = a.blocks ?? [];
+  const charts = a.charts ?? [];
+  const keyData = a.keyData ?? [];
+  const sources = a.sources ?? [];
+  const limitations = a.limitations ?? [];
+  const followUps = a.followUps ?? [];
   return (
     <motion.div initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: EASE }}>
       <GlassPanel tlSharp>
@@ -254,43 +263,83 @@ function AnswerCard({ a, onFollow }: { a: ChatAnswer; onFollow: (q: string) => v
           )}
           <span className="pointer-events-none absolute -right-20 -top-24 h-48 w-48 rounded-full bg-emerald/[0.08] blur-3xl" aria-hidden />
           <span className="pointer-events-none absolute left-0 top-5 bottom-5 w-px bg-gradient-to-b from-emerald/0 via-emerald/60 to-emerald/0" aria-hidden />
+
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] text-dim">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.9)]" />Maven
             </div>
             <span className="shrink-0 rounded-md bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-dim">India markets</span>
           </div>
+
           <h3 className="mt-2.5 font-serif text-[1.45rem] leading-snug text-ink sm:text-[1.6rem]">{a.headline}</h3>
-          <p className="mt-2 text-sm leading-relaxed text-ink/70">{a.summary}</p>
-          <motion.div className="mt-5 space-y-2.5" initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.11, delayChildren: 0.1 } } }}>
-            {a.blocks.map((b, i) => {
-              const g = blockGlyph(b.type);
-              return (
-                <motion.div key={i} variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 12, filter: "blur(6px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: EASE } } }} className="rounded-xl border border-hairline bg-white/[0.02] p-3.5">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + g.dot} />
-                    <span className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + g.label}>{b.type}</span>
-                    <span className="text-[0.9rem] font-medium text-ink">{b.title}</span>
-                  </div>
-                  <p className="mt-1.5 pl-3.5 text-[0.83rem] leading-relaxed text-ink/65">{b.body}</p>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-          {a.citations.length > 0 && (
-            <div className="mt-5 flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-dim">Sources</span>
-              {a.citations.map((c, i) => (<span key={i} className="rounded-md border border-hairline bg-white/[0.03] px-2 py-0.5 text-[11px] text-muted">{c.label} &middot; {c.time}</span>))}
+          {a.summary && <p className="mt-2 text-sm leading-relaxed text-ink/70">{a.summary}</p>}
+
+          {!minimal && keyData.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {keyData.map((d, i) => (
+                <div key={i} className="rounded-lg border border-hairline bg-white/[0.02] px-2.5 py-1.5">
+                  <div className="text-[9px] uppercase tracking-wider text-dim">{d.label}</div>
+                  <div className="tnum text-sm text-ink">{d.value}{d.change && <span className={"ml-1 text-[11px] " + (d.change.trim().startsWith("-") ? "text-rose" : "text-emerald")}>{d.change}</span>}</div>
+                </div>
+              ))}
             </div>
           )}
-          {a.followups.length > 0 && (
+
+          {!minimal && charts.length > 0 && <div className="mt-4"><MavenChartRenderer charts={charts} /></div>}
+
+          {blocks.length > 0 && (
+            <motion.div className="mt-5 space-y-2.5" initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.1, delayChildren: 0.05 } } }}>
+              {blocks.map((b, i) => {
+                const g = blockGlyph(b.type);
+                return (
+                  <motion.div key={i} variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 12, filter: "blur(6px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: EASE } } }} className="rounded-xl border border-hairline bg-white/[0.02] p-3.5">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + g.dot} />
+                      <span className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + g.label}>{b.type}</span>
+                      <span className="text-[0.9rem] font-medium text-ink">{b.title}</span>
+                    </div>
+                    <p className="mt-1.5 pl-3.5 text-[0.83rem] leading-relaxed text-ink/65">{b.body}</p>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          )}
+
+          {!minimal && sources.length > 0 && (
+            <div className="mt-5 flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] uppercase tracking-wider text-dim">Sources</span>
+              {sources.map((s, i) => {
+                const meta = s.date || s.recency;
+                const dot = s.confidence === "verified" || s.confidence === "retrieved" ? "bg-emerald/70" : "bg-white/30";
+                const inner = (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={"h-1 w-1 rounded-full " + dot} aria-hidden />
+                    {s.name}{meta ? " · " + meta : ""}
+                  </span>
+                );
+                return s.url
+                  ? <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="rounded-md border border-hairline bg-white/[0.03] px-2 py-0.5 text-[11px] text-muted transition-colors hover:border-emerald/40 hover:text-ink">{inner}</a>
+                  : <span key={i} className="rounded-md border border-hairline bg-white/[0.03] px-2 py-0.5 text-[11px] text-muted">{inner}</span>;
+              })}
+            </div>
+          )}
+
+          {!minimal && limitations.length > 0 && (
+            <div className="mt-2 text-[10px] leading-snug text-dim">Limitations: {limitations.join("; ")}</div>
+          )}
+
+          {followUps.length > 0 && (
             <div className="mt-5 flex flex-wrap gap-2 border-t border-hairline pt-4">
-              {a.followups.map((f) => (
+              {followUps.map((f) => (
                 <button key={f} onClick={() => onFollow(f)} className="group inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white/[0.02] px-3 py-1.5 text-xs text-muted transition-colors hover:border-emerald/45 hover:text-ink">
                   {f}<span className="text-emerald opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
                 </button>
               ))}
             </div>
+          )}
+
+          {a.disclaimer && a.disclaimerLevel !== "none" && (
+            <div className="mt-3 border-t border-hairline pt-3 text-[10px] leading-relaxed text-dim">{a.disclaimer}</div>
           )}
         </div>
       </GlassPanel>
