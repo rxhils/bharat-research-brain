@@ -1,0 +1,14 @@
+{
+  "date": "2026-06-29",
+  "completed": {
+    "research": true,
+    "content": true,
+    "creative": true,
+    "images_built": true,
+    "caption": true,
+    "hashtags": true,
+    "quality": true,
+    "publish": true
+  },
+  "notes": []
+}

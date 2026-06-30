@@ -1,0 +1,50 @@
+{
+  "date": "2026-06-29",
+  "quality_scores": {
+    "content": 100,
+    "design": 94,
+    "compliance": 100
+  },
+  "gates": {
+    "content": 90,
+    "design": 90,
+    "compliance": 95
+  },
+  "passed": {
+    "content": true,
+    "design": true,
+    "compliance": true
+  },
+  "overall_pass": true,
+  "content_issues": [],
+  "design_issues": [],
+  "design_detail": {
+    "mechanical": 100,
+    "aesthetic": 94,
+    "per_image": [
+      {
+        "file": "slide_1.jpg",
+        "exists": true,
+        "dims_ok": true,
+        "size_ok": true,
+        "jpeg": true
+      },
+      {
+        "file": "slide_2.jpg",
+        "exists": true,
+        "dims_ok": true,
+        "size_ok": true,
+        "jpeg": true
+      },
+      {
+        "file": "slide_3.jpg",
+        "exists": true,
+        "dims_ok": true,
+        "size_ok": true,
+        "jpeg": true
+      }
+    ]
+  },
+  "compliance_violations": [],
+  "verdict": "PUBLISH_OK"
+}

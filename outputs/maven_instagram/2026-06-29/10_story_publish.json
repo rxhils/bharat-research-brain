@@ -1,0 +1,43 @@
+{
+  "date": "2026-06-29",
+  "flow": [
+    {
+      "stage": "create_story_container",
+      "calls": [
+        {
+          "tool": "INSTAGRAM_POST_IG_USER_MEDIA",
+          "arguments": {
+            "ig_user_id": "me",
+            "media_type": "STORIES",
+            "video_file": {
+              "name": "story.mp4",
+              "mimetype": "video/mp4",
+              "s3key": "<s3key>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "stage": "publish_story",
+      "calls": [
+        {
+          "tool": "INSTAGRAM_POST_IG_USER_MEDIA_PUBLISH",
+          "arguments": {
+            "ig_user_id": "me",
+            "creation_id": "<story creation_id from create call>",
+            "max_wait_seconds": 180
+          },
+          "retry": {
+            "max": 3,
+            "retry_on_error_codes": [
+              9,
+              9007
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "status": "payloads_built"
+}
