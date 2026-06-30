@@ -1,0 +1,55 @@
+{
+  "date": "2026-06-29",
+  "carousel_plan": [
+    {
+      "slide": 1,
+      "story_rank": 1,
+      "eyebrow": "MARKET DIGEST  ·  29 JUN 2026",
+      "headline": "A risk-off Monday",
+      "subtitle": "Renewed US-Iran tension lifted oil and the dollar, and Indian indices snapped a two-day rising streak.",
+      "bullets": [
+        "Sensex  76,728.37   -372 pts  (-0.48%)",
+        "Nifty 50  23,946.25   -110 pts  (-0.46%)",
+        "Bank Nifty  ~58,120   -0.10%"
+      ],
+      "takeaway": "An external shock, not a domestic one. Domestic funds net bought about Rs 5,748 cr, cushioning the fall.",
+      "visual_direction": "Dark cover slide: near-black navy background, oversized headline, a single faint downward trend line, three index delta chips. Lots of negative space.",
+      "source_footer": "Source: Business Standard · Upstox",
+      "footer_brand": "Maven · trymaven.in"
+    },
+    {
+      "slide": 2,
+      "story_rank": 2,
+      "eyebrow": "BANKING  ·  GOVERNANCE",
+      "headline": "Kotak Mahindra Bank in focus",
+      "subtitle": "CEO Ashok Vaswani will not seek another term when it ends on 31 Dec 2026; the board has begun a succession search.",
+      "bullets": [
+        "Stock fell about 3% to around Rs 397",
+        "Among the day's heaviest Nifty drags",
+        "Disclosed to exchanges on Sat, 27 Jun"
+      ],
+      "takeaway": "A governance event at one index heavyweight can ripple into the whole banking index.",
+      "visual_direction": "Light data-card slide: white/very-light-grey background, one company stat block, a small neutral bar for the day's move, teal accent rule.",
+      "source_footer": "Source: Business Standard · Outlook India",
+      "footer_brand": "Maven · trymaven.in"
+    },
+    {
+      "slide": 3,
+      "story_rank": 3,
+      "eyebrow": "SECTOR WATCH  ·  AUTO",
+      "headline": "Autos led the fall",
+      "subtitle": "Nifty Auto was the worst major sector as costlier crude and a stronger dollar weighed on cyclicals.",
+      "bullets": [
+        "Nifty Auto about -2%, worst sector",
+        "M&M, Maruti, L&T, SBI down 1.3-2.4%",
+        "12 of 15 NSE sectors closed lower"
+      ],
+      "takeaway": "A classic oil-and-dollar rotation: cyclicals lag while defensives like pharma and metals hold up.",
+      "visual_direction": "Light sector-panel slide: minimal horizontal sector-performance bars with exactly one highlighted (worst) bar in orange; structured and clean.",
+      "source_footer": "Source: Upstox · Business Today",
+      "footer_brand": "Maven · trymaven.in"
+    }
+  ],
+  "_compliance": { "ok": true, "violations": [], "score": 100 },
+  "_note": "Display copy refined by the creative-director step from the deterministic baseline (step2_content_plan) for premium, complete, ellipsis-free slide text."
+}

@@ -1,0 +1,7 @@
+file 'C:/Users/fazea/bharat research brain/outputs/maven_instagram/2026-06-29/story_frame_1.png'
+duration 5
+file 'C:/Users/fazea/bharat research brain/outputs/maven_instagram/2026-06-29/story_frame_2.png'
+duration 5
+file 'C:/Users/fazea/bharat research brain/outputs/maven_instagram/2026-06-29/story_frame_3.png'
+duration 5
+file 'C:/Users/fazea/bharat research brain/outputs/maven_instagram/2026-06-29/story_frame_3.png'

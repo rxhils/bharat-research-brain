@@ -1,0 +1,61 @@
+{
+  "date": "2026-06-29",
+  "directions": [
+    {
+      "concept_name": "Market Digest Dark",
+      "style": "Premium finance-editorial, dark market-digest cover system",
+      "layout": "Top: section label + date. Middle: one large headline. Lower third: compact data chips. Footer: source + brand.",
+      "background": "Near-black navy (#0B1220) with a faint single trend line, generous negative space, no candlestick spam",
+      "typography": "Tight geometric sans; oversized bold headline, light subhead, mono for numbers",
+      "visual_elements": "Delta chips (▲/▼ %), thin rule lines, one accent color per slide, small circular icon",
+      "chart_style": "Single minimal line or 3-4 bar mini-chart, no gridlines",
+      "why_it_fits": "Reads instantly on mobile, looks like a high-end market digest, lets numbers breathe",
+      "what_to_avoid": [
+        "clutter",
+        "random candlesticks",
+        "neon",
+        "3D",
+        "stocky bull/bear art",
+        "tiny text"
+      ],
+      "score": 66
+    },
+    {
+      "concept_name": "Analytical White",
+      "style": "Clean white analytical report slide",
+      "layout": "Left-aligned headline column + right data card; airy margins",
+      "background": "White / very light grey, thin teal accent rule",
+      "typography": "Editorial serif headline + sans body; strong hierarchy",
+      "visual_elements": "Boxed stat cards, one highlighted metric, subtle iconography",
+      "chart_style": "Flat horizontal bars or a single sparkline",
+      "why_it_fits": "Feels like a research note; great for company/sector data slides; very legible",
+      "what_to_avoid": [
+        "gradients",
+        "drop shadows everywhere",
+        "emoji",
+        "cartoon",
+        "copied smallcase layout"
+      ],
+      "score": 68
+    },
+    {
+      "concept_name": "Hybrid Cover+Cards",
+      "style": "Dark cover (slide 1) + light data cards (slides 2-3)",
+      "layout": "Slide 1 dark hero; slides 2-3 light cards with consistent footer system",
+      "background": "Mixed: dark navy hero, light analytical interiors",
+      "typography": "Consistent sans family across both modes",
+      "visual_elements": "Shared chip + footer system, accent color carries across slides",
+      "chart_style": "Line on cover, bars on interior cards",
+      "why_it_fits": "Maximum visual variety while staying one cohesive system — avoids three near-identical slides",
+      "what_to_avoid": [
+        "inconsistent fonts between slides",
+        "too many colors",
+        "clutter",
+        "fake terminals"
+      ],
+      "score": 80
+    }
+  ],
+  "selected": "Hybrid Cover+Cards",
+  "selection_rationale": "'Hybrid Cover+Cards' scored highest because it maximizes slide-to-slide variety while keeping one cohesive premium system — directly addressing the 'don't make three repetitive slides' requirement — and stays highly mobile-readable."
+}

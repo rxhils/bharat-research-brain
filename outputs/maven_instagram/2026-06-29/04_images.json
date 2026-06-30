@@ -1,0 +1,72 @@
+{
+  "date": "2026-06-29",
+  "model": "nano_banana_pro",
+  "negative_prompt": "basic Canva template, generic stock-market poster, random candlestick background, clutter, fake numbers, fake logos, unreadable tiny text, cheap AI look, cartoon style, meme style, overcomplicated 3D, glossy 3D coins, copied smallcase layout, watermark, gibberish text, bull/bear mascots, buy/sell arrows, price targets",
+  "jobs": [
+    {
+      "slide": 1,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "4:5",
+      "count": 1,
+      "prompt": "Create a premium Instagram carousel slide for Maven, an Indian stock market research brand (trymaven.in).\n\nCanvas: 1080x1350 px, 4:5 Instagram carousel.\nBrand: Maven / trymaven.in\nTopic: A risk-off Monday\nSlide: 1 of 3\n\nText content to render cleanly and legibly:\nHeadline: A risk-off Monday\nSubtitle: Renewed US-Iran tension lifted oil and the dollar, and Indian indices snapped a two-day rising streak.\nBullets:\n- Sensex  76,728.37   -372 pts  (-0.48%)\n- Nifty 50  23,946.25   -110 pts  (-0.46%)\n- Bank Nifty  ~58,120   -0.10%\nTakeaway: An external shock, not a domestic one. Domestic funds net bought about Rs 5,748 cr, cushioning the fall.\nFooter source (tiny): Source: Business Standard · Upstox\nFooter brand (tiny): Maven · trymaven.in\n\nVisual style: Dark cover (slide 1) + light data cards (slides 2-3).\nBackground: Mixed: dark navy hero, light analytical interiors.\nTypography: Consistent sans family across both modes.\n\nPremium finance-editorial design: clean, modern, minimalist, strong typographic\nhierarchy, generous whitespace, subtle data/chart elements, professional\nIndian-market research aesthetic. Use ONE main visual idea only. All rendered\ntext must be real words, correctly spelled, high-contrast and legible on a phone.\nPlace Maven · trymaven.in subtly in the footer. Keep the source line tiny in the footer.\n\nComposition for THIS slide: Dark cover slide: near-black navy background, oversized headline, a single faint downward trend line, three index delta chips. Lots of negative space.\n\nAvoid: basic Canva template, generic stock-market poster, random candlestick background, clutter, fake numbers, fake logos, unreadable tiny text, cheap AI look, cartoon style, meme style, overcomplicated 3D, glossy 3D coins, copied smallcase layout, watermark, gibberish text, bull/bear mascots, buy/sell arrows, price targets\n\nRegeneration rule: if regenerating, do NOT reuse the same layout, background,\nvisual metaphor, colour emphasis, or composition — create a genuinely different\npremium version.\n\nTop eyebrow label (small, uppercase, letter-spaced): MARKET DIGEST  ·  29 JUN 2026\n",
+      "negative_prompt": "basic Canva template, generic stock-market poster, random candlestick background, clutter, fake numbers, fake logos, unreadable tiny text, cheap AI look, cartoon style, meme style, overcomplicated 3D, glossy 3D coins, copied smallcase layout, watermark, gibberish text, bull/bear mascots, buy/sell arrows, price targets",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_1.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_1.jpg",
+      "regenerate_rule": "On retry, change layout, background, visual metaphor and accent color — produce a genuinely different premium version, do not repeat."
+    },
+    {
+      "slide": 2,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "4:5",
+      "count": 1,
+      "prompt": "Create a premium Instagram carousel slide for Maven, an Indian stock market research brand (trymaven.in).\n\nCanvas: 1080x1350 px, 4:5 Instagram carousel.\nBrand: Maven / trymaven.in\nTopic: Kotak Mahindra Bank in focus\nSlide: 2 of 3\n\nText content to render cleanly and legibly:\nHeadline: Kotak Mahindra Bank in focus\nSubtitle: CEO Ashok Vaswani will not seek another term when it ends on 31 Dec 2026; the board has begun a succession search.\nBullets:\n- Stock fell about 3% to around Rs 397\n- Among the day's heaviest Nifty drags\n- Disclosed to exchanges on Sat, 27 Jun\nTakeaway: A governance event at one index heavyweight can ripple into the whole banking index.\nFooter source (tiny): Source: Business Standard · Outlook India\nFooter brand (tiny): Maven · trymaven.in\n\nVisual style: Dark cover (slide 1) + light data cards (slides 2-3).\nBackground: Mixed: dark navy hero, light analytical interiors.\nTypography: Consistent sans family across both modes.\n\nPremium finance-editorial design: clean, modern, minimalist, strong typographic\nhierarchy, generous whitespace, subtle data/chart elements, professional\nIndian-market research aesthetic. Use ONE main visual idea only. All rendered\ntext must be real words, correctly spelled, high-contrast and legible on a phone.\nPlace Maven · trymaven.in subtly in the footer. Keep the source line tiny in the footer.\n\nComposition for THIS slide: Light data-card slide: white/very-light-grey background, one company stat block, a small neutral bar for the day's move, teal accent rule.\n\nAvoid: basic Canva template, generic stock-market poster, random candlestick background, clutter, fake numbers, fake logos, unreadable tiny text, cheap AI look, cartoon style, meme style, overcomplicated 3D, glossy 3D coins, copied smallcase layout, watermark, gibberish text, bull/bear mascots, buy/sell arrows, price targets\n\nRegeneration rule: if regenerating, do NOT reuse the same layout, background,\nvisual metaphor, colour emphasis, or composition — create a genuinely different\npremium version.\n\nTop eyebrow label (small, uppercase, letter-spaced): BANKING  ·  GOVERNANCE\n",
+      "negative_prompt": "basic Canva template, generic stock-market poster, random candlestick background, clutter, fake numbers, fake logos, unreadable tiny text, cheap AI look, cartoon style, meme style, overcomplicated 3D, glossy 3D coins, copied smallcase layout, watermark, gibberish text, bull/bear mascots, buy/sell arrows, price targets",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_2.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_2.jpg",
+      "regenerate_rule": "On retry, change layout, background, visual metaphor and accent color — produce a genuinely different premium version, do not repeat."
+    },
+    {
+      "slide": 3,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "4:5",
+      "count": 1,
+      "prompt": "Create a premium Instagram carousel slide for Maven, an Indian stock market research brand (trymaven.in).\n\nCanvas: 1080x1350 px, 4:5 Instagram carousel.\nBrand: Maven / trymaven.in\nTopic: Autos led the fall\nSlide: 3 of 3\n\nText content to render cleanly and legibly:\nHeadline: Autos led the fall\nSubtitle: Nifty Auto was the worst major sector as costlier crude and a stronger dollar weighed on cyclicals.\nBullets:\n- Nifty Auto about -2%, worst sector\n- M&M, Maruti, L&T, SBI down 1.3-2.4%\n- 12 of 15 NSE sectors closed lower\nTakeaway: A classic oil-and-dollar rotation: cyclicals lag while defensives like pharma and metals hold up.\nFooter source (tiny): Source: Upstox · Business Today\nFooter brand (tiny): Maven · trymaven.in\n\nVisual style: Dark cover (slide 1) + light data cards (slides 2-3).\nBackground: Mixed: dark navy hero, light analytical interiors.\nTypography: Consistent sans family across both modes.\n\nPremium finance-editorial design: clean, modern, minimalist, strong typographic\nhierarchy, generous whitespace, subtle data/chart elements, professional\nIndian-market research aesthetic. Use ONE main visual idea only. All rendered\ntext must be real words, correctly spelled, high-contrast and legible on a phone.\nPlace Maven · trymaven.in subtly in the footer. Keep the source line tiny in the footer.\n\nComposition for THIS slide: Light sector-panel slide: minimal horizontal sector-performance bars with exactly one highlighted (worst) bar in orange; structured and clean.\n\nAvoid: basic Canva template, generic stock-market poster, random candlestick background, clutter, fake numbers, fake logos, unreadable tiny text, cheap AI look, cartoon style, meme style, overcomplicated 3D, glossy 3D coins, copied smallcase layout, watermark, gibberish text, bull/bear mascots, buy/sell arrows, price targets\n\nRegeneration rule: if regenerating, do NOT reuse the same layout, background,\nvisual metaphor, colour emphasis, or composition — create a genuinely different\npremium version.\n\nTop eyebrow label (small, uppercase, letter-spaced): SECTOR WATCH  ·  AUTO\n",
+      "negative_prompt": "basic Canva template, generic stock-market poster, random candlestick background, clutter, fake numbers, fake logos, unreadable tiny text, cheap AI look, cartoon style, meme style, overcomplicated 3D, glossy 3D coins, copied smallcase layout, watermark, gibberish text, bull/bear mascots, buy/sell arrows, price targets",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_3.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_3.jpg",
+      "regenerate_rule": "On retry, change layout, background, visual metaphor and accent color — produce a genuinely different premium version, do not repeat."
+    }
+  ],
+  "status": "generated_and_postprocessed",
+  "finals": [
+    {
+      "path": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_1.jpg",
+      "width": 1080,
+      "height": 1350,
+      "bytes": 207473,
+      "jpeg_quality": 90,
+      "slide": 1
+    },
+    {
+      "path": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_2.jpg",
+      "width": 1080,
+      "height": 1350,
+      "bytes": 149413,
+      "jpeg_quality": 90,
+      "slide": 2
+    },
+    {
+      "path": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_instagram\\2026-06-29\\slide_3.jpg",
+      "width": 1080,
+      "height": 1350,
+      "bytes": 150791,
+      "jpeg_quality": 90,
+      "slide": 3
+    }
+  ],
+  "job_ids": {
+    "slide_1": "87643125-40f6-4ff4-abe0-c9b02f67a249",
+    "slide_2": "c96d0d79-c3ef-423a-afed-244316e59060",
+    "slide_3": "e9045678-b128-4f5f-9008-fed94c4cd07e"
+  }
+}

@@ -1,0 +1,33 @@
+Create a premium Instagram carousel slide for {brand}, an Indian stock market research brand ({site}).
+
+Canvas: 1080x1350 px, 4:5 Instagram carousel.
+Brand: {brand} / {site}
+Topic: {topic}
+Slide: {slide_n} of {total}
+
+Text content to render cleanly and legibly:
+Headline: {headline}
+Subtitle: {subtitle}
+Bullets:
+{bullets}
+Takeaway: {takeaway}
+Footer source (tiny): {source}
+Footer brand (tiny): {brand} · {site}
+
+Visual style: {style}.
+Background: {background}.
+Typography: {typography}.
+
+Premium finance-editorial design: clean, modern, minimalist, strong typographic
+hierarchy, generous whitespace, subtle data/chart elements, professional
+Indian-market research aesthetic. Use ONE main visual idea only. All rendered
+text must be real words, correctly spelled, high-contrast and legible on a phone.
+Place {brand} · {site} subtly in the footer. Keep the source line tiny in the footer.
+
+Composition for THIS slide: {variation}
+
+Avoid: {negative}
+
+Regeneration rule: if regenerating, do NOT reuse the same layout, background,
+visual metaphor, colour emphasis, or composition — create a genuinely different
+premium version.

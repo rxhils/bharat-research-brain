@@ -1,0 +1,95 @@
+2026-06-22 14:41:18 [info     ] backtest.f.start               active_isins=507 end=2018-12-31 rebalances=8 start=2017-01-16 trading_days=484
+2026-06-22 14:41:36 [info     ] backtest.f.done                maxdd=14.60 n500=29.79 sharpe=0.18 total_return_pct=17.50 trades=110
+2026-06-22 14:41:37 [info     ] backtest.f.start               active_isins=507 end=2018-12-31 rebalances=8 start=2017-01-16 trading_days=484
+2026-06-22 14:41:51 [info     ] backtest.f.done                maxdd=12.86 n500=29.79 sharpe=0.28 total_return_pct=20.15 trades=57
+2026-06-22 14:41:51 [info     ] backtest.f.start               active_isins=507 end=2019-06-01 rebalances=8 start=2017-06-01 trading_days=493
+2026-06-22 14:42:07 [info     ] backtest.f.done                maxdd=15.99 n500=20.02 sharpe=-0.30 total_return_pct=6.63 trades=101
+2026-06-22 14:42:07 [info     ] backtest.f.start               active_isins=507 end=2019-06-01 rebalances=8 start=2017-06-01 trading_days=493
+2026-06-22 14:42:21 [info     ] backtest.f.done                maxdd=13.38 n500=20.02 sharpe=-0.25 total_return_pct=7.71 trades=50
+2026-06-22 14:42:21 [info     ] backtest.f.start               active_isins=507 end=2020-06-30 rebalances=10 start=2018-01-01 trading_days=611
+2026-06-22 14:42:44 [info     ] backtest.f.done                maxdd=13.88 n500=-7.46 sharpe=-1.01 total_return_pct=-7.40 trades=146
+2026-06-22 14:42:44 [info     ] backtest.f.start               active_isins=507 end=2020-06-30 rebalances=10 start=2018-01-01 trading_days=611
+2026-06-22 14:43:06 [info     ] backtest.f.done                maxdd=20.16 n500=-7.46 sharpe=-1.32 total_return_pct=-14.71 trades=73
+2026-06-22 14:43:06 [info     ] backtest.f.start               active_isins=507 end=2020-12-31 rebalances=11 start=2018-06-01 trading_days=637
+2026-06-22 14:43:32 [info     ] backtest.f.done                maxdd=16.90 n500=25.00 sharpe=0.80 total_return_pct=46.89 trades=138
+2026-06-22 14:43:32 [info     ] backtest.f.start               active_isins=507 end=2020-12-31 rebalances=11 start=2018-06-01 trading_days=637
+2026-06-22 14:43:57 [info     ] backtest.f.done                maxdd=14.52 n500=25.00 sharpe=0.44 total_return_pct=32.83 trades=71
+2026-06-22 14:43:57 [info     ] backtest.f.start               active_isins=507 end=2023-06-01 rebalances=8 start=2021-06-01 trading_days=498
+2026-06-22 14:44:04 [info     ] backtest.f.done                maxdd=8.02 n500=21.95 sharpe=1.02 total_return_pct=33.97 trades=63
+2026-06-22 14:44:04 [info     ] backtest.f.start               active_isins=507 end=2023-06-01 rebalances=8 start=2021-06-01 trading_days=498
+2026-06-22 14:44:11 [info     ] backtest.f.done                maxdd=10.05 n500=21.95 sharpe=1.14 total_return_pct=39.61 trades=32
+2026-06-22 14:44:11 [info     ] backtest.f.start               active_isins=507 end=2024-06-01 rebalances=8 start=2022-06-01 trading_days=493
+2026-06-22 14:44:26 [info     ] backtest.f.done                maxdd=8.98 n500=52.78 sharpe=2.24 total_return_pct=96.83 trades=118
+2026-06-22 14:44:26 [info     ] backtest.f.start               active_isins=507 end=2024-06-01 rebalances=8 start=2022-06-01 trading_days=493
+2026-06-22 14:44:41 [info     ] backtest.f.done                maxdd=11.29 n500=52.78 sharpe=2.53 total_return_pct=125.24 trades=58
+2026-06-22 14:44:41 [info     ] backtest.f.start               active_isins=507 end=2025-06-01 rebalances=8 start=2023-06-01 trading_days=491
+2026-06-22 14:45:00 [info     ] backtest.f.done                maxdd=14.48 n500=47.42 sharpe=1.14 total_return_pct=54.05 trades=134
+2026-06-22 14:45:00 [info     ] backtest.f.start               active_isins=507 end=2025-06-01 rebalances=8 start=2023-06-01 trading_days=491
+2026-06-22 14:45:19 [info     ] backtest.f.done                maxdd=12.28 n500=47.42 sharpe=0.81 total_return_pct=42.52 trades=79
+2026-06-22 14:45:19 [info     ] backtest.f.start               active_isins=507 end=2026-05-26 rebalances=10 start=2024-01-01 trading_days=587
+2026-06-22 14:45:44 [info     ] backtest.f.done                maxdd=15.00 n500=20.46 sharpe=0.24 total_return_pct=24.67 trades=121
+2026-06-22 14:45:44 [info     ] backtest.f.start               active_isins=507 end=2026-05-26 rebalances=10 start=2024-01-01 trading_days=587
+2026-06-22 14:46:10 [info     ] backtest.f.done                maxdd=16.05 n500=20.46 sharpe=0.24 total_return_pct=24.92 trades=82
+2026-06-22 14:46:10 [info     ] backtest.f.start               active_isins=507 end=2020-12-31 rebalances=16 start=2017-01-16 trading_days=978
+2026-06-22 14:46:53 [info     ] backtest.f.done                maxdd=15.08 n500=62.45 sharpe=0.77 total_return_pct=82.29 trades=202
+2026-06-22 14:46:53 [info     ] backtest.f.start               active_isins=507 end=2020-12-31 rebalances=16 start=2017-01-16 trading_days=978
+2026-06-22 14:47:35 [info     ] backtest.f.done                maxdd=16.39 n500=62.45 sharpe=0.57 total_return_pct=66.42 trades=100
+2026-06-22 14:47:35 [info     ] backtest.f.start               active_isins=507 end=2026-05-26 rebalances=20 start=2021-06-01 trading_days=1228
+2026-06-22 14:48:22 [info     ] backtest.f.done                maxdd=14.05 n500=82.17 sharpe=0.95 total_return_pct=129.97 trades=204
+2026-06-22 14:48:22 [info     ] backtest.f.start               active_isins=507 end=2026-05-26 rebalances=20 start=2021-06-01 trading_days=1228
+2026-06-22 14:49:09 [info     ] backtest.f.done                maxdd=12.69 n500=82.17 sharpe=0.99 total_return_pct=142.07 trades=118
+2026-06-22 14:49:09 [info     ] backtest.f.start               active_isins=507 end=2026-05-26 rebalances=20 start=2021-06-01 trading_days=1228
+2026-06-22 14:49:55 [info     ] backtest.f.done                maxdd=12.69 n500=82.17 sharpe=0.99 total_return_pct=142.07 trades=118
+2026-06-22 14:49:55 [info     ] backtest.f.start               active_isins=507 end=2026-05-26 rebalances=20 start=2021-06-01 trading_days=1228
+2026-06-22 14:50:43 [info     ] backtest.f.done                maxdd=12.69 n500=82.17 sharpe=0.99 total_return_pct=142.07 trades=118
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\fazea\bharat research brain\scripts\diag_test_growth.py", line 179, in <module>
+    asyncio.run(main())
+    ~~~~~~~~~~~^^^^^^^^
+  File "C:\Python313\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "C:\Python313\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "C:\Python313\Lib\asyncio\base_events.py", line 725, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\fazea\bharat research brain\scripts\diag_test_growth.py", line 121, in main
+    print(delta_row(lab, g, c))
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u0394' in position 16: character maps to <undefined>
+============================================================================================
+GROWTH GAUNTLET — aggressive tilt vs Enhanced F+ (control) vs Nifty 500 TRI
+SURVIVORSHIP CAVEAT: 0 delisted -> absolute # optimistic (Growth most flattered);
+                     trust the DELTA vs Enhanced F+ on the same universe.
+============================================================================================
+
+### ENHANCED F+ (control)  — 8 windows
+window              tot%   CAGR  Shrp  maxDD%  covDD%  trd    N500%    aTRI
+E1W1 2017-18       17.50   8.60  0.18   14.60       -  110    29.79  -12.29
+E1W2 2017-19        6.63   3.26 -0.30   15.99       -  101    20.02  -13.39
+E1W3 2018-cov      -7.40  -3.03 -1.01   13.88   11.98  146    -7.46    0.06
+E1W4 2018-20       46.89  16.04  0.80   16.90    9.12  138    25.00   21.89
+E2W1 2021-23       33.97  15.76  1.02    8.02       -   63    21.95   12.02
+E2W2 2022-24       96.83  40.26  2.24    8.98       -  118    52.78   44.05
+E2W3 2023-25       54.05  24.10  1.14   14.48       -  134    47.42    6.63
+E2W4 2024-26       24.67   9.63  0.24   15.00       -  121    20.46    4.21
+
+### GROWTH  — 8 windows
+window              tot%   CAGR  Shrp  maxDD%  covDD%  trd    N500%    aTRI
+E1W1 2017-18       20.15   9.84  0.28   12.86       -   57    29.79   -9.64
+E1W2 2017-19        7.71   3.79 -0.25   13.38       -   50    20.02  -12.31
+E1W3 2018-cov     -14.71  -6.18 -1.32   20.16   18.15   73    -7.46   -7.25
+E1W4 2018-20       32.83  11.61  0.44   14.52   13.83   71    25.00    7.83
+E2W1 2021-23       39.61  18.17  1.14   10.05       -   32    21.95   17.66
+E2W2 2022-24      125.24  50.04  2.53   11.29       -   58    52.78   72.46
+E2W3 2023-25       42.52  19.37  0.81   12.28       -   79    47.42   -4.90
+E2W4 2024-26       24.92   9.72  0.24   16.05       -   82    20.46    4.46
+
+### DELTA: GROWTH vs ENHANCED F+ (Growth's core job = higher RETURN)

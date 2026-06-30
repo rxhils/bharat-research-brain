@@ -1,0 +1,689 @@
+{
+  "paper_account": [
+    {
+      "id": 1,
+      "inception_date": "2026-04-15",
+      "starting_capital": "1000000.00",
+      "current_cash": "629841.14",
+      "current_equity": "1011149.10",
+      "last_updated": "2026-06-20 11:55:31.220275+00:00",
+      "engine_version": "Enhanced F+ 6ced078",
+      "score_source": "mechanical"
+    }
+  ],
+  "paper_position": [
+    {
+      "id": 3,
+      "isin": "INE089A01031",
+      "entry_date": "2026-04-15",
+      "entry_price": "1217.8000",
+      "shares": "24.15155198",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 4,
+      "isin": "INE0Q9301021",
+      "entry_date": "2026-04-15",
+      "entry_price": "351.1000",
+      "shares": "83.77032185",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 5,
+      "isin": "INE117A01022",
+      "entry_date": "2026-04-15",
+      "entry_price": "6843.4100",
+      "shares": "4.29782228",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 6,
+      "isin": "INE172A01027",
+      "entry_date": "2026-04-15",
+      "entry_price": "180.0100",
+      "shares": "163.38958947",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 7,
+      "isin": "INE200M01039",
+      "entry_date": "2026-04-15",
+      "entry_price": "445.0500",
+      "shares": "66.08641726",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 9,
+      "isin": "INE228A01035",
+      "entry_date": "2026-04-15",
+      "entry_price": "441.9500",
+      "shares": "66.54997172",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 10,
+      "isin": "INE343G01021",
+      "entry_date": "2026-04-15",
+      "entry_price": "1540.8000",
+      "shares": "19.08862928",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 11,
+      "isin": "INE455K01017",
+      "entry_date": "2026-04-15",
+      "entry_price": "7791.0000",
+      "shares": "3.77509434",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 12,
+      "isin": "INE457A01014",
+      "entry_date": "2026-04-15",
+      "entry_price": "71.3900",
+      "shares": "411.98711304",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 13,
+      "isin": "INE476A01022",
+      "entry_date": "2026-04-15",
+      "entry_price": "141.7100",
+      "shares": "207.54893797",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 14,
+      "isin": "INE513A01022",
+      "entry_date": "2026-04-15",
+      "entry_price": "3907.8000",
+      "shares": "7.52642407",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 15,
+      "isin": "INE536H01010",
+      "entry_date": "2026-04-15",
+      "entry_price": "478.7500",
+      "shares": "61.43448564",
+      "exposure_at_entry": "0.50",
+      "status": "open",
+      "exit_date": null,
+      "exit_price": null,
+      "exit_reason": null
+    },
+    {
+      "id": 1,
+      "isin": "INE009A01021",
+      "entry_date": "2026-04-15",
+      "entry_price": "1305.3000",
+      "shares": "22.53256723",
+      "exposure_at_entry": "0.50",
+      "status": "closed",
+      "exit_date": "2026-05-14",
+      "exit_price": "1095.0000",
+      "exit_reason": "breakdown"
+    },
+    {
+      "id": 8,
+      "isin": "INE214T01019",
+      "entry_date": "2026-04-15",
+      "entry_price": "4628.7000",
+      "shares": "6.35421609",
+      "exposure_at_entry": "0.50",
+      "status": "closed",
+      "exit_date": "2026-05-14",
+      "exit_price": "3920.2000",
+      "exit_reason": "breakdown"
+    },
+    {
+      "id": 17,
+      "isin": "INE692A01016",
+      "entry_date": "2026-04-15",
+      "entry_price": "188.7100",
+      "shares": "155.85692332",
+      "exposure_at_entry": "0.50",
+      "status": "closed",
+      "exit_date": "2026-05-18",
+      "exit_price": "158.8900",
+      "exit_reason": "breakdown"
+    },
+    {
+      "id": 16,
+      "isin": "INE562A01011",
+      "entry_date": "2026-04-15",
+      "entry_price": "946.0000",
+      "shares": "31.09065539",
+      "exposure_at_entry": "0.50",
+      "status": "closed",
+      "exit_date": "2026-06-01",
+      "exit_price": "792.8599",
+      "exit_reason": "breakdown"
+    },
+    {
+      "id": 2,
+      "isin": "INE075A01022",
+      "entry_date": "2026-04-15",
+      "entry_price": "209.7500",
+      "shares": "140.22293206",
+      "exposure_at_entry": "0.50",
+      "status": "closed",
+      "exit_date": "2026-06-11",
+      "exit_price": "177.3700",
+      "exit_reason": "breakdown"
+    }
+  ],
+  "paper_equity_curve": [
+    {
+      "trade_date": "2026-04-15",
+      "total_equity": "1000000.00",
+      "invested_value": "499999.92",
+      "cash_value": "500000.08",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36118.5600",
+      "drawdown_pct": "0.00"
+    },
+    {
+      "trade_date": "2026-04-16",
+      "total_equity": "1004026.96",
+      "invested_value": "503897.91",
+      "cash_value": "500129.05",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36215.6900",
+      "drawdown_pct": "0.00"
+    },
+    {
+      "trade_date": "2026-04-17",
+      "total_equity": "1008885.34",
+      "invested_value": "508627.29",
+      "cash_value": "500258.05",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36556.9400",
+      "drawdown_pct": "0.00"
+    },
+    {
+      "trade_date": "2026-04-20",
+      "total_equity": "1008104.08",
+      "invested_value": "507717.00",
+      "cash_value": "500387.08",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36551.1400",
+      "drawdown_pct": "0.08"
+    },
+    {
+      "trade_date": "2026-04-21",
+      "total_equity": "1013566.32",
+      "invested_value": "513050.17",
+      "cash_value": "500516.15",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36833.4000",
+      "drawdown_pct": "0.00"
+    },
+    {
+      "trade_date": "2026-04-22",
+      "total_equity": "1014507.21",
+      "invested_value": "513861.96",
+      "cash_value": "500645.25",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36752.0700",
+      "drawdown_pct": "0.00"
+    },
+    {
+      "trade_date": "2026-04-23",
+      "total_equity": "1009448.51",
+      "invested_value": "508674.13",
+      "cash_value": "500774.38",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36463.6500",
+      "drawdown_pct": "0.50"
+    },
+    {
+      "trade_date": "2026-04-24",
+      "total_equity": "1003322.12",
+      "invested_value": "502418.57",
+      "cash_value": "500903.55",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36083.5700",
+      "drawdown_pct": "1.10"
+    },
+    {
+      "trade_date": "2026-04-27",
+      "total_equity": "1012068.78",
+      "invested_value": "511036.03",
+      "cash_value": "501032.75",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36485.6800",
+      "drawdown_pct": "0.24"
+    },
+    {
+      "trade_date": "2026-04-28",
+      "total_equity": "1007757.73",
+      "invested_value": "506595.75",
+      "cash_value": "501161.98",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36396.4900",
+      "drawdown_pct": "0.67"
+    },
+    {
+      "trade_date": "2026-04-29",
+      "total_equity": "1007789.63",
+      "invested_value": "506498.38",
+      "cash_value": "501291.25",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36565.0300",
+      "drawdown_pct": "0.66"
+    },
+    {
+      "trade_date": "2026-04-30",
+      "total_equity": "1001846.39",
+      "invested_value": "500425.84",
+      "cash_value": "501420.55",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36266.6100",
+      "drawdown_pct": "1.25"
+    },
+    {
+      "trade_date": "2026-05-04",
+      "total_equity": "1001671.93",
+      "invested_value": "500122.05",
+      "cash_value": "501549.88",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36502.0900",
+      "drawdown_pct": "1.27"
+    },
+    {
+      "trade_date": "2026-05-05",
+      "total_equity": "1003492.68",
+      "invested_value": "501813.43",
+      "cash_value": "501679.25",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36466.3200",
+      "drawdown_pct": "1.09"
+    },
+    {
+      "trade_date": "2026-05-06",
+      "total_equity": "1009493.39",
+      "invested_value": "507684.74",
+      "cash_value": "501808.65",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36986.1800",
+      "drawdown_pct": "0.49"
+    },
+    {
+      "trade_date": "2026-05-07",
+      "total_equity": "1012269.66",
+      "invested_value": "510331.58",
+      "cash_value": "501938.08",
+      "exposure_level": "0.50",
+      "nifty500_tri": "37115.0800",
+      "drawdown_pct": "0.22"
+    },
+    {
+      "trade_date": "2026-05-08",
+      "total_equity": "1009692.17",
+      "invested_value": "507624.62",
+      "cash_value": "502067.55",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36958.3700",
+      "drawdown_pct": "0.47"
+    },
+    {
+      "trade_date": "2026-05-11",
+      "total_equity": "1001151.90",
+      "invested_value": "498954.85",
+      "cash_value": "502197.05",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36446.9500",
+      "drawdown_pct": "1.32"
+    },
+    {
+      "trade_date": "2026-05-12",
+      "total_equity": "990133.20",
+      "invested_value": "487806.62",
+      "cash_value": "502326.58",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35654.5400",
+      "drawdown_pct": "2.40"
+    },
+    {
+      "trade_date": "2026-05-13",
+      "total_equity": "990206.54",
+      "invested_value": "487750.39",
+      "cash_value": "502456.15",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35778.4000",
+      "drawdown_pct": "2.40"
+    },
+    {
+      "trade_date": "2026-05-14",
+      "total_equity": "992612.65",
+      "invested_value": "440686.90",
+      "cash_value": "551925.75",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36155.3800",
+      "drawdown_pct": "2.16"
+    },
+    {
+      "trade_date": "2026-05-15",
+      "total_equity": "992681.00",
+      "invested_value": "440612.89",
+      "cash_value": "552068.11",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36038.4800",
+      "drawdown_pct": "2.15"
+    },
+    {
+      "trade_date": "2026-05-18",
+      "total_equity": "990601.75",
+      "invested_value": "413748.47",
+      "cash_value": "576853.27",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35926.3800",
+      "drawdown_pct": "2.36"
+    },
+    {
+      "trade_date": "2026-05-19",
+      "total_equity": "994655.18",
+      "invested_value": "417653.12",
+      "cash_value": "577002.06",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36023.4900",
+      "drawdown_pct": "1.96"
+    },
+    {
+      "trade_date": "2026-05-20",
+      "total_equity": "997325.61",
+      "invested_value": "420174.72",
+      "cash_value": "577150.89",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36113.9300",
+      "drawdown_pct": "1.69"
+    },
+    {
+      "trade_date": "2026-05-21",
+      "total_equity": "1000680.22",
+      "invested_value": "423380.46",
+      "cash_value": "577299.76",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36153.6000",
+      "drawdown_pct": "1.36"
+    },
+    {
+      "trade_date": "2026-05-22",
+      "total_equity": "1001927.66",
+      "invested_value": "424478.99",
+      "cash_value": "577448.67",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36240.5500",
+      "drawdown_pct": "1.24"
+    },
+    {
+      "trade_date": "2026-05-25",
+      "total_equity": "1005208.92",
+      "invested_value": "427611.30",
+      "cash_value": "577597.62",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36693.5800",
+      "drawdown_pct": "0.92"
+    },
+    {
+      "trade_date": "2026-05-26",
+      "total_equity": "1009026.09",
+      "invested_value": "431279.49",
+      "cash_value": "577746.60",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36642.0000",
+      "drawdown_pct": "0.54"
+    },
+    {
+      "trade_date": "2026-05-27",
+      "total_equity": "1009611.11",
+      "invested_value": "431715.49",
+      "cash_value": "577895.62",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36754.5100",
+      "drawdown_pct": "0.48"
+    },
+    {
+      "trade_date": "2026-05-28",
+      "total_equity": "1009760.17",
+      "invested_value": "431715.49",
+      "cash_value": "578044.68",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36754.5100",
+      "drawdown_pct": "0.47"
+    },
+    {
+      "trade_date": "2026-05-29",
+      "total_equity": "1005775.06",
+      "invested_value": "427581.28",
+      "cash_value": "578193.78",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36261.8000",
+      "drawdown_pct": "0.86"
+    },
+    {
+      "trade_date": "2026-06-01",
+      "total_equity": "1000497.74",
+      "invested_value": "397625.07",
+      "cash_value": "602872.67",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35911.8100",
+      "drawdown_pct": "1.38"
+    },
+    {
+      "trade_date": "2026-06-02",
+      "total_equity": "1002908.02",
+      "invested_value": "399879.85",
+      "cash_value": "603028.17",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36044.9100",
+      "drawdown_pct": "1.14"
+    },
+    {
+      "trade_date": "2026-06-03",
+      "total_equity": "1003543.34",
+      "invested_value": "400359.63",
+      "cash_value": "603183.71",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35935.3700",
+      "drawdown_pct": "1.08"
+    },
+    {
+      "trade_date": "2026-06-04",
+      "total_equity": "1005589.75",
+      "invested_value": "402250.46",
+      "cash_value": "603339.29",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36008.8200",
+      "drawdown_pct": "0.88"
+    },
+    {
+      "trade_date": "2026-06-05",
+      "total_equity": "1005492.68",
+      "invested_value": "401997.77",
+      "cash_value": "603494.91",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35966.7800",
+      "drawdown_pct": "0.89"
+    },
+    {
+      "trade_date": "2026-06-08",
+      "total_equity": "997701.21",
+      "invested_value": "394050.64",
+      "cash_value": "603650.57",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35499.8200",
+      "drawdown_pct": "1.66"
+    },
+    {
+      "trade_date": "2026-06-09",
+      "total_equity": "1003178.10",
+      "invested_value": "399371.83",
+      "cash_value": "603806.27",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35814.3400",
+      "drawdown_pct": "1.12"
+    },
+    {
+      "trade_date": "2026-06-10",
+      "total_equity": "997951.35",
+      "invested_value": "393989.34",
+      "cash_value": "603962.01",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35597.0500",
+      "drawdown_pct": "1.63"
+    },
+    {
+      "trade_date": "2026-06-11",
+      "total_equity": "994376.89",
+      "invested_value": "365509.63",
+      "cash_value": "628867.26",
+      "exposure_level": "0.50",
+      "nifty500_tri": "35405.8700",
+      "drawdown_pct": "1.98"
+    },
+    {
+      "trade_date": "2026-06-12",
+      "total_equity": "1002165.11",
+      "invested_value": "373135.64",
+      "cash_value": "629029.47",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36193.5300",
+      "drawdown_pct": "1.22"
+    },
+    {
+      "trade_date": "2026-06-15",
+      "total_equity": "1007151.24",
+      "invested_value": "377959.52",
+      "cash_value": "629191.72",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36193.5300",
+      "drawdown_pct": "0.73"
+    },
+    {
+      "trade_date": "2026-06-16",
+      "total_equity": "1008581.06",
+      "invested_value": "379227.05",
+      "cash_value": "629354.01",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36193.5300",
+      "drawdown_pct": "0.58"
+    },
+    {
+      "trade_date": "2026-06-17",
+      "total_equity": "1010178.34",
+      "invested_value": "380662.00",
+      "cash_value": "629516.34",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36193.5300",
+      "drawdown_pct": "0.43"
+    },
+    {
+      "trade_date": "2026-06-18",
+      "total_equity": "1008545.80",
+      "invested_value": "378867.08",
+      "cash_value": "629678.72",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36193.5300",
+      "drawdown_pct": "0.59"
+    },
+    {
+      "trade_date": "2026-06-19",
+      "total_equity": "1011149.10",
+      "invested_value": "381307.96",
+      "cash_value": "629841.14",
+      "exposure_level": "0.50",
+      "nifty500_tri": "36193.5300",
+      "drawdown_pct": "0.33"
+    }
+  ],
+  "paper_event_log": [
+    {
+      "id": 1,
+      "trade_date": "2026-04-15",
+      "event_type": "inception",
+      "detail": "Enhanced F+ inception: 17 names, exposure 0.50, cash 500000, Rs 1000000 (vol-adj momentum + 6.5% cash yield, commit 6ced078)",
+      "created_at": "2026-06-20 11:53:05.550210+00:00"
+    },
+    {
+      "id": 2,
+      "trade_date": "2026-05-14",
+      "event_type": "breakdown",
+      "detail": "INE009A01021 cut at 1095.00 (entry 1305.30)",
+      "created_at": "2026-06-20 11:53:26.600503+00:00"
+    },
+    {
+      "id": 3,
+      "trade_date": "2026-05-14",
+      "event_type": "breakdown",
+      "detail": "INE214T01019 cut at 3920.20 (entry 4628.70)",
+      "created_at": "2026-06-20 11:53:26.600503+00:00"
+    },
+    {
+      "id": 4,
+      "trade_date": "2026-05-18",
+      "event_type": "breakdown",
+      "detail": "INE692A01016 cut at 158.89 (entry 188.71)",
+      "created_at": "2026-06-20 11:53:27.728485+00:00"
+    },
+    {
+      "id": 5,
+      "trade_date": "2026-06-01",
+      "event_type": "breakdown",
+      "detail": "INE562A01011 cut at 792.86 (entry 946.00)",
+      "created_at": "2026-06-20 11:53:32.208254+00:00"
+    },
+    {
+      "id": 6,
+      "trade_date": "2026-06-11",
+      "event_type": "breakdown",
+      "detail": "INE075A01022 cut at 177.37 (entry 209.75)",
+      "created_at": "2026-06-20 11:53:35.636245+00:00"
+    }
+  ]
+}

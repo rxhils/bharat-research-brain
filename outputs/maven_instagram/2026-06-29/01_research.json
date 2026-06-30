@@ -1,0 +1,155 @@
+{
+  "date": "2026-06-29",
+  "market_summary": "Indian benchmarks ended lower on Monday, snapping a two-day winning streak. The BSE Sensex fell 372.10 points (-0.48%) to close at 76,728.37 and the NSE Nifty 50 declined 109.75 points (-0.46%) to 23,946.25 (Business Standard; Upstox). The Nifty Bank index closed roughly flat-to-lower at about 58,120, down ~0.10% (5paisa). The tone was risk-off: renewed US-Iran hostilities over the weekend pushed crude oil higher and the US dollar to near a one-year high, with 12 of 15 major NSE sector indices ending in the red and negative market breadth (2,036 decliners vs 1,330 advancers).",
+  "data_confidence_note": "High confidence. Closing levels cross-verified across Business Standard, Business Today, and Upstox (all independently report Sensex 76,728.37 / -372.10 and Nifty 23,946.25 / -109.75). Bank Nifty close (~58,120), FII net buy +Rs383.80 cr, DII net buy +Rs5,747.80 cr, and Brent ~$72/bbl reached via 5paisa aggregation. Geopolitical timeline cross-checked against the HDFCSky pre-open note and the Wikipedia '2026 Strait of Hormuz crisis' timeline (June 27 tanker strike + US airstrikes). Kotak CEO news verified across Business Standard, Outlook India, Business Today, and Free Press Journal. Rejected an early Trading Economics aggregator value (77,097 'flat, Thursday') and the figures 77,100.47/24,056.00 as these are the PREVIOUS (Friday June 26) close, not June 29. The Massive Market Data API does not cover Indian indices (US equities only), so index levels rely on Indian financial media rather than a direct data feed.",
+  "top_3_stories": [
+    {
+      "rank": 1,
+      "headline": "Sensex falls 372 points, Nifty ends below 23,950 as renewed US-Iran tension lifts oil and the dollar",
+      "category": "Indices / Global Macro",
+      "what_happened": "Indian equities snapped a two-day rising streak and closed lower across the board. The Sensex shed 372.10 points (-0.48%) to 76,728.37 and the Nifty 50 lost 109.75 points (-0.46%) to 23,946.25. A weekend re-escalation in the US-Iran conflict (a June 27 tanker strike near the Strait of Hormuz followed by US airstrikes) pushed Brent crude higher and strengthened the US dollar to near a one-year high, souring risk appetite. Twelve of fifteen major NSE sector indices fell; Nifty Auto led losses (~-2%), with Oil & Gas, IT, Bank and Financial Services down 0.6-1.2%. Metal, pharma and healthcare bucked the trend with mild buying.",
+      "why_it_matters": "This was a macro-driven, broad-based risk-off session rather than a stock-specific move, showing how sensitive Indian equities remain to Gulf geopolitics through the twin channels of crude oil (India imports the bulk of its oil) and a stronger dollar (which pressures emerging-market flows). Notably, domestic institutions (DII) absorbed much of the selling with a large net purchase, cushioning the fall.",
+      "affected_sectors": [
+        "Auto",
+        "Oil & Gas / Energy",
+        "IT",
+        "Banking",
+        "Financial Services",
+        "Metals (relative outperformer)",
+        "Pharma/Healthcare (relative outperformer)"
+      ],
+      "affected_companies": [
+        "Reliance Industries",
+        "Mahindra & Mahindra",
+        "Larsen & Toubro",
+        "Maruti Suzuki",
+        "State Bank of India"
+      ],
+      "key_numbers": [
+        "Sensex: 76,728.37, down 372.10 pts (-0.48%)",
+        "Nifty 50: 23,946.25, down 109.75 pts (-0.46%)",
+        "Nifty Bank: ~58,120, down ~0.10%",
+        "Nifty Auto: approx -2% (worst sector)",
+        "Brent crude: ~$72/bbl",
+        "FII net buy: +Rs383.80 cr (cash); DII net buy: +Rs5,747.80 cr (cash)",
+        "Breadth: 2,036 decliners vs 1,330 advancers; Nifty Midcap100 -0.37%, Smallcap100 -0.62%"
+      ],
+      "investor_takeaway": "Days like this illustrate how external geopolitical shocks can move Indian indices regardless of domestic fundamentals. The split between foreign and domestic flows (foreign buyers light, domestic institutions buying heavily) is a useful lens for understanding why the fall stayed modest. Educational only, not advice.",
+      "sources": [
+        {
+          "name": "Business Standard",
+          "url": "https://www.business-standard.com/markets/news/stock-market-live-june-29-nse-bse-sensex-today-nifty-gift-nifty-us-iran-deal-brent-crude-oil-prices-ipos-share-market-today-126062900077_1.html"
+        },
+        {
+          "name": "Upstox",
+          "url": "https://upstox.com/news/market-news/stocks/sensex-nifty-50-snap-two-day-winning-streak-dragged-by-reliance-kotak-bank/article-196075/"
+        },
+        {
+          "name": "Business Today",
+          "url": "https://www.businesstoday.in/markets/stocks/story/sensex-nifty-close-in-the-red-why-markets-fell-and-what-to-expect-next-539767-2026-06-29"
+        },
+        {
+          "name": "HDFC Sky (pre-open context)",
+          "url": "https://hdfcsky.com/news/stock-market-today-june-29-2026-sensex-slips-nifty-flat-iran-war-oil-prices"
+        }
+      ],
+      "importance_score": 9,
+      "confidence_score": 9
+    },
+    {
+      "rank": 2,
+      "headline": "Kotak Mahindra Bank in focus as CEO Ashok Vaswani opts not to seek another term; stock among top Nifty losers",
+      "category": "Company News / Banking / Corporate Governance",
+      "what_happened": "Kotak Mahindra Bank shares fell about 3% (to around Rs397) and were among the heaviest drags on the Nifty after the bank disclosed (Saturday, June 27) that Managing Director and CEO Ashok Vaswani has decided not to seek re-appointment when his term ends on December 31, 2026, citing personal reasons. The board has begun a succession process; whole-time directors Paritosh Kashyap and Anup Saha are reported as internal candidates under consideration. The market reaction played out in Monday's June 29 session, the first trading day after the disclosure.",
+      "why_it_matters": "Leadership transitions at a top private-sector lender reintroduce a governance and continuity question that the market tends to price quickly. Kotak has had a closely watched CEO-succession history since founder Uday Kotak stepped back, so a second leadership change in a few years draws scrutiny over strategy continuity. The drop in a single index-heavyweight bank contributed meaningfully to the Nifty Bank and Financial Services weakness on the day.",
+      "affected_sectors": [
+        "Banking",
+        "Financial Services"
+      ],
+      "affected_companies": [
+        "Kotak Mahindra Bank"
+      ],
+      "key_numbers": [
+        "Kotak Mahindra Bank: approx -3% on the day, to around Rs397",
+        "CEO term end date: December 31, 2026",
+        "Disclosure date to exchanges: Saturday, June 27, 2026"
+      ],
+      "investor_takeaway": "CEO-succession announcements at large lenders are a classic example of headline-driven, single-stock volatility. The educational point is how a governance event at one index-heavyweight can ripple into sector indices. Informational only, not advice.",
+      "sources": [
+        {
+          "name": "Business Standard",
+          "url": "https://www.business-standard.com/companies/news/kotak-bank-s-md-ceo-ashok-vaswani-to-step-down-at-end-of-dec-2026-126062700595_1.html"
+        },
+        {
+          "name": "Outlook India",
+          "url": "https://www.outlookindia.com/business/kotak-mahindra-bank-ceo-ashok-vaswani-to-step-down-citing-personal-reasons"
+        },
+        {
+          "name": "Business Today",
+          "url": "https://www.businesstoday.in/industry/banks/story/kotak-mahindra-bank-ceo-ashok-vaswani-to-step-down-in-december-board-begins-succession-hunt-539556-2026-06-28"
+        },
+        {
+          "name": "Upstox",
+          "url": "https://upstox.com/news/market-news/stocks/sensex-nifty-50-snap-two-day-winning-streak-dragged-by-reliance-kotak-bank/article-196075/"
+        }
+      ],
+      "importance_score": 8,
+      "confidence_score": 9
+    },
+    {
+      "rank": 3,
+      "headline": "Auto stocks lead the decline as crude oil and dollar strength pressure cyclicals",
+      "category": "Sector Move / Auto",
+      "what_happened": "The Nifty Auto index was the day's worst-performing major sector, falling roughly 2% as renewed US-Iran tension lifted crude oil and pushed the US dollar toward a one-year high. Index heavyweights Mahindra & Mahindra and Maruti Suzuki were among the notable decliners (within a 1.3%-2.4% loss band that also included Larsen & Toubro and State Bank of India). Higher oil and a stronger dollar raise input-cost and currency concerns for auto and other cyclicals, while defensive pockets like pharma, metals and healthcare saw relative buying.",
+      "why_it_matters": "The session shows the textbook sector rotation that accompanies an oil-and-dollar shock: rate- and cost-sensitive cyclicals (autos, financials, energy consumers) underperform, while defensives hold up better. For market-watchers, the magnitude of the Auto index's underperformance versus the broader Nifty is a clean illustration of how a single macro variable (crude) reprices an entire sector in one day.",
+      "affected_sectors": [
+        "Auto",
+        "Oil & Gas",
+        "IT",
+        "Banking (relative underperformers)",
+        "Metals",
+        "Pharma",
+        "Healthcare (relative outperformers)"
+      ],
+      "affected_companies": [
+        "Mahindra & Mahindra",
+        "Maruti Suzuki",
+        "Larsen & Toubro",
+        "State Bank of India"
+      ],
+      "key_numbers": [
+        "Nifty Auto: approx -2% (worst major sector)",
+        "Decliner band for M&M, L&T, Maruti, SBI: roughly -1.3% to -2.4%",
+        "12 of 15 major NSE sector indices closed lower",
+        "Brent crude: ~$72/bbl"
+      ],
+      "investor_takeaway": "A useful educational case of macro-driven sector rotation: when oil rises and the dollar strengthens, cost- and consumption-sensitive sectors such as autos typically lag while defensives cushion the index. Informational only, not advice.",
+      "sources": [
+        {
+          "name": "Upstox",
+          "url": "https://upstox.com/news/market-news/stocks/sensex-nifty-50-snap-two-day-winning-streak-dragged-by-reliance-kotak-bank/article-196075/"
+        },
+        {
+          "name": "Business Today",
+          "url": "https://www.businesstoday.in/markets/stocks/story/sensex-nifty-close-in-the-red-why-markets-fell-and-what-to-expect-next-539767-2026-06-29"
+        },
+        {
+          "name": "HDFC Sky",
+          "url": "https://hdfcsky.com/news/stock-market-today-june-29-2026-sensex-slips-nifty-flat-iran-war-oil-prices"
+        }
+      ],
+      "importance_score": 7,
+      "confidence_score": 8
+    }
+  ],
+  "_meta": {
+    "agent": "IndianMarketResearchAgent",
+    "generated_at_ist": "2026-06-29T17:40:00+05:30",
+    "post_worthy_count": 3,
+    "thresholds": {
+      "min_importance": 7,
+      "min_confidence": 8
+    },
+    "all_pass": true
+  }
+}
