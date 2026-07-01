@@ -10,9 +10,38 @@ export type AnswerType =
 export type DisclaimerLevel = "none" | "light" | "standard" | "strong";
 export type Confidence = "verified" | "retrieved" | "analysis_only" | "unavailable";
 
+export type Freshness = "live" | "latest_available" | "delayed" | "stale" | "unavailable";
+export type DataConfidence = "verified" | "retrieved" | "estimated" | "unavailable";
+
+// Standard, source-attributed market datum. Every important number carries provenance.
+export type MarketDataPoint = {
+  key: string; label: string; value: number | string | null; unit?: string;
+  change?: number | null; changePct?: number | null; timestamp?: string;
+  source: string; sourceUrl?: string;
+  freshness: Freshness; confidence: DataConfidence; limitation?: string;
+};
+
 export type Quote = { label: string; symbol: string; price: number | null; changePct: number | null; spark?: number[] };
 export type SectorPerf = { name: string; changePct: number };
-export type Flows = { fiiCr: number | null; diiCr: number | null; asOf: string } | null;
+
+export type FiiDiiFlows = {
+  date?: string; fiiCashNet: number | null; diiCashNet: number | null;
+  fiiIndexFuturesNet?: number | null; fiiStockFuturesNet?: number | null;
+  context?: string; source: string; sourceUrl?: string;
+  freshness: Freshness; confidence: DataConfidence; limitation?: string;
+};
+export type GSecYield = {
+  date?: string; yield10Y: number | null; changeBps?: number | null;
+  source: string; sourceUrl?: string; freshness: Freshness; confidence: DataConfidence; limitation?: string;
+};
+export type MacroSnapshot = { points: MarketDataPoint[]; limitation?: string };
+export type Announcement = {
+  title: string; date?: string; source: string; sourceUrl?: string;
+  type: "exchange_announcement" | "results" | "corporate_action" | "investor_presentation" | "news_fallback";
+  snippet?: string; confidence: DataConfidence;
+};
+export type CompanyAnnouncements = { symbol: string; announcements: Announcement[]; limitation?: string };
+export type CompanySnapshot = { symbol: string; sector?: string; points: MarketDataPoint[]; limitation?: string };
 
 export type SourceResult = { title: string; url: string; snippet: string; source: string; published?: string };
 
@@ -24,7 +53,11 @@ export type ResearchPlan = {
 export type MarketData = {
   indices?: Quote[]; sectors?: SectorPerf[]; stocks?: Quote[];
   crude?: Quote | null; usdinr?: Quote | null;
-  gsec?: { yieldPct: number | null; asOf: string } | null; flows?: Flows;
+  fiiDiiFlows?: FiiDiiFlows | null;
+  gsecYield?: GSecYield | null;
+  macroSnapshot?: MacroSnapshot | null;
+  stockSnapshots?: CompanySnapshot[];
+  announcements?: CompanyAnnouncements[];
 };
 
 export type ChartSpec = {

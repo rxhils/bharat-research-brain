@@ -23,31 +23,31 @@ export function planResearch(query: string, intent: Intent): ResearchPlan {
   switch (intent) {
     case "market_summary":
       return mk(
-        ["indices", "sectors", "fiidii", "crude", "usdinr", "gsec"],
-        ["index_line", "sector_bar", "fiidii_bar"],
+        ["indices", "sectors", "fiidii", "crude", "usdinr", "gsec", "macro"],
+        ["index_bar", "sector_bar", "fiidii_bar"],
         [`Indian stock market today ${topic}`, "Nifty Sensex close today reasons", "FII DII activity today India"],
       );
     case "index_movement":
       return mk(
         ["indices", "sectors", "gsec", "fiidii"],
-        ["index_line", "sector_bar"],
+        ["index_bar", "sector_bar"],
         [`why is ${topic} moving today`, `${topic} today India news`],
       );
     case "sector_impact":
       return mk(
-        ["sectors", "indices", "crude", "usdinr", "gsec", "fiidii"],
+        ["sectors", "indices", "crude", "usdinr", "gsec", "fiidii", "macro"],
         ["sector_bar"],
         [`${topic} India market today`, `${topic} impact Indian stocks`],
       );
     case "stock_comparison":
       return mk(
-        ["stocks", "sectors"],
+        ["stocks", "snapshots", "announcements", "sectors"],
         ["stock_compare", "valuation"],
         [`${topic} comparison India`, `${topic} latest quarterly results`],
       );
     case "macro_impact":
       return mk(
-        ["crude", "usdinr", "gsec"],
+        ["crude", "usdinr", "gsec", "macro"],
         ["macro_line"],
         [`${topic} India impact markets`, `${topic} latest data India`],
       );
