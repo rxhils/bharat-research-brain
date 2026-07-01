@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { useReducedMotionSafe } from "./motion";
 import { MavenChartRenderer, MechanismStepper } from "./maven-charts";
@@ -11,7 +11,10 @@ const SUGGESTIONS = [
   { t: "What sectors benefit from softer crude?", k: "Macro knock-on" },
   { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison" },
 ];
-const CHIPS = ["Nifty", "Banks", "FII Flows", "RIL", "Oil", "Macro", "RBI"];
+const MODELS = [
+  { id: "maven-v1", name: "Maven V1", tag: "Bharat Core", desc: "India-first market reasoning engine", live: true },
+  { id: "maven-pro", name: "Maven Pro", tag: "Deep Research", desc: "Multi-source deep dives — coming soon", live: false },
+] as const;
 const EASE = [0.22, 1, 0.36, 1] as const;
 const FLOW = ["flow", "flow_chart"];
 
@@ -99,11 +102,13 @@ function GlassPanel({ children, className = "", tlSharp = false }: { children: R
 export function ChatView() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
-  const [active, setActive] = useState<string[]>([]);
+  const [model, setModel] = useState<string>(MODELS[0].id);
   const idRef = useRef(1);
-  const endRef = useRef<HTMLDivElement>(null);
+  const lastUserId = useRef(0);
+  const turnRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs]);
+  // On a new question, bring the latest exchange to the top so the answer reads top-down.
+  useEffect(() => { turnRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [msgs.length]);
 
   async function send(q: string) {
     const text = q.trim();
@@ -111,9 +116,10 @@ export function ChatView() {
     setInput("");
     const uid = idRef.current++;
     const aid = idRef.current++;
+    lastUserId.current = uid;
     setMsgs((m) => [...m, { id: uid, role: "user", text }, { id: aid, role: "assistant", loading: true }]);
     try {
-      const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text }) });
+      const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text, model }) });
       const answer: MavenAskResponse = await r.json();
       setTimeout(() => setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, answer } : x))), 600);
     } catch {
@@ -126,8 +132,12 @@ export function ChatView() {
     <div className={"relative mx-auto flex max-w-[960px] flex-col" + (empty ? "" : " min-h-[58vh]")}>
       <AuroraBg />
       {empty ? <Hero onPick={send} /> : (
-        <div className="flex-1 space-y-7 pb-40">
-          {msgs.map((m) => (m.role === "user" ? <UserBubble key={m.id} text={m.text ?? ""} /> : (
+        <div className="flex-1 space-y-7 pb-6">
+          {msgs.map((m) => (m.role === "user" ? (
+            <div key={m.id} ref={m.id === lastUserId.current ? turnRef : undefined} className="scroll-mt-24">
+              <UserBubble text={m.text ?? ""} />
+            </div>
+          ) : (
             <motion.div key={m.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE }} className="flex gap-3">
               <Avatar thinking={!!m.loading} />
               <div className="min-w-0 flex-1">
@@ -135,10 +145,11 @@ export function ChatView() {
               </div>
             </motion.div>
           )))}
-          <div ref={endRef} />
+          {/* reserve room so the latest question can scroll to the top of the view */}
+          <div style={{ minHeight: "42vh" }} aria-hidden />
         </div>
       )}
-      <Composer input={input} setInput={setInput} send={send} active={active} setActive={setActive} empty={empty} />
+      <Composer input={input} setInput={setInput} send={send} empty={empty} model={model} setModel={setModel} />
     </div>
   );
 }
@@ -351,22 +362,75 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
   );
 }
 
-function Composer({ input, setInput, send, active, setActive, empty }: {
-  input: string; setInput: (s: string) => void; send: (q: string) => void; active: string[]; setActive: Dispatch<SetStateAction<string[]>>; empty: boolean;
+function ModelSelector({ model, setModel }: { model: string; setModel: (id: string) => void }) {
+  const reduce = useReducedMotionSafe();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const current = MODELS.find((m) => m.id === model) ?? MODELS[0];
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open}
+        className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-white/[0.03] py-1.5 pl-2 pr-3 text-xs text-ink transition-colors hover:border-emerald/40">
+        <span className="grid h-5 w-5 place-items-center rounded-full border border-emerald/25 bg-panel"><MavenMark size={12} /></span>
+        <span className="font-medium">{current.name}</span>
+        <span className="hidden text-[10px] text-dim sm:inline">{current.tag}</span>
+        <motion.svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="text-dim"
+          animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25, ease: EASE }}><path d="M6 9l6 6 6-6" /></motion.svg>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div role="listbox"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28 }}
+            className="absolute bottom-full left-0 z-30 mb-2 w-72 origin-bottom-left rounded-2xl bg-gradient-to-b from-emerald/25 via-white/[0.06] to-transparent p-px shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)]">
+            <div className="rounded-2xl bg-panel/95 p-1.5 backdrop-blur-xl">
+              <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-dim">Model</div>
+              <motion.div initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.05 } } }}>
+                {MODELS.map((m) => {
+                  const selected = m.id === model;
+                  return (
+                    <motion.button key={m.id} type="button" role="option" aria-selected={selected} disabled={!m.live}
+                      variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, x: -6 }, show: { opacity: 1, x: 0, transition: { duration: 0.3, ease: EASE } } }}
+                      onClick={() => { if (m.live) { setModel(m.id); setOpen(false); } }}
+                      className={"flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors " + (m.live ? "hover:bg-white/[0.05]" : "cursor-not-allowed opacity-60")}>
+                      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-emerald/25 bg-panel"><MavenMark size={15} /></span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex flex-wrap items-center gap-2">
+                          <span className="text-sm font-medium text-ink">{m.name}</span>
+                          <span className="rounded-full border border-hairline px-1.5 py-px text-[9px] uppercase tracking-wider text-dim">{m.tag}</span>
+                          {!m.live && <span className="rounded-full bg-gold/15 px-1.5 py-px text-[9px] uppercase tracking-wider text-gold-soft">Soon</span>}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] leading-snug text-ink/55">{m.desc}</span>
+                      </span>
+                      {selected && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="mt-1 shrink-0" aria-hidden><path d="M20 6L9 17l-5-5" /></svg>}
+                    </motion.button>
+                  );
+                })}
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function Composer({ input, setInput, send, empty, model, setModel }: {
+  input: string; setInput: (s: string) => void; send: (q: string) => void; empty: boolean; model: string; setModel: (id: string) => void;
 }) {
-  const toggle = (c: string) => setActive((a) => (a.includes(c) ? a.filter((x) => x !== c) : [...a, c]));
   return (
     <div className={(empty ? "mt-10 sm:mt-14 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
-      {!empty && (
-        <div className="mb-2.5 flex flex-nowrap gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {CHIPS.map((c) => (
-            <button key={c} onClick={() => toggle(c)}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2.5 py-1 text-[11px] transition-all " + (active.includes(c) ? "border-emerald/50 bg-emerald/12 text-emerald shadow-[0_0_14px_-4px_rgba(52,211,153,0.6)]" : "border-hairline text-muted hover:border-border hover:text-ink")}>
-              {c}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className="mb-2.5 flex items-center px-1">
+        <ModelSelector model={model} setModel={setModel} />
+      </div>
       <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-all focus-within:from-emerald/60 focus-within:shadow-[0_0_30px_-10px_rgba(52,211,153,0.5)]">
         <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2 rounded-2xl bg-panel/80 p-2 backdrop-blur-md">
           <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={1} placeholder="Ask Maven about Nifty, sectors, flows, macro, or Indian stocks&hellip;"
