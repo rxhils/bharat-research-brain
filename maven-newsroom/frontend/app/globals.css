@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "Cascadia Code", Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  padding: 0;
+  margin: 0;
+  background: #05070A;
+  color: #E6EDF3;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient newsroom backdrop: faint radial glows, no clutter. */
+body {
+  background-image:
+    radial-gradient(900px 500px at 78% -8%, rgba(31, 182, 166, 0.07), transparent 60%),
+    radial-gradient(700px 500px at 8% 8%, rgba(59, 130, 246, 0.06), transparent 55%);
+  background-attachment: fixed;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.18); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(148,163,184,0.32); }
+
+@layer components {
+  .glass {
+    @apply bg-card/80 border border-line rounded-xl backdrop-blur-sm;
+    box-shadow: 0 1px 0 0 rgba(255,255,255,0.02) inset, 0 8px 24px -16px rgba(0,0,0,0.7);
+  }
+  .glass-raised { @apply bg-card-raised/90 border border-line rounded-xl; }
+  .hairline { @apply border-line; }
+  .mono { font-family: var(--font-mono); }
+  .eyebrow {
+    @apply text-[11px] uppercase tracking-[0.18em] text-ink-faint font-medium;
+  }
+  .metric { @apply text-3xl font-semibold tracking-tight text-ink; }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium border;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium
+           border border-line transition-colors duration-150 select-none;
+  }
+  .btn-primary {
+    @apply bg-teal/15 border-teal/40 text-teal hover:bg-teal/25;
+  }
+  .btn-ghost { @apply text-ink-muted hover:text-ink hover:bg-white/5; }
+  .card-pad { @apply p-5; }
+}
+
+/* React Flow dark theme overrides */
+.react-flow__attribution { display: none; }
+.react-flow__edge-path { stroke: rgba(148,163,184,0.35); stroke-width: 1.5; }
+.react-flow__edge.animated .react-flow__edge-path { stroke: #1FB6A6; }
+.react-flow__background { opacity: 0.4; }

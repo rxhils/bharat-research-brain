@@ -1,0 +1,56 @@
+{
+  "date": "2026-06-30",
+  "scenes": [
+    {
+      "scene": 1,
+      "from_segment": "hook",
+      "seconds": 2.0,
+      "on_screen": "Everyone saw the market today — but this",
+      "visual_beat": "Full-bleed bold hook text on dark navy; one accent glow."
+    },
+    {
+      "scene": 2,
+      "from_segment": "what",
+      "seconds": 6.0,
+      "on_screen": "The Nifty IT index sank about 2.7% on",
+      "visual_beat": "Index/Information Technology stat card with the day's numbers."
+    },
+    {
+      "scene": 3,
+      "from_segment": "why",
+      "seconds": 5.0,
+      "on_screen": "IT is among the most heavily weighted sectors",
+      "visual_beat": "Single cause-and-effect diagram; one arrow, minimal."
+    },
+    {
+      "scene": 4,
+      "from_segment": "why",
+      "seconds": 5.0,
+      "on_screen": "IT is among the most heavily weighted sectors",
+      "visual_beat": "Single cause-and-effect diagram; one arrow, minimal."
+    },
+    {
+      "scene": 5,
+      "from_segment": "understand",
+      "seconds": 5.0,
+      "on_screen": "For educational context only: the IT drawdown is",
+      "visual_beat": "One-line insight on clean background; large type."
+    },
+    {
+      "scene": 6,
+      "from_segment": "understand",
+      "seconds": 5.0,
+      "on_screen": "For educational context only: the IT drawdown is",
+      "visual_beat": "One-line insight on clean background; large type."
+    },
+    {
+      "scene": 7,
+      "from_segment": "cta",
+      "seconds": 5.0,
+      "on_screen": "Understand the Indian market better with Maven. trymaven.in.",
+      "visual_beat": "Maven wordmark + trymaven.in on dark; calm."
+    }
+  ],
+  "scene_count": 7,
+  "total_seconds": 33.0
+}

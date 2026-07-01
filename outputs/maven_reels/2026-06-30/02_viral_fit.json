@@ -1,0 +1,117 @@
+{
+  "date": "2026-06-30",
+  "dimensions": [
+    "importance",
+    "curiosity",
+    "emotional",
+    "simplicity",
+    "visual",
+    "shareability",
+    "retail_relevance"
+  ],
+  "weights": {
+    "importance": 1.0,
+    "curiosity": 1.6,
+    "emotional": 1.5,
+    "simplicity": 1.2,
+    "visual": 1.5,
+    "shareability": 1.6,
+    "retail_relevance": 1.3
+  },
+  "min_fit": 6.0,
+  "chosen": {
+    "headline": "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+    "viral_fit": 8.29,
+    "dims": {
+      "importance": 9.0,
+      "curiosity": 5,
+      "emotional": 10.0,
+      "simplicity": 3.7,
+      "visual": 10.0,
+      "shareability": 10.0,
+      "retail_relevance": 10.0
+    },
+    "story": {
+      "rank": 2,
+      "headline": "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+      "category": "Sector / Information Technology",
+      "what_happened": "The Nifty IT index sank about 2.7% on June 30, sharply underperforming the Nifty 50 (-0.34%) and extending its losing streak to a third straight session (down roughly 4.6% over three days). Heavyweights led the slide: Infosys fell ~3.5%, TCS ~3.2%, Wipro ~2.9%, HCLTech ~2.8% and Tech Mahindra ~2%, with several IT names hitting 52-week lows and the index touching a three-year low. The selloff was driven by fears that US interest rates stay higher-for-longer (pressuring discretionary tech spend) and worries about AI-driven disruption to the IT services model.",
+      "why_it_matters": "IT is among the most heavily weighted sectors in Indian benchmarks and is highly export-/US-demand-sensitive. A move to a three-year low with multiple 52-week lows signals deepening pessimism on US discretionary tech budgets and the AI-disruption overhang for traditional services revenue - the single biggest drag on the headline indices today.",
+      "affected_sectors": [
+        "Information Technology",
+        "IT Services",
+        "Export-oriented sectors"
+      ],
+      "affected_companies": [
+        "Infosys",
+        "TCS",
+        "Wipro",
+        "HCLTech",
+        "Tech Mahindra"
+      ],
+      "key_numbers": [
+        "Nifty IT: ~-2.7% on the day",
+        "3-day decline: ~-4.6%",
+        "Infosys ~-3.5%, TCS ~-3.2%, Wipro ~-2.9%, HCLTech ~-2.8%, Tech Mahindra ~-2%",
+        "Index at ~3-year low; multiple constituents at 52-week lows"
+      ],
+      "investor_takeaway": "For educational context only: the IT drawdown is tied to macro (US rate outlook) and structural (AI-disruption) concerns rather than a single company event - a sector-wide de-rating worth monitoring. Not investment advice.",
+      "sources": [
+        {
+          "name": "Moneycontrol via TradingView - Nifty IT falls nearly 3%",
+          "url": "https://www.tradingview.com/news/moneycontrol:bd9f71f8e094b:0-nifty-it-falls-nearly-3-infosys-tcs-wipro-among-top-losers-as-us-rate-fear-ai-disruption-weigh-on-outlook/"
+        },
+        {
+          "name": "Business Standard - Nifty IT sinks to 3-year low; TCS, Infosys, HCL Tech hit 52-wk lows",
+          "url": "https://www.business-standard.com/markets/news/it-stocks-crash-nifty-it-sinks-2-to-3-year-low-tcs-infosys-hcl-tech-ltm-hit-52-wk-lows-126063000275_1.html"
+        }
+      ],
+      "importance_score": 9,
+      "confidence_score": 9
+    }
+  },
+  "ranked": [
+    {
+      "headline": "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+      "viral_fit": 8.29,
+      "dims": {
+        "importance": 9.0,
+        "curiosity": 5,
+        "emotional": 10.0,
+        "simplicity": 3.7,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 10.0
+      }
+    },
+    {
+      "headline": "Autos, realty and consumer durables cushion the market as Maruti jumps ~5.5%",
+      "viral_fit": 7.86,
+      "dims": {
+        "importance": 7.0,
+        "curiosity": 5,
+        "emotional": 8.0,
+        "simplicity": 4.4,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 10.0
+      },
+      "rejected_reason": "Lower viral fit (7.86 vs 8.29); weaker on emotional"
+    },
+    {
+      "headline": "Sensex, Nifty close ~0.3% lower as IT selloff overpowers broad-market gains",
+      "viral_fit": 7.51,
+      "dims": {
+        "importance": 9.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 4.9,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 10.0
+      },
+      "rejected_reason": "Lower viral fit (7.51 vs 8.29); weaker on emotional"
+    }
+  ],
+  "reel_worthy": true
+}

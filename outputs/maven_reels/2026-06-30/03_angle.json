@@ -1,0 +1,32 @@
+{
+  "date": "2026-06-30",
+  "story_headline": "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+  "candidates": [
+    {
+      "angle": "Why Nifty IT: ~-2.7% on the day moved on one story today",
+      "type": "data",
+      "scroll_score": 86
+    },
+    {
+      "angle": "Everyone saw the headline — few understood why information technology really moved",
+      "type": "curiosity",
+      "scroll_score": 86
+    },
+    {
+      "angle": "The real reason information technology moved today",
+      "type": "explainer",
+      "scroll_score": 80
+    },
+    {
+      "angle": "One thing behind today's move that most retail investors missed",
+      "type": "insider",
+      "scroll_score": 74
+    }
+  ],
+  "chosen": {
+    "angle": "Why Nifty IT: ~-2.7% on the day moved on one story today",
+    "type": "data",
+    "scroll_score": 86
+  },
+  "rationale": "'Why Nifty IT: ~-2.7% on the day moved on one story today' scored highest for scroll-stop (86) — it frames the event as a why, not a recap."
+}

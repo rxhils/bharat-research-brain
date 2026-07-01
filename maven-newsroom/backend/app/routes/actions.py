@@ -15,7 +15,24 @@ from fastapi import APIRouter, Body, HTTPException
 from .. import database as db
 from ..events import bus
 from ..registry import GRAPH_ORDER, NODES_BY_ID
-from ..services import runner
+from ..registry_reels import REEL_GRAPH_ORDER, REEL_NODES_BY_ID
+from ..services import runner, runner_reels
+
+
+def _is_reel(job_id: str) -> bool:
+    return str(job_id).startswith("reel-")
+
+
+def _nodes_by_id(job_id: str) -> dict:
+    return REEL_NODES_BY_ID if _is_reel(job_id) else NODES_BY_ID
+
+
+def _graph_order(job_id: str) -> list:
+    return REEL_GRAPH_ORDER if _is_reel(job_id) else GRAPH_ORDER
+
+
+def _set_node(job_id: str, node_id: str, **fields):
+    (runner_reels._set if _is_reel(job_id) else runner._set_node)(job_id, node_id, **fields)
 
 router = APIRouter(prefix="/api")
 
@@ -33,6 +50,11 @@ def _require_job(job_id: str) -> dict:
 
 @router.post("/run")
 async def start_run(body: dict = Body(default={})):
+    if body.get("pipeline") == "reel":
+        info = runner_reels.create_simulation_job(body.get("date"))
+        if info.get("status") == "running":
+            asyncio.create_task(runner_reels.run_simulation(info["job_id"]))
+        return info
     info = runner.create_simulation_job(body.get("date"))
     if info.get("status") == "running":
         asyncio.create_task(runner.run_simulation(info["job_id"]))
@@ -42,17 +64,18 @@ async def start_run(body: dict = Body(default={})):
 @router.post("/jobs/{job_id}/rerun/{node_id}")
 def rerun_node(job_id: str, node_id: str):
     _require_job(job_id)
-    if node_id not in NODES_BY_ID:
+    nodes = _nodes_by_id(job_id)
+    if node_id not in nodes:
         raise HTTPException(404, "unknown node")
-    spec = NODES_BY_ID[node_id]
+    spec = nodes[node_id]
     if spec["external"]:
         bus.emit(job_id, node_id, "node.retrying", CONDUCTOR_MSG, status="pending")
-        runner._set_node(job_id, node_id, status="pending", summary=CONDUCTOR_MSG)
+        _set_node(job_id, node_id, status="pending", summary=CONDUCTOR_MSG)
         return {"status": "requires_conductor", "node_id": node_id, "message": CONDUCTOR_MSG}
     bus.emit(job_id, node_id, "node.retrying", f"Re-running {spec['name']}…",
              status="running")
-    runner._set_node(job_id, node_id, status="completed", progress=100,
-                     retry_count=_retry(job_id, node_id) + 1)
+    _set_node(job_id, node_id, status="completed", progress=100,
+              retry_count=_retry(job_id, node_id) + 1)
     bus.emit(job_id, node_id, "node.completed", f"{spec['name']} re-ran.",
              status="completed")
     return {"status": "completed", "node_id": node_id}
@@ -61,15 +84,16 @@ def rerun_node(job_id: str, node_id: str):
 @router.post("/jobs/{job_id}/rerun-from/{node_id}")
 def rerun_from(job_id: str, node_id: str):
     _require_job(job_id)
-    if node_id not in GRAPH_ORDER:
+    nodes, order = _nodes_by_id(job_id), _graph_order(job_id)
+    if node_id not in order:
         raise HTTPException(404, "unknown node")
-    chain = GRAPH_ORDER[GRAPH_ORDER.index(node_id):]
+    chain = order[order.index(node_id):]
     for nid in chain:
-        runner._set_node(job_id, nid, status="waiting", progress=0)
+        _set_node(job_id, nid, status="waiting", progress=0)
     bus.emit(job_id, node_id, "node.retrying",
-             f"Queued rerun from {NODES_BY_ID[node_id]['name']} ({len(chain)} nodes).",
+             f"Queued rerun from {nodes[node_id]['name']} ({len(chain)} nodes).",
              status="queued", payload={"chain": chain})
-    needs = any(NODES_BY_ID[n]["external"] for n in chain)
+    needs = any(nodes[n]["external"] for n in chain)
     return {"status": "queued", "chain": chain,
             "message": CONDUCTOR_MSG if needs else "queued"}
 

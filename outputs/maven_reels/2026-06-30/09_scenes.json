@@ -1,0 +1,85 @@
+{
+  "date": "2026-06-30",
+  "model": "nano_banana_pro",
+  "aspect_ratio": "9:16",
+  "jobs": [
+    {
+      "scene": 1,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "9:16",
+      "seconds": 2.0,
+      "on_screen": "Everyone saw the market today — but this",
+      "prompt": "Vertical 9:16 (1080x1920) background frame for a premium Maven Indian-market reel. Design system: near-black navy #05070A with faint grid; tight geometric sans; oversized bold on-screen lines. Visual beat: Full-bleed bold hook text on dark navy; one accent glow. Leave the lower third clean for captions. One main visual idea, deep negative space, calm premium finance-editorial mood, dark theme. Minimal or NO baked text (captions are added separately). Avoid: cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_1.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_1.jpg"
+    },
+    {
+      "scene": 2,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "9:16",
+      "seconds": 6.0,
+      "on_screen": "The Nifty IT index sank about 2.7% on",
+      "prompt": "Vertical 9:16 (1080x1920) background frame for a premium Maven Indian-market reel. Design system: near-black navy #05070A with faint grid; tight geometric sans; oversized bold on-screen lines. Visual beat: Index/Information Technology stat card with the day's numbers. Leave the lower third clean for captions. One main visual idea, deep negative space, calm premium finance-editorial mood, dark theme. Minimal or NO baked text (captions are added separately). Avoid: cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_2.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_2.jpg"
+    },
+    {
+      "scene": 3,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "9:16",
+      "seconds": 5.0,
+      "on_screen": "IT is among the most heavily weighted sectors",
+      "prompt": "Vertical 9:16 (1080x1920) background frame for a premium Maven Indian-market reel. Design system: near-black navy #05070A with faint grid; tight geometric sans; oversized bold on-screen lines. Visual beat: Single cause-and-effect diagram; one arrow, minimal. Leave the lower third clean for captions. One main visual idea, deep negative space, calm premium finance-editorial mood, dark theme. Minimal or NO baked text (captions are added separately). Avoid: cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_3.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_3.jpg"
+    },
+    {
+      "scene": 4,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "9:16",
+      "seconds": 5.0,
+      "on_screen": "IT is among the most heavily weighted sectors",
+      "prompt": "Vertical 9:16 (1080x1920) background frame for a premium Maven Indian-market reel. Design system: near-black navy #05070A with faint grid; tight geometric sans; oversized bold on-screen lines. Visual beat: Single cause-and-effect diagram; one arrow, minimal. Leave the lower third clean for captions. One main visual idea, deep negative space, calm premium finance-editorial mood, dark theme. Minimal or NO baked text (captions are added separately). Avoid: cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_4.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_4.jpg"
+    },
+    {
+      "scene": 5,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "9:16",
+      "seconds": 5.0,
+      "on_screen": "For educational context only: the IT drawdown is",
+      "prompt": "Vertical 9:16 (1080x1920) background frame for a premium Maven Indian-market reel. Design system: near-black navy #05070A with faint grid; tight geometric sans; oversized bold on-screen lines. Visual beat: One-line insight on clean background; large type. Leave the lower third clean for captions. One main visual idea, deep negative space, calm premium finance-editorial mood, dark theme. Minimal or NO baked text (captions are added separately). Avoid: cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_5.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_5.jpg"
+    },
+    {
+      "scene": 6,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "9:16",
+      "seconds": 5.0,
+      "on_screen": "For educational context only: the IT drawdown is",
+      "prompt": "Vertical 9:16 (1080x1920) background frame for a premium Maven Indian-market reel. Design system: near-black navy #05070A with faint grid; tight geometric sans; oversized bold on-screen lines. Visual beat: One-line insight on clean background; large type. Leave the lower third clean for captions. One main visual idea, deep negative space, calm premium finance-editorial mood, dark theme. Minimal or NO baked text (captions are added separately). Avoid: cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_6.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_6.jpg"
+    },
+    {
+      "scene": 7,
+      "model": "nano_banana_pro",
+      "aspect_ratio": "9:16",
+      "seconds": 5.0,
+      "on_screen": "Understand the Indian market better with Maven. trymaven.in.",
+      "prompt": "Vertical 9:16 (1080x1920) background frame for a premium Maven Indian-market reel. Design system: near-black navy #05070A with faint grid; tight geometric sans; oversized bold on-screen lines. Visual beat: Maven wordmark + trymaven.in on dark; calm. Leave the lower third clean for captions. One main visual idea, deep negative space, calm premium finance-editorial mood, dark theme. Minimal or NO baked text (captions are added separately). Avoid: cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "target_png": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_7.png",
+      "target_jpg": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\scene_7.jpg"
+    }
+  ],
+  "status": "jobs_built"
+}

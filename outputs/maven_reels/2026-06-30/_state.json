@@ -1,0 +1,20 @@
+{
+  "date": "2026-06-30",
+  "completed": {
+    "research": true,
+    "viral_fit": true,
+    "angle": true,
+    "hooks": true,
+    "script": true,
+    "retention": true,
+    "storyboard": true,
+    "visual_direction": true,
+    "scenes_built": true,
+    "subtitles": true,
+    "cover_built": true,
+    "caption": true,
+    "compliance": true,
+    "quality": true
+  },
+  "notes": []
+}

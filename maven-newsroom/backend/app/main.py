@@ -13,6 +13,7 @@ from .config import FRONTEND_ORIGINS
 from .database import init_db
 from .routes import actions, jobs, settings, stream
 from .services.ingest import ingest_all
+from .services.ingest_reels import ingest_all as ingest_reels_all
 
 app = FastAPI(title="Maven Newsroom OS", version="1.0.0",
               description="Observability + control API for the Maven Instagram "
@@ -37,7 +38,8 @@ app.include_router(actions.router)
 def _startup() -> None:
     init_db()
     ingested = ingest_all()
-    print(f"[Newsroom] DB ready. Ingested runs: {ingested or 'none'}")
+    reels = ingest_reels_all()
+    print(f"[Newsroom] DB ready. Carousel: {ingested or 'none'} | Reels: {reels or 'none'}")
 
 
 @app.get("/")

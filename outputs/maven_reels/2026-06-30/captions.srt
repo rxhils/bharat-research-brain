@@ -1,0 +1,79 @@
+1
+00:00:00,000 --> 00:00:01,000
+Everyone saw the market today — but
+
+2
+00:00:01,000 --> 00:00:02,000
+this is the part they missed.
+
+3
+00:00:02,000 --> 00:00:03,200
+The Nifty IT index sank about 2.7%
+
+4
+00:00:03,200 --> 00:00:04,400
+on June 30, sharply underperforming
+
+5
+00:00:04,400 --> 00:00:05,600
+the Nifty 50 (-0.34%) and extending
+
+6
+00:00:05,600 --> 00:00:06,800
+its losing streak to a third straight
+
+7
+00:00:06,800 --> 00:00:08,000
+session (down roughly
+
+8
+00:00:08,000 --> 00:00:09,667
+IT is among the most heavily weighted
+
+9
+00:00:09,667 --> 00:00:11,333
+sectors in Indian benchmarks and is
+
+10
+00:00:11,333 --> 00:00:13,000
+highly export-/US-demand-sensitive.
+
+11
+00:00:13,000 --> 00:00:14,667
+A move to a three-year low with multiple
+
+12
+00:00:14,667 --> 00:00:16,333
+52-week lows signals deepening pessimism
+
+13
+00:00:16,333 --> 00:00:18,000
+on US
+
+14
+00:00:18,000 --> 00:00:20,000
+For educational context only: the
+
+15
+00:00:20,000 --> 00:00:22,000
+IT drawdown is tied to macro (US rate
+
+16
+00:00:22,000 --> 00:00:24,000
+outlook) and structural (AI-disruption)
+
+17
+00:00:24,000 --> 00:00:26,000
+concerns rather than a single company
+
+18
+00:00:26,000 --> 00:00:28,000
+event - a
+
+19
+00:00:28,000 --> 00:00:30,500
+Understand the Indian market better
+
+20
+00:00:30,500 --> 00:00:33,000
+with Maven. trymaven.in.

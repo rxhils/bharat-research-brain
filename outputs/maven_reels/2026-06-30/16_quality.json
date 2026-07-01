@@ -1,0 +1,30 @@
+{
+  "date": "2026-06-30",
+  "scores": {
+    "hook": 88,
+    "retention": 100,
+    "visual": 0,
+    "compliance": 100,
+    "publish": 0
+  },
+  "gates": {
+    "hook": 85,
+    "retention": 85,
+    "visual": 85,
+    "compliance": 95
+  },
+  "passed": {
+    "hook": true,
+    "retention": true,
+    "visual": false,
+    "compliance": true
+  },
+  "overall_pass": false,
+  "retention_issues": [],
+  "visual_issues": [
+    "reel.mp4 not built yet",
+    "aesthetic (visual) review not supplied"
+  ],
+  "compliance_violations": [],
+  "verdict": "BLOCKED"
+}

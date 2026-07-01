@@ -1,0 +1,62 @@
+{
+  "date": "2026-06-30",
+  "buckets": [
+    "curiosity",
+    "shock",
+    "contrarian",
+    "simple",
+    "data",
+    "myth",
+    "question"
+  ],
+  "hooks": [
+    {
+      "bucket": "curiosity",
+      "text": "Everyone saw the market today — but this is the part they missed.",
+      "strength": 88,
+      "compliant": true
+    },
+    {
+      "bucket": "shock",
+      "text": "Indian markets just got hit by something bigger than the headline.",
+      "strength": 84,
+      "compliant": true
+    },
+    {
+      "bucket": "contrarian",
+      "text": "Information Technology moving is not the real story today. Here's what is.",
+      "strength": 76,
+      "compliant": true
+    },
+    {
+      "bucket": "simple",
+      "text": "Here's why information technology moved today, in 30 seconds.",
+      "strength": 82,
+      "compliant": true
+    },
+    {
+      "bucket": "data",
+      "text": "Nifty IT: ~-2.7% on the day — and it came down to one thing.",
+      "strength": 78,
+      "compliant": true
+    },
+    {
+      "bucket": "myth",
+      "text": "You think the index tells the story. Today it didn't.",
+      "strength": 70,
+      "compliant": true
+    },
+    {
+      "bucket": "question",
+      "text": "Why did information technology really move today?",
+      "strength": 84,
+      "compliant": true
+    }
+  ],
+  "chosen": {
+    "bucket": "curiosity",
+    "text": "Everyone saw the market today — but this is the part they missed.",
+    "strength": 88,
+    "compliant": true
+  }
+}

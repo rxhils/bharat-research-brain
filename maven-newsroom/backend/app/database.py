@@ -17,6 +17,7 @@ from .config import DB_PATH
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS jobs (
   job_id TEXT PRIMARY KEY,
+  pipeline TEXT DEFAULT 'carousel',
   run_type TEXT, date TEXT, status TEXT, current_node TEXT,
   market_status TEXT, scheduled_time TEXT, started_at TEXT, completed_at TEXT,
   approval_status TEXT, publish_status TEXT,

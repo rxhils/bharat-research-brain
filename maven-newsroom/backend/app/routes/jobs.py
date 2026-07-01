@@ -9,19 +9,29 @@ from fastapi.responses import FileResponse, JSONResponse
 
 from .. import database as db
 from ..registry import CLASS_LABELS, GRAPH_ORDER, NODES
+from ..registry_reels import REEL_GRAPH_ORDER, REEL_NODES
 
 router = APIRouter(prefix="/api")
 
 
 @router.get("/nodes")
-def registry():
-    """Static node registry (names, classes, types, graph order)."""
-    return {"nodes": NODES, "graph_order": GRAPH_ORDER, "class_labels": CLASS_LABELS}
+def registry(pipeline: str = "carousel"):
+    """Static node registry for a pipeline (carousel default, or reel)."""
+    if pipeline == "reel":
+        return {"nodes": REEL_NODES, "graph_order": REEL_GRAPH_ORDER,
+                "class_labels": CLASS_LABELS, "pipeline": "reel"}
+    return {"nodes": NODES, "graph_order": GRAPH_ORDER,
+            "class_labels": CLASS_LABELS, "pipeline": "carousel"}
 
 
 @router.get("/jobs")
-def list_jobs():
-    jobs = db.query_all("SELECT * FROM jobs ORDER BY date DESC, created_at DESC")
+def list_jobs(pipeline: str | None = None):
+    if pipeline:
+        jobs = db.query_all(
+            "SELECT * FROM jobs WHERE pipeline=? ORDER BY date DESC, created_at DESC",
+            (pipeline,))
+    else:
+        jobs = db.query_all("SELECT * FROM jobs ORDER BY date DESC, created_at DESC")
     for j in jobs:
         j["scores"] = db.query_one("SELECT * FROM scores WHERE job_id=?", (j["job_id"],))
         j["thumbnails"] = [a["name"] for a in db.query_all(

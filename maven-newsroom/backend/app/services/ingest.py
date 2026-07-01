@@ -91,7 +91,7 @@ def ingest_run(date: str) -> str | None:
     base = _base_time(research, final, date_dir)
 
     db.upsert("jobs", {
-        "job_id": job_id, "run_type": "closing_bell", "date": date,
+        "job_id": job_id, "pipeline": "carousel", "run_type": "closing_bell", "date": date,
         "status": "published" if published else "completed",
         "current_node": "run_vault", "market_status": "open",
         "scheduled_time": "17:00 IST",
