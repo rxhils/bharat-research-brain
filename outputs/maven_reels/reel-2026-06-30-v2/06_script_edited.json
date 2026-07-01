@@ -1,0 +1,56 @@
+{
+  "date": "reel-2026-06-30-v2",
+  "segments": [
+    {
+      "label": "hook",
+      "t0": 0.0,
+      "seconds": 1.5,
+      "narration": "Here's what investors missed today."
+    },
+    {
+      "label": "what",
+      "t0": 1.5,
+      "seconds": 4.5,
+      "narration": "Indian benchmark indices ended lower in a volatile session on the last trading day of June.…"
+    },
+    {
+      "label": "why",
+      "t0": 6.0,
+      "seconds": 5.5,
+      "narration": "The headline drop masked a two-speed market: heavyweight IT exporters dragged the benchmarks while…"
+    },
+    {
+      "label": "understand",
+      "t0": 11.5,
+      "seconds": 4.0,
+      "narration": "For educational context only: a falling headline index alongside positive breadth…"
+    },
+    {
+      "label": "cta",
+      "t0": 15.5,
+      "seconds": 3.0,
+      "narration": "Understand the Indian market with Maven. trymaven.in."
+    }
+  ],
+  "total_seconds": 18.5,
+  "estimated_duration": 18.5,
+  "narration": "Here's what investors missed today. Indian benchmark indices ended lower in a volatile session on the last trading day of June.… The headline drop masked a two-speed market: heavyweight IT exporters dragged the benchmarks while… For educational context only: a falling headline index alongside positive breadth… Understand the Indian market with Maven. trymaven.in.",
+  "word_count": 53,
+  "retention_score": 100,
+  "pattern_interrupt_beats": 9,
+  "pattern_interrupts": [
+    "beat @ ~2s",
+    "beat @ ~4s",
+    "beat @ ~6s",
+    "beat @ ~8s",
+    "beat @ ~10s",
+    "beat @ ~12s",
+    "beat @ ~14s",
+    "beat @ ~16s",
+    "beat @ ~18s"
+  ],
+  "removed_lines": [],
+  "edits": [
+    "No filler found; pacing already tight."
+  ]
+}

@@ -34,6 +34,10 @@ FILES = {
     "04_hooks.json": ("hook_lab", "json"),
     "05_script.json": ("script_room", "json"),
     "06_script_edited.json": ("retention_editor", "json"),
+    "02_duplicate_check.json": ("viral_fit", "json"),
+    "10_visual_uniqueness.json": ("reel_auditor", "json"),
+    "improvement_plan.json": ("run_vault", "json"),
+    "feedback.json": ("approval", "json"),
     "07_template.json": ("template_selector", "json"),
     "08_motion_variation.json": ("motion_variation", "json"),
     "07_storyboard.json": ("motion_storyboard", "json"),
@@ -85,11 +89,18 @@ def list_run_dates() -> list[str]:
 
 
 def ingest_run(date: str) -> str | None:
+    """`date` is the run FOLDER name: legacy 'YYYY-MM-DD' or a job id like
+    'reel-2026-07-02-1700-001[-v2]'."""
+    import re as _re
+
     dd = REEL_OUTPUT_ROOT / date
     quality = _load(dd, "16_quality.json")
     if quality is None:
         return None
-    job_id = f"reel-{date}"
+    job_id = date if date.startswith("reel-") else f"reel-{date}"
+    run_date = job_id.removeprefix("reel-")[:10]
+    vm = _re.search(r"-v(\d+)$", job_id)
+    version = int(vm.group(1)) if vm else 1
     final = _load(dd, "_final_output.json") or {}
     viral = _load(dd, "02_viral_fit.json") or {}
     hooks = _load(dd, "04_hooks.json") or {}
@@ -99,8 +110,15 @@ def ingest_run(date: str) -> str | None:
     passed = bool(quality.get("passed", quality.get("overall_pass")))
     base = datetime.now(IST) - timedelta(seconds=sum(APPROX.values()))
 
+    existing = db.query_one("SELECT is_latest, parent_job_id, source FROM jobs "
+                            "WHERE job_id=?", (job_id,)) or {}
     db.upsert("jobs", {
-        "job_id": job_id, "run_type": "reel", "pipeline": "reel", "date": date,
+        "job_id": job_id, "run_type": "reel", "pipeline": "reel", "date": run_date,
+        "version": version,
+        "parent_job_id": existing.get("parent_job_id"),
+        "is_latest": existing.get("is_latest", 0),
+        "source": existing.get("source") or "ingest",
+        "updated_at": datetime.now(IST).isoformat(timespec="seconds"),
         "status": "published" if published else ("blocked" if quality.get("verdict") == "BLOCKED" else "completed"),
         "current_node": "reels_courier" if published else "reel_auditor",
         "market_status": "open", "scheduled_time": "17:00 IST",
@@ -178,7 +196,18 @@ def ingest_run(date: str) -> str | None:
 
 
 def ingest_all() -> list[str]:
-    return [j for d in list_run_dates() if (j := ingest_run(d))]
+    out = [j for d in list_run_dates() if (j := ingest_run(d))]
+    # ensure exactly one latest reel job (newest created_at wins if none marked)
+    has_latest = db.query_one(
+        "SELECT job_id FROM jobs WHERE pipeline='reel' AND is_latest=1 LIMIT 1")
+    if not has_latest:
+        newest = db.query_one(
+            "SELECT job_id FROM jobs WHERE pipeline='reel' AND job_id NOT LIKE "
+            "'reel-sim-%' ORDER BY created_at DESC LIMIT 1")
+        if newest:
+            db.upsert("jobs", {"job_id": newest["job_id"], "is_latest": 1},
+                      conflict_keys=["job_id"])
+    return out
 
 
 def _node_state(nid, dd: Path, quality, viral, hooks, final, published):

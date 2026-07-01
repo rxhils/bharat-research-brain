@@ -1,0 +1,17 @@
+{
+  "run_key": "reel-2026-06-30-v2",
+  "recent_reel_topics": [
+    "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+    "Auto stocks lead the decline as crude oil and dollar strength pressure cyclicals"
+  ],
+  "duplicate_risk": "high",
+  "penalized_stories": [
+    {
+      "headline": "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+      "similarity": 1.0,
+      "matched_recent": "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows"
+    }
+  ],
+  "selected_story_is_duplicate": false,
+  "reason": "1 candidate(s) overlap recent reels; they are penalized in the Viral Fit Gate unless clearly the day's biggest event."
+}

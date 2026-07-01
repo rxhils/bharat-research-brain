@@ -1,0 +1,52 @@
+{
+  "run_key": "reel-2026-06-30-v2",
+  "feedback_type": "visuals_too_basic",
+  "custom_feedback": "needs more premium animation",
+  "improvement_plan": {
+    "keep": [
+      "research",
+      "viral_fit",
+      "angle",
+      "hooks",
+      "script",
+      "voiceover"
+    ],
+    "change": [
+      "template",
+      "motion_variation",
+      "assets",
+      "storyboard",
+      "video",
+      "cover"
+    ],
+    "rerun_steps": [
+      "template_selector",
+      "motion_variation",
+      "asset_picker",
+      "motion_storyboard",
+      "motion_graphics",
+      "cover_studio",
+      "reel_auditor"
+    ],
+    "reason": "New template + variation + asset combination for a premium look.",
+    "target_scores": {
+      "hook": 97,
+      "retention": 105,
+      "edit_quality": 105,
+      "visual_quality": 97
+    }
+  },
+  "next_version_strategy": "New template + variation + asset combination for a premium look.",
+  "reroute_to": [
+    "template_selector",
+    "motion_variation",
+    "asset_picker",
+    "motion_storyboard",
+    "motion_graphics",
+    "cover_studio",
+    "reel_auditor"
+  ],
+  "needs_conductor": [],
+  "locally_completable": true,
+  "auditor_failures_folded_in": []
+}

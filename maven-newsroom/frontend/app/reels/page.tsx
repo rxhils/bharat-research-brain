@@ -16,16 +16,21 @@ export default function ReelsDashboard() {
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
-    api.jobs("reel").then((r) => {
-      const latest = r.jobs.find((j) => !j.job_id.includes("-sim-")) ?? r.jobs[0] ?? null;
-      setJob(latest);
-      if (latest) fetch(api.artifactUrl(latest.job_id, "16_quality.json"))
+    const load = (id: string) => {
+      api.job(id).then(setJob).catch(() => {});
+      fetch(api.artifactUrl(id, "16_quality.json"))
         .then((x) => x.ok ? x.json() : null).then(setQuality).catch(() => {});
-    }).catch(() => {});
+    };
+    api.reelsLatest().then((l) => load(l.job_id)).catch(() =>
+      api.jobs("reel").then((r) => {
+        const latest = r.jobs.find((j) => !j.job_id.includes("-sim-")) ?? r.jobs[0] ?? null;
+        if (latest) load(latest.job_id);
+      }).catch(() => {}));
   }, []);
 
   async function runReel() {
     setRunning(true);
+    // every click = a NEW unique job (fresh folder, fresh research required)
     try { const r = await api.runReel(); router.push(`/reels/run/${r.job_id}`); }
     catch { setRunning(false); }
   }

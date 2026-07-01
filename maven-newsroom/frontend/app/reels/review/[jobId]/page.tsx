@@ -1,10 +1,10 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Send, X, RefreshCw, Mic, Zap, Scissors, Gauge, Image as ImageIcon,
   Film, ImagePlus, ShieldCheck, MessageSquare, CheckCircle2,
-  LayoutTemplate, Palette, Sparkles,
+  LayoutTemplate, Palette, Sparkles, Wand2,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Job } from "@/lib/types";
@@ -60,12 +60,31 @@ function statusLabel(job: Job | null, passed: boolean, hasScores: boolean): { te
   return { text: "Draft", tone: "muted" };
 }
 
+/** rejection feedback types (mirror backend FEEDBACK_TYPES) */
+const FEEDBACK_BUTTONS: { type: string; label: string }[] = [
+  { type: "weak_hook", label: "Weak Hook" },
+  { type: "boring_script", label: "Boring Script" },
+  { type: "bad_animation", label: "Bad Animation" },
+  { type: "visuals_too_basic", label: "Visuals Too Basic" },
+  { type: "too_slow", label: "Too Slow" },
+  { type: "bad_voiceover", label: "Bad Voiceover" },
+  { type: "bad_subtitles", label: "Bad Subtitles" },
+  { type: "not_premium_enough", label: "Not Premium Enough" },
+  { type: "wrong_story", label: "Wrong Story" },
+  { type: "bad_data", label: "Bad Data / Needs Research" },
+  { type: "try_different_style", label: "Try Different Style" },
+  { type: "other", label: "Other Feedback" },
+];
+
 export default function ReelReviewPage() {
   const { jobId } = useParams<{ jobId: string }>();
+  const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [arts, setArts] = useState<string[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [customFb, setCustomFb] = useState("");
+  const [parentQuality, setParentQuality] = useState<any>(null);
 
   const quality = useArtifact(jobId, "16_quality.json");
   const caption = useArtifact(jobId, "14_caption.json");
@@ -84,6 +103,33 @@ export default function ReelReviewPage() {
     refresh();
     api.artifacts(jobId).then((a) => setArts(a.artifacts.map((x) => x.name))).catch(() => {});
   }, [jobId, refresh]);
+
+  // version comparison: fetch the parent version's auditor scores
+  const parentId = (job as any)?.parent_job_id as string | undefined;
+  useEffect(() => {
+    if (!parentId) { setParentQuality(null); return; }
+    fetch(api.artifactUrl(parentId, "16_quality.json"))
+      .then((x) => (x.ok ? x.json() : null)).then(setParentQuality).catch(() => {});
+  }, [parentId]);
+
+  /** rejection/improvement: feedback → Improvement Director → new version */
+  const improve = useCallback(async (type: string) => {
+    setBusy(`fb:${type}`); setToast("Creating improved version…");
+    try {
+      const r = await api.reelImprove(jobId, type, customFb || undefined);
+      if (r.status === "improving" && r.new_job_id) {
+        setToast(`v${r.version} rendering — opening it now…`);
+        router.push(`/reels/review/${r.new_job_id}`);
+      } else if (r.status === "needs_conductor" && r.new_job_id) {
+        setToast(`v${r.version} created — ${r.message ?? "needs the Claude Code conductor"}`);
+        router.push(`/reels/review/${r.new_job_id}`);
+      } else {
+        setToast(r.message ?? r.status);
+      }
+    } catch { setToast("Improvement failed"); }
+    setBusy(null);
+    setTimeout(() => setToast(null), 6000);
+  }, [jobId, customFb, router]);
 
   const act = useCallback(async (key: string, label: string, fn: () => Promise<any>) => {
     setBusy(key); setToast(`${label}…`);
@@ -129,6 +175,8 @@ export default function ReelReviewPage() {
           <h2 className="text-xl font-semibold tracking-tight mt-1">{job?.summary || "Approve the reel"} · {jobId}</h2>
         </div>
         <div className="flex items-center gap-2">
+          {((job as any)?.version ?? 1) > 1 && <Pill tone="teal">v{(job as any).version}</Pill>}
+          {(job as any)?.is_latest ? <Pill tone="ok">Latest</Pill> : null}
           <Pill tone={label.tone}>{label.text}</Pill>
           {verdict && <Pill tone={passed ? "ok" : "warn"}>{verdict}</Pill>}
         </div>
@@ -173,14 +221,45 @@ export default function ReelReviewPage() {
             <ScoreCard label="Compliance" score={s.compliance} threshold={gates.compliance} />
             <ScoreCard label="Brand" score={s.brand} threshold={gates.brand} />
             <ScoreCard label="Cost Eff." score={s.cost_efficiency} threshold={gates.cost_efficiency ?? 85} sub={s.cost_efficiency ? "library reuse" : undefined} />
+            <ScoreCard label="Uniqueness" score={s.visual_uniqueness} threshold={gates.visual_uniqueness ?? 85} sub="vs last 5 reels" />
+            <ScoreCard label="Freshness" score={s.freshness} threshold={gates.freshness ?? 95} sub="data currency + sources" />
           </div>
 
-          {quality?.fixes_required?.length > 0 && (
+          {!passed && hasScores && (
             <Card className="border-warn/30">
-              <div className="eyebrow mb-2 text-warn">Auditor — fixes required → auto-reroute</div>
-              <ul className="text-sm text-ink-muted space-y-1">
-                {quality.fixes_required.map((f: string, i: number) => <li key={i}>• {f}</li>)}
+              <div className="eyebrow mb-2 text-warn">Not ready to publish — exact reasons</div>
+              <ul className="text-sm text-ink-muted space-y-1.5">
+                {(quality?.suggested_buttons ?? []).map((sb: any, i: number) => (
+                  <li key={i} className="flex items-center justify-between gap-2">
+                    <span>• {sb.gate} scored {sb.score} (needs ≥ {sb.min})</span>
+                    <span className="chip border-teal/40 text-teal bg-teal/10 shrink-0">→ {sb.click}</span>
+                  </li>
+                ))}
+                {(quality?.suggested_buttons ?? []).length === 0 &&
+                  (quality?.fixes_required ?? []).map((f: string, i: number) => <li key={i}>• {f}</li>)}
               </ul>
+            </Card>
+          )}
+
+          {/* version comparison: old score vs new score */}
+          {parentQuality?.scores && quality?.scores && (
+            <Card>
+              <div className="eyebrow mb-2">v{(job as any)?.version ?? 2} vs previous — what changed</div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                {Object.keys(quality.scores).filter((k) => k !== "publish").map((k) => {
+                  const oldS = parentQuality.scores[k], newS = quality.scores[k];
+                  if (oldS == null || newS == null) return null;
+                  const up = newS > oldS, down = newS < oldS;
+                  return (
+                    <div key={k} className="rounded-lg border border-line px-2.5 py-1.5">
+                      <div className="text-[10px] uppercase tracking-wide text-ink-faint">{k.replace(/_/g, " ")}</div>
+                      <div className={up ? "text-ok" : down ? "text-danger" : "text-ink-muted"}>
+                        {oldS} → {newS}{up ? " ↑" : down ? " ↓" : ""}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </Card>
           )}
 
@@ -215,6 +294,41 @@ export default function ReelReviewPage() {
             </div>
             {toast && <div className="mt-3 text-xs text-teal">{toast}</div>}
             <p className="text-[11px] text-mcp mt-2">Real publishing runs in the Claude Code conductor (Composio Reels, <code>media_type=REELS</code>). Never faked — the backend only preflights and queues.</p>
+          </Card>
+
+          {/* improvement studio: reject-with-feedback → new version */}
+          <Card>
+            <div className="flex items-center justify-between mb-1">
+              <div className="eyebrow">Improvement Studio — reject with feedback, get a better version</div>
+            </div>
+            <p className="text-[11px] text-ink-faint mb-3">
+              Each button files feedback, runs the Reel Improvement Director, and builds
+              a new <b>version</b> (v{(((job as any)?.version ?? 1) + 1)}) that replaces this one as latest.
+            </p>
+            <button disabled={busy === "fb:improve_animations_quality"}
+              onClick={() => improve("improve_animations_quality")}
+              className="btn btn-primary w-full mb-2">
+              {busy === "fb:improve_animations_quality" ? <RefreshCw size={15} className="animate-spin" /> : <Wand2 size={15} />}
+              Improve Animations &amp; Quality
+            </button>
+            <div className="grid grid-cols-2 gap-2">
+              {FEEDBACK_BUTTONS.map((f) => (
+                <button key={f.type} disabled={busy === `fb:${f.type}`}
+                  onClick={() => improve(f.type)}
+                  className="btn btn-ghost border-line text-xs">
+                  {busy === `fb:${f.type}` ? <RefreshCw size={13} className="animate-spin" /> : null}
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <textarea value={customFb} onChange={(e) => setCustomFb(e.target.value)}
+              placeholder="Optional: describe exactly what to improve (sent with any button above)…"
+              className="mt-3 w-full rounded-lg bg-white/[0.03] border border-line p-2.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-teal/50"
+              rows={2} />
+            <p className="text-[11px] text-mcp mt-2">
+              Story/data changes and new voiceover need the Claude Code conductor — versions
+              that need it are created and clearly marked, never faked.
+            </p>
           </Card>
         </div>
       </div>

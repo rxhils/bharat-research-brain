@@ -51,10 +51,14 @@ def _require_job(job_id: str) -> dict:
 @router.post("/run")
 async def start_run(body: dict = Body(default={})):
     if body.get("pipeline") == "reel":
-        info = runner_reels.create_simulation_job(body.get("date"))
-        if info.get("status") == "running":
-            asyncio.create_task(runner_reels.run_simulation(info["job_id"]))
-        return info
+        if body.get("simulate"):
+            info = runner_reels.create_simulation_job(body.get("date"))
+            if info.get("status") == "running":
+                asyncio.create_task(runner_reels.run_simulation(info["job_id"]))
+            return info
+        # REAL mode: every click creates a new unique job with a fresh folder
+        from ..services import reel_studio
+        return reel_studio.create_reel_job(source="manual_run")
     info = runner.create_simulation_job(body.get("date"))
     if info.get("status") == "running":
         asyncio.create_task(runner.run_simulation(info["job_id"]))
@@ -257,6 +261,27 @@ def publish(job_id: str):
                            (job_id,))
         if not vid:
             problems.append("final reel.mp4 missing")
+        cap = db.query_all("SELECT name FROM artifacts WHERE job_id=? AND name='14_caption.json'",
+                           (job_id,))
+        if not cap:
+            problems.append("caption missing")
+        meta = db.query_one("SELECT path FROM artifacts WHERE job_id=? AND name='12_reel_video.json'",
+                            (job_id,))
+        if meta:
+            import json as _json
+            from pathlib import Path as _P
+            try:
+                m = _json.loads(_P(meta["path"]).read_text(encoding="utf-8"))
+                if not (m.get("width") == 1080 and m.get("height") == 1920):
+                    problems.append("video is not 1080x1920")
+                if not (14.0 <= float(m.get("seconds", 0)) <= 21.0):
+                    problems.append(f"duration {m.get('seconds')}s outside 15-20s band")
+            except Exception:
+                problems.append("reel video metadata unreadable")
+        from ..services import reel_studio as _rs
+        st = _rs.staleness(job_id)
+        if st["stale"]:
+            problems.append("stale artifacts: " + "; ".join(st["problems"]))
     else:
         imgs = db.query_all("SELECT name FROM artifacts WHERE job_id=? AND name LIKE 'slide_%.jpg'",
                             (job_id,))
@@ -268,8 +293,12 @@ def publish(job_id: str):
         raise HTTPException(409, {"status": "blocked", "problems": problems})
 
     courier = "reels_courier" if reel else "ig_courier"
-    bus.emit(job_id, courier, "publish.started",
+    bus.emit(job_id, courier, "reel.publish.started" if reel else "publish.started",
              "Preconditions met. " + CONDUCTOR_MSG, status="pending")
+    if reel:
+        db.upsert("reel_publish", {"job_id": job_id, "status": "pending_conductor",
+                                   "media_id": None, "permalink": None, "error": None,
+                                   "published_at": None}, conflict_keys=["job_id"])
     db.upsert("jobs", {"job_id": job_id, "publish_status": "pending_conductor"},
               conflict_keys=["job_id"])
     return {"status": "requires_conductor", "message": CONDUCTOR_MSG,

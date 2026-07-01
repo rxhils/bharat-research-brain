@@ -18,9 +18,15 @@ def _rotate(date: str) -> str:
     return ORDER[h % len(ORDER)]
 
 
-def run(date: str, *, template: dict | None = None) -> dict:
+def run(date: str, *, template: dict | None = None, force_id: str | None = None,
+        avoid: list[str] | None = None) -> dict:
     preferred = (template or {}).get("motion_style")
-    variation_id = preferred if preferred in PRESETS else _rotate(date)
+    variation_id = (force_id if force_id in PRESETS
+                    else preferred if preferred in PRESETS else _rotate(date))
+    # uniqueness retry: rotate past any preset we must avoid
+    for bad in (avoid or []):
+        if variation_id == bad:
+            variation_id = ORDER[(ORDER.index(variation_id) + 1) % len(ORDER)]
     p = PRESETS[variation_id]
     payload = {
         "date": date, "variation_id": variation_id,

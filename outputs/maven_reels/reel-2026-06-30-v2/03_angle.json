@@ -1,0 +1,72 @@
+{
+  "date": "reel-2026-06-30-v2",
+  "story_headline": "Sensex, Nifty close ~0.3% lower as IT selloff overpowers broad-market gains",
+  "candidates": [
+    {
+      "type": "money_flow",
+      "angle": "Where the money actually went today — and why information technology felt it.",
+      "angle_score": 82
+    },
+    {
+      "type": "hidden_reason",
+      "angle": "The real reason information technology moved today.",
+      "angle_score": 80
+    },
+    {
+      "type": "market_under_surface",
+      "angle": "The market looked calm on the surface. Underneath, it wasn't.",
+      "angle_score": 80
+    },
+    {
+      "type": "myth_busting",
+      "angle": "You think the index tells the story. Today it didn't.",
+      "angle_score": 80
+    },
+    {
+      "type": "curiosity",
+      "angle": "The market moved today, but the real story was information technology.",
+      "angle_score": 74
+    },
+    {
+      "type": "what_people_missed",
+      "angle": "Everyone watched the index. Few watched information technology.",
+      "angle_score": 74
+    },
+    {
+      "type": "contrarian",
+      "angle": "The market didn't move because of one stock. It moved because of information technology.",
+      "angle_score": 74
+    },
+    {
+      "type": "why_this_matters",
+      "angle": "Why information technology changed the market mood today.",
+      "angle_score": 72
+    },
+    {
+      "type": "shock",
+      "angle": "Sensex: 76,478.67 (-249.70 pts, -0.33%) — and it came down to one sector.",
+      "angle_score": 66
+    },
+    {
+      "type": "simple_explainer",
+      "angle": "Today's market move, explained through information technology, in 15 seconds.",
+      "angle_score": 66
+    }
+  ],
+  "count": 10,
+  "chosen": {
+    "type": "money_flow",
+    "angle": "Where the money actually went today — and why information technology felt it.",
+    "angle_score": 82
+  },
+  "selected_angle": "Where the money actually went today — and why information technology felt it.",
+  "angle_type": "money_flow",
+  "angle_score": 82,
+  "why_selected": "Highest scroll-stop (82) — frames the event as a why/hidden-reason, not a recap, and fits 15-20s.",
+  "backup_angles": [
+    "The real reason information technology moved today.",
+    "The market looked calm on the surface. Underneath, it wasn't.",
+    "You think the index tells the story. Today it didn't.",
+    "The market moved today, but the real story was information technology."
+  ]
+}

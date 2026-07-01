@@ -22,7 +22,21 @@ CREATE TABLE IF NOT EXISTS jobs (
   market_status TEXT, scheduled_time TEXT, started_at TEXT, completed_at TEXT,
   approval_status TEXT, publish_status TEXT,
   instagram_post_id TEXT, instagram_post_url TEXT,
-  summary TEXT, created_at TEXT
+  summary TEXT, created_at TEXT,
+  is_latest INTEGER DEFAULT 0, parent_job_id TEXT, version INTEGER DEFAULT 1,
+  updated_at TEXT, source TEXT
+);
+CREATE TABLE IF NOT EXISTS reel_feedback (
+  feedback_id TEXT PRIMARY KEY, job_id TEXT, feedback_type TEXT,
+  custom_feedback TEXT, created_at TEXT, improvement_job_id TEXT
+);
+CREATE TABLE IF NOT EXISTS reel_versions (
+  job_id TEXT PRIMARY KEY, root_job_id TEXT, version INTEGER,
+  parent_job_id TEXT, improvement_reason TEXT, created_at TEXT, scores_json TEXT
+);
+CREATE TABLE IF NOT EXISTS reel_publish (
+  job_id TEXT PRIMARY KEY, status TEXT, media_id TEXT, permalink TEXT,
+  error TEXT, published_at TEXT
 );
 CREATE TABLE IF NOT EXISTS nodes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,9 +85,20 @@ def connect():
         conn.close()
 
 
+_JOBS_MIGRATIONS = {
+    "is_latest": "INTEGER DEFAULT 0", "parent_job_id": "TEXT",
+    "version": "INTEGER DEFAULT 1", "updated_at": "TEXT", "source": "TEXT",
+}
+
+
 def init_db() -> None:
     with connect() as c:
         c.executescript(SCHEMA)
+        # additive column migration for pre-existing newsroom.db files
+        have = {r["name"] for r in c.execute("PRAGMA table_info(jobs)").fetchall()}
+        for col, decl in _JOBS_MIGRATIONS.items():
+            if col not in have:
+                c.execute(f"ALTER TABLE jobs ADD COLUMN {col} {decl}")
 
 
 def _row_to_dict(row: sqlite3.Row | None) -> dict | None:

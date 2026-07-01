@@ -33,8 +33,23 @@
     }
   ],
   "total_seconds": 18.5,
+  "estimated_duration": 18.5,
   "narration": "Here's what investors missed today. The Nifty IT index sank about 2.7% on June 30, sharply underperforming the Nifty 50 (-0.34%)… IT is among the most heavily weighted sectors in Indian benchmarks and is highly export-/US-demand-sensitive.… For educational context only: the IT drawdown is tied to macro (US rate outlook) and… Understand the Indian market with Maven. trymaven.in.",
-  "pattern_interrupt_beats": 6.0,
+  "word_count": 58,
+  "retention_score": 100,
+  "pattern_interrupt_beats": 9,
+  "pattern_interrupts": [
+    "beat @ ~2s",
+    "beat @ ~4s",
+    "beat @ ~6s",
+    "beat @ ~8s",
+    "beat @ ~10s",
+    "beat @ ~12s",
+    "beat @ ~14s",
+    "beat @ ~16s",
+    "beat @ ~18s"
+  ],
+  "removed_lines": [],
   "edits": [
     "No filler found; pacing already tight."
   ]

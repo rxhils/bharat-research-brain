@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import FRONTEND_ORIGINS
 from .database import init_db
-from .routes import actions, jobs, settings, stream
+from .routes import actions, jobs, reels, settings, stream
 from .services.ingest import ingest_all
 from .services.ingest_reels import ingest_all as ingest_reels_all
 
@@ -32,6 +32,7 @@ app.include_router(settings.router)
 app.include_router(jobs.router)
 app.include_router(stream.router)
 app.include_router(actions.router)
+app.include_router(reels.router)
 
 
 @app.on_event("startup")

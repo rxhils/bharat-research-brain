@@ -31,6 +31,7 @@ def run_dir(date: str | None = None) -> Path:
 
 ARTIFACTS = {
     "research": "01_research.json",
+    "duplicate_check": "02_duplicate_check.json",
     "viral_fit": "02_viral_fit.json",
     "angle": "03_angle.json",
     "hooks": "04_hooks.json",
@@ -42,6 +43,9 @@ ARTIFACTS = {
     "asset_picker": "09_asset_picker.json",
     "higgsfield_request": "11_higgsfield_request.json",
     "cost_guard": "cost_guard.json",
+    "visual_uniqueness": "10_visual_uniqueness.json",
+    "improvement_plan": "improvement_plan.json",
+    "feedback": "feedback.json",
     "assets": "08_assets.json",
     "visual_direction": "08_visual_direction.json",
     "scenes": "09_scenes.json",

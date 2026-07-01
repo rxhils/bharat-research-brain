@@ -3,6 +3,9 @@
   "total_duration": 15.2,
   "scene_count": 8,
   "fps": 30,
+  "accent_color": "#38BDF8",
+  "template": "company_shock",
+  "variation_id": "blue_newsroom",
   "scenes": [
     {
       "kind": "hook",
@@ -16,7 +19,8 @@
       "asset": "asset_bg_dark",
       "scene": 1,
       "start": 0.0,
-      "end": 1.2
+      "end": 1.2,
+      "accent": "#38BDF8"
     },
     {
       "kind": "stat",
@@ -33,7 +37,8 @@
       "asset": "asset_bg_dark",
       "scene": 2,
       "start": 1.2,
-      "end": 3.4
+      "end": 3.4,
+      "accent": "#38BDF8"
     },
     {
       "kind": "chips",
@@ -51,7 +56,8 @@
       "asset": "asset_bg_panel",
       "scene": 3,
       "start": 3.4,
-      "end": 5.2
+      "end": 5.2,
+      "accent": "#38BDF8"
     },
     {
       "kind": "reason",
@@ -65,7 +71,8 @@
       "asset": "asset_bg_dark",
       "scene": 4,
       "start": 5.2,
-      "end": 7.2
+      "end": 7.2,
+      "accent": "#38BDF8"
     },
     {
       "kind": "chart",
@@ -88,7 +95,8 @@
       "asset": "asset_bg_dark",
       "scene": 5,
       "start": 7.2,
-      "end": 9.4
+      "end": 9.4,
+      "accent": "#38BDF8"
     },
     {
       "kind": "reason",
@@ -102,7 +110,8 @@
       "asset": "asset_bg_panel",
       "scene": 6,
       "start": 9.4,
-      "end": 11.2
+      "end": 11.2,
+      "accent": "#38BDF8"
     },
     {
       "kind": "reason",
@@ -116,7 +125,8 @@
       "asset": "asset_bg_dark",
       "scene": 7,
       "start": 11.2,
-      "end": 13.0
+      "end": 13.0,
+      "accent": "#38BDF8"
     },
     {
       "kind": "outro",
@@ -130,7 +140,8 @@
       "asset": "asset_bg_end",
       "scene": 8,
       "start": 13.0,
-      "end": 15.2
+      "end": 15.2,
+      "accent": "#38BDF8"
     }
   ]
 }

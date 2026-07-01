@@ -45,6 +45,11 @@ export const api = {
   telegramPreview: (id: string) => post<{ status: string; delivered: boolean; token_configured: boolean; preview_url: string | null; message: string; paid_higgsfield_used?: boolean; template?: string | null }>(`/api/jobs/${id}/telegram-preview`),
   requestHiggsfield: (id: string, approved = false) => post<{ status: string; paid: boolean; message: string; allow_paid_generation?: boolean }>(`/api/jobs/${id}/request-higgsfield`, { approved }),
   approve: (id: string) => post(`/api/jobs/${id}/approve`),
+  // reels studio
+  reelsLatest: () => get<{ job_id: string; status: string; created_at: string; version: number; parent_job_id: string | null; review_url: string; scores: Scores | null; stale: { stale: boolean; problems: string[] }; approval_status: string; publish_status: string }>("/api/reels/latest"),
+  reelFeedback: (id: string, feedback_type: string, custom_feedback?: string) => post(`/api/jobs/${id}/feedback`, { feedback_type, custom_feedback }),
+  reelImprove: (id: string, feedback_type: string, custom_feedback?: string) => post<{ status: string; new_job_id?: string; version?: number; review_url?: string; message?: string; needs?: string[] }>(`/api/jobs/${id}/improve`, { feedback_type, custom_feedback }),
+  reelVersions: (id: string) => get<{ root_job_id: string; versions: any[]; feedback: any[] }>(`/api/jobs/${id}/versions`),
   reject: (id: string, reason?: string) => post(`/api/jobs/${id}/reject`, { reason }),
   publish: (id: string) => post(`/api/jobs/${id}/publish`),
   updateSettings: (patch: unknown) => post("/api/settings", patch),

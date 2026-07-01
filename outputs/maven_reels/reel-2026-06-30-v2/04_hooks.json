@@ -1,0 +1,138 @@
+{
+  "date": "reel-2026-06-30-v2",
+  "categories": [
+    "question",
+    "curiosity",
+    "data",
+    "contrarian",
+    "direct",
+    "hidden_reason",
+    "you_missed_this",
+    "market_psychology"
+  ],
+  "hooks": [
+    {
+      "category": "question",
+      "text": "Why did information technology really move today?",
+      "strength": 81,
+      "on_screen": "Why did information technology really move today?",
+      "compliant": true
+    },
+    {
+      "category": "question",
+      "text": "Nifty moved. But why?",
+      "strength": 82,
+      "on_screen": "Nifty moved. But why?",
+      "compliant": true
+    },
+    {
+      "category": "curiosity",
+      "text": "Everyone watched Nifty. This is what they missed.",
+      "strength": 83,
+      "on_screen": "Everyone watched Nifty. This is what they missed.",
+      "compliant": true
+    },
+    {
+      "category": "curiosity",
+      "text": "The market looked calm. It wasn't.",
+      "strength": 84,
+      "on_screen": "The market looked calm. It wasn't.",
+      "compliant": true
+    },
+    {
+      "category": "data",
+      "text": "Sensex: 76,478.67 (-249.70 pts, -0.33%) moved the whole market today.",
+      "strength": 68,
+      "on_screen": "Sensex: 76,478.67 (-249.70 pts, -0.33%) moved the whole",
+      "compliant": true
+    },
+    {
+      "category": "data",
+      "text": "Information Technology did most of the damage today.",
+      "strength": 65,
+      "on_screen": "Information Technology did most of the damage today.",
+      "compliant": true
+    },
+    {
+      "category": "contrarian",
+      "text": "Information Technology moving is not the real story.",
+      "strength": 79,
+      "on_screen": "Information Technology moving is not the real story.",
+      "compliant": true
+    },
+    {
+      "category": "contrarian",
+      "text": "A red index isn't always bad news.",
+      "strength": 65,
+      "on_screen": "A red index isn't always bad news.",
+      "compliant": true
+    },
+    {
+      "category": "direct",
+      "text": "Here's why information technology moved today.",
+      "strength": 74,
+      "on_screen": "Here's why information technology moved today.",
+      "compliant": true
+    },
+    {
+      "category": "direct",
+      "text": "Today's market, in 15 seconds.",
+      "strength": 78,
+      "on_screen": "Today's market, in 15 seconds.",
+      "compliant": true
+    },
+    {
+      "category": "hidden_reason",
+      "text": "One reason moved everything today.",
+      "strength": 70,
+      "on_screen": "One reason moved everything today.",
+      "compliant": true
+    },
+    {
+      "category": "hidden_reason",
+      "text": "The real driver wasn't the index.",
+      "strength": 84,
+      "on_screen": "The real driver wasn't the index.",
+      "compliant": true
+    },
+    {
+      "category": "you_missed_this",
+      "text": "Here's what investors missed today.",
+      "strength": 88,
+      "on_screen": "Here's what investors missed today.",
+      "compliant": true
+    },
+    {
+      "category": "you_missed_this",
+      "text": "Don't just watch Nifty.",
+      "strength": 74,
+      "on_screen": "Don't just watch Nifty.",
+      "compliant": true
+    },
+    {
+      "category": "market_psychology",
+      "text": "The market's mood changed today. Here's why.",
+      "strength": 65,
+      "on_screen": "The market's mood changed today. Here's why.",
+      "compliant": true
+    }
+  ],
+  "count": 15,
+  "chosen": {
+    "category": "you_missed_this",
+    "text": "Here's what investors missed today.",
+    "strength": 88,
+    "on_screen": "Here's what investors missed today.",
+    "compliant": true
+  },
+  "selected_hook": "Here's what investors missed today.",
+  "on_screen_hook": "Here's what investors missed today.",
+  "voiceover_hook": "Here's what investors missed today.",
+  "hook_score": 88,
+  "backup_hooks": [
+    "The market looked calm. It wasn't.",
+    "The real driver wasn't the index.",
+    "Everyone watched Nifty. This is what they missed.",
+    "Nifty moved. But why?"
+  ]
+}

@@ -13,12 +13,50 @@ from .config import (BRAND_NAME, REEL_MAX_SECONDS, REEL_MIN_SECONDS, SCENE_MAX,
 
 GATES = {"hook": 90, "retention": 90, "edit_quality": 90, "visual_quality": 90,
          "subtitle": 90, "voiceover": 85, "compliance": 95, "brand": 90,
-         "cost_efficiency": 85}
+         "cost_efficiency": 85, "visual_uniqueness": 85, "freshness": 95}
 REROUTE = {"hook": "hook_lab", "retention": "retention_editor",
            "edit_quality": "motion_storyboard", "visual_quality": "motion_graphics",
            "subtitle": "subtitle_engine", "voiceover": "voice_studio",
            "compliance": "compliance_shield", "brand": "caption_desk",
-           "cost_efficiency": "asset_picker"}
+           "cost_efficiency": "asset_picker", "visual_uniqueness": "motion_variation",
+           "freshness": "market_sentinel"}
+# which improvement button fixes which failed gate (surfaced in the UI)
+SUGGEST_BUTTON = {
+    "hook": "Rewrite Hook", "retention": "Shorten Script / Improve Pacing",
+    "edit_quality": "Improve Animations & Quality",
+    "visual_quality": "Improve Animations & Quality / Regenerate Visuals",
+    "subtitle": "Re-run Subtitle Engine", "voiceover": "Regenerate Voiceover",
+    "compliance": "Fix wording (Compliance Shield)", "brand": "Rewrite Caption",
+    "cost_efficiency": "Pick Different Assets", "visual_uniqueness": "Try Different Style",
+    "freshness": "Change Story (fresh research)",
+}
+
+
+def _freshness(research: dict | None, run_key: str) -> tuple[int, list[str]]:
+    """Data must be current + sourced. Stale/unsourced research blocks publish."""
+    from datetime import datetime, timezone
+
+    if not research:
+        return 0, ["no research artifact (Needs Research)"]
+    issues, s = [], 100
+    stories = research.get("top_3_stories") or research.get("stories") or []
+    if not stories:
+        return 0, ["research has no stories (Needs Research)"]
+    unsourced = [st.get("headline", "?") for st in stories
+                 if not (st.get("sources") or st.get("source_urls") or st.get("source"))]
+    if unsourced:
+        s -= 30; issues.append(f"{len(unsourced)} story(ies) missing source URLs")
+    stamp = str(research.get("retrieved_at") or research.get("generated_at")
+                or research.get("date") or "")[:10]
+    if not stamp:
+        s -= 20; issues.append("research is not timestamped")
+    else:
+        # run_key is either 'YYYY-MM-DD' or 'reel-YYYY-MM-DD-HHMM-NNN[-vN]'
+        run_date = run_key.removeprefix("reel-")[:10]
+        today = datetime.now(timezone.utc).date().isoformat()
+        if stamp not in (run_date, today):
+            s -= 15; issues.append(f"research dated {stamp} does not match this run ({run_date})")
+    return max(0, s), issues
 
 
 def _cost_efficiency(asset_picker: dict | None, cost_guard: dict | None) -> tuple[int, list[str]]:
@@ -126,7 +164,8 @@ def run(date: str, *, hooks: dict, script_edited: dict, storyboard: dict,
         compliance: dict, caption: dict | None = None,
         subtitles: dict | None = None, reel_video: dict | None = None,
         aesthetic_score: int | None = None, asset_picker: dict | None = None,
-        cost_guard: dict | None = None) -> dict:
+        cost_guard: dict | None = None, research: dict | None = None,
+        visual_uniqueness: dict | None = None) -> dict:
     scores, issues = {}, {}
     scores["hook"], issues["hook"] = _hook(hooks)
     scores["retention"], issues["retention"] = _retention(storyboard, script_edited)
@@ -138,6 +177,17 @@ def run(date: str, *, hooks: dict, script_edited: dict, storyboard: dict,
     issues["compliance"] = compliance.get("violations", [])
     scores["brand"], issues["brand"] = _brand(caption or {}, storyboard)
     scores["cost_efficiency"], issues["cost_efficiency"] = _cost_efficiency(asset_picker, cost_guard)
+    scores["freshness"], issues["freshness"] = _freshness(research, date)
+    if visual_uniqueness is not None:
+        scores["visual_uniqueness"] = int(visual_uniqueness.get("visual_uniqueness_score", 0))
+        issues["visual_uniqueness"] = (
+            [f"too similar to {', '.join(visual_uniqueness.get('too_similar_to', []))} "
+             f"({', '.join(visual_uniqueness.get('matched_dimensions', []))})"]
+            if not visual_uniqueness.get("passed") else [])
+    else:
+        # first-ever run / legacy runs: nothing to compare against
+        scores["visual_uniqueness"] = 100
+        issues["visual_uniqueness"] = []
 
     passed = {k: scores[k] >= GATES[k] for k in GATES}
     overall = all(passed.values())
@@ -149,6 +199,8 @@ def run(date: str, *, hooks: dict, script_edited: dict, storyboard: dict,
         "date": date, "passed": overall, "scores": scores, "gates": GATES,
         "gate_passed": passed, "issues": all_issues,
         "fixes_required": [f"{k} ({scores[k]}<{GATES[k]}) -> {REROUTE[k]}" for k in fails],
+        "suggested_buttons": [{"gate": k, "score": scores[k], "min": GATES[k],
+                               "click": SUGGEST_BUTTON.get(k, "Improve Reel")} for k in fails],
         "reroute_to": REROUTE[fails[0]] if fails else "",
         "verdict": "PUBLISH_OK" if overall else "BLOCKED",
     }

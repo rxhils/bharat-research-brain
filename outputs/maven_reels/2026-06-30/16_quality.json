@@ -10,6 +10,7 @@
     "voiceover": 92,
     "compliance": 100,
     "brand": 100,
+    "cost_efficiency": 100,
     "publish": 100
   },
   "gates": {
@@ -20,7 +21,8 @@
     "subtitle": 90,
     "voiceover": 85,
     "compliance": 95,
-    "brand": 90
+    "brand": 90,
+    "cost_efficiency": 85
   },
   "gate_passed": {
     "hook": true,
@@ -30,7 +32,8 @@
     "subtitle": true,
     "voiceover": true,
     "compliance": true,
-    "brand": true
+    "brand": true,
+    "cost_efficiency": true
   },
   "issues": [],
   "fixes_required": [],

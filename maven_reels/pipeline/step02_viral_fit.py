@@ -47,15 +47,24 @@ def _weighted(scores: dict[str, float]) -> float:
     return round(sum(scores[d] * w for d, w in FORMULA.items()), 2)
 
 
-def run(date: str, research: dict) -> dict:
+DUPLICATE_PENALTY = 1.5   # subtracted from the weighted fit of a recently-used topic
+
+
+def run(date: str, research: dict, duplicate_check: dict | None = None) -> dict:
+    penalized_heads = {p["headline"] for p in (duplicate_check or {}).get("penalized_stories", [])}
     ranked = []
     for s in research["top_3_stories"]:
         dims = {k: round(v, 1) for k, v in _score_story(s).items()}
+        fit = _weighted(dims)
+        dup = s.get("headline") in penalized_heads
+        if dup:
+            fit = round(max(0.0, fit - DUPLICATE_PENALTY), 2)
         ranked.append({
             "rank_in_research": s.get("rank"),
             "headline": s.get("headline"),
             "dims": dims,
-            "viral_fit": _weighted(dims),
+            "viral_fit": fit,
+            "duplicate_penalty_applied": dup,
             "story": s,
         })
     ranked.sort(key=lambda r: r["viral_fit"], reverse=True)
@@ -78,6 +87,7 @@ def run(date: str, research: dict) -> dict:
                     } | ({"rejected_reason": r["rejected_reason"]} if "rejected_reason" in r else {})
                    for r in ranked],
         "reel_worthy": chosen["viral_fit"] >= VIRAL_FIT_MIN,
+        "selected_story_is_duplicate": bool(chosen.get("duplicate_penalty_applied")),
         # spec output shape
         "selected_story": chosen["story"],
         "viral_fit_score": chosen["viral_fit"],

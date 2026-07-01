@@ -1,0 +1,138 @@
+{
+  "date": "2026-06-30",
+  "market_summary": "Indian benchmarks ended lower on Tuesday, the final trading day of June, as a sharp selloff in IT stocks overpowered gains in autos, realty and consumer names. The Sensex fell 249.70 points (-0.33%) to 76,478.67 and the Nifty 50 slipped 80.50 points (-0.34%) to 23,865.75; Bank Nifty eased 0.32% to 57,542.90. Market breadth was positive (~2,250 advances vs ~1,805 declines) with midcaps and smallcaps outperforming, but the Nifty IT index plunged ~2.7% to a three-year low on US-rate and AI-disruption fears. Geopolitical jitters (Iran-US ceasefire friction) and monthly derivatives expiry added to the cautious tone.",
+  "data_confidence_note": "Today's official close (Tue 2026-06-30) is cross-verified across HDFCSky, the Liquide market-wrap blog, and multiple broker/news wraps, and is clearly distinct from Monday 2026-06-29 (Sensex 76,728.37 / Nifty 23,946.25). Index levels and the IT selloff are high-confidence (2+ independent sources each). FII/DII provisional flows came from a single data-aggregator snippet and could not be cross-confirmed against a second named source, so they are flagged as indicative only, not headline data. The Yes Bank fundraise board approval is dated June 29 (news flowed into June 30 trading), so it is intentionally excluded from the top-3 TODAY stories.",
+  "top_3_stories": [
+    {
+      "rank": 1,
+      "headline": "Sensex, Nifty close ~0.3% lower as IT selloff overpowers broad-market gains",
+      "category": "Market Indices / Benchmarks",
+      "what_happened": "Indian benchmark indices ended lower in a volatile session on the last trading day of June. The Sensex fell 249.70 points (-0.33%) to 76,478.67 and the Nifty 50 dropped 80.50 points (-0.34%) to 23,865.75, while the Nifty Bank index eased 184.45 points (-0.32%) to 57,542.90. Despite the headline weakness, market breadth was positive with roughly 2,250 advances against 1,805 declines, and the Nifty Midcap 100 (+0.4%) and Smallcap 100 (+1%) outperformed.",
+      "why_it_matters": "The headline drop masked a two-speed market: heavyweight IT exporters dragged the benchmarks while domestic-facing sectors (realty, consumer durables, autos) and broader midcap/smallcap segments held firm, signaling that the weakness was sector-specific rather than a broad risk-off move. The session also marked the close of the June series amid derivatives-expiry volatility.",
+      "affected_sectors": [
+        "Information Technology",
+        "Auto",
+        "Realty",
+        "Consumer Durables",
+        "Banking"
+      ],
+      "affected_companies": [
+        "Maruti Suzuki",
+        "Titan Company",
+        "Adani Enterprises",
+        "Bajaj Finance",
+        "Infosys",
+        "TCS",
+        "Wipro"
+      ],
+      "key_numbers": [
+        "Sensex: 76,478.67 (-249.70 pts, -0.33%)",
+        "Nifty 50: 23,865.75 (-80.50 pts, -0.34%)",
+        "Nifty Bank: 57,542.90 (-184.45 pts, -0.32%)",
+        "Breadth: ~2,250 advances vs ~1,805 declines",
+        "Nifty Midcap 100 +0.4%, Smallcap 100 +1%"
+      ],
+      "investor_takeaway": "For educational context only: a falling headline index alongside positive breadth and midcap/smallcap outperformance reflects concentrated sector pressure (IT) rather than a market-wide decline. Not investment advice.",
+      "sources": [
+        {
+          "name": "HDFCSky - Stock Market Close Report, June 30, 2026",
+          "url": "https://hdfcsky.com/news/stock-market-close-june-30-2026-sensex-nifty-fall-it-stocks"
+        },
+        {
+          "name": "Liquide - Share Market Today, June 30, 2026",
+          "url": "https://blog.liquide.life/share-market-today-sensex-falls-250-points-nifty-dips-below-23-900/"
+        }
+      ],
+      "importance_score": 9,
+      "confidence_score": 9
+    },
+    {
+      "rank": 2,
+      "headline": "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+      "category": "Sector / Information Technology",
+      "what_happened": "The Nifty IT index sank about 2.7% on June 30, sharply underperforming the Nifty 50 (-0.34%) and extending its losing streak to a third straight session (down roughly 4.6% over three days). Heavyweights led the slide: Infosys fell ~3.5%, TCS ~3.2%, Wipro ~2.9%, HCLTech ~2.8% and Tech Mahindra ~2%, with several IT names hitting 52-week lows and the index touching a three-year low. The selloff was driven by fears that US interest rates stay higher-for-longer (pressuring discretionary tech spend) and worries about AI-driven disruption to the IT services model.",
+      "why_it_matters": "IT is among the most heavily weighted sectors in Indian benchmarks and is highly export-/US-demand-sensitive. A move to a three-year low with multiple 52-week lows signals deepening pessimism on US discretionary tech budgets and the AI-disruption overhang for traditional services revenue - the single biggest drag on the headline indices today.",
+      "affected_sectors": [
+        "Information Technology",
+        "IT Services",
+        "Export-oriented sectors"
+      ],
+      "affected_companies": [
+        "Infosys",
+        "TCS",
+        "Wipro",
+        "HCLTech",
+        "Tech Mahindra"
+      ],
+      "key_numbers": [
+        "Nifty IT: ~-2.7% on the day",
+        "3-day decline: ~-4.6%",
+        "Infosys ~-3.5%, TCS ~-3.2%, Wipro ~-2.9%, HCLTech ~-2.8%, Tech Mahindra ~-2%",
+        "Index at ~3-year low; multiple constituents at 52-week lows"
+      ],
+      "investor_takeaway": "For educational context only: the IT drawdown is tied to macro (US rate outlook) and structural (AI-disruption) concerns rather than a single company event - a sector-wide de-rating worth monitoring. Not investment advice.",
+      "sources": [
+        {
+          "name": "Moneycontrol via TradingView - Nifty IT falls nearly 3%",
+          "url": "https://www.tradingview.com/news/moneycontrol:bd9f71f8e094b:0-nifty-it-falls-nearly-3-infosys-tcs-wipro-among-top-losers-as-us-rate-fear-ai-disruption-weigh-on-outlook/"
+        },
+        {
+          "name": "Business Standard - Nifty IT sinks to 3-year low; TCS, Infosys, HCL Tech hit 52-wk lows",
+          "url": "https://www.business-standard.com/markets/news/it-stocks-crash-nifty-it-sinks-2-to-3-year-low-tcs-infosys-hcl-tech-ltm-hit-52-wk-lows-126063000275_1.html"
+        }
+      ],
+      "importance_score": 9,
+      "confidence_score": 9
+    },
+    {
+      "rank": 3,
+      "headline": "Autos, realty and consumer durables cushion the market as Maruti jumps ~5.5%",
+      "category": "Sector Rotation / Gainers",
+      "what_happened": "While IT dragged, domestic-facing sectors rallied and limited the benchmark's downside. The Nifty Realty and Nifty Consumer Durables indices each gained more than 1%, helped by optimism on domestic consumption and easing crude oil prices. Maruti Suzuki was the standout Nifty gainer, rising about 5.5%, followed by Titan Company (+3.43%), Adani Enterprises (+2.72%) and Bajaj Finance (+2.54%). The rotation toward consumption and rate-sensitive domestic plays offset much of the export-driven IT weakness.",
+      "why_it_matters": "The strength in autos, realty and consumer durables against an IT-led decline illustrates a clear rotation into domestic-demand and rate-sensitive themes, supported by softer crude. This is what kept the headline index loss to ~0.3% despite a ~2.7% IT crash, and points to where market leadership shifted on the day.",
+      "affected_sectors": [
+        "Auto",
+        "Realty",
+        "Consumer Durables",
+        "Consumption"
+      ],
+      "affected_companies": [
+        "Maruti Suzuki",
+        "Titan Company",
+        "Adani Enterprises",
+        "Bajaj Finance"
+      ],
+      "key_numbers": [
+        "Maruti Suzuki ~+5.5%",
+        "Titan +3.43%",
+        "Adani Enterprises +2.72%",
+        "Bajaj Finance +2.54%",
+        "Nifty Realty & Consumer Durables each +1%+"
+      ],
+      "investor_takeaway": "For educational context only: the day's gainers cluster in domestic-consumption and rate-sensitive names, illustrating sector rotation away from export-led IT toward home-demand themes amid easing crude. Not investment advice.",
+      "sources": [
+        {
+          "name": "HDFCSky - Stock Market Close Report, June 30, 2026",
+          "url": "https://hdfcsky.com/news/stock-market-close-june-30-2026-sensex-nifty-fall-it-stocks"
+        },
+        {
+          "name": "Liquide - Share Market Today, June 30, 2026",
+          "url": "https://blog.liquide.life/share-market-today-sensex-falls-250-points-nifty-dips-below-23-900/"
+        }
+      ],
+      "importance_score": 7,
+      "confidence_score": 8
+    }
+  ],
+  "_meta": {
+    "agent": "IndianMarketResearchAgent",
+    "generated_at_ist": "2026-06-30T21:40:00+05:30",
+    "post_worthy_count": 3,
+    "thresholds": {
+      "min_importance": 7,
+      "min_confidence": 8
+    },
+    "all_pass": true,
+    "story_count": 3
+  }
+}
