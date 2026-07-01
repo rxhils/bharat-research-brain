@@ -31,6 +31,8 @@ const STOCKS: Def[] = [
   { name: "Sun Pharma", symbol: "SUNPHARMA", sector: "Pharma", aliases: ["sun pharma", "sunpharma"] },
   { name: "Cipla", symbol: "CIPLA", sector: "Pharma", aliases: ["cipla"] },
   { name: "Adani Enterprises", symbol: "ADANIENT", sector: "Infra", aliases: ["adani enterprises", "adani ent", "adani"] },
+  { name: "Mahindra & Mahindra", symbol: "M&M", sector: "Auto", aliases: ["mahindra & mahindra", "mahindra and mahindra", "m&m", "mahindra"] },
+  { name: "Swiggy", symbol: "SWIGGY", sector: "Internet", aliases: ["swiggy"] },
 ];
 
 function matches(alias: string, s: string): boolean {

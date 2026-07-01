@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "eval:maven": "node scripts/run-maven-evals.mjs",
+    "eval:maven:prod": "MAVEN_EVAL_URL=https://www.trymaven.in/api/ask node scripts/run-maven-evals.mjs"
   },
   "dependencies": {
     "@types/pg": "^8.20.0",

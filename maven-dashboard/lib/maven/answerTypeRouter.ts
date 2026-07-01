@@ -15,9 +15,9 @@ export function routeAnswerType(query: string): { answerType: AnswerType; discla
   const s = (query || "").trim();
   const l = s.toLowerCase();
   if (!s) return { answerType: "out_of_scope", disclaimerLevel: "light" };
-  if (GREETING.test(s)) return { answerType: "greeting", disclaimerLevel: "none" };
-  if (isAdviceRequest(s) || FNO.test(l)) return { answerType: "unsafe_advice", disclaimerLevel: "strong" };
-  if (OUT.test(l) && !INDIA.test(l)) return { answerType: "out_of_scope", disclaimerLevel: "light" };
+  if (GREETING.test(s) || /\bwhat can (you|maven) do\b|\bwho are you\b|\bhow do you work\b|\bwhat do you do\b/i.test(l)) return { answerType: "greeting", disclaimerLevel: "none" };
+  if (isAdviceRequest(s) || FNO.test(l) || /\b(price target|target price|stock to buy|stocks? to buy|which stock|multibagger|guaranteed return)\b/i.test(l)) return { answerType: "unsafe_advice", disclaimerLevel: "strong" };
+  if (OUT.test(l) && !/\b(india|indian|nifty|sensex|nse|bse|sebi)\b/i.test(l)) return { answerType: "out_of_scope", disclaimerLevel: "light" };
   if (COMPARE.test(l)) return { answerType: "stock_comparison", disclaimerLevel: "standard" };
   if (resolveStock(s)) return { answerType: "single_stock_research", disclaimerLevel: "standard" };
   if (CONCEPT.test(l)) return { answerType: "basic_concept", disclaimerLevel: "light" };
