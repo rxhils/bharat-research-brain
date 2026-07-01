@@ -1,5 +1,6 @@
 import type { AnswerType, DisclaimerLevel } from "./types";
 import { isAdviceRequest } from "../guard";
+import { resolveStock } from "./stockResolver";
 
 const GREETING = /^\s*(hi+|hello+|hey+|yo+|hiya|namaste|sup|good (morning|afternoon|evening))\b[\s!.,]*$/i;
 const OUT = /(polymarket|prediction market|crypto|bitcoin|ethereum|\bbtc\b|\beth\b|dogecoin|\bsolana\b|us stock|u\.s\. stock|nasdaq|dow jones|s&p ?500|tesla|nvidia|forex|gambl|bett?ing|casino|sportsbook|premier league|football)/i;
@@ -18,6 +19,7 @@ export function routeAnswerType(query: string): { answerType: AnswerType; discla
   if (isAdviceRequest(s) || FNO.test(l)) return { answerType: "unsafe_advice", disclaimerLevel: "strong" };
   if (OUT.test(l) && !INDIA.test(l)) return { answerType: "out_of_scope", disclaimerLevel: "light" };
   if (COMPARE.test(l)) return { answerType: "stock_comparison", disclaimerLevel: "standard" };
+  if (resolveStock(s)) return { answerType: "single_stock_research", disclaimerLevel: "standard" };
   if (CONCEPT.test(l)) return { answerType: "basic_concept", disclaimerLevel: "light" };
   if (CURRENT.test(l)) return { answerType: "current_market_research", disclaimerLevel: "standard" };
   if (MACRO.test(l)) return { answerType: "macro_sector_impact", disclaimerLevel: "light" };

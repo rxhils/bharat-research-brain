@@ -3,6 +3,8 @@ import { getIndexPerformance, getSectorPerformance, getStockPrice, getCrudePrice
 import { searchSources } from "./sourceSearch";
 import { lookupKnowledge } from "./indiaMarketKnowledge";
 import { buildMechanism } from "./mechanismBuilder";
+import { extractSymbols } from "./stockResolver";
+import { extractCatalyst } from "./stockCatalystExtractor";
 
 const pct = (n: number | null) => (n == null ? "n/a" : (n >= 0 ? "+" : "") + n.toFixed(2) + "%");
 const round = (n: number | null): number | null => (n == null ? null : Math.round(n * 100) / 100);
@@ -24,7 +26,7 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   if (need.has("gsec")) jobs.push(getGSecYield().then((d) => { md.gsecYield = d; }));
   if (need.has("fiidii")) jobs.push(getFIIDIIFlows().then((d) => { md.fiiDiiFlows = d; }));
   if (need.has("macro")) jobs.push(getIndiaMacroSnapshot().then((d) => { md.macroSnapshot = d; }));
-  if (need.has("stocks") && syms.length) jobs.push(Promise.all(syms.map((s) => getStockPrice(s))).then((d) => { md.stocks = d; }));
+  if (need.has("stock") || need.has("stocks")) { if (syms.length) jobs.push(Promise.all(syms.map((s) => getStockPrice(s))).then((d) => { md.stocks = d; })); }
   if (need.has("snapshots") && syms.length) jobs.push(Promise.all(syms.map((s) => getCompanySnapshot(s))).then((d) => { md.stockSnapshots = d; }));
   if (need.has("announcements") && syms.length) jobs.push(Promise.all(syms.map((s) => getCompanyAnnouncements(s))).then((d) => { md.announcements = d; }));
 
@@ -47,19 +49,37 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   const mechanism = buildMechanism(query, plan.topic);
   for (const f of knowledge?.facts ?? []) facts.push(`[directional] ${f.text}.`);
 
-  // ---- limitations (clean, user-facing; no technical wording) ----
+  // ---- single-stock catalyst + relative move + stock chart ----
+  if (answerType === "single_stock_research") {
+    const st = md.stocks?.[0];
+    const nifty = md.indices?.find((i) => i.label === "Nifty 50");
+    if (st?.changePct != null && nifty?.changePct != null) facts.push(`${st.label} moved ${pct(st.changePct)} today vs Nifty ${pct(nifty.changePct)} (relative ${pct(st.changePct - nifty.changePct)}). [source: Yahoo Finance]`);
+    const annItems = (md.announcements ?? []).flatMap((a) => a.announcements.map((x) => ({ title: x.title, snippet: x.snippet })));
+    for (const a of md.announcements ?? []) for (const an of a.announcements.slice(0, 2)) facts.push(`${a.symbol} news: ${an.title}. [source: ${an.source}]`);
+    const catalyst = extractCatalyst([...annItems, ...sourceSnippets.map((s) => ({ title: s.title, snippet: s.snippet }))]);
+    if (catalyst.primaryCatalyst !== "no_clear_catalyst") {
+      facts.push(`Likely catalyst: ${catalyst.primaryCatalyst}${catalyst.secondaryCatalysts.length ? " (also " + catalyst.secondaryCatalysts.join(", ") + ")" : ""} [confidence: ${catalyst.confidence}].`);
+      charts.push({ type: "comparison_table", title: "Possible catalysts", dataSource: "catalyst", data: [{ primary: catalyst.primaryCatalyst, secondary: catalyst.secondaryCatalysts.join(", ") || "-", confidence: catalyst.confidence }] });
+    } else {
+      facts.push("No single company-specific catalyst was identified from available sources; the move appears more likely linked to broader sector/market context.");
+    }
+    if (st?.spark?.length) charts.push({ type: "line", title: `${st.label} (intraday)`, dataSource: "stock", xKey: "i", yKeys: ["price"], data: st.spark.map((p, i) => ({ i, price: round(p) })) });
+  }
+
+  // ---- limitations (clean, user-facing) ----
   if (md.gsecYield?.limitation) limitations.push(md.gsecYield.limitation);
   if (md.fiiDiiFlows?.limitation) limitations.push(md.fiiDiiFlows.limitation);
   if (md.macroSnapshot?.limitation) limitations.push(md.macroSnapshot.limitation);
   for (const snap of md.stockSnapshots ?? []) if (snap.limitation) limitations.push(`${snap.symbol}: ${snap.limitation}`);
+  for (const ca of md.announcements ?? []) if (ca.limitation) limitations.push(ca.limitation);
   if (plan.requiresLiveData && (md.indices?.every((q) => q.price == null) ?? false)) limitations.push("Current live market data is unavailable for this query.");
 
-  // ---- extra source chips from feeds (real, clickable) ----
+  // ---- feed source chips ----
   const pushSrc = (title: string, url?: string, snippet?: string, source?: string, published?: string) => { if (url) extraSources.push({ title, url, snippet: snippet ?? "", source: source ?? title, published }); };
   if (md.gsecYield?.yield10Y != null) pushSrc("10Y G-Sec yield", md.gsecYield.sourceUrl, "", md.gsecYield.source, md.gsecYield.date);
   if (md.fiiDiiFlows?.context) pushSrc("FII/DII context", md.fiiDiiFlows.sourceUrl, md.fiiDiiFlows.context, md.fiiDiiFlows.source, md.fiiDiiFlows.date);
   for (const p of md.macroSnapshot?.points ?? []) if (p.value != null && p.sourceUrl) pushSrc(p.label, p.sourceUrl, "", p.source);
-  for (const ca of md.announcements ?? []) for (const an of ca.announcements.slice(0, 2)) pushSrc(an.title, an.sourceUrl, an.snippet, an.source, an.date);
+  for (const ca of md.announcements ?? []) for (const an of ca.announcements.slice(0, 3)) pushSrc(an.title, an.sourceUrl, an.snippet, an.source, an.date);
   const allSources = dedupeSources([...sourceSnippets, ...extraSources]);
 
   // ---- charts (only when real data exists) ----
@@ -67,15 +87,13 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   if (md.sectors?.length) charts.push({ type: "bar", title: "Sector performance", dataSource: "sectors", xKey: "name", yKeys: ["changePct"], data: md.sectors.map((s) => ({ name: s.name, changePct: round(s.changePct) })) });
   if (md.crude?.spark?.length) charts.push({ type: "line", title: "Brent crude (intraday)", dataSource: "crude", xKey: "i", yKeys: ["price"], data: md.crude.spark.map((p, i) => ({ i, price: round(p) })) });
   if (md.usdinr?.spark?.length) charts.push({ type: "line", title: "USD/INR (intraday)", dataSource: "usdinr", xKey: "i", yKeys: ["price"], data: md.usdinr.spark.map((p, i) => ({ i, price: round(p) })) });
-
-  // valuation comparison table from snapshots (fall back to price-only stock table)
   if (md.stockSnapshots?.length) {
     const rows = md.stockSnapshots.map((s) => {
       const get = (k: string) => { const p = s.points.find((x) => x.key === k); return p ? p.value : null; };
       return { name: s.symbol, price: get("price"), PE: get("pe"), PB: get("pb"), ROE: get("roe") };
     });
     if (rows.some((r) => r.price != null || r.PE != null)) charts.push({ type: "comparison_table", title: "Valuation comparison", dataSource: "snapshots", data: rows as Record<string, unknown>[] });
-  } else if (md.stocks?.length) {
+  } else if (md.stocks?.length && md.stocks.length > 1) {
     charts.push({ type: "comparison_table", title: "Stock comparison", dataSource: "stocks", data: md.stocks.map((q) => ({ name: q.label, price: q.price, changePct: round(q.changePct) })) });
   }
   if (mechanism.flow) charts.push(mechanism.flow);
@@ -86,11 +104,4 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
 function dedupeSources(list: SourceResult[]): SourceResult[] {
   const seen = new Set<string>();
   return list.filter((s) => s.url && !seen.has(s.url) && seen.add(s.url)).slice(0, 8);
-}
-
-function extractSymbols(q: string): string[] {
-  const map: Record<string, string> = { hdfc: "HDFCBANK", icici: "ICICIBANK", sbi: "SBIN", axis: "AXISBANK", kotak: "KOTAKBANK", reliance: "RELIANCE", ril: "RELIANCE", tcs: "TCS", infosys: "INFY", infy: "INFY", wipro: "WIPRO", itc: "ITC" };
-  const s = q.toLowerCase(); const out: string[] = [];
-  for (const k of Object.keys(map)) if (new RegExp("\\b" + k + "\\b").test(s) && !out.includes(map[k])) out.push(map[k]);
-  return out.slice(0, 3);
 }

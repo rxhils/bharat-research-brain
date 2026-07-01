@@ -1,11 +1,11 @@
 // Shared types for the Maven Research + Answer-Quality layers.
 export type Intent =
   | "market_summary" | "index_movement" | "sector_impact" | "stock_comparison"
-  | "macro_impact" | "term_explanation" | "unsafe_advice" | "out_of_scope";
+  | "macro_impact" | "single_stock" | "term_explanation" | "unsafe_advice" | "out_of_scope";
 
 export type AnswerType =
   | "greeting" | "basic_concept" | "market_mechanism" | "current_market_research"
-  | "stock_comparison" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data";
+  | "stock_comparison" | "single_stock_research" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data";
 
 export type DisclaimerLevel = "none" | "light" | "standard" | "strong";
 export type Confidence = "verified" | "retrieved" | "analysis_only" | "unavailable";
@@ -93,3 +93,5 @@ export type MavenAnswer = {
   sources: MavenSource[]; followUps: string[]; disclaimer: string;
   limitations?: string[];
 };
+export type ResolvedStock = { companyName: string; symbol: string; exchange: string; sector: string; confidence: "high" | "medium" | "low" };
+export type Catalyst = { primaryCatalyst: string; secondaryCatalysts: string[]; confidence: "low" | "medium" | "high"; evidence: string[] };

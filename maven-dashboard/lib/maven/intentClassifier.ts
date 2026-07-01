@@ -1,5 +1,6 @@
 import type { Intent } from "./types";
 import { isAdviceRequest } from "../guard";
+import { resolveStock } from "./stockResolver";
 
 // Fast, deterministic intent classification (no token cost). Heuristic order matters.
 export function classifyIntent(query: string): Intent {
@@ -7,9 +8,10 @@ export function classifyIntent(query: string): Intent {
   if (!s.trim()) return "out_of_scope";
   if (isAdviceRequest(query)) return "unsafe_advice";
 
-  const NAMES = /(hdfc|icici|sbi|axis|kotak|reliance|ril|tcs|infosys|infy|wipro|hcl|itc|lt|larsen|adani|tata|bajaj|maruti|sun pharma|cipla)/g;
+  const NAMES = /(hdfc|icici|sbi|axis|kotak|reliance|ril|tcs|infosys|infy|wipro|hcl|itc|larsen|adani|tata|bajaj|maruti|sun pharma|cipla|zomato|paytm|coal india|hindustan|airtel|bharti)/g;
   const names = (s.match(NAMES) || []).length;
   if (/\b(vs|versus|compare|against|better than)\b/.test(s) || names >= 2) return "stock_comparison";
+  if (resolveStock(query)) return "single_stock";
 
   if (/summari|today'?s? market|market wrap|how (is|was|did) the market|market today|wrap up/.test(s)) return "market_summary";
   if (/(nifty|sensex|bank ?nifty|midcap|smallcap|index)\b/.test(s) && /(mov|up|down|fall|rise|gain|drop|today|why|lead|rally)/.test(s)) return "index_movement";

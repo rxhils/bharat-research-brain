@@ -18,16 +18,47 @@ function keyDataFrom(pack: ContextPack): MavenKeyData[] {
   const push = (label: string, q?: { price: number | null; changePct: number | null } | null) => {
     if (q && q.price != null) k.push({ label, value: q.price.toFixed(2), change: q.changePct != null ? (q.changePct >= 0 ? "+" : "") + q.changePct.toFixed(2) + "%" : undefined });
   };
-  for (const q of pack.marketData.indices ?? []) push(q.label, q);
   for (const q of pack.marketData.stocks ?? []) push(q.label, q);
+  for (const q of pack.marketData.indices ?? []) push(q.label, q);
   push("Brent crude", pack.marketData.crude);
   push("USD/INR", pack.marketData.usdinr);
   return k.slice(0, 6);
 }
 
-function synthesize(pack: ContextPack): MavenAnswer {
+function synthesizeStock(pack: ContextPack, liveFacts: string[], disc: string): MavenAnswer {
   const kb = pack.knowledge;
+  const moveFact = liveFacts.find((f) => f.includes("moved") && f.includes("vs Nifty")) || liveFacts.find((f) => /at \d/.test(f)) || "";
+  const catFact = pack.extractedFacts.find((f) => f.startsWith("Likely catalyst"));
+  const noCat = pack.extractedFacts.find((f) => f.startsWith("No single company-specific"));
+  const newsFacts = pack.extractedFacts.filter((f) => f.includes(" news: ")).slice(0, 2);
+  const st = pack.marketData.stocks?.[0];
+  const dir = st?.changePct == null ? "the move" : st.changePct >= 0 ? "the gain" : "the fall";
+
+  const blocks: MavenBlock[] = [];
+  blocks.push({ type: "DATA", title: "Market move", body: (moveFact || `${pack.topic} price data from the latest session.`) });
+  blocks.push({ type: "POINT", title: "Main catalyst", body: catFact ? (catFact + (newsFacts.length ? " " + newsFacts.join(" ") : "")) : (noCat || "No single company-specific catalyst was identified from available sources; the move appears more likely linked to broader sector/market context.") });
+  blocks.push({ type: "POINT", title: "Mechanism", body: arrowize(pack.mechanism?.chain || "driver → channel → variable → impact → risk") + (kb ? ". " + kb.summary : "") });
+  blocks.push({ type: "RISK", title: "What is not confirmed", body: "Company-specific confirmation is limited from open sources; treat the catalyst as tentative and cross-check the official filing." + (pack.limitations.length ? " " + pack.limitations.join(" ") : "") });
+  blocks.push({ type: "TAKEAWAY", title: "Maven view", body: `Read ${dir} in ${pack.topic} through its own drivers plus sector and flow context - mechanism, not a recommendation.` + (disc ? " " + disc : "") });
+
+  return {
+    headline: `${pack.topic}: what's driving ${dir}`,
+    summary: (moveFact || `${pack.topic} in focus.`) + (catFact ? " " + catFact : ""),
+    keyData: keyDataFrom(pack),
+    charts: pack.chartData,
+    blocks,
+    sources: realSources(pack),
+    followUps: [`What are the key drivers for ${pack.topic}?`, `How does ${pack.topic}'s sector look today?`, `What would change this view?`],
+    disclaimer: disc,
+  };
+}
+
+function synthesize(pack: ContextPack): MavenAnswer {
+  const disc = disclaimerText(pack.disclaimerLevel);
   const liveFacts = pack.extractedFacts.filter((f) => !f.startsWith("[directional]"));
+  if (pack.answerType === "single_stock_research") return synthesizeStock(pack, liveFacts, disc);
+
+  const kb = pack.knowledge;
   const dirFacts = pack.extractedFacts.filter((f) => f.startsWith("[directional]")).map((f) => f.replace("[directional] ", ""));
   const blocks: MavenBlock[] = [];
   if (liveFacts.length) blocks.push({ type: "DATA", title: "Market setup", body: liveFacts.slice(0, 4).join(" ") });
@@ -36,7 +67,6 @@ function synthesize(pack: ContextPack): MavenAnswer {
   if (dirFacts.length) blocks.push({ type: "DATA", title: "Grounding (directional)", body: dirFacts.join(" ") });
   if (pack.marketData.crude?.price != null || pack.marketData.usdinr?.price != null) blocks.push({ type: "MACRO", title: "External setup", body: "Crude and the rupee shape India's import bill, inflation and foreign-flow appetite; read them alongside US yields." });
   blocks.push({ type: "RISK", title: "What can reverse it", body: kb && kb.key === "crude" ? "A crude fall driven by weak global demand is not purely positive - it can signal slowing growth that hurts cyclicals and exporters." : "Watch market breadth, the FII vs DII balance, and any shift in the RBI rate/liquidity stance." });
-  const disc = disclaimerText(pack.disclaimerLevel);
   blocks.push({ type: "TAKEAWAY", title: "India context", body: "Read this through India-specific drivers - flows, rates and sector rotation." + (disc ? " " + disc : "") });
 
   const limitNote = pack.limitations.length ? " " + pack.limitations.join(" ") : "";
@@ -44,10 +74,7 @@ function synthesize(pack: ContextPack): MavenAnswer {
   return {
     headline: head,
     summary: (kb?.summary || liveFacts[0] || "Maven read this across India's indices, sectors, flows and macro.") + limitNote,
-    keyData: keyDataFrom(pack),
-    charts: pack.chartData,
-    blocks,
-    sources: realSources(pack),
+    keyData: keyDataFrom(pack), charts: pack.chartData, blocks, sources: realSources(pack),
     followUps: kb?.followUps?.slice(0, 3) || ["What is driving this specifically?", "How do FII/DII flows affect it?", "What would change this view?"],
     disclaimer: disc,
   };
@@ -56,6 +83,7 @@ function synthesize(pack: ContextPack): MavenAnswer {
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 export async function generateAnswer(pack: ContextPack, strict = false): Promise<MavenAnswer> {
+  const single = pack.answerType === "single_stock_research";
   const system =
     SYSTEM_PROMPT + "\n\n" + RETRIEVAL_PACK +
     "\n\nRESEARCH MODE: Answer ONLY from the provided research context (live facts, knowledge grounding, sources). " +
@@ -64,6 +92,7 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
     "('here is the market context', 'there are many factors', 'investors should monitor'). " +
     "Output JSON {headline, summary, keyData:[{label,value,change}], blocks:[{type,title,body}], followUps:[]}. " +
     "Block types DATA/POINT/MACRO/CONTEXT/RISK/TAKEAWAY; include >=1 RISK and end with TAKEAWAY. Do NOT output charts/sources/disclaimer." +
+    (single ? " SINGLE-STOCK MODE: This is about ONE company. Block order: DATA (Market move: price, daily % and move vs Nifty/sector) -> POINT (Main catalyst: cite the company-specific news/filing if present in facts/sources; if none, state the move is more likely sector/market-linked and DO NOT invent a catalyst) -> POINT (Mechanism: how the catalyst hits earnings/margins/valuation/flows) -> RISK (what is not confirmed / would invalidate this) -> TAKEAWAY. Headline = one line on the likely driver." : "") +
     (strict ? " STRICTER PASS: increase specificity, make the mechanism chain explicit with arrows, remove every generic sentence, and ensure each claim ties to a provided fact/source." : "");
   const user = JSON.stringify({
     question: pack.question, intent: pack.intent, answerType: pack.answerType, topic: pack.topic,
@@ -83,7 +112,7 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
       headline: String(out.headline), summary: String(out.summary ?? ""),
       keyData: Array.isArray(out.keyData) ? out.keyData.map((d: any) => ({ label: String(d.label ?? ""), value: String(d.value ?? ""), change: d.change != null ? String(d.change) : undefined })) : keyDataFrom(pack),
       charts: pack.chartData, blocks, sources: realSources(pack),
-      followUps: Array.isArray(out.followUps) && out.followUps.length ? out.followUps.map((f: any) => String(f)).slice(0, 4) : (pack.knowledge?.followUps?.slice(0, 3) || []),
+      followUps: Array.isArray(out.followUps) && out.followUps.length ? out.followUps.map((f: any) => String(f)).slice(0, 4) : (single ? [`What are the key drivers for ${pack.topic}?`, "What would change this view?"] : (pack.knowledge?.followUps?.slice(0, 3) || [])),
       disclaimer: disc,
     };
   }
