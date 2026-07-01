@@ -1,0 +1,40 @@
+{
+  "date": "2026-06-29",
+  "segments": [
+    {
+      "label": "hook",
+      "t0": 0.0,
+      "seconds": 1.5,
+      "narration": "Everyone saw the market today — but this is the part they missed."
+    },
+    {
+      "label": "what",
+      "t0": 1.5,
+      "seconds": 4.5,
+      "narration": "The Nifty Auto index was the day's worst-performing major sector, falling roughly 2% as…"
+    },
+    {
+      "label": "why",
+      "t0": 6.0,
+      "seconds": 5.5,
+      "narration": "The session shows the textbook sector rotation that accompanies an oil-and-dollar shock: rate- and…"
+    },
+    {
+      "label": "understand",
+      "t0": 11.5,
+      "seconds": 4.0,
+      "narration": "A useful educational case of macro-driven sector rotation: when oil rises and the…"
+    },
+    {
+      "label": "cta",
+      "t0": 15.5,
+      "seconds": 3.0,
+      "narration": "Understand the Indian market with Maven. trymaven.in."
+    }
+  ],
+  "total_seconds": 18.5,
+  "narration": "Everyone saw the market today — but this is the part they missed. The Nifty Auto index was the day's worst-performing major sector, falling roughly 2% as… The session shows the textbook sector rotation that accompanies an oil-and-dollar shock: rate- and… A useful educational case of macro-driven sector rotation: when oil rises and the… Understand the Indian market with Maven. trymaven.in.",
+  "compliance": {
+    "violations": []
+  }
+}

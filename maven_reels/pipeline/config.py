@@ -37,6 +37,7 @@ ARTIFACTS = {
     "script": "05_script.json",
     "script_edited": "06_script_edited.json",
     "storyboard": "07_storyboard.json",
+    "assets": "08_assets.json",
     "visual_direction": "08_visual_direction.json",
     "scenes": "09_scenes.json",
     "voiceover": "10_voiceover.json",
@@ -56,9 +57,9 @@ ARTIFACTS = {
 # Reel format
 # ---------------------------------------------------------------------------
 REEL_W, REEL_H = 1080, 1920            # 9:16
-REEL_MIN_SECONDS = 20
-REEL_MAX_SECONDS = 35
-SCENE_MIN, SCENE_MAX = 5, 7
+REEL_MIN_SECONDS = 15
+REEL_MAX_SECONDS = 20
+SCENE_MIN, SCENE_MAX = 7, 12
 IMAGE_MODEL = "nano_banana_pro"        # Higgsfield stills (NanoBanana)
 IMAGE_ASPECT = "9:16"
 TTS_MODEL = "text2speech_v2_minimax"   # default; confirm via models_explore(type:'audio')

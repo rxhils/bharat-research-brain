@@ -1,5 +1,5 @@
 {
-  "date": "2026-06-30",
+  "date": "2026-06-29",
   "total_duration": 16.4,
   "scene_count": 7,
   "fps": 30,
@@ -21,11 +21,11 @@
     {
       "kind": "stat",
       "duration": 2.6,
-      "label": "NIFTY IT",
-      "value": -2.7,
+      "label": "NIFTY AUTO",
+      "value": -2.0,
       "suffix": "%",
       "sub": "",
-      "on_screen": "NIFTY IT -2.7%",
+      "on_screen": "NIFTY AUTO -2.0%",
       "visual": "Index stat card slides up + number counter",
       "motion": "slide-up + count-up",
       "transition_out": "slide",
@@ -39,11 +39,12 @@
       "kind": "chips",
       "duration": 2.0,
       "chips": [
-        "Information Technology",
-        "IT Services",
-        "Export-oriented sectors"
+        "Auto",
+        "Oil & Gas",
+        "IT",
+        "Banking"
       ],
-      "on_screen": "Information Technology / IT Services / Export-oriented sectors",
+      "on_screen": "Auto / Oil & Gas / IT / Banking",
       "visual": "Sector chips stagger in",
       "motion": "stagger-pop",
       "transition_out": "wipe",
@@ -56,8 +57,8 @@
     {
       "kind": "reason",
       "duration": 3.0,
-      "text": "IT is among the most heavily weighted sectors in",
-      "on_screen": "IT is among the most heavily weighted sectors in",
+      "text": "The session shows the textbook sector rotation that accompanies",
+      "on_screen": "The session shows the textbook sector rotation that accompanies",
       "visual": "Key reason as kinetic text card",
       "motion": "word-by-word rise",
       "transition_out": "fade",
@@ -93,8 +94,8 @@
     {
       "kind": "reason",
       "duration": 2.4,
-      "text": "For educational context only: the IT drawdown is tied",
-      "on_screen": "For educational context only: the IT drawdown is tied",
+      "text": "A useful educational case of macro-driven sector rotation: when",
+      "on_screen": "A useful educational case of macro-driven sector rotation: when",
       "visual": "Takeaway as kinetic text",
       "motion": "word-by-word rise",
       "transition_out": "fade",

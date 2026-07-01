@@ -1,6 +1,48 @@
 {
   "date": "2026-06-30",
-  "srt_path": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\captions.srt",
-  "cue_count": 20,
-  "total_seconds": 33.0
+  "subtitles": [
+    {
+      "start": 0.0,
+      "end": 1.4,
+      "text": "Nifty moved — the real story was IT",
+      "emphasis": "IT"
+    },
+    {
+      "start": 1.4,
+      "end": 4.0,
+      "text": "Nifty IT sank 2.7% — a 3-year low",
+      "emphasis": "2.7%"
+    },
+    {
+      "start": 4.0,
+      "end": 6.0,
+      "text": "The pressure spread across sectors",
+      "emphasis": "sectors"
+    },
+    {
+      "start": 6.0,
+      "end": 9.0,
+      "text": "The trigger: US rate fears and AI",
+      "emphasis": "AI"
+    },
+    {
+      "start": 9.0,
+      "end": 11.6,
+      "text": "A third straight down day",
+      "emphasis": "third"
+    },
+    {
+      "start": 11.6,
+      "end": 14.0,
+      "text": "IT is a top index weight",
+      "emphasis": "weight"
+    },
+    {
+      "start": 14.0,
+      "end": 16.4,
+      "text": "Understand the market with Maven",
+      "emphasis": "Maven"
+    }
+  ],
+  "cue_count": 7
 }

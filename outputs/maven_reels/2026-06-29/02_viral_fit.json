@@ -1,0 +1,124 @@
+{
+  "date": "2026-06-29",
+  "dimensions": [
+    "importance",
+    "curiosity",
+    "emotional",
+    "simplicity",
+    "visual",
+    "shareability",
+    "retail_relevance"
+  ],
+  "weights": {
+    "importance": 1.0,
+    "curiosity": 1.6,
+    "emotional": 1.5,
+    "simplicity": 1.2,
+    "visual": 1.5,
+    "shareability": 1.6,
+    "retail_relevance": 1.3
+  },
+  "min_fit": 6.0,
+  "chosen": {
+    "headline": "Auto stocks lead the decline as crude oil and dollar strength pressure cyclicals",
+    "viral_fit": 7.51,
+    "dims": {
+      "importance": 7.0,
+      "curiosity": 5,
+      "emotional": 6.0,
+      "simplicity": 4.0,
+      "visual": 10.0,
+      "shareability": 10.0,
+      "retail_relevance": 10.0
+    },
+    "story": {
+      "rank": 3,
+      "headline": "Auto stocks lead the decline as crude oil and dollar strength pressure cyclicals",
+      "category": "Sector Move / Auto",
+      "what_happened": "The Nifty Auto index was the day's worst-performing major sector, falling roughly 2% as renewed US-Iran tension lifted crude oil and pushed the US dollar toward a one-year high. Index heavyweights Mahindra & Mahindra and Maruti Suzuki were among the notable decliners (within a 1.3%-2.4% loss band that also included Larsen & Toubro and State Bank of India). Higher oil and a stronger dollar raise input-cost and currency concerns for auto and other cyclicals, while defensive pockets like pharma, metals and healthcare saw relative buying.",
+      "why_it_matters": "The session shows the textbook sector rotation that accompanies an oil-and-dollar shock: rate- and cost-sensitive cyclicals (autos, financials, energy consumers) underperform, while defensives hold up better. For market-watchers, the magnitude of the Auto index's underperformance versus the broader Nifty is a clean illustration of how a single macro variable (crude) reprices an entire sector in one day.",
+      "affected_sectors": [
+        "Auto",
+        "Oil & Gas",
+        "IT",
+        "Banking (relative underperformers)",
+        "Metals",
+        "Pharma",
+        "Healthcare (relative outperformers)"
+      ],
+      "affected_companies": [
+        "Mahindra & Mahindra",
+        "Maruti Suzuki",
+        "Larsen & Toubro",
+        "State Bank of India"
+      ],
+      "key_numbers": [
+        "Nifty Auto: approx -2% (worst major sector)",
+        "Decliner band for M&M, L&T, Maruti, SBI: roughly -1.3% to -2.4%",
+        "12 of 15 major NSE sector indices closed lower",
+        "Brent crude: ~$72/bbl"
+      ],
+      "investor_takeaway": "A useful educational case of macro-driven sector rotation: when oil rises and the dollar strengthens, cost- and consumption-sensitive sectors such as autos typically lag while defensives cushion the index. Informational only, not advice.",
+      "sources": [
+        {
+          "name": "Upstox",
+          "url": "https://upstox.com/news/market-news/stocks/sensex-nifty-50-snap-two-day-winning-streak-dragged-by-reliance-kotak-bank/article-196075/"
+        },
+        {
+          "name": "Business Today",
+          "url": "https://www.businesstoday.in/markets/stocks/story/sensex-nifty-close-in-the-red-why-markets-fell-and-what-to-expect-next-539767-2026-06-29"
+        },
+        {
+          "name": "HDFC Sky",
+          "url": "https://hdfcsky.com/news/stock-market-today-june-29-2026-sensex-slips-nifty-flat-iran-war-oil-prices"
+        }
+      ],
+      "importance_score": 7,
+      "confidence_score": 8
+    }
+  },
+  "ranked": [
+    {
+      "headline": "Auto stocks lead the decline as crude oil and dollar strength pressure cyclicals",
+      "viral_fit": 7.51,
+      "dims": {
+        "importance": 7.0,
+        "curiosity": 5,
+        "emotional": 6.0,
+        "simplicity": 4.0,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 10.0
+      }
+    },
+    {
+      "headline": "Sensex falls 372 points, Nifty ends below 23,950 as renewed US-Iran tension lifts oil and the dollar",
+      "viral_fit": 7.28,
+      "dims": {
+        "importance": 9.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 3.0,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 10.0
+      },
+      "rejected_reason": "Lower viral fit (7.28 vs 7.51); weaker on emotional"
+    },
+    {
+      "headline": "Kotak Mahindra Bank in focus as CEO Ashok Vaswani opts not to seek another term; stock among top Nifty losers",
+      "viral_fit": 6.74,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 3.8,
+        "visual": 10.0,
+        "shareability": 8.0,
+        "retail_relevance": 8.5
+      },
+      "rejected_reason": "Lower viral fit (6.74 vs 7.51); weaker on emotional, shareability"
+    }
+  ],
+  "reel_worthy": true
+}

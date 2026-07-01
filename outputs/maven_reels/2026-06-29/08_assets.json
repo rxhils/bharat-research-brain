@@ -1,0 +1,48 @@
+{
+  "date": "2026-06-29",
+  "note": "Motion Graphics Engine overlays all text; assets are clean backgrounds only. v1 renders on the engine's own animated dark background, so these are optional enhancements.",
+  "kinds_in_reel": [
+    "chart",
+    "chips",
+    "hook",
+    "outro",
+    "reason",
+    "stat"
+  ],
+  "assets_needed": [
+    {
+      "asset_id": "asset_bg_dark",
+      "type": "background",
+      "purpose": "primary dark motion background",
+      "prompt": "Vertical 9:16 premium finance motion-graphic background. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "used_in_scenes": [
+        1,
+        2,
+        4,
+        5
+      ]
+    },
+    {
+      "asset_id": "asset_bg_panel",
+      "type": "panel",
+      "purpose": "subtle dashboard panel backdrop for chips/cards",
+      "prompt": "Vertical 9:16 subtle market dashboard panel backdrop. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "used_in_scenes": [
+        3,
+        6
+      ]
+    },
+    {
+      "asset_id": "asset_bg_end",
+      "type": "endcard",
+      "purpose": "Maven end-card backdrop",
+      "prompt": "Vertical 9:16 calm Maven end-card backdrop. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "used_in_scenes": [
+        7
+      ]
+    }
+  ]
+}

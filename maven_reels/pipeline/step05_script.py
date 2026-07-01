@@ -17,20 +17,20 @@ def _clean(text: str, limit: int) -> str:
 
 
 def run(date: str, story: dict, hooks: dict) -> dict:
+    # Tight 15-20s reel: short, punchy lines (45-65 words total).
     hook = hooks["chosen"]["text"]
-    what = _clean(story.get("what_happened", ""), 170)
-    why = _clean(story.get("why_it_matters", ""), 200)
-    take = _clean(story.get("investor_takeaway", ""), 170)
+    what = _clean(story.get("what_happened", ""), 95)
+    why = _clean(story.get("why_it_matters", ""), 110)
+    take = _clean(story.get("investor_takeaway", ""), 85)
 
     segments = [
-        {"label": "hook", "t0": 0, "seconds": 2, "narration": hook},
-        {"label": "what", "t0": 2, "seconds": 6, "narration": what},
-        {"label": "why", "t0": 8, "seconds": 10, "narration": why},
-        {"label": "understand", "t0": 18, "seconds": 10,
-         "narration": take or "Watching just the index isn't enough — the sector "
-                             "moves tell you what's really happening."},
-        {"label": "cta", "t0": 28, "seconds": 5,
-         "narration": f"Understand the Indian market better with {BRAND_NAME}. {BRAND_SITE}."},
+        {"label": "hook", "t0": 0.0, "seconds": 1.5, "narration": hook},
+        {"label": "what", "t0": 1.5, "seconds": 4.5, "narration": what},
+        {"label": "why", "t0": 6.0, "seconds": 5.5, "narration": why},
+        {"label": "understand", "t0": 11.5, "seconds": 4.0,
+         "narration": take or "Watch the sectors, not just the index."},
+        {"label": "cta", "t0": 15.5, "seconds": 3.0,
+         "narration": f"Understand the Indian market with {BRAND_NAME}. {BRAND_SITE}."},
     ]
     total = sum(s["seconds"] for s in segments)
     payload = {

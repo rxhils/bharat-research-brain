@@ -43,7 +43,9 @@ def validate_script(d: dict) -> dict:
         raise SchemaError("reel.script: empty")
     total = sum(s.get("seconds", 0) for s in segs)
     if not (config.REEL_MIN_SECONDS - 5 <= total <= config.REEL_MAX_SECONDS + 5):
-        raise SchemaError(f"reel.script: total {total}s outside 20-35s band")
+        raise SchemaError(
+            f"reel.script: total {total}s outside {config.REEL_MIN_SECONDS}-"
+            f"{config.REEL_MAX_SECONDS}s band")
     return d
 
 

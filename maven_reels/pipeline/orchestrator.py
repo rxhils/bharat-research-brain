@@ -11,9 +11,9 @@ from __future__ import annotations
 import argparse
 
 from . import (config, state, step01_research, step02_viral_fit, step03_angle,
-               step04_hooks, step05_script, step06_retention, step07_storyboard,
-               step08_visual_direction, step09_scenes, step11_subtitles,
-               step13_cover, step14_caption, step15_compliance, step16_quality)
+               step04_hooks, step05_script, step06_retention, step6_motion_storyboard,
+               step7_asset_director, step11_subtitles, step14_caption,
+               step15_compliance, step16_quality)
 
 
 def prepare(date: str) -> dict:
@@ -26,12 +26,11 @@ def prepare(date: str) -> dict:
     hooks = step04_hooks.run(date, angle, viral_fit)
     script = step05_script.run(date, story, hooks)
     edited = step06_retention.run(date, script)
-    storyboard = step07_storyboard.run(date, edited, story)
-    visual = step08_visual_direction.run(date)
+    storyboard = step6_motion_storyboard.run(date, story=story, hooks=hooks,
+                                             script_edited=edited, viral_fit=viral_fit)
+    step7_asset_director.run(date, storyboard)
 
-    step09_scenes.build_scene_jobs(date, storyboard, visual)
     step11_subtitles.run(date, edited)
-    step13_cover.build_cover_job(date, hooks, visual)
     caption = step14_caption.run(date, story, hooks, angle)
     compliance = step15_compliance.run(date, hooks=hooks, angle=angle,
                                        script_edited=edited, caption=caption)

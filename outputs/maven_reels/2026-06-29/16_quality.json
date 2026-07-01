@@ -1,11 +1,11 @@
 {
-  "date": "2026-06-30",
+  "date": "2026-06-29",
   "scores": {
     "hook": 88,
-    "retention": 85,
-    "visual": 93,
+    "retention": 100,
+    "visual": 0,
     "compliance": 100,
-    "publish": 100
+    "publish": 0
   },
   "gates": {
     "hook": 85,
@@ -16,14 +16,15 @@
   "passed": {
     "hook": true,
     "retention": true,
-    "visual": true,
+    "visual": false,
     "compliance": true
   },
-  "overall_pass": true,
-  "retention_issues": [
-    "length 33s outside 15-20s"
+  "overall_pass": false,
+  "retention_issues": [],
+  "visual_issues": [
+    "reel.mp4 not built yet",
+    "aesthetic (visual) review not supplied"
   ],
-  "visual_issues": [],
   "compliance_violations": [],
-  "verdict": "PUBLISH_OK"
+  "verdict": "BLOCKED"
 }

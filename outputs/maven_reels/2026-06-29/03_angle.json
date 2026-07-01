@@ -1,0 +1,32 @@
+{
+  "date": "2026-06-29",
+  "story_headline": "Auto stocks lead the decline as crude oil and dollar strength pressure cyclicals",
+  "candidates": [
+    {
+      "angle": "Everyone saw the headline — few understood why auto really moved",
+      "type": "curiosity",
+      "scroll_score": 86
+    },
+    {
+      "angle": "Why Nifty Auto: approx -2% (worst major sector) moved on one story today",
+      "type": "data",
+      "scroll_score": 80
+    },
+    {
+      "angle": "The real reason auto moved today",
+      "type": "explainer",
+      "scroll_score": 80
+    },
+    {
+      "angle": "One thing behind today's move that most retail investors missed",
+      "type": "insider",
+      "scroll_score": 74
+    }
+  ],
+  "chosen": {
+    "angle": "Everyone saw the headline — few understood why auto really moved",
+    "type": "curiosity",
+    "scroll_score": 86
+  },
+  "rationale": "'Everyone saw the headline — few understood why auto really moved' scored highest for scroll-stop (86) — it frames the event as a why, not a recap."
+}

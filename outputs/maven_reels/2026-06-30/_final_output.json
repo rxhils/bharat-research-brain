@@ -1,0 +1,16 @@
+{
+  "status": "prepared",
+  "date": "2026-06-30",
+  "reel": "outputs/maven_reels/2026-06-30/reel.mp4",
+  "cover": "outputs/maven_reels/2026-06-30/cover.jpg",
+  "renderer": "remotion",
+  "quality_scores": {
+    "hook": 88,
+    "retention": 85,
+    "visual": 93,
+    "compliance": 100,
+    "publish": 100
+  },
+  "verdict": "PUBLISH_OK",
+  "notes": "UPGRADED motion-graphics reel: Remotion animated composition (kinetic typography, number counters, chart reveal, staggered chips, kinetic subtitles) + seed_audio voiceover + ffmpeg music. 16.4s, 7 micro-scenes. Not published (awaiting approval)."
+}

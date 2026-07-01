@@ -18,12 +18,11 @@ from ..registry_reels import REEL_NODES
 REEL_OUTPUT_ROOT = REPO_ROOT / "outputs" / "maven_reels"
 
 APPROX = {
-    "closing_bell": 1, "claude_conductor": 2, "market_sentinel": 150,
-    "viral_fit": 1, "angle_studio": 1, "hook_lab": 2, "script_room": 2,
-    "retention_editor": 1, "storyboard": 1, "visual_director": 1,
-    "scene_studio": 55, "voice_studio": 20, "subtitle_engine": 1, "cut_room": 12,
-    "cover_studio": 15, "caption_desk": 1, "compliance_shield": 1,
-    "reel_auditor": 2, "publish_gate": 2, "reels_courier": 20, "signal_tracker": 0,
+    "closing_bell": 1, "market_sentinel": 150, "viral_fit": 1, "angle_studio": 2,
+    "hook_lab": 3, "script_room": 2, "retention_editor": 1, "motion_storyboard": 1,
+    "asset_director": 1, "scene_studio": 50, "motion_graphics": 90, "voice_studio": 18,
+    "subtitle_engine": 1, "sound_design": 3, "cover_studio": 2, "reel_auditor": 2,
+    "approval": 1, "publish_gate": 2, "reels_courier": 20, "signal_tracker": 0,
     "run_vault": 1,
 }
 
@@ -34,22 +33,22 @@ FILES = {
     "04_hooks.json": ("hook_lab", "json"),
     "05_script.json": ("script_room", "json"),
     "06_script_edited.json": ("retention_editor", "json"),
-    "07_storyboard.json": ("storyboard", "json"),
-    "08_visual_direction.json": ("visual_director", "json"),
+    "07_storyboard.json": ("motion_storyboard", "json"),
+    "08_assets.json": ("asset_director", "json"),
     "09_scenes.json": ("scene_studio", "json"),
     "10_voiceover.json": ("voice_studio", "json"),
     "11_captions.json": ("subtitle_engine", "json"),
-    "12_reel_video.json": ("cut_room", "json"),
-    "13_cover.json": ("cover_studio", "json"),
-    "14_caption.json": ("caption_desk", "json"),
-    "14_hashtags.json": ("caption_desk", "json"),
-    "15_compliance.json": ("compliance_shield", "json"),
+    "12_reel_video.json": ("motion_graphics", "json"),
+    "14_caption.json": ("reels_courier", "json"),
+    "14_hashtags.json": ("reels_courier", "json"),
     "16_quality.json": ("reel_auditor", "json"),
     "17_publish.json": ("reels_courier", "json"),
     "_final_output.json": ("run_vault", "json"),
-    "reel.mp4": ("cut_room", "video"),
+    "reel.mp4": ("motion_graphics", "video"),
     "cover.jpg": ("cover_studio", "image"),
     "voiceover.mp3": ("voice_studio", "audio"),
+    "music_bed.mp3": ("sound_design", "audio"),
+    "captions.srt": ("subtitle_engine", "log"),
     "scene_1.jpg": ("scene_studio", "image"), "scene_2.jpg": ("scene_studio", "image"),
     "scene_3.jpg": ("scene_studio", "image"), "scene_4.jpg": ("scene_studio", "image"),
     "scene_5.jpg": ("scene_studio", "image"), "scene_6.jpg": ("scene_studio", "image"),
@@ -163,38 +162,44 @@ def ingest_all() -> list[str]:
 
 def _node_state(nid, dd: Path, quality, viral, hooks, final, published):
     has = lambda f: (dd / f).exists()
+    # media-producing nodes: completed only if their file exists on disk
     media = {"scene_studio": "scene_1.jpg", "voice_studio": "voiceover.mp3",
-             "cut_room": "reel.mp4", "cover_studio": "cover.jpg"}
+             "motion_graphics": "reel.mp4", "cover_studio": "cover.jpg",
+             "sound_design": "music_bed.mp3"}
     if nid in media:
-        return ("completed", f"{media[nid]} ready", media[nid]) if has(media[nid]) \
-            else ("pending", "Awaiting media (requires Claude Code conductor).", None)
+        f = media[nid]
+        return ("completed", f"{f} ready", f) if has(f) \
+            else ("pending", "Awaiting render (requires Claude Code conductor).", None)
     if nid == "reels_courier":
         return ("published", f"Reel published — {final.get('instagram_post_url')}", "17_publish.json") \
             if published else ("pending", "Awaiting publish (requires conductor).", None)
     if nid == "signal_tracker":
         return "pending", "Analytics collected post-publish.", None
+    if nid == "approval":
+        return ("completed" if published else "approval_required",
+                "Approved." if published else "Awaiting human approval.", None)
     if nid == "closing_bell":
         return "completed", "Reel workflow started.", None
-    if nid == "claude_conductor":
-        return "completed", "Bridged Python + Higgsfield/Composio.", None
     if nid == "viral_fit":
         c = viral.get("chosen", {})
         return "completed", f"Picked reel story (fit {c.get('viral_fit')}).", "02_viral_fit.json"
     if nid == "hook_lab":
         return "completed", f"Hook: {(hooks.get('chosen') or {}).get('text','')[:50]}", "04_hooks.json"
+    if nid == "motion_storyboard":
+        return "completed", "Micro-scenes storyboarded.", "07_storyboard.json"
+    if nid == "asset_director":
+        return ("completed" if has("08_assets.json") else "completed",
+                "Assets decided.", "08_assets.json" if has("08_assets.json") else None)
     if nid == "reel_auditor":
         qs = quality.get("scores", {})
         return "completed", f"hook {qs.get('hook')} / ret {qs.get('retention')} / vis {qs.get('visual')} -> {quality.get('verdict')}", "16_quality.json"
     if nid == "publish_gate":
         return ("completed" if published else "blocked",
-                "Preflight passed." if published else "Held (needs real reel + approval).", None)
+                "Preflight passed." if published else "Held (needs approval).", None)
     if nid == "run_vault":
         return "completed", "Reel artifacts + state stored.", "_final_output.json"
-    # deterministic prepared steps
     fmap = {"market_sentinel": "01_research.json", "angle_studio": "03_angle.json",
             "script_room": "05_script.json", "retention_editor": "06_script_edited.json",
-            "storyboard": "07_storyboard.json", "visual_director": "08_visual_direction.json",
-            "subtitle_engine": "11_captions.json", "caption_desk": "14_caption.json",
-            "compliance_shield": "15_compliance.json"}
+            "subtitle_engine": "11_captions.json"}
     art = fmap.get(nid)
-    return ("completed" if (art and has(art)) else "completed", "Prepared.", art)
+    return "completed", "Prepared.", art
