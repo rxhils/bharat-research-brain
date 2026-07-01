@@ -1,4 +1,4 @@
-// Shared types for the Maven Research + Answer-Quality layers.
+// Shared types for the Maven Research + Answer-Quality + Stock layers.
 export type Intent =
   | "market_summary" | "index_movement" | "sector_impact" | "stock_comparison"
   | "macro_impact" | "single_stock" | "term_explanation" | "unsafe_advice" | "out_of_scope";
@@ -9,11 +9,9 @@ export type AnswerType =
 
 export type DisclaimerLevel = "none" | "light" | "standard" | "strong";
 export type Confidence = "verified" | "retrieved" | "analysis_only" | "unavailable";
-
 export type Freshness = "live" | "latest_available" | "delayed" | "stale" | "unavailable";
 export type DataConfidence = "verified" | "retrieved" | "estimated" | "unavailable";
 
-// Standard, source-attributed market datum. Every important number carries provenance.
 export type MarketDataPoint = {
   key: string; label: string; value: number | string | null; unit?: string;
   change?: number | null; changePct?: number | null; timestamp?: string;
@@ -35,13 +33,34 @@ export type GSecYield = {
   source: string; sourceUrl?: string; freshness: Freshness; confidence: DataConfidence; limitation?: string;
 };
 export type MacroSnapshot = { points: MarketDataPoint[]; limitation?: string };
+
 export type Announcement = {
   title: string; date?: string; source: string; sourceUrl?: string;
-  type: "exchange_announcement" | "results" | "corporate_action" | "investor_presentation" | "news_fallback";
+  type: "exchange_announcement" | "quarterly_result" | "investor_presentation" | "corporate_action" | "management_commentary" | "news_fallback";
   snippet?: string; confidence: DataConfidence;
 };
 export type CompanyAnnouncements = { symbol: string; announcements: Announcement[]; limitation?: string };
-export type CompanySnapshot = { symbol: string; sector?: string; points: MarketDataPoint[]; limitation?: string };
+
+export type CompanySnapshot = {
+  symbol: string; companyName?: string; sector?: string; industry?: string;
+  price: number | null; change: number | null; changePct: number | null;
+  marketCap: number | null; pe: number | null; pb: number | null; roe: number | null; roce: number | null;
+  dividendYield: number | null; eps: number | null; bookValue: number | null; debtToEquity: number | null;
+  revenueGrowth: number | null; profitGrowth: number | null; operatingMargin: number | null; netMargin: number | null;
+  fiftyTwoWeekHigh: number | null; fiftyTwoWeekLow: number | null; resultDate: string | null;
+  source: string; sourceUrl?: string; freshness: Freshness; confidence: DataConfidence;
+  unavailableFields: string[]; limitation?: string;
+};
+
+export type ResultContext = {
+  resultDate: string | null; revenue: number | null; ebitda: number | null; pat: number | null; margin: number | null;
+  yoyRevenueGrowth: number | null; yoyProfitGrowth: number | null; qoqRevenueGrowth: number | null; qoqProfitGrowth: number | null;
+  keyCommentary?: string; source: string; sourceUrl?: string; confidence: DataConfidence; unavailableFields: string[]; limitation?: string;
+};
+export type ShareholdingContext = {
+  date: string | null; promoterHolding: number | null; fiiHolding: number | null; diiHolding: number | null;
+  publicHolding: number | null; pledgedHolding: number | null; source: string; sourceUrl?: string; confidence: DataConfidence; limitation?: string;
+};
 
 export type SourceResult = { title: string; url: string; snippet: string; source: string; published?: string };
 
@@ -58,6 +77,8 @@ export type MarketData = {
   macroSnapshot?: MacroSnapshot | null;
   stockSnapshots?: CompanySnapshot[];
   announcements?: CompanyAnnouncements[];
+  results?: ResultContext[];
+  shareholding?: ShareholdingContext[];
 };
 
 export type ChartSpec = {
@@ -93,5 +114,6 @@ export type MavenAnswer = {
   sources: MavenSource[]; followUps: string[]; disclaimer: string;
   limitations?: string[];
 };
+
 export type ResolvedStock = { companyName: string; symbol: string; exchange: string; sector: string; confidence: "high" | "medium" | "low" };
-export type Catalyst = { primaryCatalyst: string; secondaryCatalysts: string[]; confidence: "low" | "medium" | "high"; evidence: string[] };
+export type Catalyst = { primaryCatalyst: string; secondaryCatalysts: string[]; confidence: "none" | "low" | "medium" | "high"; evidence: string[] };

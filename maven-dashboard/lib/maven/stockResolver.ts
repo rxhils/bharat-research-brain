@@ -22,6 +22,7 @@ const STOCKS: Def[] = [
   { name: "Bharat Electronics", symbol: "BEL", sector: "Defence", aliases: ["bharat electronics", "\\bbel\\b"] },
   { name: "Hindustan Aeronautics", symbol: "HAL", sector: "Defence", aliases: ["hindustan aeronautics", "\\bhal\\b"] },
   { name: "Coal India", symbol: "COALINDIA", sector: "Energy", aliases: ["coal india", "coalindia"] },
+  { name: "Oil and Natural Gas Corp", symbol: "ONGC", sector: "Energy", aliases: ["ongc", "oil and natural gas"] },
   { name: "Hindustan Zinc", symbol: "HINDZINC", sector: "Metal", aliases: ["hindustan zinc", "hindzinc"] },
   { name: "Tata Steel", symbol: "TATASTEEL", sector: "Metal", aliases: ["tata steel", "tatasteel"] },
   { name: "ITC", symbol: "ITC", sector: "FMCG", aliases: ["\\bitc\\b"] },
@@ -58,4 +59,8 @@ export function sectorGroup(sector: string): "banks" | "energy" | "exporter" | "
   if (x === "energy") return "energy";
   if (x === "it" || x === "pharma") return "exporter";
   return "other";
+}
+export function nameForSymbol(symbol: string): string | undefined {
+  const sym = symbol.replace(/\.ns$/i, "").toUpperCase();
+  return STOCKS.find((d) => d.symbol === sym)?.name;
 }
