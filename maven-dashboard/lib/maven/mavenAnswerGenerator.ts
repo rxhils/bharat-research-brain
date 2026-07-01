@@ -6,7 +6,11 @@ import { disclaimerText } from "./answerTypeRouter";
 const arrowize = (chain: string) => chain.replace(/->/g, "→");
 
 function realSources(pack: ContextPack): MavenSource[] {
-  const out: MavenSource[] = pack.sourceSnippets.slice(0, 5).map((s) => ({ name: s.source, title: s.title, url: s.url, date: s.published, snippet: s.snippet, type: "news", confidence: "retrieved" as const }));
+  const out: MavenSource[] = pack.sourceSnippets.slice(0, 5).map((s) => ({
+    name: s.source, title: s.title, url: s.url, date: s.date ?? s.published, snippet: s.snippet,
+    type: (s.sourceRank ?? 9) <= 3 ? "official" : "news",
+    confidence: s.confidence ?? "retrieved",
+  }));
   const hasMarket = !!(pack.marketData.indices?.some((q) => q.price != null) || pack.marketData.sectors?.length || pack.marketData.stocks?.length || pack.marketData.crude?.price != null || pack.marketData.usdinr?.price != null);
   if (hasMarket) out.push({ name: "NSE/BSE market data (via Yahoo Finance)", type: "market_data", confidence: "retrieved" });
   out.push({ name: "Maven analysis", type: "analysis", confidence: "analysis_only" });

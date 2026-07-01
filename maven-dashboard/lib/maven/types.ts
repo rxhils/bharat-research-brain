@@ -62,7 +62,21 @@ export type ShareholdingContext = {
   publicHolding: number | null; pledgedHolding: number | null; source: string; sourceUrl?: string; confidence: DataConfidence; limitation?: string;
 };
 
-export type SourceResult = { title: string; url: string; snippet: string; source: string; published?: string };
+export type SourceResult = {
+  title: string; url: string; snippet: string; source: string; published?: string;
+  provider?: string;                 // "searxng" | "tavily" | "serper" | ...
+  confidence?: Confidence;           // verified (official) | retrieved (search/news) | analysis_only
+  freshness?: Freshness;
+  domain?: string;
+  date?: string;
+  sourceRank?: number;               // 1 = NSE/BSE/RBI/SEBI, higher = less official
+  extractionStatus?: "success" | "partial" | "failed";
+};
+
+export type ExtractedPage = {
+  title: string; url: string; domain: string; text: string; date?: string;
+  extractionStatus: "success" | "partial" | "failed";
+};
 
 export type ResearchPlan = {
   intent: Intent; topic: string; requiresLiveData: boolean;

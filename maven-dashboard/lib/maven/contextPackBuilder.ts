@@ -113,7 +113,10 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   if (md.fiiDiiFlows?.context) pushSrc("FII/DII context", md.fiiDiiFlows.sourceUrl, md.fiiDiiFlows.context, md.fiiDiiFlows.source, md.fiiDiiFlows.date);
   for (const p of md.macroSnapshot?.points ?? []) if (p.value != null && p.sourceUrl) pushSrc(p.label, p.sourceUrl, "", p.source);
   for (const ca of md.announcements ?? []) for (const an of ca.announcements.slice(0, 3)) pushSrc(an.title, an.sourceUrl, an.snippet, an.source, an.date);
-  const allSources = dedupeSources([...sourceSnippets, ...extraSources]);
+  const allSources = dedupeSources([...sourceSnippets, ...extraSources]).sort((a, b) => (a.sourceRank ?? 9) - (b.sourceRank ?? 9));
+  // Clean, user-safe limitation only - never expose search/scraper/provider internals.
+  if (plan.searchQueries.length && allSources.length === 0 && (answerType === "single_stock_research" || answerType === "current_market_research"))
+    limitations.push("Some source pages were unavailable; Maven used available official and retrieved context.");
 
   // ---- market charts ----
   if (md.indices?.some((q) => q.price != null)) charts.push({ type: "bar", title: "Index moves today", dataSource: "indices", xKey: "name", yKeys: ["changePct"], data: md.indices.filter((q) => q.changePct != null).map((q) => ({ name: q.label, changePct: round(q.changePct) })) });

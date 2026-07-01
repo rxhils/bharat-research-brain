@@ -86,6 +86,11 @@ export const CASES = [
   { id: "D14", query: "Why is Sun Pharma moving?", category: "single_stock", expectedAnswerType: "single_stock_research", expectedSymbols: ["Sun Pharma"], ...R },
   { id: "C11", query: "How does inflation affect Indian markets?", category: "macro", expectedAnswerType: "macro_sector_impact", ...R },
   { id: "B7", query: "Why are PSU banks moving today?", category: "market_summary", expectedAnswerType: "current_market_research", ...R },
+
+  // I. Official source retrieval (Free Source Retrieval v1) - official domains first, clean sources, no scraper/provider leakage
+  { id: "I1", query: "Latest announcement for HDFC Bank", category: "official_source", expectedAnswerType: "single_stock_research", expectedSymbols: ["HDFC"], ...R, mustNotContain: ["searxng", "scraper", "fetch error", "provider error", "anti-bot"] },
+  { id: "I2", query: "RBI latest repo rate decision", category: "official_source", expectedAnswerType: "current_market_research", blocks: true, charts: false, sources: true, mustNotContain: ["searxng", "scraper", "fetch error", "provider error", "anti-bot"] },
+  { id: "I3", query: "SEBI latest circular", category: "official_source", expectedAnswerType: "current_market_research", blocks: true, charts: false, sources: true, mustNotContain: ["searxng", "scraper", "fetch error", "provider error", "anti-bot"] },
 ];
 
 export default CASES;
