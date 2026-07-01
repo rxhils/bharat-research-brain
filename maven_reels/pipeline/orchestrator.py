@@ -11,9 +11,10 @@ from __future__ import annotations
 import argparse
 
 from . import (config, state, step01_research, step02_viral_fit, step03_angle,
-               step04_hooks, step05_script, step06_retention, step6_motion_storyboard,
-               step7_asset_director, step11_subtitles, step14_caption,
-               step15_compliance, step16_quality)
+               step04_hooks, step05_script, step06_retention,
+               step_template_selector, step_motion_variation, step6_motion_storyboard,
+               step7_asset_director, step_asset_picker, step_higgsfield_asset_request,
+               step11_subtitles, step14_caption, step15_compliance, step16_quality)
 
 
 def prepare(date: str) -> dict:
@@ -26,25 +27,41 @@ def prepare(date: str) -> dict:
     hooks = step04_hooks.run(date, angle, viral_fit)
     script = step05_script.run(date, story, hooks)
     edited = step06_retention.run(date, script)
-    storyboard = step6_motion_storyboard.run(date, story=story, hooks=hooks,
-                                             script_edited=edited, viral_fit=viral_fit)
-    step7_asset_director.run(date, storyboard)
 
-    step11_subtitles.run(date, edited)
+    # cost-optimized path: choose a template + motion variation, then storyboard
+    template = step_template_selector.run(date, story=story, angle=angle)
+    variation = step_motion_variation.run(date, template=template)
+    storyboard = step6_motion_storyboard.run(date, story=story, hooks=hooks,
+                                             script_edited=edited, viral_fit=viral_fit,
+                                             template=template, variation=variation)
+    step7_asset_director.run(date, storyboard)
+    # pick from the reusable library (no paid generation); gate any gaps
+    asset_picker = step_asset_picker.run(date, storyboard=storyboard,
+                                         template=template, story=story)
+    higgs = step_higgsfield_asset_request.run(date, asset_picker=asset_picker)
+
+    subtitles = step11_subtitles.run(date, edited)
     caption = step14_caption.run(date, story, hooks, angle)
     compliance = step15_compliance.run(date, hooks=hooks, angle=angle,
                                        script_edited=edited, caption=caption)
     quality = step16_quality.run(date, hooks=hooks, script_edited=edited,
-                                 storyboard=storyboard, compliance=compliance)
+                                 storyboard=storyboard, compliance=compliance,
+                                 caption=caption, subtitles=subtitles,
+                                 asset_picker=asset_picker,
+                                 cost_guard=asset_picker.get("cost_guard"))
 
     rs = state.RunState.load_or_new(date)
     for k in ("research", "viral_fit", "angle", "hooks", "script", "retention",
-              "storyboard", "visual_direction", "scenes_built", "subtitles",
-              "cover_built", "caption", "compliance", "quality"):
+              "template", "motion_variation", "storyboard", "asset_picker",
+              "higgsfield_request", "subtitles", "caption", "compliance", "quality"):
         rs.mark(k)
     return {"date": date, "chosen_story": story.get("headline"),
             "viral_fit": viral_fit["chosen"]["viral_fit"],
             "hook": hooks["chosen"]["text"], "scenes": storyboard["scene_count"],
+            "template": template["selected_template"],
+            "variation": variation["variation_id"],
+            "paid_generation_required": asset_picker["paid_generation_required"],
+            "new_generations": asset_picker["estimated_new_generations"],
             "verdict": quality["verdict"], "scores": quality["scores"]}
 
 

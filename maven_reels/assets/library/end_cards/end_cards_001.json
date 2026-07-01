@@ -1,0 +1,30 @@
+{
+  "asset_id": "end_cards_001",
+  "category": "end_cards",
+  "type": "motion_plate",
+  "file_name": "end_cards_001.jpg",
+  "file_path": "C:\\Users\\fazea\\bharat research brain\\maven_reels\\assets\\library\\end_cards\\end_cards_001.jpg",
+  "preview_name": "end_cards_001.jpg",
+  "duration": 0,
+  "resolution": "1080x1920",
+  "style": "calm radial teal glow end-card backdrop",
+  "tags": [
+    "end_card",
+    "brand",
+    "maven",
+    "teal",
+    "outro"
+  ],
+  "motion_type": "slow glow",
+  "text_safe_areas": [
+    "center",
+    "upper_third",
+    "lower_third"
+  ],
+  "avoid_uses": [],
+  "source_model": "higgsfield/nano_banana_pro",
+  "generation_cost": "already paid (2026-06-30 run)",
+  "quality_score": 86,
+  "reuse_count": 1,
+  "created_at": "2026-07-01T19:29:08+00:00"
+}

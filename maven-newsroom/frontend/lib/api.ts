@@ -42,6 +42,8 @@ export const api = {
   regenerateImages: (id: string) => post(`/api/jobs/${id}/regenerate-images`),
   rewriteCaption: (id: string) => post(`/api/jobs/${id}/rewrite-caption`),
   recheckQuality: (id: string) => post(`/api/jobs/${id}/recheck-quality`),
+  telegramPreview: (id: string) => post<{ status: string; delivered: boolean; token_configured: boolean; preview_url: string | null; message: string; paid_higgsfield_used?: boolean; template?: string | null }>(`/api/jobs/${id}/telegram-preview`),
+  requestHiggsfield: (id: string, approved = false) => post<{ status: string; paid: boolean; message: string; allow_paid_generation?: boolean }>(`/api/jobs/${id}/request-higgsfield`, { approved }),
   approve: (id: string) => post(`/api/jobs/${id}/approve`),
   reject: (id: string, reason?: string) => post(`/api/jobs/${id}/reject`, { reason }),
   publish: (id: string) => post(`/api/jobs/${id}/publish`),

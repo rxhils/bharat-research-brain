@@ -38,10 +38,13 @@ def _score_story(s: dict) -> dict[str, float]:
     }
 
 
+# Exact spec formula (weights sum to 1.0).
+FORMULA = {"importance": 0.25, "curiosity": 0.20, "simplicity": 0.15,
+           "visual": 0.15, "shareability": 0.15, "emotional": 0.10}
+
+
 def _weighted(scores: dict[str, float]) -> float:
-    num = sum(scores[d] * VIRAL_FIT_WEIGHTS[d] for d in VIRAL_FIT_DIMS)
-    den = sum(VIRAL_FIT_WEIGHTS.values())
-    return round(num / den, 2)
+    return round(sum(scores[d] * w for d, w in FORMULA.items()), 2)
 
 
 def run(date: str, research: dict) -> dict:
@@ -67,7 +70,7 @@ def run(date: str, research: dict) -> dict:
     payload = {
         "date": date,
         "dimensions": VIRAL_FIT_DIMS,
-        "weights": VIRAL_FIT_WEIGHTS,
+        "formula": FORMULA,
         "min_fit": VIRAL_FIT_MIN,
         "chosen": {"headline": chosen["headline"], "viral_fit": chosen["viral_fit"],
                    "dims": chosen["dims"], "story": chosen["story"]},
@@ -75,6 +78,17 @@ def run(date: str, research: dict) -> dict:
                     } | ({"rejected_reason": r["rejected_reason"]} if "rejected_reason" in r else {})
                    for r in ranked],
         "reel_worthy": chosen["viral_fit"] >= VIRAL_FIT_MIN,
+        # spec output shape
+        "selected_story": chosen["story"],
+        "viral_fit_score": chosen["viral_fit"],
+        "why_this_story_can_work_as_a_reel": (
+            f"Scores {chosen['viral_fit']}/10 on the weighted reel formula — strong "
+            f"on curiosity ({chosen['dims']['curiosity']}), visual "
+            f"({chosen['dims']['visual']}) and shareability ({chosen['dims']['shareability']}); "
+            "explainable in 15-20s."),
+        "rejected_stories": [{"headline": r["headline"],
+                              "reason": r.get("rejected_reason", "lower viral fit")}
+                             for r in ranked[1:]],
     }
     schemas.validate_viral_fit(payload)
     state.save_artifact(date, "viral_fit", payload)

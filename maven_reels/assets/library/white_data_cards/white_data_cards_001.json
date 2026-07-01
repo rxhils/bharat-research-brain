@@ -1,0 +1,31 @@
+{
+  "asset_id": "white_data_cards_001",
+  "category": "white_data_cards",
+  "type": "motion_plate",
+  "file_name": "white_data_cards_001.jpg",
+  "file_path": "C:\\Users\\fazea\\bharat research brain\\maven_reels\\assets\\library\\white_data_cards\\white_data_cards_001.jpg",
+  "preview_name": "white_data_cards_001.jpg",
+  "duration": 0,
+  "resolution": "1080x1920",
+  "style": "subtle translucent data-panel motif with soft grid lines",
+  "tags": [
+    "panel",
+    "cards",
+    "data",
+    "sector",
+    "dashboard",
+    "teal"
+  ],
+  "motion_type": "subtle parallax",
+  "text_safe_areas": [
+    "center",
+    "upper_third",
+    "lower_third"
+  ],
+  "avoid_uses": [],
+  "source_model": "higgsfield/nano_banana_pro",
+  "generation_cost": "already paid (2026-06-30 run)",
+  "quality_score": 85,
+  "reuse_count": 1,
+  "created_at": "2026-07-01T19:29:08+00:00"
+}

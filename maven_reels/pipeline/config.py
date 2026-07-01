@@ -36,12 +36,18 @@ ARTIFACTS = {
     "hooks": "04_hooks.json",
     "script": "05_script.json",
     "script_edited": "06_script_edited.json",
+    "template": "07_template.json",
+    "motion_variation": "08_motion_variation.json",
     "storyboard": "07_storyboard.json",
+    "asset_picker": "09_asset_picker.json",
+    "higgsfield_request": "11_higgsfield_request.json",
+    "cost_guard": "cost_guard.json",
     "assets": "08_assets.json",
     "visual_direction": "08_visual_direction.json",
     "scenes": "09_scenes.json",
     "voiceover": "10_voiceover.json",
     "subtitles": "11_captions.json",
+    "sound_design": "11_sound_design.json",
     "reel_video": "12_reel_video.json",
     "cover": "13_cover.json",
     "caption": "14_caption.json",
@@ -99,6 +105,53 @@ QUALITY_GATES = {"hook": 85, "retention": 85, "visual": 85, "compliance": 95}
 # ---------------------------------------------------------------------------
 # Instagram Reels publish (Composio)
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Cost strategy — Higgsfield is a REUSABLE asset library, not a daily generator.
+# Daily runs render with Remotion + existing library assets = ~zero marginal cost.
+# ---------------------------------------------------------------------------
+def _envbool(name: str, default: bool) -> bool:
+    import os
+    v = os.getenv(name)
+    return default if v is None else v.strip().lower() in ("1", "true", "yes", "on")
+
+
+def _envint(name: str, default: int) -> int:
+    import os
+    v = os.getenv(name)
+    try:
+        return int(v) if v is not None else default
+    except ValueError:
+        return default
+
+
+ALLOW_PAID_GENERATION = _envbool("ALLOW_PAID_GENERATION", False)
+MAX_HIGGSFIELD_GENERATIONS_PER_DAILY_RUN = _envint("MAX_HIGGSFIELD_GENERATIONS_PER_DAILY_RUN", 0)
+MAX_HIGGSFIELD_GENERATIONS_WITH_APPROVAL = _envint("MAX_HIGGSFIELD_GENERATIONS_WITH_APPROVAL", 1)
+USE_EXISTING_ASSET_LIBRARY = _envbool("USE_EXISTING_ASSET_LIBRARY", True)
+
+# Reusable Higgsfield motion-asset library (checked into the repo, reused daily).
+ASSET_LIBRARY_DIR = Path(__file__).resolve().parent.parent / "assets" / "library"
+ASSET_LIBRARY_CATEGORIES = [
+    "dark_dashboard", "white_data_cards", "banking", "rbi_policy",
+    "sector_heatmap", "market_fall", "market_rally", "earnings",
+    "company_news", "liquidity", "index_move", "end_cards", "covers",
+]
+
+# Remotion Reel templates (scene structure lives in step_template_selector).
+REEL_TEMPLATES = [
+    "market_move_explainer", "sector_breakdown", "policy_impact",
+    "company_shock", "what_investors_missed",
+]
+
+# Motion-variation presets (make each daily reel unique with zero new generation).
+MOTION_VARIATIONS = {
+    "teal_terminal":  {"accent": "#22D3EE", "hook_animation": "scale-pop",  "transition_style": "flash",  "chart_style": "thin-line",   "subtitle_style": "highlight-teal",   "card_style": "slide-up"},
+    "green_pulse":    {"accent": "#27C281", "hook_animation": "pulse",      "transition_style": "slide",  "chart_style": "glow-line",   "subtitle_style": "highlight-green",  "card_style": "pop"},
+    "white_brief":    {"accent": "#16A34A", "hook_animation": "rise",       "transition_style": "wipe",   "chart_style": "clean-reveal","subtitle_style": "underline",        "card_style": "editorial"},
+    "blue_newsroom":  {"accent": "#38BDF8", "hook_animation": "block-in",   "transition_style": "wipe",   "chart_style": "dashboard",   "subtitle_style": "highlight-blue",   "card_style": "panel"},
+    "orange_alert":   {"accent": "#F59E0B", "hook_animation": "impact",     "transition_style": "impact", "chart_style": "bold-line",   "subtitle_style": "highlight-amber",  "card_style": "alert"},
+}
+
 IG_USER_ID = "36492003990443127"       # try.maven business account
 COMPOSIO_TOOLS = {
     "create_media": "INSTAGRAM_POST_IG_USER_MEDIA",   # media_type=REELS

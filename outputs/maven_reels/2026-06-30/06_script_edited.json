@@ -3,39 +3,39 @@
   "segments": [
     {
       "label": "hook",
-      "t0": 0,
-      "seconds": 2,
-      "narration": "Everyone saw the market fall today — but this is the part they missed."
+      "t0": 0.0,
+      "seconds": 1.5,
+      "narration": "Here's what investors missed today."
     },
     {
       "label": "what",
-      "t0": 2,
-      "seconds": 6,
-      "narration": "The Nifty IT index sank about 2.7% — a 3-year low — its third straight down day."
+      "t0": 1.5,
+      "seconds": 4.5,
+      "narration": "The Nifty IT index sank about 2.7% on June 30, sharply underperforming the Nifty 50 (-0.34%)…"
     },
     {
       "label": "why",
-      "t0": 8,
-      "seconds": 10,
-      "narration": "IT is one of the heaviest-weighted, most export-sensitive sectors in Indian indices — so when it drops, it drags the whole benchmark down."
+      "t0": 6.0,
+      "seconds": 5.5,
+      "narration": "IT is among the most heavily weighted sectors in Indian benchmarks and is highly export-/US-demand-sensitive.…"
     },
     {
       "label": "understand",
-      "t0": 18,
-      "seconds": 10,
-      "narration": "The trigger: fears US rates stay higher for longer, plus worries about AI disrupting IT services. Educational only, not advice."
+      "t0": 11.5,
+      "seconds": 4.0,
+      "narration": "For educational context only: the IT drawdown is tied to macro (US rate outlook) and…"
     },
     {
       "label": "cta",
-      "t0": 28,
-      "seconds": 5,
-      "narration": "Understand the Indian market better with Maven. trymaven.in"
+      "t0": 15.5,
+      "seconds": 3.0,
+      "narration": "Understand the Indian market with Maven. trymaven.in."
     }
   ],
-  "total_seconds": 33,
-  "narration": "Everyone saw the market fall today — but this is the part they missed. The Nifty IT index sank about 2.7% — a 3-year low — its third straight down day. IT is one of the heaviest-weighted, most export-sensitive sectors in Indian indices — so when it drops, it drags the whole benchmark down. The trigger: fears US rates stay higher for longer, plus worries about AI disrupting IT services. Educational only, not advice. Understand the Indian market better with Maven. trymaven.in",
-  "pattern_interrupt_beats": 11,
+  "total_seconds": 18.5,
+  "narration": "Here's what investors missed today. The Nifty IT index sank about 2.7% on June 30, sharply underperforming the Nifty 50 (-0.34%)… IT is among the most heavily weighted sectors in Indian benchmarks and is highly export-/US-demand-sensitive.… For educational context only: the IT drawdown is tied to macro (US rate outlook) and… Understand the Indian market with Maven. trymaven.in.",
+  "pattern_interrupt_beats": 6.0,
   "edits": [
-    "Rewrote narration to clean, complete lines for voiceover + synced subtitles."
+    "No filler found; pacing already tight."
   ]
 }

@@ -15,6 +15,8 @@ export type Caption = { start: number; end: number; text: string; emphasis?: str
 export type ReelProps = {
   fps: number; durationSeconds: number;
   brand: { name: string; site: string };
+  theme?: { accent?: string };
+  template?: string; variation?: string;
   scenes: Scene[]; subtitles: Caption[];
 };
 
@@ -98,14 +100,14 @@ const Stat: React.FC<{ s: Scene }> = ({ s }) => {
   );
 };
 
-const Chips: React.FC<{ s: Scene }> = ({ s }) => (
+const Chips: React.FC<{ s: Scene; accent: string }> = ({ s, accent }) => (
   <Center>
     <div style={{ display: "flex", flexWrap: "wrap", gap: 22, justifyContent: "center", padding: "0 80px", maxWidth: 900 }}>
       {(s.chips ?? []).map((c, i) => {
         const e = useEnter(i * 5, 12);
         return (
           <div key={c} style={{ transform: `scale(${interpolate(e, [0, 1], [0.5, 1])})`, opacity: e,
-            background: "rgba(31,182,166,0.12)", border: "1px solid rgba(31,182,166,0.45)", color: TEAL,
+            background: `${accent}1F`, border: `1px solid ${accent}73`, color: accent,
             fontFamily: SANS, fontWeight: 700, fontSize: 46, padding: "20px 40px", borderRadius: 999 }}>{c}</div>
         );
       })}
@@ -177,17 +179,17 @@ const Center: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>{children}</AbsoluteFill>
 );
 
-const SceneBody: React.FC<{ s: Scene; brand: ReelProps["brand"] }> = ({ s, brand }) => {
+const SceneBody: React.FC<{ s: Scene; brand: ReelProps["brand"]; accent: string }> = ({ s, brand, accent }) => {
   if (s.kind === "hook") return <Hook s={s} />;
   if (s.kind === "stat") return <Stat s={s} />;
-  if (s.kind === "chips") return <Chips s={s} />;
+  if (s.kind === "chips") return <Chips s={s} accent={accent} />;
   if (s.kind === "reason") return <Reason s={s} />;
   if (s.kind === "chart") return <Chart s={s} />;
   return <Outro s={s} brand={brand} />;
 };
 
 // ---------------------------------------------------------------- subtitles
-const Subtitles: React.FC<{ subs: Caption[]; fps: number }> = ({ subs, fps }) => {
+const Subtitles: React.FC<{ subs: Caption[]; fps: number; accent: string }> = ({ subs, fps, accent }) => {
   const frame = useCurrentFrame();
   const t = frame / fps;
   const cur = subs.find((c) => t >= c.start && t < c.end);
@@ -203,7 +205,7 @@ const Subtitles: React.FC<{ subs: Caption[]; fps: number }> = ({ subs, fps }) =>
         {words.map((w, i) => {
           const key = cur.emphasis && w.toLowerCase().replace(/[^a-z0-9%.-]/g, "").includes(cur.emphasis.toLowerCase());
           return <span key={i} style={{ fontFamily: SANS, fontWeight: 800, fontSize: 58, lineHeight: 1.15,
-            color: key ? TEAL : "#FFFFFF", marginRight: 14, textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>{w}</span>;
+            color: key ? accent : "#FFFFFF", marginRight: 14, textShadow: "0 2px 8px rgba(0,0,0,0.8)" }}>{w}</span>;
         })}
       </div>
     </AbsoluteFill>
@@ -211,14 +213,14 @@ const Subtitles: React.FC<{ subs: Caption[]; fps: number }> = ({ subs, fps }) =>
 };
 
 // ---------------------------------------------------------------- chrome (brand + progress)
-const Chrome: React.FC<{ brand: ReelProps["brand"] }> = ({ brand }) => {
+const Chrome: React.FC<{ brand: ReelProps["brand"]; accent: string }> = ({ brand, accent }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const p = frame / durationInFrames;
   return (
     <>
       <AbsoluteFill style={{ pointerEvents: "none" }}>
-        <div style={{ position: "absolute", top: 0, left: 0, height: 6, width: `${p * 100}%`, background: TEAL, boxShadow: `0 0 12px ${TEAL}` }} />
+        <div style={{ position: "absolute", top: 0, left: 0, height: 6, width: `${p * 100}%`, background: accent, boxShadow: `0 0 12px ${accent}` }} />
         <div style={{ position: "absolute", top: 70, left: 60, fontFamily: SANS, fontWeight: 700, fontSize: 34, color: INK, letterSpacing: 1 }}>
           {brand.name}<span style={{ color: FAINT, fontWeight: 500 }}> · {brand.site}</span>
         </div>
@@ -228,20 +230,21 @@ const Chrome: React.FC<{ brand: ReelProps["brand"] }> = ({ brand }) => {
 };
 
 // ---------------------------------------------------------------- root
-export const MavenReel: React.FC<ReelProps> = ({ fps, brand, scenes, subtitles }) => {
+export const MavenReel: React.FC<ReelProps> = ({ fps, brand, scenes, subtitles, theme }) => {
   const frame = useCurrentFrame();
   const t = frame / fps;
+  const accent = theme?.accent || TEAL;
   const active = [...scenes].reverse().find((s) => t >= s.start) ?? scenes[0];
   return (
     <AbsoluteFill>
       <Background scene={active} />
       {scenes.map((s, i) => (
         <Sequence key={i} from={Math.round(s.start * fps)} durationInFrames={Math.round(s.duration * fps)} layout="none">
-          <SceneBody s={s} brand={brand} />
+          <SceneBody s={s} brand={brand} accent={accent} />
         </Sequence>
       ))}
-      <Subtitles subs={subtitles} fps={fps} />
-      <Chrome brand={brand} />
+      <Subtitles subs={subtitles} fps={fps} accent={accent} />
+      <Chrome brand={brand} accent={accent} />
     </AbsoluteFill>
   );
 };

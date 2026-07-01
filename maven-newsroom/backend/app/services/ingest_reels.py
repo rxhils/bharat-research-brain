@@ -19,11 +19,12 @@ REEL_OUTPUT_ROOT = REPO_ROOT / "outputs" / "maven_reels"
 
 APPROX = {
     "closing_bell": 1, "market_sentinel": 150, "viral_fit": 1, "angle_studio": 2,
-    "hook_lab": 3, "script_room": 2, "retention_editor": 1, "motion_storyboard": 1,
-    "asset_director": 1, "scene_studio": 50, "motion_graphics": 90, "voice_studio": 18,
-    "subtitle_engine": 1, "sound_design": 3, "cover_studio": 2, "reel_auditor": 2,
-    "approval": 1, "publish_gate": 2, "reels_courier": 20, "signal_tracker": 0,
-    "run_vault": 1,
+    "hook_lab": 3, "script_room": 2, "retention_editor": 1, "template_selector": 1,
+    "motion_variation": 1, "motion_storyboard": 1, "asset_director": 1,
+    "asset_picker": 1, "cost_guard": 1, "scene_studio": 50, "motion_graphics": 90,
+    "voice_studio": 18, "subtitle_engine": 1, "sound_design": 3, "cover_studio": 2,
+    "reel_auditor": 2, "approval": 1, "publish_gate": 2, "reels_courier": 20,
+    "signal_tracker": 0, "run_vault": 1,
 }
 
 FILES = {
@@ -33,8 +34,13 @@ FILES = {
     "04_hooks.json": ("hook_lab", "json"),
     "05_script.json": ("script_room", "json"),
     "06_script_edited.json": ("retention_editor", "json"),
+    "07_template.json": ("template_selector", "json"),
+    "08_motion_variation.json": ("motion_variation", "json"),
     "07_storyboard.json": ("motion_storyboard", "json"),
     "08_assets.json": ("asset_director", "json"),
+    "09_asset_picker.json": ("asset_picker", "json"),
+    "cost_guard.json": ("cost_guard", "json"),
+    "11_higgsfield_request.json": ("scene_studio", "json"),
     "09_scenes.json": ("scene_studio", "json"),
     "10_voiceover.json": ("voice_studio", "json"),
     "11_captions.json": ("subtitle_engine", "json"),
@@ -44,16 +50,21 @@ FILES = {
     "16_quality.json": ("reel_auditor", "json"),
     "17_publish.json": ("reels_courier", "json"),
     "_final_output.json": ("run_vault", "json"),
+    "11_sound_design.json": ("sound_design", "json"),
     "reel.mp4": ("motion_graphics", "video"),
     "cover.jpg": ("cover_studio", "image"),
     "voiceover.mp3": ("voice_studio", "audio"),
-    "music_bed.mp3": ("sound_design", "audio"),
+    "sound_bed.mp3": ("sound_design", "audio"),
+    "music_bed.mp3": ("sound_design", "audio"),   # legacy name (older runs)
     "captions.srt": ("subtitle_engine", "log"),
-    "scene_1.jpg": ("scene_studio", "image"), "scene_2.jpg": ("scene_studio", "image"),
-    "scene_3.jpg": ("scene_studio", "image"), "scene_4.jpg": ("scene_studio", "image"),
-    "scene_5.jpg": ("scene_studio", "image"), "scene_6.jpg": ("scene_studio", "image"),
-    "scene_7.jpg": ("scene_studio", "image"),
+    # background plates (Higgsfield stills) live in assets/
+    "asset_bg_dark.jpg": ("scene_studio", "image"),
+    "asset_bg_panel.jpg": ("scene_studio", "image"),
+    "asset_bg_end.jpg": ("scene_studio", "image"),
 }
+
+# artifacts stored in the run's assets/ subdirectory rather than the run root
+ASSET_SUBDIR = {"asset_bg_dark.jpg", "asset_bg_panel.jpg", "asset_bg_end.jpg"}
 
 
 def _load(d: Path, name: str):
@@ -85,6 +96,7 @@ def ingest_run(date: str) -> str | None:
     published = final.get("status") == "published"
     permalink = final.get("instagram_post_url")
     qs = quality.get("scores", {})
+    passed = bool(quality.get("passed", quality.get("overall_pass")))
     base = datetime.now(IST) - timedelta(seconds=sum(APPROX.values()))
 
     db.upsert("jobs", {
@@ -104,15 +116,23 @@ def ingest_run(date: str) -> str | None:
 
     db.upsert("scores", {
         "job_id": job_id, "content_score": qs.get("hook"),
-        "design_score": qs.get("visual"), "compliance_score": qs.get("compliance"),
-        "aesthetic_score": qs.get("retention"), "brand_score": None,
-        "publish_allowed": 1 if quality.get("overall_pass") else 0,
-        "issues_json": db.dumps({"reel_scores": qs, "retention": quality.get("retention_issues", []),
-                                 "visual": quality.get("visual_issues", [])}),
+        "design_score": qs.get("visual_quality", qs.get("visual")),
+        "compliance_score": qs.get("compliance"),
+        "aesthetic_score": qs.get("edit_quality", qs.get("retention")),
+        "brand_score": qs.get("brand"),
+        "publish_allowed": 1 if passed else 0,
+        "issues_json": db.dumps({
+            "reel_scores": qs, "gates": quality.get("gates", {}),
+            "gate_passed": quality.get("gate_passed", {}),
+            "verdict": quality.get("verdict"), "passed": passed,
+            "issues": quality.get("issues", []),
+            "fixes_required": quality.get("fixes_required", []),
+            "reroute_to": quality.get("reroute_to", ""),
+        }),
     }, conflict_keys=["job_id"])
 
     for fname, (nid, atype) in FILES.items():
-        fp = dd / fname
+        fp = (dd / "assets" / fname) if fname in ASSET_SUBDIR else (dd / fname)
         if not fp.exists():
             continue
         db.upsert("artifacts", {
@@ -145,10 +165,11 @@ def ingest_run(date: str) -> str | None:
         if status not in ("skipped", "pending"):
             bus.emit(job_id, nid, "node.completed", summary, status=status)
             if nid == "reel_auditor":
-                ev = "quality.passed" if quality.get("overall_pass") else "quality.failed"
+                ev = "quality.passed" if passed else "quality.failed"
                 bus.emit(job_id, nid, ev,
                          f"hook {qs.get('hook')} / retention {qs.get('retention')} / "
-                         f"visual {qs.get('visual')} / compliance {qs.get('compliance')}",
+                         f"visual {qs.get('visual_quality', qs.get('visual'))} / "
+                         f"compliance {qs.get('compliance')}",
                          status=quality.get("verdict", ""))
     bus.emit(job_id, None, "job.completed",
              f"Published Reel: {permalink}" if published else "Reel prepared (not published).",
@@ -162,10 +183,18 @@ def ingest_all() -> list[str]:
 
 def _node_state(nid, dd: Path, quality, viral, hooks, final, published):
     has = lambda f: (dd / f).exists()
+    has_asset = lambda f: (dd / "assets" / f).exists()
     # media-producing nodes: completed only if their file exists on disk
-    media = {"scene_studio": "scene_1.jpg", "voice_studio": "voiceover.mp3",
-             "motion_graphics": "reel.mp4", "cover_studio": "cover.jpg",
-             "sound_design": "music_bed.mp3"}
+    media = {"voice_studio": "voiceover.mp3", "motion_graphics": "reel.mp4",
+             "cover_studio": "cover.jpg"}
+    if nid == "scene_studio":
+        return ("completed", "3 background plates ready", "asset_bg_dark.jpg") \
+            if has_asset("asset_bg_dark.jpg") \
+            else ("pending", "Awaiting plates (requires Claude Code conductor).", None)
+    if nid == "sound_design":
+        f = "sound_bed.mp3" if has("sound_bed.mp3") else "music_bed.mp3"
+        return ("completed", "Music bed + SFX ready", f) if has(f) \
+            else ("pending", "Awaiting sound design (requires conductor).", None)
     if nid in media:
         f = media[nid]
         return ("completed", f"{f} ready", f) if has(f) \
@@ -185,6 +214,20 @@ def _node_state(nid, dd: Path, quality, viral, hooks, final, published):
         return "completed", f"Picked reel story (fit {c.get('viral_fit')}).", "02_viral_fit.json"
     if nid == "hook_lab":
         return "completed", f"Hook: {(hooks.get('chosen') or {}).get('text','')[:50]}", "04_hooks.json"
+    if nid == "template_selector":
+        tpl = _load(dd, "07_template.json") or {}
+        return "completed", f"Template: {tpl.get('selected_template', '—')}", "07_template.json"
+    if nid == "motion_variation":
+        mv = _load(dd, "08_motion_variation.json") or {}
+        return "completed", f"Variation: {mv.get('variation_id', '—')} {mv.get('accent_color', '')}", "08_motion_variation.json"
+    if nid == "asset_picker":
+        ap = _load(dd, "09_asset_picker.json") or {}
+        n = len(ap.get("selected_assets", []))
+        paid = ap.get("paid_generation_required")
+        return "completed", f"{n} library plate(s) reused; paid={'yes' if paid else 'no'}", "09_asset_picker.json"
+    if nid == "cost_guard":
+        cg = _load(dd, "cost_guard.json") or {}
+        return "completed", f"Paid gen allowed: {cg.get('allowed')} (cap {cg.get('cap')})", "cost_guard.json"
     if nid == "motion_storyboard":
         return "completed", "Micro-scenes storyboarded.", "07_storyboard.json"
     if nid == "asset_director":
@@ -192,7 +235,8 @@ def _node_state(nid, dd: Path, quality, viral, hooks, final, published):
                 "Assets decided.", "08_assets.json" if has("08_assets.json") else None)
     if nid == "reel_auditor":
         qs = quality.get("scores", {})
-        return "completed", f"hook {qs.get('hook')} / ret {qs.get('retention')} / vis {qs.get('visual')} -> {quality.get('verdict')}", "16_quality.json"
+        vis = qs.get("visual_quality", qs.get("visual"))
+        return "completed", f"hook {qs.get('hook')} / ret {qs.get('retention')} / vis {vis} -> {quality.get('verdict')}", "16_quality.json"
     if nid == "publish_gate":
         return ("completed" if published else "blocked",
                 "Preflight passed." if published else "Held (needs approval).", None)

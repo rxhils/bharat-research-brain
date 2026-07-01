@@ -14,7 +14,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from . import config, state
+from . import config, state, step_sound_design
 
 REMOTION_DIR = Path(__file__).resolve().parent.parent / "remotion"
 FPS = 30
@@ -22,15 +22,22 @@ W, H = 1080, 1920
 
 
 def build_props(date: str, storyboard: dict, subtitles: list[dict]) -> dict:
+    assets_dir = config.run_dir(date) / "assets"
     scenes = []
     for s in storyboard["scenes"]:
         sc = {"start": s["start"], "duration": s["duration"], "kind": s["kind"]}
         for k in ("title", "label", "value", "suffix", "sub", "chips", "text", "points", "accent"):
             if s.get(k) not in (None, "", []):
                 sc[k] = s[k]
+        asset = s.get("asset")
+        if asset and (assets_dir / f"{asset}.jpg").exists():
+            sc["bg"] = f"{asset}.jpg"   # served from remotion/public/run/
         scenes.append(sc)
     return {"fps": FPS, "durationSeconds": round(storyboard["total_duration"], 2),
             "brand": {"name": config.BRAND_NAME, "site": config.BRAND_SITE},
+            "theme": {"accent": storyboard.get("accent_color", "#22D3EE")},
+            "template": storyboard.get("template"),
+            "variation": storyboard.get("variation_id"),
             "scenes": scenes, "subtitles": subtitles}
 
 
@@ -55,10 +62,26 @@ def _music(ff: str, seconds: float, rd: Path) -> Path:
     return out
 
 
+def _stage_assets(date: str) -> int:
+    """Copy this run's background plates into remotion/public/run/ so the
+    composition can load them via staticFile('run/<name>.jpg')."""
+    src = config.run_dir(date) / "assets"
+    dst = REMOTION_DIR / "public" / "run"
+    if dst.exists():
+        shutil.rmtree(dst, ignore_errors=True)
+    dst.mkdir(parents=True, exist_ok=True)
+    n = 0
+    if src.exists():
+        for jpg in src.glob("*.jpg"):
+            shutil.copy2(jpg, dst / jpg.name); n += 1
+    return n
+
+
 def render_video(date: str, props: dict) -> Path:
     """Run the Remotion CLI to render a silent motion video."""
     rd = config.run_dir(date)
     rd.mkdir(parents=True, exist_ok=True)
+    _stage_assets(date)
     props_path = rd / "_remotion_props.json"
     props_path.write_text(json.dumps(props), encoding="utf-8")
     out = rd / "_motion_silent.mp4"
@@ -78,17 +101,22 @@ def build_reel(date: str, storyboard: dict, subtitles: list[dict],
     silent = render_video(date, props)
 
     seconds = props["durationSeconds"]
-    music = _music(ff, seconds, rd)
+    # Sound Design Desk: music + SFX pre-mixed into one bed (falls back to plain music).
+    try:
+        bed = Path(step_sound_design.build_bed(date, storyboard, seconds)["sound_bed"])
+    except Exception:
+        bed = _music(ff, seconds, rd)
     vo = Path(voiceover_mp3) if voiceover_mp3 else (rd / "voiceover.mp3")
     out = rd / "reel.mp4"
 
     if vo.exists():
-        cmd = [ff, "-y", "-i", str(silent), "-i", str(vo), "-i", str(music),
-               "-filter_complex", "[2:a]volume=0.22[m];[1:a][m]amix=inputs=2:duration=first[a]",
+        # voiceover primary; sound bed ducked under it
+        cmd = [ff, "-y", "-i", str(silent), "-i", str(vo), "-i", str(bed),
+               "-filter_complex", "[2:a]volume=0.5[m];[1:a][m]amix=inputs=2:duration=first[a]",
                "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac",
                "-b:a", "160k", "-shortest", str(out)]
     else:
-        cmd = [ff, "-y", "-i", str(silent), "-i", str(music), "-map", "0:v",
+        cmd = [ff, "-y", "-i", str(silent), "-i", str(bed), "-map", "0:v",
                "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-shortest", str(out)]
     subprocess.run(cmd, check=True, capture_output=True)
 

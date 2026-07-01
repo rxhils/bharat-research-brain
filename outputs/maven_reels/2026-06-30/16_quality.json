@@ -1,29 +1,39 @@
 {
   "date": "2026-06-30",
+  "passed": true,
   "scores": {
-    "hook": 88,
-    "retention": 85,
-    "visual": 93,
+    "hook": 92,
+    "retention": 100,
+    "edit_quality": 100,
+    "visual_quality": 92,
+    "subtitle": 100,
+    "voiceover": 92,
     "compliance": 100,
+    "brand": 100,
     "publish": 100
   },
   "gates": {
-    "hook": 85,
-    "retention": 85,
-    "visual": 85,
-    "compliance": 95
+    "hook": 90,
+    "retention": 90,
+    "edit_quality": 90,
+    "visual_quality": 90,
+    "subtitle": 90,
+    "voiceover": 85,
+    "compliance": 95,
+    "brand": 90
   },
-  "passed": {
+  "gate_passed": {
     "hook": true,
     "retention": true,
-    "visual": true,
-    "compliance": true
+    "edit_quality": true,
+    "visual_quality": true,
+    "subtitle": true,
+    "voiceover": true,
+    "compliance": true,
+    "brand": true
   },
-  "overall_pass": true,
-  "retention_issues": [
-    "length 33s outside 15-20s"
-  ],
-  "visual_issues": [],
-  "compliance_violations": [],
+  "issues": [],
+  "fixes_required": [],
+  "reroute_to": "",
   "verdict": "PUBLISH_OK"
 }

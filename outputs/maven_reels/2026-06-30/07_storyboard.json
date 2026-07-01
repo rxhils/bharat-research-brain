@@ -1,14 +1,14 @@
 {
   "date": "2026-06-30",
-  "total_duration": 16.4,
-  "scene_count": 7,
+  "total_duration": 15.2,
+  "scene_count": 8,
   "fps": 30,
   "scenes": [
     {
       "kind": "hook",
-      "duration": 1.4,
-      "title": "Everyone saw the market today but this",
-      "on_screen": "Everyone saw the market today but this",
+      "duration": 1.2,
+      "title": "Here's what investors missed today.",
+      "on_screen": "Here's what investors missed today.",
       "visual": "Hook slams in over dark market grid",
       "motion": "scale-pop + underline wipe",
       "transition_out": "flash",
@@ -16,28 +16,28 @@
       "asset": "asset_bg_dark",
       "scene": 1,
       "start": 0.0,
-      "end": 1.4
+      "end": 1.2
     },
     {
       "kind": "stat",
-      "duration": 2.6,
+      "duration": 2.2,
       "label": "NIFTY IT",
       "value": -2.7,
       "suffix": "%",
       "sub": "",
       "on_screen": "NIFTY IT -2.7%",
-      "visual": "Index stat card slides up + number counter",
+      "visual": "Index stat card + number counter",
       "motion": "slide-up + count-up",
       "transition_out": "slide",
       "sfx": "tick",
       "asset": "asset_bg_dark",
       "scene": 2,
-      "start": 1.4,
-      "end": 4.0
+      "start": 1.2,
+      "end": 3.4
     },
     {
       "kind": "chips",
-      "duration": 2.0,
+      "duration": 1.8,
       "chips": [
         "Information Technology",
         "IT Services",
@@ -50,26 +50,26 @@
       "sfx": "tick",
       "asset": "asset_bg_panel",
       "scene": 3,
-      "start": 4.0,
-      "end": 6.0
+      "start": 3.4,
+      "end": 5.2
     },
     {
       "kind": "reason",
-      "duration": 3.0,
-      "text": "IT is among the most heavily weighted sectors in",
-      "on_screen": "IT is among the most heavily weighted sectors in",
-      "visual": "Key reason as kinetic text card",
-      "motion": "word-by-word rise",
+      "duration": 2.0,
+      "text": "IT is among the most heavily weighted",
+      "on_screen": "IT is among the most heavily weighted",
+      "visual": "Key reason kinetic text",
+      "motion": "word rise",
       "transition_out": "fade",
-      "sfx": "",
+      "sfx": "whoosh",
       "asset": "asset_bg_dark",
       "scene": 4,
-      "start": 6.0,
-      "end": 9.0
+      "start": 5.2,
+      "end": 7.2
     },
     {
       "kind": "chart",
-      "duration": 2.6,
+      "duration": 2.2,
       "points": [
         8,
         7.2,
@@ -87,26 +87,40 @@
       "sfx": "whoosh",
       "asset": "asset_bg_dark",
       "scene": 5,
-      "start": 9.0,
-      "end": 11.6
+      "start": 7.2,
+      "end": 9.4
     },
     {
       "kind": "reason",
-      "duration": 2.4,
-      "text": "For educational context only: the IT drawdown is tied",
-      "on_screen": "For educational context only: the IT drawdown is tied",
-      "visual": "Takeaway as kinetic text",
-      "motion": "word-by-word rise",
+      "duration": 1.8,
+      "text": "sectors in Indian benchmarks and is highly",
+      "on_screen": "sectors in Indian benchmarks and is highly",
+      "visual": "Second reason kinetic text",
+      "motion": "word rise",
       "transition_out": "fade",
       "sfx": "",
       "asset": "asset_bg_panel",
       "scene": 6,
-      "start": 11.6,
-      "end": 14.0
+      "start": 9.4,
+      "end": 11.2
+    },
+    {
+      "kind": "reason",
+      "duration": 1.8,
+      "text": "For educational context only: the IT drawdown is",
+      "on_screen": "For educational context only: the IT drawdown is",
+      "visual": "Takeaway kinetic text",
+      "motion": "word rise",
+      "transition_out": "fade",
+      "sfx": "",
+      "asset": "asset_bg_dark",
+      "scene": 7,
+      "start": 11.2,
+      "end": 13.0
     },
     {
       "kind": "outro",
-      "duration": 2.4,
+      "duration": 2.2,
       "text": "Understand the Indian market with Maven",
       "on_screen": "Maven · trymaven.in",
       "visual": "Maven end card",
@@ -114,9 +128,9 @@
       "transition_out": "",
       "sfx": "",
       "asset": "asset_bg_end",
-      "scene": 7,
-      "start": 14.0,
-      "end": 16.4
+      "scene": 8,
+      "start": 13.0,
+      "end": 15.2
     }
   ]
 }

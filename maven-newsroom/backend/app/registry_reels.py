@@ -35,15 +35,31 @@ REEL_NODES: list[dict] = [
      "component_class": "A", "component_type": "LLM Agent", "intelligent": True,
      "external": False, "in_graph": True, "actual_component": "step06_retention.py",
      "role": "Cuts filler, pattern interrupts every 2-3s, keeps it fast."},
-    {"node_id": "motion_storyboard", "name": "Motion Storyboard", "order": 7,
+    {"node_id": "template_selector", "name": "Template Selector", "order": 7,
+     "component_class": "B", "component_type": "Deterministic Module", "intelligent": False,
+     "external": False, "in_graph": True, "actual_component": "step_template_selector.py",
+     "role": "Picks 1 of 5 reel templates + scene structure for the story."},
+    {"node_id": "motion_variation", "name": "Motion Variation", "order": 8,
+     "component_class": "B", "component_type": "Deterministic Module", "intelligent": False,
+     "external": False, "in_graph": True, "actual_component": "step_motion_variation.py",
+     "role": "Varies accent/motion for a unique look — zero new generation."},
+    {"node_id": "motion_storyboard", "name": "Motion Storyboard", "order": 9,
      "component_class": "B", "component_type": "Deterministic Module", "intelligent": False,
      "external": False, "in_graph": True, "actual_component": "step6_motion_storyboard.py",
      "role": "8-12 fast micro-scenes mapped to animated scene kinds."},
-    {"node_id": "asset_director", "name": "Asset Director", "order": 8,
+    {"node_id": "asset_director", "name": "Asset Director", "order": 10,
      "component_class": "B", "component_type": "Deterministic Module", "intelligent": False,
      "external": False, "in_graph": True, "actual_component": "step7_asset_director.py",
      "role": "Decides the reusable visual assets the motion edit needs."},
-    {"node_id": "scene_studio", "name": "Scene Studio", "order": 9,
+    {"node_id": "asset_picker", "name": "Asset Picker", "order": 11,
+     "component_class": "B", "component_type": "Deterministic Module", "intelligent": False,
+     "external": False, "in_graph": True, "actual_component": "step_asset_picker.py",
+     "role": "Reuses library plates (0 paid generation); flags gaps for approval."},
+    {"node_id": "cost_guard", "name": "Cost Guard", "order": 12,
+     "component_class": "B", "component_type": "Guardrail", "intelligent": False,
+     "external": False, "in_graph": True, "actual_component": "step_cost_guard.py",
+     "role": "Blocks paid Higgsfield generation unless explicitly approved."},
+    {"node_id": "scene_studio", "name": "Scene Studio", "order": 13,
      "component_class": "C", "component_type": "External MCP Service", "intelligent": False,
      "external": True, "in_graph": True,
      "actual_component": "Higgsfield nano_banana_pro (9:16 clean assets)",
@@ -95,6 +111,10 @@ REEL_NODES: list[dict] = [
      "external": False, "in_graph": True, "actual_component": "state.py / artifacts",
      "role": "Stores every reel artifact, score, log and state update."},
 ]
+
+# Normalize order to list position so inserting nodes never requires renumbering.
+for _i, _n in enumerate(REEL_NODES):
+    _n["order"] = _i
 
 REEL_NODES_BY_ID = {n["node_id"]: n for n in REEL_NODES}
 REEL_GRAPH_ORDER = [n["node_id"] for n in sorted(REEL_NODES, key=lambda n: n["order"])

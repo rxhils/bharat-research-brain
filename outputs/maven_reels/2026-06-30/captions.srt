@@ -1,59 +1,83 @@
 1
-00:00:00,000 --> 00:00:01,000
-Everyone saw the market fall today
+00:00:00,000 --> 00:00:00,750
+Here's what investors
 
 2
-00:00:01,000 --> 00:00:02,000
-— but this is the part they missed.
+00:00:00,750 --> 00:00:01,500
+missed today.
 
 3
-00:00:02,000 --> 00:00:04,000
-The Nifty IT index sank about 2.7%
+00:00:01,500 --> 00:00:02,400
+The Nifty IT index
 
 4
-00:00:04,000 --> 00:00:06,000
-— a 3-year low — its third straight
+00:00:02,400 --> 00:00:03,300
+sank about 2.7% on
 
 5
-00:00:06,000 --> 00:00:08,000
-down day.
+00:00:03,300 --> 00:00:04,200
+June 30, sharply
 
 6
-00:00:08,000 --> 00:00:10,500
-IT is one of the heaviest-weighted,
+00:00:04,200 --> 00:00:05,100
+underperforming the
 
 7
-00:00:10,500 --> 00:00:13,000
-most export-sensitive sectors in Indian
+00:00:05,100 --> 00:00:06,000
+Nifty 50 (-0.34%)
 
 8
-00:00:13,000 --> 00:00:15,500
-indices — so when it drops, it drags
+00:00:06,000 --> 00:00:06,917
+IT is among the most
 
 9
-00:00:15,500 --> 00:00:18,000
-the whole benchmark down.
+00:00:06,917 --> 00:00:07,833
+heavily weighted
 
 10
-00:00:18,000 --> 00:00:20,500
-The trigger: fears US rates stay higher
+00:00:07,833 --> 00:00:08,750
+sectors in Indian
 
 11
-00:00:20,500 --> 00:00:23,000
-for longer, plus worries about AI
+00:00:08,750 --> 00:00:09,667
+benchmarks and is
 
 12
-00:00:23,000 --> 00:00:25,500
-disrupting IT services. Educational
+00:00:09,667 --> 00:00:10,583
+highly
 
 13
-00:00:25,500 --> 00:00:28,000
-only, not advice.
+00:00:10,583 --> 00:00:11,500
+export-/US-demand-sensitive.
 
 14
-00:00:28,000 --> 00:00:30,500
-Understand the Indian market better
+00:00:11,500 --> 00:00:12,300
+For educational
 
 15
-00:00:30,500 --> 00:00:33,000
-with Maven. trymaven.in
+00:00:12,300 --> 00:00:13,100
+context only: the IT
+
+16
+00:00:13,100 --> 00:00:13,900
+drawdown is tied to
+
+17
+00:00:13,900 --> 00:00:14,700
+macro (US rate
+
+18
+00:00:14,700 --> 00:00:15,500
+outlook) and
+
+19
+00:00:15,500 --> 00:00:16,500
+Understand the Indian
+
+20
+00:00:16,500 --> 00:00:17,500
+market with Maven.
+
+21
+00:00:17,500 --> 00:00:18,500
+trymaven.in.

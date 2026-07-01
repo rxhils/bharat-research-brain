@@ -1,0 +1,14 @@
+{
+  "date": "2026-06-30",
+  "sound_bed": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\2026-06-30\\sound_bed.mp3",
+  "music": "synth chord bed",
+  "sfx_used": [
+    "impact",
+    "tick",
+    "tick",
+    "whoosh",
+    "whoosh"
+  ],
+  "loudness_check": "passed",
+  "final_audio_mix": "voiceover over ducked sound_bed"
+}
