@@ -1,0 +1,40 @@
+{
+  "date": "reel-2026-07-02-1812-005",
+  "segments": [
+    {
+      "label": "hook",
+      "t0": 0.0,
+      "seconds": 1.5,
+      "narration": "Here's what investors missed today."
+    },
+    {
+      "label": "what",
+      "t0": 1.5,
+      "seconds": 4.5,
+      "narration": "The Nifty IT index surged more than 3% on July 2 after four consecutive sessions of losses."
+    },
+    {
+      "label": "why",
+      "t0": 6.0,
+      "seconds": 5.5,
+      "narration": "The one-day swing from worst-performing to best-performing sector illustrates mean-reversion / bargain-buying dynamics after a."
+    },
+    {
+      "label": "understand",
+      "t0": 11.5,
+      "seconds": 4.0,
+      "narration": "A single day's sector bounce reflects short-term positioning, not a change in fundamentals."
+    },
+    {
+      "label": "cta",
+      "t0": 15.5,
+      "seconds": 3.0,
+      "narration": "Understand the Indian market with Maven. trymaven.in."
+    }
+  ],
+  "total_seconds": 18.5,
+  "narration": "Here's what investors missed today. The Nifty IT index surged more than 3% on July 2 after four consecutive sessions of losses. The one-day swing from worst-performing to best-performing sector illustrates mean-reversion / bargain-buying dynamics after a. A single day's sector bounce reflects short-term positioning, not a change in fundamentals. Understand the Indian market with Maven. trymaven.in.",
+  "compliance": {
+    "violations": []
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "date": "reel-2026-07-02-1812-005",
+  "variation_id": "blue_newsroom",
+  "accent_color": "#38BDF8",
+  "hook_animation": "block-in",
+  "transition_style": "wipe",
+  "chart_style": "dashboard",
+  "subtitle_style": "highlight-blue",
+  "card_style": "panel",
+  "reason": "Rotated to 'blue_newsroom' by date for freshness.",
+  "all_variations": [
+    "teal_terminal",
+    "green_pulse",
+    "white_brief",
+    "blue_newsroom",
+    "orange_alert"
+  ]
+}

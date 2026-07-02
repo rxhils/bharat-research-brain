@@ -1,0 +1,49 @@
+{
+  "date": "reel-2026-07-02-1812-005",
+  "clips_dir": "higgsfield_clips",
+  "planned": [
+    {
+      "shot_id": "shot_01",
+      "clip_path": "higgsfield_clips/shot_01.mp4",
+      "duration": 4,
+      "model": "seedance1_5"
+    },
+    {
+      "shot_id": "shot_02",
+      "clip_path": "higgsfield_clips/shot_02.mp4",
+      "duration": 4,
+      "model": "seedance1_5"
+    },
+    {
+      "shot_id": "shot_03",
+      "clip_path": "higgsfield_clips/shot_03.mp4",
+      "duration": 4,
+      "model": "seedance1_5"
+    },
+    {
+      "shot_id": "shot_04",
+      "clip_path": "higgsfield_clips/shot_04.mp4",
+      "duration": 4,
+      "model": "seedance1_5"
+    },
+    {
+      "shot_id": "shot_05",
+      "clip_path": "higgsfield_clips/shot_05.mp4",
+      "duration": 4,
+      "model": "seedance1_5"
+    },
+    {
+      "shot_id": "shot_06",
+      "clip_path": "higgsfield_clips/shot_06.mp4",
+      "duration": 4,
+      "model": "seedance1_5"
+    }
+  ],
+  "total_clips": 6,
+  "estimated_cost_credits": 40.8,
+  "max_credits_per_reel": 60,
+  "generation_status": "requires_user_action",
+  "approved_from_ui": false,
+  "reason": "Higgsfield primary renderer awaiting operator trigger — paid generation only runs after an explicit UI action, executed by the Claude Code conductor.",
+  "clips": []
+}

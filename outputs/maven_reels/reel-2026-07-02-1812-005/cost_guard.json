@@ -1,0 +1,13 @@
+{
+  "date": "reel-2026-07-02-1812-005",
+  "requested": 0,
+  "approved": false,
+  "allow_paid_generation": false,
+  "use_existing_asset_library": true,
+  "max_per_daily_run": 0,
+  "max_with_approval": 1,
+  "allowed": true,
+  "requires_approval": false,
+  "reason": "No paid generation requested — reusing asset library.",
+  "cap": 0
+}

@@ -79,11 +79,56 @@ def _set_node(job_id: str, nid: str, **f) -> None:
 
 
 # ---------------------------------------------------------------- Run Reel
-def create_reel_job(source: str = "manual_run") -> dict:
-    """New unique reel job. Fresh folder; NOTHING copied from previous runs.
+def _same_day_research(job_id: str) -> dict | None:
+    """Verified research from TODAY (IST calendar day), produced earlier by the
+    5:20 PM cron reel, another conductor reel run, or the carousel pipeline.
 
-    The backend cannot do fresh web research (that is the conductor's job), so
-    the job starts in 'needs_research' — honest, never faked."""
+    Reusing it is honest — the data covers today's session, every source URL
+    and timestamp is preserved unchanged, and the artifact records exactly
+    where it came from. STALE (previous-day) research is never reused."""
+    import json as _json
+
+    today = datetime.now(IST).strftime("%Y-%m-%d")
+    candidates: list[tuple[float, Path, str]] = []
+    if REEL_OUTPUT_ROOT.exists():
+        for d in REEL_OUTPUT_ROOT.iterdir():
+            p = d / "01_research.json"
+            if not (d.is_dir() and d.name != job_id and p.exists()):
+                continue
+            try:
+                r = _json.loads(p.read_text(encoding="utf-8"))
+            except Exception:
+                continue
+            stamp = str(r.get("retrieved_at") or r.get("date") or "")[:10]
+            if stamp == today:
+                candidates.append((p.stat().st_mtime, p, f"reel run {d.name}"))
+    cp = REPO_ROOT / "outputs" / "maven_instagram" / today / "01_research.json"
+    if cp.exists():
+        try:
+            r = _json.loads(cp.read_text(encoding="utf-8"))
+            if str(r.get("date", ""))[:10] == today:
+                candidates.append((cp.stat().st_mtime, cp, f"carousel run {today}"))
+        except Exception:
+            pass
+    if not candidates:
+        return None
+    _, path, src = max(candidates)
+    research = _json.loads(path.read_text(encoding="utf-8"))
+    research["_meta"] = {**research.get("_meta", {}), "reused_from": src,
+                         "reuse_note": "same-day verified research; sources, "
+                                       "figures and timestamps unchanged"}
+    return {"research": research, "source": src}
+
+
+def create_reel_job(source: str = "manual_run") -> dict:
+    """New unique reel job (fresh folder, unique id). If verified SAME-DAY
+    research already exists (cron/conductor/carousel), it is reused — sources
+    preserved — and the deterministic pipeline runs immediately, landing at
+    'awaiting_scene_generation' with the Generate button live in the UI.
+    Only when today has no research at all does the job hold at
+    'needs_research' (the backend cannot do live web research itself)."""
+    import json as _json
+
     job_id = new_job_id()
     run_dir = REEL_OUTPUT_ROOT / job_id
     run_dir.mkdir(parents=True, exist_ok=True)
@@ -97,26 +142,44 @@ def create_reel_job(source: str = "manual_run") -> dict:
         "updated_at": _now(), "approval_status": "pending",
         "publish_status": "not_published", "is_latest": 1, "version": 1,
         "parent_job_id": None, "source": source,
-        "summary": "New reel run — awaiting fresh market research (conductor).",
+        "summary": "New reel run starting…",
     }, conflict_keys=["job_id"])
 
     bus.emit(job_id, "closing_bell", "reel.run.started",
-             f"New reel run {job_id} created (fresh folder, no reuse).",
+             f"New reel run {job_id} created (fresh folder, unique id).",
              status="running")
     _set_node(job_id, "closing_bell", status="completed", progress=100,
               started_at=_now(), completed_at=_now(),
               summary="Manual Run Reel trigger.")
+
+    found = _same_day_research(job_id)
+    if found:
+        (run_dir / "01_research.json").write_text(
+            _json.dumps(found["research"], indent=2, ensure_ascii=False),
+            encoding="utf-8")
+        _set_node(job_id, "market_sentinel", status="completed", progress=100,
+                  started_at=_now(), completed_at=_now(),
+                  summary=f"Reused same-day verified research ({found['source']}) "
+                          "— sources + timestamps preserved.")
+        bus.emit(job_id, "market_sentinel", "reel.research.reused",
+                 f"Same-day verified research reused from {found['source']} "
+                 "(sources preserved, nothing stale).", status="completed")
+        result = continue_after_research(job_id)
+        return {"job_id": job_id, "run_dir": str(run_dir),
+                "review_url": f"/reels/review/{job_id}",
+                "research_source": found["source"], **result}
+
     _set_node(job_id, "market_sentinel", status="pending",
-              summary="Needs fresh research: run the conductor / 5 PM cron to "
-                      "research today's market and drop 01_research.json into "
-                      f"outputs/maven_reels/{job_id}/. No stale data is reused.")
+              summary="No research from today exists yet. It arrives via the "
+                      "5:20 PM cron or the Claude Code conductor — the backend "
+                      "cannot do live web research and never reuses stale data.")
     bus.emit(job_id, "market_sentinel", "reel.research.started",
-             "Fresh research required — the backend never reuses old research. "
-             "Requires Claude Code conductor.", status="pending")
+             "No same-day research available yet — waiting for the cron/"
+             "conductor. Stale data is never reused.", status="pending")
     return {"job_id": job_id, "status": "needs_research", "run_dir": str(run_dir),
             "review_url": f"/reels/review/{job_id}",
-            "message": "New unique run created. Fresh research requires the "
-                       "Claude Code conductor — nothing stale is reused."}
+            "message": "New unique run created. No research from today exists "
+                       "yet — it arrives via the 5:20 PM cron or the conductor."}
 
 
 def continue_after_research(job_id: str, renderer: str | None = None) -> dict:
@@ -144,6 +207,7 @@ def continue_after_research(job_id: str, renderer: str | None = None) -> dict:
                 **{**prep, "verdict": result["verdict"], "scores": result["scores"]}}
 
     if not step_higgsfield_scene_generator.clips_on_disk(job_id):
+        ingest_reels.ingest_run(job_id)   # ingest FIRST — it overwrites status
         db.upsert("jobs", {"job_id": job_id, "status": "awaiting_scene_generation",
                            "current_node": "higgsfield_scene_generator",
                            "updated_at": _now(),
@@ -151,7 +215,6 @@ def continue_after_research(job_id: str, renderer: str | None = None) -> dict:
                                        f"(~{prep.get('estimated_generation_cost')}cr, "
                                        "operator-triggered).")},
                   conflict_keys=["job_id"])
-        ingest_reels.ingest_run(job_id)
         mark_latest(job_id)
         bus.emit(job_id, "higgsfield_scene_generator", "reel.scenes.awaiting",
                  f"Plan ready: {prep.get('shots')} shots, "
