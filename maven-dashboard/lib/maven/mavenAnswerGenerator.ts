@@ -1,13 +1,15 @@
-import type { ContextPack, MavenAnswer, MavenBlock, MavenKeyData, MavenSource } from "./types";
+import type { ContextPack, MavenAnswer, MavenBlock, MavenKeyData, MavenSource, MavenEvidenceSummary } from "./types";
 import { SYSTEM_PROMPT, RETRIEVAL_PACK } from "../india-context";
 import { deepseekJSON } from "../deepseek";
 import { disclaimerText } from "./answerTypeRouter";
 
 const arrowize = (chain: string) => chain.replace(/->/g, "→");
+const SOURCE_CAP = 20; // enough for a deep (22-budget) research pack without an unbounded payload
 
 function realSources(pack: ContextPack): MavenSource[] {
-  const out: MavenSource[] = pack.sourceSnippets.slice(0, 5).map((s) => ({
+  const out: MavenSource[] = pack.sourceSnippets.slice(0, SOURCE_CAP).map((s) => ({
     name: s.source, title: s.title, url: s.url, date: s.date ?? s.published, snippet: s.snippet,
+    domain: s.domain ?? s.source,
     type: (s.sourceRank ?? 9) <= 3 ? "official" : "news",
     confidence: s.confidence ?? "retrieved",
   }));
@@ -15,6 +17,31 @@ function realSources(pack: ContextPack): MavenSource[] {
   if (hasMarket) out.push({ name: "NSE/BSE market data (via Yahoo Finance)", type: "market_data", confidence: "retrieved" });
   out.push({ name: "Maven analysis", type: "analysis", confidence: "analysis_only" });
   return out;
+}
+
+// Evidence summary is derived from the exact sources array shown to the user, so counts always
+// match what the UI renders. Only produced when there is something to report.
+function buildEvidence(pack: ContextPack, sources: MavenSource[]): MavenEvidenceSummary | undefined {
+  const sourceCount = sources.length;
+  if (sourceCount === 0 && !pack.evidenceHint) return undefined;
+  const verifiedSourceCount = sources.filter((s) => s.confidence === "verified").length;
+  const retrievedSourceCount = sources.filter((s) => s.confidence === "retrieved").length;
+  const analysisOnlySourceCount = sources.filter((s) => s.confidence === "analysis_only").length;
+  const officialSourceCount = sources.filter((s) => s.type === "official").length;
+  const unavailableSourceCount = pack.sourceSnippets.filter((s) => s.extractionStatus === "failed").length;
+  const evidenceDepth = pack.evidenceHint?.evidenceDepth;
+  const sourceBudget = pack.evidenceHint?.sourceBudget;
+
+  let coverageStatus: MavenEvidenceSummary["coverageStatus"];
+  const substantive = sourceCount - analysisOnlySourceCount - (sources.some((s) => s.type === "market_data") ? 1 : 0);
+  if (sourceBudget) {
+    const ratio = Math.max(0, substantive) / sourceBudget;
+    coverageStatus = ratio >= 0.7 ? "strong" : ratio >= 0.35 ? "partial" : substantive > 0 ? "thin" : "unavailable";
+  } else {
+    coverageStatus = substantive >= 3 ? "strong" : substantive > 0 ? "partial" : "unavailable";
+  }
+
+  return { sourceCount, verifiedSourceCount, retrievedSourceCount, officialSourceCount, analysisOnlySourceCount, unavailableSourceCount, evidenceDepth, sourceBudget, coverageStatus };
 }
 
 function keyDataFrom(pack: ContextPack): MavenKeyData[] {
@@ -58,12 +85,14 @@ function synthesizeStock(pack: ContextPack, liveFacts: string[], disc: string): 
   blocks.push({ type: "RISK", title: "What is not confirmed", body: "Company-specific confirmation from open sources is limited; treat the catalyst as tentative and cross-check the official filing." + (pack.limitations.length ? " " + pack.limitations.join(" ") : "") });
   blocks.push({ type: "TAKEAWAY", title: "Maven view", body: `Read ${dir} in ${pack.topic} through its own drivers plus sector and flow context - mechanism, not a recommendation.` + (disc ? " " + disc : "") });
 
+  const stockSources = realSources(pack);
   return {
     headline: `${pack.topic}: what's driving ${dir}`,
     summary: (moveFact || `${pack.topic} in focus.`) + (catFact ? " " + catFact : ""),
-    keyData: keyDataFrom(pack), charts: pack.chartData, blocks, sources: realSources(pack),
+    keyData: keyDataFrom(pack), charts: pack.chartData, blocks, sources: stockSources,
     followUps: [`What are the key drivers for ${pack.topic}?`, `How does ${pack.topic}'s sector look today?`, `What would change this view?`],
     disclaimer: disc,
+    evidence: buildEvidence(pack, stockSources),
   };
 }
 
@@ -85,12 +114,14 @@ function synthesize(pack: ContextPack): MavenAnswer {
 
   const limitNote = pack.limitations.length ? " " + pack.limitations.join(" ") : "";
   const head = kb ? capitalize(kb.topic) + ": the India read" : pack.topic + ": the India read";
+  const marketSources = realSources(pack);
   return {
     headline: head,
     summary: (kb?.summary || liveFacts[0] || "Maven read this across India's indices, sectors, flows and macro.") + limitNote,
-    keyData: keyDataFrom(pack), charts: pack.chartData, blocks, sources: realSources(pack),
+    keyData: keyDataFrom(pack), charts: pack.chartData, blocks, sources: marketSources,
     followUps: kb?.followUps?.slice(0, 3) || ["What is driving this specifically?", "How do FII/DII flows affect it?", "What would change this view?"],
     disclaimer: disc,
+    evidence: buildEvidence(pack, marketSources),
   };
 }
 
@@ -119,14 +150,16 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
   const out = await deepseekJSON(system, user, 1500);
   const disc = disclaimerText(pack.disclaimerLevel);
   if (out && typeof out.headline === "string" && Array.isArray(out.blocks)) {
+    const sources = realSources(pack);
     const types = ["DATA", "POINT", "MACRO", "CONTEXT", "RISK", "TAKEAWAY"];
     const blocks: MavenBlock[] = out.blocks.filter((b: any) => b && b.title).map((b: any) => ({ type: (types.includes(String(b.type).toUpperCase()) ? String(b.type).toUpperCase() : "POINT") as MavenBlock["type"], title: String(b.title), body: String(b.body ?? "") }));
     return {
       headline: String(out.headline), summary: String(out.summary ?? ""),
       keyData: Array.isArray(out.keyData) ? out.keyData.map((d: any) => ({ label: String(d.label ?? ""), value: String(d.value ?? ""), change: d.change != null ? String(d.change) : undefined })) : keyDataFrom(pack),
-      charts: pack.chartData, blocks, sources: realSources(pack),
+      charts: pack.chartData, blocks, sources,
       followUps: Array.isArray(out.followUps) && out.followUps.length ? out.followUps.map((f: any) => String(f)).slice(0, 4) : (single ? [`What are the key drivers for ${pack.topic}?`, "What would change this view?"] : (pack.knowledge?.followUps?.slice(0, 3) || [])),
       disclaimer: disc,
+      evidence: buildEvidence(pack, sources),
     };
   }
   return synthesize(pack);

@@ -108,17 +108,32 @@ export type KnowledgeEntry = {
   facts: KnowledgeFact[]; followUps: string[];
 };
 
+export type EvidenceDepth = "light" | "standard" | "deep";
+export type CoverageStatus = "strong" | "partial" | "thin" | "unavailable";
+export type MavenEvidenceSummary = {
+  sourceCount?: number;
+  verifiedSourceCount?: number;
+  retrievedSourceCount?: number;
+  officialSourceCount?: number;
+  analysisOnlySourceCount?: number;
+  unavailableSourceCount?: number;
+  evidenceDepth?: EvidenceDepth;
+  sourceBudget?: number;
+  coverageStatus?: CoverageStatus;
+};
+
 export type ContextPack = {
   question: string; intent: Intent; topic: string;
   answerType: AnswerType; disclaimerLevel: DisclaimerLevel;
   marketData: MarketData; extractedFacts: string[]; sourceSnippets: SourceResult[];
   chartData: ChartSpec[]; limitations: string[];
   knowledge: KnowledgeEntry | null; mechanism: { chain: string; flow: ChartSpec | null } | null;
+  evidenceHint?: { evidenceDepth?: EvidenceDepth; sourceBudget?: number };
 };
 
 export type MavenBlock = { type: "DATA" | "POINT" | "MACRO" | "CONTEXT" | "RISK" | "TAKEAWAY"; title: string; body: string };
 export type MavenKeyData = { label: string; value: string; change?: string };
-export type MavenSource = { name: string; title?: string; url?: string; date?: string; snippet?: string; type?: string; confidence: Confidence };
+export type MavenSource = { name: string; title?: string; url?: string; date?: string; snippet?: string; type?: string; confidence: Confidence; domain?: string };
 export type MavenIntroSection = { title: string; body: string };
 
 export type MavenAnswer = {
@@ -129,6 +144,7 @@ export type MavenAnswer = {
   sources: MavenSource[]; followUps: string[]; disclaimer: string;
   limitations?: string[];
   introSections?: MavenIntroSection[];
+  evidence?: MavenEvidenceSummary;
 };
 
 export type ResolvedStock = { companyName: string; symbol: string; exchange: string; sector: string; confidence: "high" | "medium" | "low" };

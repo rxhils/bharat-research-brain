@@ -18,10 +18,25 @@ export type MavenChart = {
 export type MavenSource = {
   name: string; title?: string; url?: string; date?: string; recency?: string; snippet?: string; type?: string;
   confidence?: "verified" | "retrieved" | "analysis_only" | "unavailable";
+  domain?: string;
 };
 
 export type MavenKeyData = { label: string; value: string; change?: string };
 export type MavenIntroSection = { title: string; body: string };
+
+export type MavenEvidenceDepth = "light" | "standard" | "deep";
+export type MavenCoverageStatus = "strong" | "partial" | "thin" | "unavailable";
+export type MavenEvidenceSummary = {
+  sourceCount?: number;
+  verifiedSourceCount?: number;
+  retrievedSourceCount?: number;
+  officialSourceCount?: number;
+  analysisOnlySourceCount?: number;
+  unavailableSourceCount?: number;
+  evidenceDepth?: MavenEvidenceDepth;
+  sourceBudget?: number;
+  coverageStatus?: MavenCoverageStatus;
+};
 
 export type MavenAskResponse = {
   type?: MavenAnswerType;
@@ -37,4 +52,5 @@ export type MavenAskResponse = {
   disclaimerLevel?: "none" | "light" | "standard" | "strong";
   limitations?: string[];
   introSections?: MavenIntroSection[];
+  evidence?: MavenEvidenceSummary;
 };

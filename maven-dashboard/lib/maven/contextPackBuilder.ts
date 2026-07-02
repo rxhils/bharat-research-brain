@@ -132,7 +132,11 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   if (cmp.length) charts.push({ type: "comparison_table", title: singleStock ? "Key metrics" : "Valuation comparison", dataSource: "snapshots", data: cmp });
   if (mechanism.flow) charts.push(mechanism.flow);
 
-  return { question: query, intent: plan.intent, topic: plan.topic, answerType, disclaimerLevel, marketData: md, extractedFacts: facts, sourceSnippets: allSources, chartData: charts, limitations, knowledge, mechanism };
+  return {
+    question: query, intent: plan.intent, topic: plan.topic, answerType, disclaimerLevel, marketData: md,
+    extractedFacts: facts, sourceSnippets: allSources, chartData: charts, limitations, knowledge, mechanism,
+    evidenceHint: stockPlan ? { evidenceDepth: stockPlan.depth, sourceBudget: stockPlan.sourceBudget } : undefined,
+  };
 }
 
 function comparisonRows(snaps: CompanySnapshot[]): Record<string, unknown>[] {

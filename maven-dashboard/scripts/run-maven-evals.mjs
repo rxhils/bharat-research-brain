@@ -13,7 +13,7 @@ async function ask(query) {
 console.log(`Maven evals -> ${BASE}  (${CASES.length} cases)\n`);
 const results = [];
 for (const c of CASES) {
-  try { const { j, ms } = await ask(c.query); results.push({ id: c.id, category: c.category, query: c.query, headline: j.headline, ...scoreCase(c, j, ms) }); }
+  try { const { j, ms } = await ask(c.query); results.push({ id: c.id, category: c.category, query: c.query, headline: j.headline, evidence: j.evidence, ...scoreCase(c, j, ms) }); }
   catch (e) { results.push({ id: c.id, category: c.category, query: c.query, pass: false, score: 0, reasons: ["ERROR " + e.message], leak: [], refused: false, latencyMs: 0 }); }
 }
 
@@ -24,17 +24,26 @@ const byCat = {};
 for (const r of results) { (byCat[r.category] ??= { p: 0, n: 0 }); byCat[r.category].n++; if (r.pass) byCat[r.category].p++; }
 const leakFails = results.filter((r) => r.leak && r.leak.length);
 const refusalFails = results.filter((r) => { const c = CASES.find((x) => x.id === r.id); return c.mustRefuse && !r.refused; });
+// Evidence & Deep Research UI v1: for stock-research categories, evidence must be a well-formed
+// object (schema integrity, not a threshold on source counts - those depend on a live provider).
+const EVIDENCE_CATEGORIES = ["single_stock", "comparison", "nse_universe", "company_data"];
+const evidenceFails = results.filter((r) => {
+  const c = CASES.find((x) => x.id === r.id);
+  if (!c || !EVIDENCE_CATEGORIES.includes(c.category)) return false;
+  const ev = r.evidence;
+  return ev == null || typeof ev !== "object" || typeof ev.sourceCount !== "number" || Number.isNaN(ev.sourceCount);
+});
 
 console.log("ID   ACTUAL TYPE               P   SC  REASONS");
 for (const r of results) console.log(`${r.id.padEnd(4)} ${String(r.type || "-").padEnd(24)} ${r.pass ? "OK" : "XX"}  ${String(r.score).padStart(3)}  ${(r.reasons || []).join("; ")}`);
 
 console.log(`\nTOTAL ${results.length}   passed ${passed}   failed ${results.length - passed}   avgScore ${avg}   avgLatency ${avgLat}ms`);
 console.log("by category:  " + Object.entries(byCat).map(([k, v]) => `${k} ${v.p}/${v.n}`).join("   "));
-console.log(`leakage failures: ${leakFails.length}   refusal failures: ${refusalFails.length}`);
+console.log(`leakage failures: ${leakFails.length}   refusal failures: ${refusalFails.length}   evidence-schema failures: ${evidenceFails.length}`);
 const top = results.filter((r) => !r.pass).slice(0, 10);
 if (top.length) { console.log("\nTop failures:"); for (const r of top) console.log(`  ${r.id}  ${r.query}  ->  ${(r.reasons || []).join("; ")}`); }
 
-const report = { generatedAtMs: Date.now(), base: BASE, total: results.length, passed, failed: results.length - passed, avgScore: avg, avgLatencyMs: avgLat, byCategory: byCat, leakageFailures: leakFails.map((r) => r.id), refusalFailures: refusalFails.map((r) => r.id), results };
+const report = { generatedAtMs: Date.now(), base: BASE, total: results.length, passed, failed: results.length - passed, avgScore: avg, avgLatencyMs: avgLat, byCategory: byCat, leakageFailures: leakFails.map((r) => r.id), refusalFailures: refusalFails.map((r) => r.id), evidenceSchemaFailures: evidenceFails.map((r) => r.id), results };
 writeFileSync(new URL("./evals/latest-report.json", import.meta.url), JSON.stringify(report, null, 2));
 console.log("\nreport -> scripts/evals/latest-report.json");
-process.exitCode = leakFails.length === 0 && refusalFails.length === 0 ? 0 : 1;
+process.exitCode = leakFails.length === 0 && refusalFails.length === 0 && evidenceFails.length === 0 ? 0 : 1;

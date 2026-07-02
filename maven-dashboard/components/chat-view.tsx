@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { useReducedMotionSafe } from "./motion";
 import { MavenChartRenderer, MechanismStepper } from "./maven-charts";
+import { MavenEvidenceSummaryCard } from "./maven-evidence";
+import { MavenSourcePanel } from "./maven-source-panel";
 import type { MavenAskResponse } from "@/lib/maven-types";
 
 const SUGGESTIONS = [
@@ -316,6 +318,7 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
 
           {!minimal && dataCharts.length > 0 && <div className="mt-6"><MavenChartRenderer charts={dataCharts} /></div>}
           {!minimal && flowChart?.data && flowChart.data.length > 0 && <div className="mt-4"><MechanismStepper steps={flowChart.data as { label?: string; step?: number }[]} /></div>}
+          {!minimal && <MavenEvidenceSummaryCard evidence={a.evidence} />}
 
           {blocks.length > 0 && (
             <motion.div className="mt-6 space-y-3" initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.1, delayChildren: 0.05 } } }}>
@@ -335,24 +338,7 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
             </motion.div>
           )}
 
-          {!minimal && sources.length > 0 && (
-            <div className="mt-6 flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] uppercase tracking-wider text-dim">Sources</span>
-              {sources.map((s, i) => {
-                const meta = s.date || s.recency;
-                const dot = s.confidence === "verified" || s.confidence === "retrieved" ? "bg-emerald/70" : "bg-white/30";
-                const inner = (
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className={"h-1 w-1 rounded-full " + dot} aria-hidden />
-                    {s.name}{meta ? " · " + meta : ""}
-                  </span>
-                );
-                return s.url
-                  ? <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="rounded-md border border-hairline bg-white/[0.03] px-2.5 py-1 text-[11px] text-muted transition-colors hover:border-emerald/40 hover:text-ink">{inner}</a>
-                  : <span key={i} className="rounded-md border border-hairline bg-white/[0.03] px-2.5 py-1 text-[11px] text-muted">{inner}</span>;
-              })}
-            </div>
-          )}
+          {!minimal && <MavenSourcePanel sources={sources} />}
 
           {!minimal && limitations.length > 0 && (
             <div className="mt-2.5 text-[10px] leading-snug text-dim">Limitations: {limitations.join("; ")}</div>
@@ -405,7 +391,7 @@ function ModelSelector({ model, setModel }: { model: string; setModel: (id: stri
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
             transition={{ type: "spring", stiffness: 380, damping: 28 }}
-            className="absolute bottom-full left-0 z-30 mb-2 w-72 origin-bottom-left rounded-2xl bg-gradient-to-b from-emerald/25 via-white/[0.06] to-transparent p-px shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)]">
+            className="absolute bottom-full right-0 z-30 mb-2 w-72 origin-bottom-right rounded-2xl bg-gradient-to-b from-emerald/25 via-white/[0.06] to-transparent p-px shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)]">
             <div className="rounded-2xl bg-panel/95 p-1.5 backdrop-blur-xl">
               <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-dim">Model</div>
               <motion.div initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.05 } } }}>
@@ -443,7 +429,7 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
 }) {
   return (
     <div className={(empty ? "mt-10 sm:mt-14 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
-      <div className="mb-2.5 flex items-center px-1">
+      <div className="mb-2.5 flex items-center justify-end px-1">
         <ModelSelector model={model} setModel={setModel} />
       </div>
       <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-all focus-within:from-emerald/60 focus-within:shadow-[0_0_30px_-10px_rgba(52,211,153,0.5)]">

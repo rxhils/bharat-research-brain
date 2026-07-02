@@ -1,11 +1,11 @@
 {
-  "generatedAtMs": 1782974994149,
-  "base": "http://localhost:3008/api/ask",
-  "total": 69,
-  "passed": 69,
+  "generatedAtMs": 1782977029371,
+  "base": "http://localhost:3010/api/ask",
+  "total": 89,
+  "passed": 89,
   "failed": 0,
   "avgScore": 100,
-  "avgLatencyMs": 73,
+  "avgLatencyMs": 92,
   "byCategory": {
     "greeting": {
       "p": 10,
@@ -46,10 +46,15 @@
     "official_source": {
       "p": 3,
       "n": 3
+    },
+    "nse_universe": {
+      "p": 20,
+      "n": 20
     }
   },
   "leakageFailures": [],
   "refusalFailures": [],
+  "evidenceSchemaFailures": [],
   "results": [
     {
       "id": "A1",
@@ -67,7 +72,7 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 60
+      "latencyMs": 62
     },
     {
       "id": "A2",
@@ -103,7 +108,7 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 8
     },
     {
       "id": "A4",
@@ -121,7 +126,7 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 7
+      "latencyMs": 10
     },
     {
       "id": "A5",
@@ -139,13 +144,22 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 8
+      "latencyMs": 11
     },
     {
       "id": "B1",
       "category": "market_summary",
       "query": "Summarize today's Indian market",
       "headline": "Indian market today: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -157,13 +171,22 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 224
+      "latencyMs": 28
     },
     {
       "id": "B2",
       "category": "market_summary",
       "query": "Why is Nifty moving today?",
       "headline": "Nifty 50: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -182,6 +205,15 @@
       "category": "market_summary",
       "query": "Why is Bank Nifty moving today?",
       "headline": "Indian banks: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -193,13 +225,22 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 25
     },
     {
       "id": "B4",
       "category": "market_summary",
       "query": "What sectors are leading today?",
       "headline": "What sectors are leading today?: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -211,13 +252,22 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 14
+      "latencyMs": 30
     },
     {
       "id": "B5",
       "category": "market_summary",
       "query": "Why is Sensex up today?",
       "headline": "Sensex: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -229,13 +279,22 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 26
     },
     {
       "id": "B6",
       "category": "market_summary",
       "query": "How are midcaps doing today?",
       "headline": "How are midcaps doing today?: the India read",
+      "evidence": {
+        "sourceCount": 1,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 0,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -247,13 +306,22 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 8
+      "latencyMs": 22
     },
     {
       "id": "C1",
       "category": "macro",
       "query": "How does crude oil affect Indian markets?",
       "headline": "Crude oil and India: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -265,13 +333,22 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 26
     },
     {
       "id": "C2",
       "category": "macro",
       "query": "What sectors benefit from softer crude?",
       "headline": "Crude oil and India: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -283,13 +360,22 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 26
     },
     {
       "id": "C3",
       "category": "macro",
       "query": "What happens when USD/INR weakens?",
       "headline": "USD/INR: the India read",
+      "evidence": {
+        "sourceCount": 1,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 0,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -301,13 +387,22 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 22
     },
     {
       "id": "C4",
       "category": "macro",
       "query": "What happens when 10Y G-Sec yields fall?",
       "headline": "G-Sec yields and banks: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -319,13 +414,22 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 25
     },
     {
       "id": "C5",
       "category": "macro",
       "query": "How do FII flows affect Indian markets?",
       "headline": "FII/DII flows: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -337,13 +441,22 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 24
     },
     {
       "id": "C6",
       "category": "macro",
       "query": "How does RBI repo rate affect banks?",
       "headline": "RBI policy: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -355,13 +468,22 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 25
     },
     {
       "id": "C7",
       "category": "macro",
       "query": "How does monsoon affect Indian equities?",
       "headline": "Monsoon and rural demand: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -373,13 +495,22 @@
       "sources": 2,
       "limitations": 1,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 26
     },
     {
       "id": "C8",
       "category": "macro",
       "query": "How do Indian metals track China demand?",
       "headline": "Metals and global growth: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -391,13 +522,22 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 24
     },
     {
       "id": "C9",
       "category": "macro",
       "query": "How does a weak rupee affect Indian IT?",
       "headline": "USD/INR: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -409,13 +549,22 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 24
     },
     {
       "id": "C10",
       "category": "macro",
       "query": "How do rising US yields affect India?",
       "headline": "How do rising US yields affect India?: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -427,13 +576,24 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 25
     },
     {
       "id": "D1",
       "category": "single_stock",
       "query": "Why is Reliance moving today?",
       "headline": "Reliance Industries: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -445,13 +605,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 231
+      "latencyMs": 19
     },
     {
       "id": "D2",
       "category": "single_stock",
       "query": "Why is HDFC Bank down today?",
       "headline": "HDFC Bank: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -463,13 +634,24 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 135
+      "latencyMs": 20
     },
     {
       "id": "D3",
       "category": "single_stock",
       "query": "Explain ICICI Bank today",
       "headline": "ICICI Bank: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "light",
+        "sourceBudget": 6,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -481,13 +663,24 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 128
+      "latencyMs": 123
     },
     {
       "id": "D4",
       "category": "single_stock",
       "query": "What changed in Tata Motors?",
       "headline": "Tata Motors: what's driving the move",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -495,17 +688,28 @@
       "type": "single_stock_research",
       "refused": true,
       "blocks": 5,
-      "charts": 3,
+      "charts": 4,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 7,
       "leak": [],
-      "latencyMs": 493
+      "latencyMs": 323
     },
     {
       "id": "D5",
       "category": "single_stock",
       "query": "Why is Zomato falling?",
       "headline": "Zomato (Eternal): what's driving the move",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -517,13 +721,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 590
+      "latencyMs": 325
     },
     {
       "id": "D6",
       "category": "single_stock",
       "query": "Why is Paytm moving?",
       "headline": "Paytm (One97): what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -535,13 +750,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 278
+      "latencyMs": 130
     },
     {
       "id": "D7",
       "category": "single_stock",
       "query": "Why is BEL moving?",
       "headline": "Bharat Electronics: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -553,13 +779,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 284
+      "latencyMs": 132
     },
     {
       "id": "D8",
       "category": "single_stock",
       "query": "Why is HAL moving?",
       "headline": "Hindustan Aeronautics: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -571,13 +808,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 284
+      "latencyMs": 124
     },
     {
       "id": "D9",
       "category": "single_stock",
       "query": "Why is Infosys moving today?",
       "headline": "Infosys: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -589,13 +837,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 133
+      "latencyMs": 240
     },
     {
       "id": "D10",
       "category": "single_stock",
       "query": "Why is SBI moving today?",
       "headline": "State Bank of India: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -607,13 +866,24 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 129
+      "latencyMs": 274
     },
     {
       "id": "D11",
       "category": "single_stock",
       "query": "Why is Bharti Airtel moving?",
       "headline": "Why is Bharti Airtel moving?: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -625,13 +895,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 285
+      "latencyMs": 234
     },
     {
       "id": "D12",
       "category": "single_stock",
       "query": "Why is Coal India moving?",
       "headline": "Coal India: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -643,13 +924,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 127
+      "latencyMs": 133
     },
     {
       "id": "E1",
       "category": "comparison",
       "query": "Compare HDFC Bank and ICICI Bank",
       "headline": "Indian banks: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -661,13 +953,24 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 22
     },
     {
       "id": "E2",
       "category": "comparison",
       "query": "Compare Reliance and ONGC",
       "headline": "Compare Reliance and ONGC: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -679,13 +982,24 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 137
+      "latencyMs": 124
     },
     {
       "id": "E3",
       "category": "comparison",
       "query": "Compare TCS and Infosys",
       "headline": "Indian IT: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 90,
       "pass": true,
       "threshold": 80,
@@ -699,13 +1013,24 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 120
+      "latencyMs": 226
     },
     {
       "id": "E4",
       "category": "comparison",
       "query": "Compare Tata Motors and M&M",
       "headline": "Compare Tata Motors and M&M: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 90,
       "pass": true,
       "threshold": 80,
@@ -719,13 +1044,24 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 231
+      "latencyMs": 126
     },
     {
       "id": "E5",
       "category": "comparison",
       "query": "Compare Zomato and Swiggy",
       "headline": "Compare Zomato and Swiggy: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -737,13 +1073,24 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 126
+      "latencyMs": 125
     },
     {
       "id": "F1",
       "category": "company_data",
       "query": "What are the latest results for HDFC Bank?",
       "headline": "HDFC Bank: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -755,13 +1102,24 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 18
     },
     {
       "id": "F2",
       "category": "company_data",
       "query": "What is the shareholding pattern of Reliance?",
       "headline": "Reliance Industries: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -773,13 +1131,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 20
     },
     {
       "id": "F3",
       "category": "company_data",
       "query": "What are Reliance's key fundamentals?",
       "headline": "Reliance Industries: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -791,13 +1160,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 18
     },
     {
       "id": "F4",
       "category": "company_data",
       "query": "What is HDFC Bank's valuation context?",
       "headline": "HDFC Bank: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -809,7 +1189,7 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 18
     },
     {
       "id": "G1",
@@ -845,7 +1225,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 6
     },
     {
       "id": "G3",
@@ -863,7 +1243,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 6
     },
     {
       "id": "G4",
@@ -881,7 +1261,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 6
     },
     {
       "id": "G5",
@@ -917,7 +1297,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 7
+      "latencyMs": 6
     },
     {
       "id": "H2",
@@ -953,7 +1333,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 5
+      "latencyMs": 6
     },
     {
       "id": "H4",
@@ -989,13 +1369,22 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "latencyMs": 10
     },
     {
       "id": "T1",
       "category": "concept",
       "query": "What is FAR?",
       "headline": "FII/DII flows: the India read",
+      "evidence": {
+        "sourceCount": 1,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 0,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1014,24 +1403,15 @@
       "category": "concept",
       "query": "What is CASA?",
       "headline": "Indian banks: the India read",
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "basic_concept",
-      "refused": false,
-      "blocks": 4,
-      "charts": 1,
-      "sources": 1,
-      "limitations": 0,
-      "leak": [],
-      "latencyMs": 8
-    },
-    {
-      "id": "T3",
-      "category": "concept",
-      "query": "What is NIM?",
-      "headline": "Indian banks: the India read",
+      "evidence": {
+        "sourceCount": 1,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 0,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1046,10 +1426,48 @@
       "latencyMs": 9
     },
     {
+      "id": "T3",
+      "category": "concept",
+      "query": "What is NIM?",
+      "headline": "Indian banks: the India read",
+      "evidence": {
+        "sourceCount": 1,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 0,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "basic_concept",
+      "refused": false,
+      "blocks": 4,
+      "charts": 1,
+      "sources": 1,
+      "limitations": 0,
+      "leak": [],
+      "latencyMs": 11
+    },
+    {
       "id": "T4",
       "category": "concept",
       "query": "Explain FII vs DII",
       "headline": "FII/DII flows: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1061,13 +1479,22 @@
       "sources": 2,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 16
     },
     {
       "id": "T5",
       "category": "concept",
       "query": "What is a G-Sec?",
       "headline": "G-Sec yields and banks: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1079,13 +1506,24 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 25
     },
     {
       "id": "D13",
       "category": "single_stock",
       "query": "Why is Adani Enterprises moving?",
       "headline": "Adani Enterprises: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1097,13 +1535,24 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 288
+      "latencyMs": 122
     },
     {
       "id": "D14",
       "category": "single_stock",
       "query": "Why is Sun Pharma moving?",
       "headline": "Sun Pharma: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1115,13 +1564,22 @@
       "sources": 2,
       "limitations": 5,
       "leak": [],
-      "latencyMs": 290
+      "latencyMs": 130
     },
     {
       "id": "C11",
       "category": "macro",
       "query": "How does inflation affect Indian markets?",
       "headline": "inflation: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1133,13 +1591,22 @@
       "sources": 2,
       "limitations": 1,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 26
     },
     {
       "id": "B7",
       "category": "market_summary",
       "query": "Why are PSU banks moving today?",
       "headline": "Indian banks: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1151,13 +1618,24 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 25
     },
     {
       "id": "I1",
       "category": "official_source",
       "query": "Latest announcement for HDFC Bank",
       "headline": "HDFC Bank: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1169,13 +1647,22 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 13
     },
     {
       "id": "I2",
       "category": "official_source",
       "query": "RBI latest repo rate decision",
       "headline": "RBI policy: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1187,13 +1674,22 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 25
     },
     {
       "id": "I3",
       "category": "official_source",
       "query": "SEBI latest circular",
       "headline": "SEBI latest circular: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "unavailable"
+      },
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1205,7 +1701,7 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 27
     },
     {
       "id": "J1",
@@ -1259,7 +1755,7 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 7
+      "latencyMs": 6
     },
     {
       "id": "J4",
@@ -1277,7 +1773,7 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 8
+      "latencyMs": 7
     },
     {
       "id": "J5",
@@ -1296,6 +1792,586 @@
       "limitations": 0,
       "leak": [],
       "latencyMs": 7
+    },
+    {
+      "id": "K1",
+      "category": "nse_universe",
+      "query": "Why is Poonawalla Fincorp moving?",
+      "headline": "Poonawalla Fincorp Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 126
+    },
+    {
+      "id": "K2",
+      "category": "nse_universe",
+      "query": "Explain Lloyds Metals",
+      "headline": "Lloyds Metals And Energy Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "light",
+        "sourceBudget": 6,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 428
+    },
+    {
+      "id": "K3",
+      "category": "nse_universe",
+      "query": "What happened to Apar Industries?",
+      "headline": "Apar Industries Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 382
+    },
+    {
+      "id": "K4",
+      "category": "nse_universe",
+      "query": "Latest announcement for Coromandel",
+      "headline": "Coromandel International Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 254
+    },
+    {
+      "id": "K5",
+      "category": "nse_universe",
+      "query": "Why is Garden Reach Shipbuilders moving?",
+      "headline": "Garden Reach Shipbuilders & Engineers Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 308
+    },
+    {
+      "id": "K6",
+      "category": "nse_universe",
+      "query": "Explain Mazagon Dock",
+      "headline": "Mazagon Dock Shipbuilders Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "light",
+        "sourceBudget": 6,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 145
+    },
+    {
+      "id": "K7",
+      "category": "nse_universe",
+      "query": "What changed in Angel One?",
+      "headline": "Angel One Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 291
+    },
+    {
+      "id": "K8",
+      "category": "nse_universe",
+      "query": "Why is KFin Tech moving?",
+      "headline": "Kfin Technologies Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 148
+    },
+    {
+      "id": "K9",
+      "category": "nse_universe",
+      "query": "Explain BSE Ltd",
+      "headline": "BSE Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "light",
+        "sourceBudget": 6,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 121
+    },
+    {
+      "id": "K10",
+      "category": "nse_universe",
+      "query": "Latest results for Polycab",
+      "headline": "Polycab India Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 157
+    },
+    {
+      "id": "K11",
+      "category": "nse_universe",
+      "query": "Shareholding pattern of Dixon Technologies",
+      "headline": "Dixon Technologies (India) Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 398
+    },
+    {
+      "id": "K12",
+      "category": "nse_universe",
+      "query": "Why is Kaynes Technology moving?",
+      "headline": "Kaynes Technology India Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 295
+    },
+    {
+      "id": "K13",
+      "category": "nse_universe",
+      "query": "Explain Cochin Shipyard",
+      "headline": "Cochin Shipyard Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "light",
+        "sourceBudget": 6,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 277
+    },
+    {
+      "id": "K14",
+      "category": "nse_universe",
+      "query": "What happened to APL Apollo?",
+      "headline": "APL Apollo Tubes Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 306
+    },
+    {
+      "id": "K15",
+      "category": "nse_universe",
+      "query": "Why is Newgen Software moving?",
+      "headline": "Newgen Software Technologies Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 303
+    },
+    {
+      "id": "K16",
+      "category": "nse_universe",
+      "query": "Explain Angel One",
+      "headline": "Angel One Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "light",
+        "sourceBudget": 6,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 5,
+      "leak": [],
+      "latencyMs": 11
+    },
+    {
+      "id": "K17",
+      "category": "nse_universe",
+      "query": "Give me a full research view on Tata Motors",
+      "headline": "Tata Motors: what's driving the move",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "deep",
+        "sourceBudget": 22,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 4,
+      "sources": 2,
+      "limitations": 7,
+      "leak": [],
+      "latencyMs": 15
+    },
+    {
+      "id": "K18",
+      "category": "nse_universe",
+      "query": "Compare HAL and BEL",
+      "headline": "Compare HAL and BEL: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_comparison",
+      "refused": false,
+      "blocks": 4,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 4,
+      "leak": [],
+      "latencyMs": 12
+    },
+    {
+      "id": "K19",
+      "category": "nse_universe",
+      "query": "Compare ONGC and Oil India",
+      "headline": "Crude oil and India: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_comparison",
+      "refused": false,
+      "blocks": 6,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 4,
+      "leak": [],
+      "latencyMs": 222
+    },
+    {
+      "id": "K20",
+      "category": "nse_universe",
+      "query": "Compare Tata Elxsi and KPIT Tech",
+      "headline": "Indian IT: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_comparison",
+      "refused": false,
+      "blocks": 6,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 2,
+      "leak": [],
+      "latencyMs": 152
     }
   ]
 }
