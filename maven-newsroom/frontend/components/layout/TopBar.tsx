@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CalendarDays, CircleDot, Clock } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Job, Meta } from "@/lib/types";
@@ -8,11 +9,20 @@ import { statusMeta } from "@/lib/constants";
 export function TopBar() {
   const [meta, setMeta] = useState<Meta | null>(null);
   const [latest, setLatest] = useState<Job | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
-    api.meta().then(setMeta).catch(() => {});
-    api.jobs().then((r) => setLatest(r.jobs[0] ?? null)).catch(() => {});
-  }, []);
+    // Refetch on every route change (this layout persists across navigation,
+    // so a mount-only effect goes stale the moment a newer job is created)
+    // plus a light poll so the pill self-corrects without any navigation.
+    const load = () => {
+      api.meta().then(setMeta).catch(() => {});
+      api.jobs().then((r) => setLatest(r.jobs[0] ?? null)).catch(() => {});
+    };
+    load();
+    const id = setInterval(load, 20000);
+    return () => clearInterval(id);
+  }, [pathname]);
 
   const marketOpen = meta?.market.open;
   const js = latest ? statusMeta(latest.status) : null;

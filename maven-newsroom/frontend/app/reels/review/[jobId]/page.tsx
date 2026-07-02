@@ -43,16 +43,33 @@ function useArtifact<T = any>(jobId: string, name: string) {
   const [data, setData] = useState<T | null>(null);
   useEffect(() => {
     let live = true;
-    fetch(api.artifactUrl(jobId, name)).then((x) => (x.ok ? x.json() : null))
+    const load = () => fetch(api.artifactUrl(jobId, name)).then((x) => (x.ok ? x.json() : null))
       .then((d) => live && setData(d)).catch(() => {});
-    return () => { live = false; };
+    load();
+    // Poll so every artifact on the page (scores, storyboard, etc.) picks up
+    // real content once generation/assembly completes — no manual reload.
+    const id = setInterval(load, 15000);
+    return () => { live = false; clearInterval(id); };
   }, [jobId, name]);
   return data;
 }
 
 /* status label from job + audit */
+/** job.status ('generation_approved') and clips.generation_status
+ * ('approved_awaiting_conductor') describe the SAME moment with different raw
+ * strings — this is the one place that turns either into the human phrase. */
+function humanStatus(raw: string | undefined | null): string | null {
+  if (raw === "generation_approved" || raw === "approved_awaiting_conductor")
+    return "Approved — waiting for Claude Code to generate";
+  if (raw === "awaiting_scene_generation") return "Awaiting approval to generate";
+  if (raw === "requires_user_action") return "Awaiting approval to generate";
+  return null;
+}
+
 function statusLabel(job: Job | null, passed: boolean, hasScores: boolean): { text: string; tone: "ok" | "warn" | "muted" | "teal" } {
   if (job?.publish_status === "published") return { text: "Published", tone: "ok" };
+  const gen = humanStatus(job?.status);
+  if (gen) return { text: gen, tone: "teal" };
   if (job?.approval_status === "approved") return { text: "Approved", tone: "teal" };
   if (job?.approval_status === "rejected") return { text: "Rejected", tone: "warn" };
   if (passed) return { text: "Ready for Approval", tone: "teal" };
@@ -102,13 +119,25 @@ export default function ReelReviewPage() {
   const sceneQuality = useArtifact(jobId, "13_scene_quality.json");
   const [clips, setClips] = useState<any>(null);
   useEffect(() => {
-    api.reelClips(jobId).then(setClips).catch(() => setClips(null));
+    const load = () => api.reelClips(jobId).then(setClips).catch(() => setClips(null));
+    load();
+    // Poll while waiting on the conductor so the page updates itself once
+    // clips land — the operator shouldn't have to guess when to refresh.
+    const id = setInterval(load, 15000);
+    return () => clearInterval(id);
   }, [jobId]);
 
-  const refresh = useCallback(() => { api.job(jobId).then(setJob).catch(() => {}); }, [jobId]);
+  const refresh = useCallback(() => {
+    api.job(jobId).then(setJob).catch(() => {});
+    api.artifacts(jobId).then((a) => setArts(a.artifacts.map((x) => x.name))).catch(() => {});
+  }, [jobId]);
   useEffect(() => {
     refresh();
-    api.artifacts(jobId).then((a) => setArts(a.artifacts.map((x) => x.name))).catch(() => {});
+    // Same rationale as the clips poll above: while a reel is awaiting/mid
+    // generation, keep the whole page (status, reel.mp4 availability, scores)
+    // current without requiring a manual reload.
+    const id = setInterval(refresh, 15000);
+    return () => clearInterval(id);
   }, [jobId, refresh]);
 
   // version comparison: fetch the parent version's auditor scores
@@ -160,6 +189,7 @@ export default function ReelReviewPage() {
   const hasScores = !!quality?.scores;
   const verdict = quality?.verdict ?? "";
   const hasReel = arts.includes("reel.mp4");
+  const awaitingClips = !hasReel;   // scene/animation/visual scores are placeholders until the reel is assembled
   const hasCover = arts.includes("cover.jpg");
   const plates = ["asset_bg_dark.jpg", "asset_bg_panel.jpg", "asset_bg_end.jpg"].filter((p) => arts.includes(p));
   const label = statusLabel(job, passed, hasScores);
@@ -202,9 +232,16 @@ export default function ReelReviewPage() {
                 {clips.generation_status === "requires_user_action"
                   ? "Nothing is generating yet — the animated scenes wait for your approval."
                   : clips.generation_status === "approved_awaiting_conductor"
-                  ? "Approved ✓ — the Claude Code conductor generates the scenes next."
+                  ? "Approved ✓ — nothing is generating automatically."
                   : `Scene generation: ${clips.generation_status}`}
               </div>
+              {clips.generation_status === "approved_awaiting_conductor" && (
+                <p className="text-xs text-ink-muted leading-relaxed max-w-[280px]">
+                  Next: go back to your Claude Code chat and ask it to
+                  <span className="text-teal"> generate the approved reel ({jobId})</span>.
+                  This page updates on its own once the clips are ready — no need to refresh manually.
+                </p>
+              )}
               {clips.generation_status === "requires_user_action" && (
                 <button className="btn btn-primary"
                   onClick={() => {
@@ -254,9 +291,14 @@ export default function ReelReviewPage() {
         <div className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <ScoreCard label="Hook" score={s.hook} threshold={gates.hook} />
+            <ScoreCard label="Story" score={s.story} threshold={gates.story} />
             <ScoreCard label="Retention" score={s.retention} threshold={gates.retention} />
             <ScoreCard label="Edit" score={s.edit_quality} threshold={gates.edit_quality} />
-            <ScoreCard label="Visual" score={s.visual_quality} threshold={gates.visual_quality} sub={s.visual_quality ? undefined : "needs the real video"} />
+            {/* scene/animation/visual read 0 before Higgsfield clips exist — show
+                neutral "—" (undefined score), not a red fail, until real content lands */}
+            <ScoreCard label="Scene Quality" score={awaitingClips ? undefined : s.scene_quality} threshold={gates.scene_quality} sub={awaitingClips ? "awaiting generation" : undefined} />
+            <ScoreCard label="Animation" score={awaitingClips ? undefined : s.animation_quality} threshold={gates.animation_quality} sub={awaitingClips ? "awaiting generation" : undefined} />
+            <ScoreCard label="Visual" score={awaitingClips ? undefined : s.visual_quality} threshold={gates.visual_quality} sub={awaitingClips ? "awaiting generation" : undefined} />
             <ScoreCard label="Subtitle" score={s.subtitle} threshold={gates.subtitle} />
             <ScoreCard label="Voiceover" score={s.voiceover} threshold={gates.voiceover} />
             <ScoreCard label="Compliance" score={s.compliance} threshold={gates.compliance} />
