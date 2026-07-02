@@ -5,9 +5,11 @@ bookkeeping, rejection feedback, the Reel Improvement Director bridge, and
 version jobs (…-v2) that re-run the deterministic pipeline + Remotion render
 LOCALLY (zero paid generation).
 
-Honesty contract: fresh market research and new voiceover need the Claude Code
-conductor (LLM/web + Higgsfield MCP live there). Jobs that need them stop in a
-clearly-labelled state instead of faking artifacts.
+Honesty contract: the backend runs the full Reel itself — research, animated
+Higgsfield clip generation (real when HIGGSFIELD_API_KEY is set, else a free
+local simulation preview), ffmpeg assembly, and audit. It never fakes an
+artifact: a missing provider surfaces as a named, operator-actionable gap (see
+maven_reels.pipeline.capabilities), never as "requires Claude Code conductor".
 """
 from __future__ import annotations
 
@@ -225,21 +227,90 @@ def continue_after_research(job_id: str, renderer: str | None = None) -> dict:
                 **{**prep, "verdict": result["verdict"], "scores": result["scores"]}}
 
     if not step_higgsfield_scene_generator.clips_on_disk(job_id):
+        from maven_reels.pipeline import capabilities  # noqa: PLC0415
+        caps = capabilities.check()
+        # FREE simulation mode (no Higgsfield keys): render the whole reel now —
+        # end to end, zero credits, zero Claude Code — for an instant preview.
+        if caps["generation_mode"] == "simulation":
+            bus.emit(job_id, "higgsfield_scene_generator", "reel.scenes.simulation",
+                     "No HIGGSFIELD_API_KEY set — producing a FREE simulation preview "
+                     "on the backend. Add the key in Settings for real animated clips.",
+                     status="running")
+            return run_generation(job_id, simulate=True, prep=prep)
+        # REAL generation available: stop for ONE cost confirmation in the UI.
         ingest_reels.ingest_run(job_id)   # ingest FIRST — it overwrites status
-        db.upsert("jobs", {"job_id": job_id, "status": "awaiting_scene_generation",
+        est = prep.get("estimated_generation_cost")
+        db.upsert("jobs", {"job_id": job_id, "status": "awaiting_generation_confirmation",
                            "current_node": "higgsfield_scene_generator",
                            "updated_at": _now(),
-                           "summary": (f"Awaiting Higgsfield scene generation "
-                                       f"(~{prep.get('estimated_generation_cost')}cr, "
-                                       "operator-triggered).")},
+                           "summary": (f"Ready to generate {prep.get('shots')} animated "
+                                       f"clips (~{est}cr). Click Confirm Generation.")},
                   conflict_keys=["job_id"])
         mark_latest(job_id)
         bus.emit(job_id, "higgsfield_scene_generator", "reel.scenes.awaiting",
-                 f"Plan ready: {prep.get('shots')} shots, "
-                 f"~{prep.get('estimated_generation_cost')}cr. Paid generation "
-                 "runs after the UI trigger, executed by the Claude Code conductor.",
+                 f"Plan ready: {prep.get('shots')} shots, ~{est}cr. Click Confirm "
+                 "Generation in the UI — the backend renders it (no Claude Code).",
                  status="requires_user_action")
-        return {"status": "awaiting_scene_generation", "job_id": job_id, **prep}
+        return {"status": "awaiting_generation_confirmation", "job_id": job_id,
+                "estimated_generation_cost": est, "generation_mode": "real", **prep}
+
+    return assemble_and_audit(job_id, prep=prep)
+
+
+def run_generation(job_id: str, *, simulate: bool | None = None,
+                   prep: dict | None = None) -> dict:
+    """Generate the animated clips FROM THE BACKEND, then assemble + audit.
+
+    simulate=None  -> real Higgsfield iff HIGGSFIELD_API_KEY is configured;
+    simulate=True  -> free local simulation (used to test wiring / preview).
+    This is the localhost 'Confirm Generation' (and free auto-preview) entry
+    point. No Claude Code, no MCP — the backend calls Higgsfield's Cloud API
+    directly (or synthesizes a preview) and downloads every clip itself.
+    """
+    from maven_reels.pipeline import (capabilities,  # noqa: PLC0415
+                                      orchestrator, state as rstate,
+                                      step_higgsfield_scene_generator)
+    if prep is None:
+        prep = orchestrator.prepare(job_id)
+    shot_prompts = rstate.load_artifact(job_id, "shot_prompts")
+    mode = "simulation" if (simulate or capabilities.generation_mode() == "simulation") else "real"
+    n = len(shot_prompts.get("shot_prompts", []))
+    bus.emit(job_id, "higgsfield_scene_generator", "reel.generation.started",
+             f"Backend generating {n} animated clips ({mode}).", status="running")
+
+    gen = step_higgsfield_scene_generator.run_backend(
+        job_id, shot_prompts=shot_prompts, simulate=simulate)
+    done = gen.get("completed_clips", 0)
+    bus.emit(job_id, "higgsfield_scene_generator", "reel.generation.completed",
+             f"Generated {done}/{done + gen.get('failed_clips', 0)} clips ({mode}); "
+             f"{gen.get('actual_cost_credits', 0)}cr spent.",
+             status=gen.get("generation_status"))
+
+    # Voiceover on the backend: real TTS when a key is set, else a free
+    # simulation placeholder (so the reel isn't blocked on VO in preview).
+    try:
+        from maven_reels.pipeline import step_voiceover  # noqa: PLC0415
+        script_edited = rstate.load_artifact(job_id, "script_edited")
+        bus.emit(job_id, "voice_studio", "reel.voiceover.started",
+                 "Generating voiceover on the backend.", status="running")
+        vo = step_voiceover.run(job_id, script_edited=script_edited, simulate=simulate)
+        ev = ("reel.voiceover.simulated" if vo["voiceover_mode"] != "real_tts"
+              else "reel.voiceover.completed")
+        bus.emit(job_id, "voice_studio", ev,
+                 f"Voiceover ready ({vo['voiceover_mode']}, {vo['duration']:.0f}s).",
+                 status="completed")
+    except Exception as exc:  # VO is non-fatal — assembly falls back to the bed
+        bus.emit(job_id, "voice_studio", "reel.voiceover.simulated",
+                 f"Voiceover skipped ({str(exc)[:100]}).", status="pending")
+
+    if not step_higgsfield_scene_generator.clips_on_disk(job_id):
+        ingest_reels.ingest_run(job_id)
+        db.upsert("jobs", {"job_id": job_id, "status": "generation_failed",
+                           "updated_at": _now(),
+                           "summary": "Clip generation failed — see event log."},
+                  conflict_keys=["job_id"])
+        mark_latest(job_id)
+        return {"status": "generation_failed", "job_id": job_id, **prep}
 
     return assemble_and_audit(job_id, prep=prep)
 
@@ -277,6 +348,7 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
              f"reel.mp4 assembled ({meta['duration']}s, {meta['scene_count']} clips).",
              status="completed")
 
+    from maven_reels.pipeline import capabilities as _caps  # noqa: PLC0415
     audit = step16_quality.run(
         job_id, hooks=hooks, script_edited=rstate.load_artifact(job_id, "script_edited"),
         storyboard=rstate.load_artifact(job_id, "storyboard"),
@@ -286,7 +358,11 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
         cost_guard=_opt("cost_guard"), research=_opt("research"),
         visual_uniqueness=_opt("visual_uniqueness"), fresh_video=scene_gen,
         viral_fit=_opt("viral_fit"), scene_quality=inspection,
-        renderer="higgsfield_primary")
+        renderer="higgsfield_primary", voiceover=_opt("voiceover_v2"),
+        capabilities_report=_caps.check())
+    bus.emit(job_id, "reel_auditor", "reel.audit.viral_completed",
+             f"Viral audit: {audit['verdict']} (preview_ready={audit['preview_ready']}, "
+             f"production_ready={audit['production_ready']}).", status=audit["verdict"])
     bus.emit(job_id, "reel_auditor", "reel.audit.completed",
              f"Auditor verdict: {audit['verdict']}.", status=audit["verdict"])
 
@@ -297,30 +373,26 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
              status=audit["verdict"])
     return {"status": "ready", "job_id": job_id, **(prep or {}),
             "verdict": audit["verdict"], "scores": audit["scores"],
+            "preview_ready": audit["preview_ready"],
+            "production_ready": audit["production_ready"],
+            "generation_mode": audit["generation_mode"],
+            "voiceover_mode": audit.get("voiceover_mode"),
             "scene_quality": inspection["overall_scene_quality_score"]}
 
 
 def approve_generation(job_id: str, shot_ids: list[str] | None = None,
                        source: str = "ui") -> dict:
-    """Record the operator's explicit paid-generation trigger from the UI."""
-    from maven_reels.pipeline import step_higgsfield_scene_generator  # noqa: PLC0415
-    gen = step_higgsfield_scene_generator.approve_from_ui(
-        job_id, shot_ids=shot_ids, source=source)
+    """UI 'Confirm Generation': the operator confirmed the cost — run generation
+    on the backend NOW (real Higgsfield if keys are configured, else a free
+    simulation), then assemble + audit. No Claude Code, no MCP."""
+    from maven_reels.pipeline import (capabilities,  # noqa: PLC0415
+                                      step_higgsfield_scene_generator)
+    step_higgsfield_scene_generator.approve_from_ui(job_id, shot_ids=shot_ids, source=source)
+    mode = capabilities.generation_mode()
     bus.emit(job_id, "higgsfield_scene_generator", "reel.generation.approved",
-             f"Operator approved paid generation ({len(gen.get('approved_shot_ids', []))} "
-             f"shot(s), ~{gen.get('estimated_cost_credits')}cr). The Claude Code "
-             "conductor executes next — the backend never calls Higgsfield itself.",
-             status=gen["generation_status"])
-    db.upsert("jobs", {"job_id": job_id, "status": "generation_approved",
-                       "updated_at": _now(),
-                       "summary": "Scene generation approved — awaiting conductor."},
-              conflict_keys=["job_id"])
-    return {"status": gen["generation_status"], "job_id": job_id,
-            "approved_shots": gen.get("approved_shot_ids", []),
-            "estimated_cost_credits": gen.get("estimated_cost_credits"),
-            "requires_conductor": True,
-            "message": "Approved. Generation executes via the Claude Code conductor "
-                       "(Higgsfield MCP) — nothing has been charged yet."}
+             f"Generation confirmed in the UI — backend rendering now ({mode}).",
+             status="running")
+    return run_generation(job_id, simulate=None)
 
 
 def improve_animation(job_id: str) -> dict:

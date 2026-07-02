@@ -46,13 +46,24 @@ export const api = {
   requestHiggsfield: (id: string, approved = false) => post<{ status: string; paid: boolean; message: string; allow_paid_generation?: boolean }>(`/api/jobs/${id}/request-higgsfield`, { approved }),
   approve: (id: string) => post(`/api/jobs/${id}/approve`),
   // reels studio
+  reelCapabilities: () => get<{
+    research_provider_available: boolean; research_providers: string[];
+    llm_provider_available: boolean; llm_api_configured: boolean; content_engine: string;
+    higgsfield_available: boolean; tts_available: boolean; tts_mode: string;
+    voiceover_production_ready: boolean; composio_available: boolean; ffmpeg_available: boolean;
+    can_run_full_reel_from_backend: boolean; can_generate_real_clips: boolean;
+    generation_mode: "real" | "simulation";
+    missing: { capability: string; message: string }[];
+  }>("/api/reels/capabilities"),
+  reelGenerate: (id: string, simulate?: boolean) =>
+    post<{ status: string; verdict?: string; preview_ready?: boolean; production_ready?: boolean; generation_mode?: string; scores?: any }>(`/api/reels/${id}/generate`, { simulate }),
   reelsLatest: () => get<{ job_id: string; status: string; created_at: string; version: number; parent_job_id: string | null; review_url: string; scores: Scores | null; stale: { stale: boolean; problems: string[] }; approval_status: string; publish_status: string }>("/api/reels/latest"),
   reelFeedback: (id: string, feedback_type: string, custom_feedback?: string) => post(`/api/jobs/${id}/feedback`, { feedback_type, custom_feedback }),
   reelImprove: (id: string, feedback_type: string, custom_feedback?: string) => post<{ status: string; new_job_id?: string; version?: number; review_url?: string; message?: string; needs?: string[] }>(`/api/jobs/${id}/improve`, { feedback_type, custom_feedback }),
   reelVersions: (id: string) => get<{ root_job_id: string; versions: any[]; feedback: any[] }>(`/api/jobs/${id}/versions`),
   // higgsfield-primary renderer
   reelClips: (id: string) => get<{ job_id: string; generation_status: string; approved_from_ui: boolean; estimated_cost_credits: number | null; actual_cost_credits: number | null; planned: any[]; clips: any[]; clips_on_disk: string[] }>(`/api/reels/${id}/clips`),
-  approveGeneration: (id: string) => post<{ status: string; approved_shots: string[]; estimated_cost_credits: number; requires_conductor: boolean; message: string }>(`/api/reels/${id}/approve-generation`),
+  approveGeneration: (id: string) => post<{ status: string; verdict?: string; preview_ready?: boolean; production_ready?: boolean; generation_mode?: string; scores?: any }>(`/api/reels/${id}/approve-generation`),
   regenerateScene: (id: string, shotId: string) => post(`/api/reels/${id}/regenerate-scene/${shotId}`),
   regenerateAllScenes: (id: string) => post(`/api/reels/${id}/regenerate-all-scenes`),
   improveAnimation: (id: string) => post<{ status: string; shots: number; estimated_cost_credits: number; message: string }>(`/api/reels/${id}/improve-animation`),

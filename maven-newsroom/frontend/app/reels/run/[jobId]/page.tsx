@@ -12,6 +12,7 @@ import { PipelineGraph } from "@/components/pipeline/PipelineGraph";
 import { NodeInspector } from "@/components/pipeline/NodeInspector";
 import { LiveConsole } from "@/components/pipeline/LiveConsole";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { CapabilityBanner } from "@/components/reels/CapabilityBanner";
 
 export default function ReelRunPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -34,7 +35,7 @@ export default function ReelRunPage() {
     setToast(`${label}…`);
     try {
       const r: any = await fn();
-      setToast(r?.status === "requires_conductor" ? `${label}: requires Claude Code conductor` : `${label}: ${r?.status ?? "done"}`);
+      setToast(`${label}: ${r?.status ?? "done"}`);
       refresh();
     } catch (e: any) { setToast(`${label}: ${e?.data?.problems?.join(", ") || "failed"}`); }
     setTimeout(() => setToast(null), 3500);
@@ -57,6 +58,8 @@ export default function ReelRunPage() {
           <a href={job.instagram_post_url} target="_blank" rel="noreferrer" className="btn btn-primary">View reel</a>
         )}
       </div>
+
+      <div className="px-6 pt-3"><CapabilityBanner /></div>
 
       <div className="flex-1 grid grid-cols-[230px_1fr_360px] min-h-0">
         <div className="border-r border-line overflow-auto py-2">

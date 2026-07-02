@@ -6,12 +6,23 @@ the provider fails only if EVERY feed fails.
 """
 from __future__ import annotations
 
+import re
 import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
+from html import unescape
 
 from .base import Story, http_get
 
 NAME = "rss"
+
+_TAG = re.compile(r"<[^>]+>")
+
+
+def _strip_html(text: str) -> str:
+    """RSS <description> fields often embed raw HTML (e.g. Moneycontrol's
+    <img src="..."> thumbnails) — strip tags before this text is ever used as
+    narration/subtitles. Never pass raw markup downstream as prose."""
+    return " ".join(_TAG.sub(" ", unescape(text or "")).split())
 
 FEEDS = [
     ("Moneycontrol Markets", "https://www.moneycontrol.com/rss/marketreports.xml"),
@@ -50,8 +61,8 @@ def fetch(max_items: int = 25) -> list[Story]:
                 if not title:
                     continue
                 out.append(Story.make(
-                    headline=title,
-                    summary=_text(it.find("description")) or title,
+                    headline=_strip_html(title),
+                    summary=_strip_html(_text(it.find("description"))) or title,
                     source_name=name,
                     source_url=_text(it.find("link")),
                     published_at=_iso(_text(it.find("pubDate"))),

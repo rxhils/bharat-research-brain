@@ -55,14 +55,16 @@ function useArtifact<T = any>(jobId: string, name: string) {
 }
 
 /* status label from job + audit */
-/** job.status ('generation_approved') and clips.generation_status
- * ('approved_awaiting_conductor') describe the SAME moment with different raw
- * strings — this is the one place that turns either into the human phrase. */
+/** Turns the various raw generation statuses into one human phrase. Generation
+ * now runs on the BACKEND (real Higgsfield when keyed, else free simulation) —
+ * never "Claude Code". */
 function humanStatus(raw: string | undefined | null): string | null {
-  if (raw === "generation_approved" || raw === "approved_awaiting_conductor")
-    return "Approved — waiting for Claude Code to generate";
-  if (raw === "awaiting_scene_generation") return "Awaiting approval to generate";
-  if (raw === "requires_user_action") return "Awaiting approval to generate";
+  if (raw === "awaiting_generation_confirmation") return "Ready to generate — confirm cost";
+  if (raw === "generation_approved" || raw === "approved_awaiting_conductor" ||
+      raw === "approved_generating") return "Generating on the backend…";
+  if (raw === "generation_failed") return "Generation failed";
+  if (raw === "awaiting_scene_generation") return "Awaiting generation";
+  if (raw === "requires_user_action") return "Awaiting generation";
   return null;
 }
 
@@ -117,15 +119,25 @@ export default function ReelReviewPage() {
   const direction = useArtifact(jobId, "09_higgsfield_creative_direction.json");
   const shotPlan = useArtifact(jobId, "10_higgsfield_shot_plan.json");
   const sceneQuality = useArtifact(jobId, "13_scene_quality.json");
+  const research = useArtifact(jobId, "01_research.json");
+  const brief = useArtifact(jobId, "04_creative_brief.json");
+  const voiceover = useArtifact(jobId, "10_voiceover.json");
   const [clips, setClips] = useState<any>(null);
+  const [caps, setCaps] = useState<Awaited<ReturnType<typeof api.reelCapabilities>> | null>(null);
   useEffect(() => {
     const load = () => api.reelClips(jobId).then(setClips).catch(() => setClips(null));
     load();
-    // Poll while waiting on the conductor so the page updates itself once
-    // clips land — the operator shouldn't have to guess when to refresh.
+    // Poll while generation runs so the page updates itself once clips land —
+    // the operator shouldn't have to guess when to refresh.
     const id = setInterval(load, 15000);
     return () => clearInterval(id);
   }, [jobId]);
+  useEffect(() => {
+    const load = () => api.reelCapabilities().then(setCaps).catch(() => {});
+    load();
+    const id = setInterval(load, 20000);
+    return () => clearInterval(id);
+  }, []);
 
   const refresh = useCallback(() => {
     api.job(jobId).then(setJob).catch(() => {});
@@ -157,7 +169,7 @@ export default function ReelReviewPage() {
         setToast(`v${r.version} rendering — opening it now…`);
         router.push(`/reels/review/${r.new_job_id}`);
       } else if (r.status === "needs_conductor" && r.new_job_id) {
-        setToast(`v${r.version} created — ${r.message ?? "needs the Claude Code conductor"}`);
+        setToast(`v${r.version} created — ${r.message ?? "new version building on the backend"}`);
         router.push(`/reels/review/${r.new_job_id}`);
       } else {
         setToast(r.message ?? r.status);
@@ -171,9 +183,7 @@ export default function ReelReviewPage() {
     setBusy(key); setToast(`${label}…`);
     try {
       const r = await fn();
-      setToast(r?.status === "requires_conductor"
-        ? `${label}: needs Claude Code conductor (queued, nothing faked)`
-        : `${label}: ${r?.message ?? r?.status ?? "done"}`);
+      setToast(`${label}: ${r?.message ?? r?.status ?? "done"}`);
       refresh();
       api.artifacts(jobId).then((a) => setArts(a.artifacts.map((x) => x.name))).catch(() => {});
     } catch (e: any) {
@@ -188,6 +198,21 @@ export default function ReelReviewPage() {
   const passed = !!quality?.passed;
   const hasScores = !!quality?.scores;
   const verdict = quality?.verdict ?? "";
+  const previewReady = !!quality?.preview_ready;
+  const productionReady = !!quality?.production_ready;
+  const genMode = quality?.generation_mode as string | undefined;   // "real" | "simulation"
+  const voMode = quality?.voiceover_mode as string | undefined;     // real_tts | local_simulation
+  const composioOk = !!caps?.composio_available;
+  const canPublish = productionReady && composioOk;
+  const readiness: { text: string; tone: "ok" | "warn" | "muted" | "teal" } =
+    job?.publish_status === "published" ? { text: "Published", tone: "ok" }
+    : productionReady && composioOk ? { text: "Production Ready", tone: "ok" }
+    : productionReady && !composioOk ? { text: "Needs Composio", tone: "warn" }
+    : previewReady && genMode === "simulation" && !caps?.higgsfield_available ? { text: "Needs Higgsfield Key", tone: "teal" }
+    : previewReady && !caps?.voiceover_production_ready ? { text: "Needs TTS (preview ok)", tone: "teal" }
+    : previewReady ? { text: "Preview Ready", tone: "teal" }
+    : hasScores ? { text: "Audit Failed", tone: "warn" }
+    : { text: "Draft", tone: "muted" };
   const hasReel = arts.includes("reel.mp4");
   const awaitingClips = !hasReel;   // scene/animation/visual scores are placeholders until the reel is assembled
   const hasCover = arts.includes("cover.jpg");
@@ -210,11 +235,22 @@ export default function ReelReviewPage() {
         <div>
           <div className="eyebrow">Reel Review · Reel Auditor → Approval → Publish Gate</div>
           <h2 className="text-xl font-semibold tracking-tight mt-1">{job?.summary || "Approve the reel"} · {jobId}</h2>
+          <div className="text-[11px] text-ink-faint mt-1 flex flex-wrap gap-x-3 gap-y-1">
+            {research?.data_window && <span>Data: <span className="text-ink-muted">{research.data_window}</span></span>}
+            {research?.market_status && <span>Market: <span className="text-ink-muted">{research.market_status}</span></span>}
+            {research?.sources_used?.length ? <span>Sources: <span className="text-ink-muted">{research.sources_used.join(", ")}</span></span> : null}
+            {hooks?.hook_category && <span>Hook: <span className="text-ink-muted">{hooks.hook_category}</span></span>}
+            {brief?.creative_brief?.main_visual_metaphor && <span>Metaphor: <span className="text-ink-muted">{brief.creative_brief.main_visual_metaphor}</span></span>}
+            {voiceover?.voiceover_mode && <span>VO: <span className="text-ink-muted">{voiceover.voiceover_mode}</span></span>}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {((job as any)?.version ?? 1) > 1 && <Pill tone="teal">v{(job as any).version}</Pill>}
           {(job as any)?.is_latest ? <Pill tone="ok">Latest</Pill> : null}
           <Pill tone={label.tone}>{label.text}</Pill>
+          <Pill tone={readiness.tone}>{readiness.text}</Pill>
+          {genMode && <Pill tone={genMode === "real" ? "ok" : "muted"}>{genMode === "real" ? "Real clips" : "Simulation"}</Pill>}
+          {voMode && <Pill tone={voMode === "real_tts" ? "ok" : "muted"}>{voMode === "real_tts" ? "Real VO" : "Sim VO"}</Pill>}
           {verdict && <Pill tone={passed ? "ok" : "warn"}>{verdict}</Pill>}
         </div>
       </div>
@@ -230,25 +266,24 @@ export default function ReelReviewPage() {
               <Sparkles size={28} className="text-teal" />
               <div className="text-sm text-ink">
                 {clips.generation_status === "requires_user_action"
-                  ? "Nothing is generating yet — the animated scenes wait for your approval."
-                  : clips.generation_status === "approved_awaiting_conductor"
-                  ? "Approved ✓ — nothing is generating automatically."
+                  ? (caps?.higgsfield_available
+                      ? "Ready to generate real animated scenes on the backend — confirm the cost below."
+                      : "Ready to generate a free simulation preview on the backend.")
+                  : (clips.generation_status === "approved_generating" || clips.generation_status === "approved_awaiting_conductor")
+                  ? "Generating animated scenes on the backend… this page updates itself."
                   : `Scene generation: ${clips.generation_status}`}
               </div>
-              {clips.generation_status === "approved_awaiting_conductor" && (
-                <p className="text-xs text-ink-muted leading-relaxed max-w-[280px]">
-                  Next: go back to your Claude Code chat and ask it to
-                  <span className="text-teal"> generate the approved reel ({jobId})</span>.
-                  This page updates on its own once the clips are ready — no need to refresh manually.
-                </p>
-              )}
               {clips.generation_status === "requires_user_action" && (
                 <button className="btn btn-primary"
                   onClick={() => {
-                    if (window.confirm(`This will use Higgsfield credits to generate animated video scenes (~${clips.estimated_cost_credits}cr). Continue?`))
+                    const real = caps?.higgsfield_available;
+                    const msg = `This will use Higgsfield credits to generate animated scenes (~${clips.estimated_cost_credits}cr). Continue?`;
+                    if (!real || window.confirm(msg))
                       act("gen-top", "Generate Scenes", () => api.approveGeneration(jobId));
                   }}>
-                  <Sparkles size={15} /> Generate Animated Scenes (~{clips.estimated_cost_credits}cr) ⚠
+                  <Sparkles size={15} /> {caps?.higgsfield_available
+                    ? `Generate Animated Scenes (~${clips.estimated_cost_credits}cr) ⚠`
+                    : "Generate Simulation Preview (free)"}
                 </button>
               )}
               <p className="text-[11px] text-ink-faint">
@@ -362,7 +397,7 @@ export default function ReelReviewPage() {
               <Btn k="motion" label="Change Motion Style" icon={<Palette size={15} />} onClick={() => act("motion", "Change Motion Style", () => api.rerun(jobId, "motion_variation"))} />
               <Btn k="pick" label="Pick Different Assets" icon={<ImageIcon size={15} />} onClick={() => act("pick", "Pick Assets", () => api.rerun(jobId, "asset_picker"))} />
               <Btn k="higgs" label="Request New Higgsfield ⚠" icon={<Sparkles size={15} />} onClick={() => {
-                if (window.confirm("This requests PAID Higgsfield generation. Approve 1 new asset generation? Nothing is charged until the conductor runs it."))
+                if (window.confirm("This requests PAID Higgsfield generation of 1 new asset on the backend. Continue?"))
                   act("higgs", "Higgsfield request", () => api.requestHiggsfield(jobId, true));
                 else act("higgs", "Higgsfield request", () => api.requestHiggsfield(jobId, false));
               }} />
@@ -380,12 +415,20 @@ export default function ReelReviewPage() {
             <div className="eyebrow mb-3 mt-5">Approval &amp; publish (Telegram-mirror)</div>
             <div className="grid gap-2">
               <Btn k="tg" label="Send Preview to Telegram" icon={<MessageSquare size={15} />} onClick={() => act("tg", "Telegram preview", () => api.telegramPreview(jobId))} />
-              <Btn k="approve" label="Approve" icon={<CheckCircle2 size={15} />} onClick={() => act("approve", "Approve", () => api.approve(jobId))} disabled={!passed || job?.approval_status === "approved"} />
-              <Btn k="publish" label="Approve & Publish Reel" tone="primary" icon={<Send size={15} />} onClick={() => act("publish", "Publish", () => api.approveAndPublish(jobId))} disabled={!passed} />
+              <Btn k="approve" label="Approve" icon={<CheckCircle2 size={15} />} onClick={() => act("approve", "Approve", () => api.approve(jobId))} disabled={!previewReady || job?.approval_status === "approved"} />
+              <Btn k="publish" label="Approve & Publish Reel" tone="primary" icon={<Send size={15} />} onClick={() => act("publish", "Publish", () => api.approveAndPublish(jobId))} disabled={!canPublish} />
               <Btn k="reject" label="Reject" tone="danger" icon={<X size={15} />} onClick={() => act("reject", "Reject", () => api.reject(jobId))} />
             </div>
             {toast && <div className="mt-3 text-xs text-teal">{toast}</div>}
-            <p className="text-[11px] text-mcp mt-2">Real publishing runs in the Claude Code conductor (Composio Reels, <code>media_type=REELS</code>). Never faked — the backend only preflights and queues.</p>
+            {!canPublish && (
+              <p className="text-[11px] text-warn mt-2">
+                {!productionReady
+                  ? "Publish is locked until the reel is production-ready — add HIGGSFIELD_API_KEY for real clips"
+                    + (!caps?.voiceover_production_ready ? " and a TTS key for real voiceover" : "") + "."
+                  : "Publish is locked: Composio not connected. Add COMPOSIO_API_KEY in Settings to publish to Instagram."}
+              </p>
+            )}
+            <p className="text-[11px] text-mcp mt-2">Publishing runs on the backend via Composio (Instagram Reels, <code>media_type=REELS</code>) and is never marked published without a real media ID.</p>
           </Card>
 
           {/* improvement studio: reject-with-feedback → new version */}
@@ -418,8 +461,8 @@ export default function ReelReviewPage() {
               className="mt-3 w-full rounded-lg bg-white/[0.03] border border-line p-2.5 text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-teal/50"
               rows={2} />
             <p className="text-[11px] text-mcp mt-2">
-              Story/data changes and new voiceover need the Claude Code conductor — versions
-              that need it are created and clearly marked, never faked.
+              Each feedback button rebuilds a new version on the backend (fresh research,
+              hooks, script, clips and voiceover) — clearly marked, never faked.
             </p>
           </Card>
         </div>
@@ -512,10 +555,11 @@ export default function ReelReviewPage() {
             </button>
           )}
           <p className="text-[11px] text-mcp mt-2">
-            Higgsfield animated clips generated per scene using lowest-cost suitable
+            Higgsfield animated clips generated per scene using the lowest-cost suitable
             model — no static plates, no slideshows. The local assembler adds voiceover,
-            music, subtitles and branding. Generation executes via the Claude Code
-            conductor after your approval — never automatically.
+            music, subtitles and branding. Generation runs on the backend after your
+            confirmation (real Higgsfield when a key is set, else a free simulation) —
+            never automatically.
           </p>
         </Section>
       )}
@@ -551,12 +595,15 @@ export default function ReelReviewPage() {
           {hooks ? (
             <div className="space-y-2">
               <div className="rounded-lg border border-teal/30 bg-teal/[0.06] p-2.5">
-                <div className="text-[11px] text-teal mb-1">Chosen · on-screen</div>
+                <div className="text-[11px] text-teal mb-1 flex items-center gap-2">Chosen · on-screen
+                  {hooks?.hook_category && <span className="chip border-teal/40 text-teal bg-teal/10">{hooks.hook_category}</span>}</div>
                 <div className="text-sm text-ink">{hooks?.on_screen_hook ?? hooks?.chosen?.text ?? "—"}</div>
+                {hooks?.why_this_hook_should_stop_scroll && <div className="text-[11px] text-ink-faint mt-1.5">{hooks.why_this_hook_should_stop_scroll}</div>}
+                {hooks?.hook_lab_blocked && <div className="text-[11px] text-warn mt-1.5">⚠ {hooks.blocked_reason}</div>}
               </div>
               {Array.isArray(hooks?.hooks) && (
                 <details className="text-xs text-ink-faint"><summary className="cursor-pointer">All {hooks.hooks.length} hooks across categories</summary>
-                  <ul className="mt-2 space-y-1.5">{hooks.hooks.slice(0, 15).map((h: any, i: number) => (
+                  <ul className="mt-2 space-y-1.5">{hooks.hooks.slice(0, 25).map((h: any, i: number) => (
                     <li key={i} className="flex items-start gap-2"><span className="chip border-line shrink-0">{h.category ?? "—"}</span><span className="text-ink-muted">{h.text}{h.strength != null ? ` (${h.strength})` : ""}</span></li>
                   ))}</ul>
                 </details>

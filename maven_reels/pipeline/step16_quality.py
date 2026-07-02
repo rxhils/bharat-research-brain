@@ -222,10 +222,45 @@ def _subtitle(subtitles: dict | None) -> tuple[int, list[str]]:
     return max(0, s), issues
 
 
-def _voiceover(reel_video: dict | None) -> tuple[int, list[str]]:
+def _voiceover(reel_video: dict | None, vo: dict | None = None) -> tuple[int, list[str]]:
+    mode = (vo or {}).get("voiceover_mode")
+    if mode == "real_tts":
+        return 92, []
+    if mode == "local_simulation":
+        # preview-OK: a simulated VO must NOT block the whole flow; production
+        # readiness is tracked separately (needs a real TTS key).
+        return 88, ["simulation voiceover (preview only — add a TTS key for production)"]
+    if mode == "no_voice_preview":
+        return 85, ["no-voice preview mode"]
     if not reel_video or not reel_video.get("has_voiceover"):
         return 70, ["no voiceover (captions-only)"]
     return 92, []
+
+
+def _teaching_clarity(script_edited: dict) -> tuple[int, list[str]]:
+    wc = int(script_edited.get("word_count", 0) or 0)
+    if wc == 0:
+        return 60, ["no script narration"]
+    s, issues = 90, []
+    if wc > 65:
+        s -= 10; issues.append(f"{wc} words (>65) dilutes one clear teaching point")
+    narr = (script_edited.get("narration") or "").lower()
+    if any(w in narr for w in ("because", "why", "means", "driver", "sector", "reason", "reacted")):
+        s = min(100, s + 5)
+    else:
+        issues.append("no explicit cause ('why/because/driver') — teaching point unclear")
+    return max(0, s), issues
+
+
+def _text_overlay(hooks: dict, subtitles: dict | None, reel_video: dict | None) -> tuple[int, list[str]]:
+    s, issues = 100, []
+    if not (reel_video or {}).get("hook_overlay"):
+        s -= 10; issues.append("no burned hook overlay")
+    if not (subtitles or {}).get("subtitles"):
+        s -= 15; issues.append("no subtitle overlay")
+    if len((hooks.get("on_screen_hook", "") or "").split()) > 7:
+        s -= 8; issues.append("on-screen hook > 7 words")
+    return max(0, s), issues
 
 
 def _brand(caption: dict, storyboard: dict) -> tuple[int, list[str]]:
@@ -245,7 +280,8 @@ def run(date: str, *, hooks: dict, script_edited: dict, storyboard: dict,
         cost_guard: dict | None = None, research: dict | None = None,
         visual_uniqueness: dict | None = None, fresh_video: dict | None = None,
         viral_fit: dict | None = None, scene_quality: dict | None = None,
-        renderer: str = "higgsfield_primary") -> dict:
+        renderer: str = "higgsfield_primary", voiceover: dict | None = None,
+        capabilities_report: dict | None = None) -> dict:
     gates = dict(GATES)
     if renderer == "remotion_fallback":
         # explicitly-selected fallback is judged by its own (lower) animation bar
@@ -260,7 +296,7 @@ def run(date: str, *, hooks: dict, script_edited: dict, storyboard: dict,
     scores["edit_quality"], issues["edit_quality"] = _edit(storyboard)
     scores["visual_quality"], issues["visual_quality"] = _visual(reel_video, aesthetic_score)
     scores["subtitle"], issues["subtitle"] = _subtitle(subtitles)
-    scores["voiceover"], issues["voiceover"] = _voiceover(reel_video)
+    scores["voiceover"], issues["voiceover"] = _voiceover(reel_video, voiceover)
     scores["compliance"] = int(compliance.get("score", 0))
     issues["compliance"] = compliance.get("violations", [])
     scores["brand"], issues["brand"] = _brand(caption or {}, storyboard)
@@ -277,21 +313,60 @@ def run(date: str, *, hooks: dict, script_edited: dict, storyboard: dict,
         scores["visual_uniqueness"] = 100
         issues["visual_uniqueness"] = []
 
+    # --- viral / creative axes (aliases + new) ---------------------------------
+    scores["visual_appeal"] = scores["visual_quality"]
+    scores["teaching_clarity"], issues["teaching_clarity"] = _teaching_clarity(script_edited)
+    scores["text_overlay"], issues["text_overlay"] = _text_overlay(hooks, subtitles, reel_video)
+    real_clips = (fresh_video or {}).get("execution_mode") == "real"
+    scores["backend_autonomy"] = 100 if (fresh_video or {}).get("generated_by") == "backend" else 90
+
+    gates["teaching_clarity"] = 85
+    gates["visual_appeal"] = 90
+    gates["backend_autonomy"] = 100
+
     passed = {k: scores[k] >= gates[k] for k in gates}
     overall = all(passed.values())
     scores["publish"] = 100 if overall else min(scores[k] for k in gates)
+    scores["publish_readiness"] = scores["publish"]
+
+    # --- preview vs production readiness --------------------------------------
+    caps = capabilities_report or {}
+    real_vo = (voiceover or {}).get("voiceover_mode") == "real_tts"
+    composio_ok = caps.get("composio_available", False)
+    # gates that only REAL Higgsfield/TTS output can satisfy — excluded from the
+    # preview verdict so a free simulation isn't unfairly marked failed.
+    REAL_ONLY = {"animation_quality", "visual_quality", "visual_appeal", "voiceover"} \
+        if not real_clips else set()
+    preview_ready = all(passed[k] for k in gates if k not in REAL_ONLY)
+    production_ready = overall and real_clips and real_vo
 
     fails = [k for k in gates if not passed[k]]
     all_issues = [f"{k}: {i}" for k in issues for i in (issues[k] if isinstance(issues[k], list) else [issues[k]]) if i]
+    # specific, actionable readiness reasons
+    fixes = [f"{k} ({scores[k]}<{gates[k]}) -> {REROUTE.get(k, 'improvement_director')}" for k in fails]
+    if not real_clips:
+        fixes.append("missing real animated clips -> add HIGGSFIELD_API_KEY + confirm generation")
+    if not real_vo:
+        fixes.append("missing real voiceover -> add a TTS key (HIGGSFIELD_API_KEY) for production VO")
+    if not composio_ok:
+        fixes.append("Composio not connected -> connect Instagram publishing in Settings")
+
+    verdict = "PUBLISH_OK" if production_ready else "PREVIEW_OK" if preview_ready else "BLOCKED"
     payload = {
-        "date": date, "passed": overall, "scores": scores, "gates": gates,
-        "renderer": renderer,
+        "date": date, "passed": overall,
+        "preview_ready": preview_ready, "production_ready": production_ready,
+        "generation_mode": "real" if real_clips else "simulation",
+        "voiceover_mode": (voiceover or {}).get("voiceover_mode"),
+        "scores": scores, "gates": gates, "renderer": renderer,
         "gate_passed": passed, "issues": all_issues,
-        "fixes_required": [f"{k} ({scores[k]}<{gates[k]}) -> {REROUTE[k]}" for k in fails],
+        "fixes_required": fixes,
         "suggested_buttons": [{"gate": k, "score": scores[k], "min": gates[k],
                                "click": SUGGEST_BUTTON.get(k, "Improve Reel")} for k in fails],
-        "reroute_to": REROUTE[fails[0]] if fails else "",
-        "verdict": "PUBLISH_OK" if overall else "BLOCKED",
+        "reroute_to": REROUTE.get(fails[0], "") if fails else "",
+        "suggested_action": ("Ready to publish." if production_ready else
+                             "Preview ready — add real generation/TTS keys for production."
+                             if preview_ready else "Blocked — see fixes_required."),
+        "verdict": verdict,
     }
     state.save_artifact(date, "quality", payload)
     return payload

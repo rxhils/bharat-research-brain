@@ -18,7 +18,8 @@ from . import (config, state, step01_research, step02_viral_fit, step03_angle,
                step14_caption, step15_compliance, step16_quality,
                step_renderer_selector, step_higgsfield_creative_director,
                step_higgsfield_shot_planner, step_higgsfield_prompt_builder,
-               step_higgsfield_scene_generator, step_higgsfield_model_router)
+               step_higgsfield_scene_generator, step_higgsfield_model_router,
+               step_reel_creative_brief)
 
 
 def prepare(date: str, renderer: str | None = None) -> dict:
@@ -32,7 +33,9 @@ def prepare(date: str, renderer: str | None = None) -> dict:
     story = viral_fit["chosen"]["story"]
 
     angle = step03_angle.run(date, viral_fit)
-    hooks = step04_hooks.run(date, angle, viral_fit)
+    creative_brief = step_reel_creative_brief.run(date, viral_fit=viral_fit,
+                                                  angle=angle, research=research)
+    hooks = step04_hooks.run(date, angle, viral_fit, creative_brief=creative_brief)
     script = step05_script.run(date, story, hooks)
     edited = step06_retention.run(date, script)
 
@@ -106,7 +109,7 @@ def prepare(date: str, renderer: str | None = None) -> dict:
                                  renderer=renderer_sel["renderer"])
 
     rs = state.RunState.load_or_new(date)
-    for k in ("research", "viral_fit", "angle", "hooks", "script", "retention",
+    for k in ("research", "viral_fit", "angle", "creative_brief", "hooks", "script", "retention",
               "renderer_selection", "creative_direction", "shot_plan",
               "shot_prompts", "scene_generation", "template", "motion_variation",
               "storyboard", "asset_picker", "higgsfield_request", "subtitles",
@@ -116,6 +119,8 @@ def prepare(date: str, renderer: str | None = None) -> dict:
             "viral_fit": viral_fit["chosen"]["viral_fit"],
             "duplicate_risk": dup["duplicate_risk"],
             "hook": hooks["chosen"]["text"],
+            "hook_category": hooks["chosen"].get("category"),
+            "creative_metaphor": creative_brief["creative_brief"]["main_visual_metaphor"],
             "renderer": renderer_sel["renderer"],
             "creative_direction": direction["selected_direction"].get("name"),
             "shots": shot_plan["shot_count"],

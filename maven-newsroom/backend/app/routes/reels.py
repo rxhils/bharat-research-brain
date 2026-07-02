@@ -11,6 +11,15 @@ from ..services import reel_studio
 router = APIRouter(prefix="/api")
 
 
+@router.get("/reels/capabilities")
+def reels_capabilities():
+    """What the localhost backend can do on its own — research, real vs
+    simulation clip generation, TTS, publishing. The UI reads this to show
+    exactly what (if anything) is missing, and never says 'Claude Code'."""
+    from maven_reels.pipeline import capabilities  # noqa: PLC0415
+    return capabilities.check()
+
+
 @router.get("/reels/latest")
 def reels_latest():
     job = reel_studio.latest_job()
@@ -68,9 +77,19 @@ def reel_versions(job_id: str):
 
 @router.post("/jobs/{job_id}/continue-after-research")
 def reel_continue(job_id: str):
-    """Conductor helper: once fresh 01_research.json is in the run folder, run
-    the full deterministic pipeline + local render + audit."""
+    """Run the full pipeline after research: prepare -> generate clips (free
+    simulation, or real when Higgsfield keys are set + cost confirmed) -> local
+    assemble + audit. Backend-driven; no Claude Code."""
     return reel_studio.continue_after_research(job_id)
+
+
+@router.post("/reels/{job_id}/generate")
+def reel_generate(job_id: str, body: dict = Body(default={})):
+    """Confirm + run backend clip generation now (real if keys configured, else
+    free simulation), then assemble + audit. Same as approve-generation; named
+    for the UI 'Confirm Generation' button."""
+    _require_reel_job(job_id)
+    return reel_studio.run_generation(job_id, simulate=body.get("simulate"))
 
 
 @router.get("/reels/{job_id}/clips")
@@ -119,7 +138,7 @@ def reel_regen_all(job_id: str):
 @router.post("/reels/{job_id}/improve-animation")
 def reel_improve_animation(job_id: str):
     """Rebuild direction/plan/prompts at HIGH intensity (free); regeneration
-    itself still needs the confirm + conductor."""
+    itself runs on the backend after the UI Confirm Generation click."""
     _require_reel_job(job_id)
     try:
         return reel_studio.improve_animation(job_id)

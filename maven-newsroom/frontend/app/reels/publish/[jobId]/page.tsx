@@ -47,7 +47,7 @@ export default function ReelPublishPage() {
         </div>
       ) : (
         <div className="glass card-pad border-mcp/30 text-sm text-ink-muted">
-          Not published. Real Instagram Reels publishing runs in the <span className="text-mcp">Claude Code conductor</span> (Composio) — never claimed without a real media ID.
+          Not published. Instagram Reels publishing runs on the backend via Composio when connected — and is never claimed without a real media ID. If Composio isn&apos;t connected, add <span className="text-mcp">COMPOSIO_API_KEY</span> in Settings.
         </div>
       )}
 
