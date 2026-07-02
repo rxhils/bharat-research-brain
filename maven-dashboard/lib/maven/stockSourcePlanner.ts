@@ -1,4 +1,5 @@
 import type { StockSourcePlan, StockDepth, AnswerType } from "./types";
+import { getExpectedLatestQuarter, getCurrentIndianFiscalYear, formatFiscalPeriod } from "./reportingPeriods";
 
 // Decides research depth + a source budget so Maven doesn't fetch 25 pages for a one-line profile
 // query, but does go deep on explicit "full research" requests. Query strings target official
@@ -19,6 +20,9 @@ const BUDGET: Record<StockDepth, number> = { light: 6, standard: 12, deep: 22 };
 export function planStockSources(query: string, companyName: string, answerType: AnswerType): StockSourcePlan {
   const depth = stockDepthFor(query, answerType);
   const name = companyName || query.trim();
+  // latest-period-labeled queries so retrieval targets the CURRENT reporting cycle, not old FYs
+  const expQ = formatFiscalPeriod(getExpectedLatestQuarter());
+  const curFY = `FY${getCurrentIndianFiscalYear()}`;
 
   const officialQueries = [
     `site:nseindia.com ${name} announcement`,
@@ -26,20 +30,21 @@ export function planStockSources(query: string, companyName: string, answerType:
   ];
   const searchQueries = [
     `${name} stock news today India why moving`,
-    `${name} latest results India`,
+    `${name} latest quarterly results ${expQ}`,
   ];
+  if (/market share/i.test(query)) searchQueries.push(`${name} market share latest ${curFY}`, `${name} investor presentation market share`);
   const requiredSources = ["announcements", "price", "sector"];
   const chartNeeds = ["stock_line", "index_compare"];
 
   if (depth !== "light") {
-    officialQueries.push(`${name} investor relations results`, `${name} shareholding pattern NSE BSE`);
-    searchQueries.push(`${name} share price analysis Moneycontrol`, `${name} quarterly earnings BusinessLine Mint`);
+    officialQueries.push(`${name} investor relations results ${curFY}`, `${name} shareholding pattern NSE BSE latest`);
+    searchQueries.push(`${name} share price analysis Moneycontrol`, `${name} ${expQ} earnings BusinessLine Mint`);
     requiredSources.push("results", "shareholding", "fundamentals", "news");
     chartNeeds.push("valuation");
   }
   if (depth === "deep") {
-    officialQueries.push(`${name} annual report investor presentation`, `${name} corporate actions board meeting NSE`);
-    searchQueries.push(`${name} credit rating outlook`, `${name} peer comparison sector India`, `${name} management commentary concall`);
+    officialQueries.push(`${name} annual report investor presentation latest`, `${name} corporate actions board meeting NSE`);
+    searchQueries.push(`${name} credit rating outlook`, `${name} peer comparison sector India`, `${name} latest management commentary concall`);
     requiredSources.push("annual_report", "presentation", "peers", "macro");
     chartNeeds.push("peer_table", "shareholding_table");
   }

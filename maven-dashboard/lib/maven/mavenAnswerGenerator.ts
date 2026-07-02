@@ -2,6 +2,7 @@ import type { ContextPack, MavenAnswer, MavenBlock, MavenKeyData, MavenSource, M
 import { SYSTEM_PROMPT, RETRIEVAL_PACK } from "../india-context";
 import { deepseekJSON } from "../deepseek";
 import { disclaimerText } from "./answerTypeRouter";
+import { getCurrentIndianFiscalYear, getLatestCompletedIndianFiscalYear, getExpectedLatestQuarter, formatFiscalPeriod, parseAllFiscalTokens, compareFiscalPeriods } from "./reportingPeriods";
 
 const arrowize = (chain: string) => chain.replace(/->/g, "→");
 const SOURCE_CAP = 20; // enough for a deep (22-budget) research pack without an unbounded payload
@@ -41,7 +42,16 @@ function buildEvidence(pack: ContextPack, sources: MavenSource[]): MavenEvidence
     coverageStatus = substantive >= 3 ? "strong" : substantive > 0 ? "partial" : "unavailable";
   }
 
-  return { sourceCount, verifiedSourceCount, retrievedSourceCount, officialSourceCount, analysisOnlySourceCount, unavailableSourceCount, evidenceDepth, sourceBudget, coverageStatus };
+  // latest fiscal period visible in retrieved source text (freshness cue for the UI)
+  let latest: { fy: number; quarter?: 1 | 2 | 3 | 4 } | null = null;
+  for (const s of pack.sourceSnippets) {
+    for (const p of parseAllFiscalTokens(`${s.title} ${s.snippet}`)) {
+      if (p.fy > getCurrentIndianFiscalYear() + 1) continue; // ignore far-future projections (e.g. FY30 targets)
+      if (!latest || compareFiscalPeriods(p, latest) > 0) latest = p;
+    }
+  }
+
+  return { sourceCount, verifiedSourceCount, retrievedSourceCount, officialSourceCount, analysisOnlySourceCount, unavailableSourceCount, evidenceDepth, sourceBudget, coverageStatus, latestPeriodFound: latest ? formatFiscalPeriod(latest) : undefined };
 }
 
 function keyDataFrom(pack: ContextPack): MavenKeyData[] {
@@ -129,10 +139,13 @@ function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); 
 
 export async function generateAnswer(pack: ContextPack, strict = false): Promise<MavenAnswer> {
   const single = pack.answerType === "single_stock_research";
+  const isStock = single || pack.answerType === "stock_comparison";
+  const curFY = getCurrentIndianFiscalYear();
   const system =
     SYSTEM_PROMPT + "\n\n" + RETRIEVAL_PACK +
     "\n\nRESEARCH MODE: Answer ONLY from the provided research context (live facts, knowledge grounding, sources). " +
     "State NO number that is not in the facts, knowledge, or sources - if you must generalise, say 'directionally'. " +
+    (isStock ? `FRESHNESS LOCK: Today's Indian fiscal context is FY${curFY} (latest completed FY${getLatestCompletedIndianFiscalYear()}, expected latest reported quarter ${formatFiscalPeriod(getExpectedLatestQuarter())}). For company answers you must NOT use memory-based financial metrics (revenue growth, margins, market share, capex, order book, guidance, market size). Use ONLY figures present in the provided facts/sources/allowedMetrics, ALWAYS labeled with their reporting period (e.g. 'Q4FY26 revenue'). Never present FY${getLatestCompletedIndianFiscalYear() - 2}/FY${getLatestCompletedIndianFiscalYear() - 1} figures as current unless the user asked for history or they are explicitly the latest available AND labeled so. If a metric is not in the context, say it is unavailable - do not approximate (~, roughly, around, estimated, X-Y%). ` : "") +
     "Lead with the mechanism chain provided. Be specific and concise like a senior Indian equity analyst; NO filler. " +
     "Output JSON {headline, summary, keyData:[{label,value,change}], blocks:[{type,title,body}], followUps:[]}. " +
     "Block types DATA/POINT/MACRO/CONTEXT/RISK/TAKEAWAY; include >=1 RISK and end with TAKEAWAY. Do NOT output charts/sources/disclaimer." +
@@ -143,7 +156,8 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
     mechanismChain: pack.mechanism?.chain,
     knowledge: pack.knowledge ? { summary: pack.knowledge.summary, chain: pack.knowledge.chain, winners: pack.knowledge.winners, losers: pack.knowledge.losers, facts: pack.knowledge.facts.map((f) => f.text) } : null,
     facts: pack.extractedFacts,
-    sources: pack.sourceSnippets.map((s) => ({ title: s.title, snippet: s.snippet, source: s.source })),
+    sources: pack.sourceSnippets.map((s) => ({ title: s.title, snippet: s.snippet, source: s.source, date: s.date ?? s.published })),
+    allowedMetrics: pack.metricEvidence?.filter((m) => m.allowedVisible).map((m) => ({ label: m.label, value: m.value, unit: m.unit, period: m.period, source: m.sourceName, freshness: m.freshness })),
     marketData: pack.marketData, limitations: pack.limitations,
   });
 

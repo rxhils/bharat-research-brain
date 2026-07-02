@@ -1,4 +1,6 @@
-import type { ContextPack, ResearchPlan, MarketData, ChartSpec, AnswerType, DisclaimerLevel, SourceResult, CompanySnapshot } from "./types";
+import type { ContextPack, ResearchPlan, MarketData, ChartSpec, AnswerType, DisclaimerLevel, SourceResult, CompanySnapshot, MetricEvidence } from "./types";
+import { validateMetricEvidence } from "./metricFreshnessValidator";
+import { parseAllFiscalTokens } from "./reportingPeriods";
 import { getIndexPerformance, getSectorPerformance, getStockPrice, getCrudePrice, getUSDINR, getGSecYield, getFIIDIIFlows, getIndiaMacroSnapshot, getCompanySnapshot, getCompanyAnnouncements, getLatestResultContext, getShareholdingContext } from "./dataTools";
 import { searchSources } from "./sourceSearch";
 import { lookupKnowledge } from "./indiaMarketKnowledge";
@@ -132,10 +134,38 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   if (cmp.length) charts.push({ type: "comparison_table", title: singleStock ? "Key metrics" : "Valuation comparison", dataSource: "snapshots", data: cmp });
   if (mechanism.flow) charts.push(mechanism.flow);
 
+  // ---- freshness lock: structured metric evidence + user-facing freshness note ----
+  let metricEvidence: MetricEvidence[] | undefined;
+  if (isStock) {
+    const raw: MetricEvidence[] = [];
+    for (const s of md.stockSnapshots ?? []) {
+      const add = (metric: MetricEvidence["metric"], label: string, value: number | null, unit?: string) => {
+        if (value != null) raw.push({ metric, label: `${s.symbol} ${label}`, value, unit, sourceName: s.source, sourceUrl: s.sourceUrl, sourceDate: s.resultDate ?? undefined, period: s.resultDate ?? undefined, confidence: s.confidence === "verified" ? "verified" : "retrieved", freshness: "unverified", allowedVisible: false });
+      };
+      add("pe", "P/E", s.pe); add("pb", "P/B", s.pb); add("roe", "ROE", s.roe, "%");
+      add("margin", "net margin", s.netMargin, "%"); add("revenueGrowth", "revenue growth", s.revenueGrowth, "%");
+    }
+    for (const rc of md.results ?? []) {
+      if (rc.yoyRevenueGrowth != null) raw.push({ metric: "revenueGrowth", label: "revenue growth YoY", value: rc.yoyRevenueGrowth, unit: "%", period: rc.resultDate ?? undefined, sourceName: rc.source, sourceUrl: rc.sourceUrl, sourceDate: rc.resultDate ?? undefined, confidence: rc.confidence === "verified" ? "verified" : "retrieved", freshness: "unverified", allowedVisible: false });
+      if (rc.yoyProfitGrowth != null) raw.push({ metric: "pat", label: "profit growth YoY", value: rc.yoyProfitGrowth, unit: "%", period: rc.resultDate ?? undefined, sourceName: rc.source, sourceUrl: rc.sourceUrl, sourceDate: rc.resultDate ?? undefined, confidence: rc.confidence === "verified" ? "verified" : "retrieved", freshness: "unverified", allowedVisible: false });
+    }
+    for (const sh of md.shareholding ?? []) {
+      if (sh.promoterHolding != null) raw.push({ metric: "shareholding", label: "promoter holding", value: sh.promoterHolding, unit: "%", period: sh.date ?? undefined, sourceName: sh.source, sourceUrl: sh.sourceUrl, sourceDate: sh.date ?? undefined, confidence: sh.confidence === "verified" ? "verified" : "retrieved", freshness: "unverified", allowedVisible: false });
+    }
+    metricEvidence = validateMetricEvidence(raw, query);
+    for (const m of metricEvidence) if (!m.allowedVisible && m.limitation) limitations.push(m.limitation);
+    // clean freshness note (task: user-facing, never technical)
+    const hasFiscalEvidence = allSources.some((s) => parseAllFiscalTokens(`${s.title} ${s.snippet}`).length > 0) || metricEvidence.some((m) => m.allowedVisible && m.metric !== "price");
+    limitations.push(hasFiscalEvidence
+      ? "Financial metrics shown are the latest available from official/retrieved sources."
+      : "Current financial metrics were not verified from available sources; Maven limits this answer to price action, sector context, and source-backed catalysts.");
+  }
+
   return {
     question: query, intent: plan.intent, topic: plan.topic, answerType, disclaimerLevel, marketData: md,
     extractedFacts: facts, sourceSnippets: allSources, chartData: charts, limitations, knowledge, mechanism,
     evidenceHint: stockPlan ? { evidenceDepth: stockPlan.depth, sourceBudget: stockPlan.sourceBudget } : undefined,
+    metricEvidence,
   };
 }
 

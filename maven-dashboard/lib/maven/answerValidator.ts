@@ -2,6 +2,7 @@ import type { ContextPack, MavenAnswer, MavenBlock, MavenSource } from "./types"
 import { sanitizeVisibleText, FORBIDDEN_VISIBLE_TERMS } from "../maven-visibility";
 import { FILLER_PATTERNS } from "./answerQualityScorer";
 import { disclaimerText } from "./answerTypeRouter";
+import { sanitizeStaleMetrics } from "./staleMetricSanitizer";
 
 const HYPE = /\b(strong buy|buy now|sell now|target price|price target|multibagger|sure[-\s]?shot|guaranteed|low risk high return)\b/i;
 const INDIA = /(nifty|sensex|bank|rbi|fii|dii|rupee|crude|g-?sec|india|sector|repo|inflation|yield|nse|bse)/i;
@@ -15,6 +16,18 @@ function stripFiller(s: string): string {
 export function validateAnswer(a: MavenAnswer, pack: ContextPack): { valid: boolean; issues: string[]; fixed: MavenAnswer } {
   const issues: string[] = [];
   const clean = (s: string) => stripFiller(sanitizeVisibleText(s || ""));
+
+  // Freshness lock for company answers: scrub stale-FY / unsourced-approx metrics against the
+  // evidence text (source snippets + tool-derived facts) BEFORE the rest of validation runs.
+  if (pack.answerType === "single_stock_research" || pack.answerType === "stock_comparison") {
+    const sourceText = [
+      ...pack.sourceSnippets.map((s) => `${s.title} ${s.snippet} ${s.date ?? s.published ?? ""}`),
+      ...pack.extractedFacts,
+    ].join("\n");
+    const res = sanitizeStaleMetrics(a, pack.question, sourceText);
+    if (res.removedCount > 0) issues.push(`stale/unsourced metrics removed (${res.removedCount})`);
+    a = res.fixed;
+  }
 
   const fixed: MavenAnswer = {
     ...a,

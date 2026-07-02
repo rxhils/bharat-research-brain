@@ -33,17 +33,21 @@ const evidenceFails = results.filter((r) => {
   const ev = r.evidence;
   return ev == null || typeof ev !== "object" || typeof ev.sourceCount !== "number" || Number.isNaN(ev.sourceCount);
 });
+// Freshness lock: stale FY metrics or unsourced approximate metrics in current stock answers.
+const freshnessFails = results.filter((r) => r.freshness && r.freshness.length);
+const staleMetricFailures = freshnessFails.filter((r) => r.freshness.some((f) => f.startsWith("stale:")));
+const approxMetricFailures = freshnessFails.filter((r) => r.freshness.some((f) => f.startsWith("approx:")));
 
 console.log("ID   ACTUAL TYPE               P   SC  REASONS");
 for (const r of results) console.log(`${r.id.padEnd(4)} ${String(r.type || "-").padEnd(24)} ${r.pass ? "OK" : "XX"}  ${String(r.score).padStart(3)}  ${(r.reasons || []).join("; ")}`);
 
 console.log(`\nTOTAL ${results.length}   passed ${passed}   failed ${results.length - passed}   avgScore ${avg}   avgLatency ${avgLat}ms`);
 console.log("by category:  " + Object.entries(byCat).map(([k, v]) => `${k} ${v.p}/${v.n}`).join("   "));
-console.log(`leakage failures: ${leakFails.length}   refusal failures: ${refusalFails.length}   evidence-schema failures: ${evidenceFails.length}`);
+console.log(`leakage failures: ${leakFails.length}   refusal failures: ${refusalFails.length}   evidence-schema failures: ${evidenceFails.length}   stale-metric failures: ${staleMetricFailures.length}   approx-metric failures: ${approxMetricFailures.length}`);
 const top = results.filter((r) => !r.pass).slice(0, 10);
 if (top.length) { console.log("\nTop failures:"); for (const r of top) console.log(`  ${r.id}  ${r.query}  ->  ${(r.reasons || []).join("; ")}`); }
 
-const report = { generatedAtMs: Date.now(), base: BASE, total: results.length, passed, failed: results.length - passed, avgScore: avg, avgLatencyMs: avgLat, byCategory: byCat, leakageFailures: leakFails.map((r) => r.id), refusalFailures: refusalFails.map((r) => r.id), evidenceSchemaFailures: evidenceFails.map((r) => r.id), results };
+const report = { generatedAtMs: Date.now(), base: BASE, total: results.length, passed, failed: results.length - passed, avgScore: avg, avgLatencyMs: avgLat, byCategory: byCat, leakageFailures: leakFails.map((r) => r.id), refusalFailures: refusalFails.map((r) => r.id), evidenceSchemaFailures: evidenceFails.map((r) => r.id), staleMetricFailures: staleMetricFailures.map((r) => r.id), approxMetricFailures: approxMetricFailures.map((r) => r.id), results };
 writeFileSync(new URL("./evals/latest-report.json", import.meta.url), JSON.stringify(report, null, 2));
 console.log("\nreport -> scripts/evals/latest-report.json");
-process.exitCode = leakFails.length === 0 && refusalFails.length === 0 && evidenceFails.length === 0 ? 0 : 1;
+process.exitCode = leakFails.length === 0 && refusalFails.length === 0 && evidenceFails.length === 0 && freshnessFails.length === 0 ? 0 : 1;

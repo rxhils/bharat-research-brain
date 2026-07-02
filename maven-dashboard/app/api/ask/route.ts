@@ -112,6 +112,7 @@ export async function POST(req: Request) {
   }
   fixed.type = answerType;
   fixed.disclaimerLevel = disclaimerLevel;
-  fixed.limitations = pack.limitations;
+  // merge pack limitations with any added by validation (e.g. freshness-lock removals)
+  fixed.limitations = [...new Set([...pack.limitations, ...(fixed.limitations ?? [])])];
   return NextResponse.json(fixed);
 }

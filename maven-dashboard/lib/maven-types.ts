@@ -36,6 +36,7 @@ export type MavenEvidenceSummary = {
   evidenceDepth?: MavenEvidenceDepth;
   sourceBudget?: number;
   coverageStatus?: MavenCoverageStatus;
+  latestPeriodFound?: string;
 };
 
 export type MavenAskResponse = {

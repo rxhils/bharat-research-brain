@@ -22,7 +22,7 @@ function Pill({ children, tone = "muted" }: { children: React.ReactNode; tone?: 
 
 export function MavenEvidenceSummaryCard({ evidence }: { evidence?: MavenEvidenceSummary }) {
   if (!evidence) return null;
-  const { sourceCount = 0, verifiedSourceCount = 0, retrievedSourceCount = 0, analysisOnlySourceCount = 0, evidenceDepth, sourceBudget, coverageStatus } = evidence;
+  const { sourceCount = 0, verifiedSourceCount = 0, retrievedSourceCount = 0, analysisOnlySourceCount = 0, evidenceDepth, sourceBudget, coverageStatus, latestPeriodFound } = evidence;
   if (sourceCount === 0 && !evidenceDepth) return null;
   const depth = depthLabel(evidenceDepth, sourceBudget);
   const cov = coverageStatus ? COVERAGE[coverageStatus] : null;
@@ -35,6 +35,7 @@ export function MavenEvidenceSummaryCard({ evidence }: { evidence?: MavenEvidenc
       {retrievedSourceCount > 0 && <Pill>{retrievedSourceCount} retrieved</Pill>}
       {analysisOnlySourceCount > 0 && <Pill tone="dim">{analysisOnlySourceCount} analysis</Pill>}
       {depth && <Pill tone="dim">{depth}</Pill>}
+      {latestPeriodFound && <Pill tone="dim">Latest period: {latestPeriodFound}</Pill>}
       {cov && (
         <span className={"ml-auto inline-flex items-center gap-1.5 text-[10px] " + cov.text}>
           <span className={"h-1.5 w-1.5 rounded-full " + cov.dot} />{cov.label}

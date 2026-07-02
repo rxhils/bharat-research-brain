@@ -120,6 +120,29 @@ export type MavenEvidenceSummary = {
   evidenceDepth?: EvidenceDepth;
   sourceBudget?: number;
   coverageStatus?: CoverageStatus;
+  latestPeriodFound?: string; // e.g. "Q4FY26" - latest fiscal period seen in retrieved sources
+};
+
+// Freshness lock: every company financial metric must be evidence-backed, period-labeled and
+// freshness-validated before it may appear in a visible answer.
+export type MetricFreshness = "current" | "latest_available" | "stale" | "historical_requested" | "unverified";
+export type MetricEvidence = {
+  metric:
+    | "price" | "dailyMove" | "volume" | "revenue" | "revenueGrowth" | "ebitda" | "pat" | "margin"
+    | "marketShare" | "pe" | "pb" | "roe" | "roce" | "debtToEquity" | "capex" | "orderBook"
+    | "guidance" | "shareholding" | "pledge" | "marketSize" | "cagr" | "other";
+  label: string;
+  value: string | number | null;
+  unit?: string;
+  period?: string;
+  sourceId?: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  sourceDate?: string;
+  confidence: "verified" | "retrieved" | "cross_verified" | "analysis_only" | "unavailable";
+  freshness: MetricFreshness;
+  allowedVisible: boolean;
+  limitation?: string;
 };
 
 export type ContextPack = {
@@ -129,6 +152,7 @@ export type ContextPack = {
   chartData: ChartSpec[]; limitations: string[];
   knowledge: KnowledgeEntry | null; mechanism: { chain: string; flow: ChartSpec | null } | null;
   evidenceHint?: { evidenceDepth?: EvidenceDepth; sourceBudget?: number };
+  metricEvidence?: MetricEvidence[];
 };
 
 export type MavenBlock = { type: "DATA" | "POINT" | "MACRO" | "CONTEXT" | "RISK" | "TAKEAWAY"; title: string; body: string };

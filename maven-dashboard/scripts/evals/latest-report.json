@@ -1,11 +1,11 @@
 {
-  "generatedAtMs": 1782977029371,
-  "base": "http://localhost:3010/api/ask",
-  "total": 89,
-  "passed": 89,
+  "generatedAtMs": 1782978600063,
+  "base": "http://localhost:3011/api/ask",
+  "total": 97,
+  "passed": 97,
   "failed": 0,
   "avgScore": 100,
-  "avgLatencyMs": 92,
+  "avgLatencyMs": 143,
   "byCategory": {
     "greeting": {
       "p": 10,
@@ -50,11 +50,17 @@
     "nse_universe": {
       "p": 20,
       "n": 20
+    },
+    "freshness": {
+      "p": 8,
+      "n": 8
     }
   },
   "leakageFailures": [],
   "refusalFailures": [],
   "evidenceSchemaFailures": [],
+  "staleMetricFailures": [],
+  "approxMetricFailures": [],
   "results": [
     {
       "id": "A1",
@@ -72,7 +78,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 62
+      "freshness": [],
+      "latencyMs": 150
     },
     {
       "id": "A2",
@@ -90,7 +97,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "freshness": [],
+      "latencyMs": 12
     },
     {
       "id": "A3",
@@ -108,7 +116,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 8
+      "freshness": [],
+      "latencyMs": 11
     },
     {
       "id": "A4",
@@ -126,7 +135,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "freshness": [],
+      "latencyMs": 11
     },
     {
       "id": "A5",
@@ -144,7 +154,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 11
+      "freshness": [],
+      "latencyMs": 10
     },
     {
       "id": "B1",
@@ -171,7 +182,8 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 28
+      "freshness": [],
+      "latencyMs": 411
     },
     {
       "id": "B2",
@@ -198,6 +210,7 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
+      "freshness": [],
       "latencyMs": 13
     },
     {
@@ -225,7 +238,8 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 25
+      "freshness": [],
+      "latencyMs": 30
     },
     {
       "id": "B4",
@@ -252,7 +266,8 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 30
+      "freshness": [],
+      "latencyMs": 29
     },
     {
       "id": "B5",
@@ -279,7 +294,8 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 26
+      "freshness": [],
+      "latencyMs": 29
     },
     {
       "id": "B6",
@@ -306,7 +322,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 22
+      "freshness": [],
+      "latencyMs": 24
     },
     {
       "id": "C1",
@@ -333,7 +350,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 26
+      "freshness": [],
+      "latencyMs": 27
     },
     {
       "id": "C2",
@@ -360,7 +378,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 26
+      "freshness": [],
+      "latencyMs": 28
     },
     {
       "id": "C3",
@@ -387,7 +406,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 22
+      "freshness": [],
+      "latencyMs": 25
     },
     {
       "id": "C4",
@@ -414,7 +434,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 25
+      "freshness": [],
+      "latencyMs": 27
     },
     {
       "id": "C5",
@@ -441,7 +462,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 24
+      "freshness": [],
+      "latencyMs": 27
     },
     {
       "id": "C6",
@@ -468,7 +490,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 25
+      "freshness": [],
+      "latencyMs": 29
     },
     {
       "id": "C7",
@@ -495,6 +518,7 @@
       "sources": 2,
       "limitations": 1,
       "leak": [],
+      "freshness": [],
       "latencyMs": 26
     },
     {
@@ -522,7 +546,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 24
+      "freshness": [],
+      "latencyMs": 29
     },
     {
       "id": "C9",
@@ -549,7 +574,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 24
+      "freshness": [],
+      "latencyMs": 30
     },
     {
       "id": "C10",
@@ -576,7 +602,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 25
+      "freshness": [],
+      "latencyMs": 26
     },
     {
       "id": "D1",
@@ -603,9 +630,10 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 19
+      "freshness": [],
+      "latencyMs": 135
     },
     {
       "id": "D2",
@@ -632,9 +660,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 7,
+      "limitations": 8,
       "leak": [],
-      "latencyMs": 20
+      "freshness": [],
+      "latencyMs": 137
     },
     {
       "id": "D3",
@@ -661,9 +690,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 7,
+      "limitations": 8,
       "leak": [],
-      "latencyMs": 123
+      "freshness": [],
+      "latencyMs": 143
     },
     {
       "id": "D4",
@@ -692,7 +722,8 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 323
+      "freshness": [],
+      "latencyMs": 738
     },
     {
       "id": "D5",
@@ -719,9 +750,10 @@
       "blocks": 5,
       "charts": 3,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 325
+      "freshness": [],
+      "latencyMs": 547
     },
     {
       "id": "D6",
@@ -748,9 +780,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 130
+      "freshness": [],
+      "latencyMs": 277
     },
     {
       "id": "D7",
@@ -777,9 +810,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 132
+      "freshness": [],
+      "latencyMs": 604
     },
     {
       "id": "D8",
@@ -806,9 +840,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 124
+      "freshness": [],
+      "latencyMs": 127
     },
     {
       "id": "D9",
@@ -835,9 +870,10 @@
       "blocks": 5,
       "charts": 6,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 240
+      "freshness": [],
+      "latencyMs": 276
     },
     {
       "id": "D10",
@@ -864,9 +900,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 7,
+      "limitations": 8,
       "leak": [],
-      "latencyMs": 274
+      "freshness": [],
+      "latencyMs": 3188
     },
     {
       "id": "D11",
@@ -893,9 +930,10 @@
       "blocks": 5,
       "charts": 4,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 234
+      "freshness": [],
+      "latencyMs": 149
     },
     {
       "id": "D12",
@@ -922,9 +960,10 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 133
+      "freshness": [],
+      "latencyMs": 177
     },
     {
       "id": "E1",
@@ -953,7 +992,8 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 22
+      "freshness": [],
+      "latencyMs": 40
     },
     {
       "id": "E2",
@@ -982,7 +1022,8 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 124
+      "freshness": [],
+      "latencyMs": 245
     },
     {
       "id": "E3",
@@ -1013,7 +1054,8 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 226
+      "freshness": [],
+      "latencyMs": 294
     },
     {
       "id": "E4",
@@ -1044,7 +1086,8 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 126
+      "freshness": [],
+      "latencyMs": 140
     },
     {
       "id": "E5",
@@ -1073,7 +1116,8 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 125
+      "freshness": [],
+      "latencyMs": 144
     },
     {
       "id": "F1",
@@ -1100,9 +1144,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 7,
+      "limitations": 8,
       "leak": [],
-      "latencyMs": 18
+      "freshness": [],
+      "latencyMs": 25
     },
     {
       "id": "F2",
@@ -1129,9 +1174,10 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 20
+      "freshness": [],
+      "latencyMs": 30
     },
     {
       "id": "F3",
@@ -1158,9 +1204,10 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 18
+      "freshness": [],
+      "latencyMs": 25
     },
     {
       "id": "F4",
@@ -1187,9 +1234,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 7,
+      "limitations": 8,
       "leak": [],
-      "latencyMs": 18
+      "freshness": [],
+      "latencyMs": 25
     },
     {
       "id": "G1",
@@ -1207,7 +1255,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 13
     },
     {
       "id": "G2",
@@ -1225,7 +1274,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 11
     },
     {
       "id": "G3",
@@ -1243,7 +1293,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 10
     },
     {
       "id": "G4",
@@ -1261,7 +1312,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 12
     },
     {
       "id": "G5",
@@ -1279,7 +1331,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 13
     },
     {
       "id": "H1",
@@ -1297,7 +1350,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 14
     },
     {
       "id": "H2",
@@ -1315,7 +1369,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 10
     },
     {
       "id": "H3",
@@ -1333,7 +1388,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 13
     },
     {
       "id": "H4",
@@ -1351,7 +1407,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 10
     },
     {
       "id": "H5",
@@ -1369,7 +1426,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "freshness": [],
+      "latencyMs": 15
     },
     {
       "id": "T1",
@@ -1396,7 +1454,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "freshness": [],
+      "latencyMs": 14
     },
     {
       "id": "T2",
@@ -1423,7 +1482,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "freshness": [],
+      "latencyMs": 20
     },
     {
       "id": "T3",
@@ -1450,7 +1510,8 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 11
+      "freshness": [],
+      "latencyMs": 16
     },
     {
       "id": "T4",
@@ -1477,9 +1538,10 @@
       "blocks": 5,
       "charts": 2,
       "sources": 2,
-      "limitations": 0,
+      "limitations": 1,
       "leak": [],
-      "latencyMs": 16
+      "freshness": [],
+      "latencyMs": 30
     },
     {
       "id": "T5",
@@ -1506,7 +1568,8 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 25
+      "freshness": [],
+      "latencyMs": 32
     },
     {
       "id": "D13",
@@ -1533,9 +1596,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 122
+      "freshness": [],
+      "latencyMs": 147
     },
     {
       "id": "D14",
@@ -1562,9 +1626,10 @@
       "blocks": 5,
       "charts": 6,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 130
+      "freshness": [],
+      "latencyMs": 338
     },
     {
       "id": "C11",
@@ -1591,7 +1656,8 @@
       "sources": 2,
       "limitations": 1,
       "leak": [],
-      "latencyMs": 26
+      "freshness": [],
+      "latencyMs": 37
     },
     {
       "id": "B7",
@@ -1618,7 +1684,8 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 25
+      "freshness": [],
+      "latencyMs": 35
     },
     {
       "id": "I1",
@@ -1645,9 +1712,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 7,
+      "limitations": 8,
       "leak": [],
-      "latencyMs": 13
+      "freshness": [],
+      "latencyMs": 21
     },
     {
       "id": "I2",
@@ -1674,7 +1742,8 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 25
+      "freshness": [],
+      "latencyMs": 37
     },
     {
       "id": "I3",
@@ -1701,7 +1770,8 @@
       "sources": 2,
       "limitations": 3,
       "leak": [],
-      "latencyMs": 27
+      "freshness": [],
+      "latencyMs": 32
     },
     {
       "id": "J1",
@@ -1719,7 +1789,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 7
+      "freshness": [],
+      "latencyMs": 9
     },
     {
       "id": "J2",
@@ -1737,7 +1808,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 10
     },
     {
       "id": "J3",
@@ -1755,7 +1827,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 6
+      "freshness": [],
+      "latencyMs": 10
     },
     {
       "id": "J4",
@@ -1773,7 +1846,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 7
+      "freshness": [],
+      "latencyMs": 10
     },
     {
       "id": "J5",
@@ -1791,7 +1865,8 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 7
+      "freshness": [],
+      "latencyMs": 12
     },
     {
       "id": "K1",
@@ -1818,9 +1893,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 126
+      "freshness": [],
+      "latencyMs": 297
     },
     {
       "id": "K2",
@@ -1847,9 +1923,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 428
+      "freshness": [],
+      "latencyMs": 295
     },
     {
       "id": "K3",
@@ -1876,9 +1953,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 382
+      "freshness": [],
+      "latencyMs": 285
     },
     {
       "id": "K4",
@@ -1905,9 +1983,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 254
+      "freshness": [],
+      "latencyMs": 148
     },
     {
       "id": "K5",
@@ -1934,9 +2013,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 308
+      "freshness": [],
+      "latencyMs": 157
     },
     {
       "id": "K6",
@@ -1963,15 +2043,16 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 145
+      "freshness": [],
+      "latencyMs": 249
     },
     {
       "id": "K7",
       "category": "nse_universe",
       "query": "What changed in Angel One?",
-      "headline": "Angel One Limited: what's driving the gain",
+      "headline": "Angel One Limited: what's driving the fall",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -1992,9 +2073,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 291
+      "freshness": [],
+      "latencyMs": 392
     },
     {
       "id": "K8",
@@ -2021,9 +2103,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 148
+      "freshness": [],
+      "latencyMs": 314
     },
     {
       "id": "K9",
@@ -2050,9 +2133,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 121
+      "freshness": [],
+      "latencyMs": 139
     },
     {
       "id": "K10",
@@ -2079,9 +2163,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 157
+      "freshness": [],
+      "latencyMs": 310
     },
     {
       "id": "K11",
@@ -2108,9 +2193,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 398
+      "freshness": [],
+      "latencyMs": 160
     },
     {
       "id": "K12",
@@ -2137,9 +2223,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 295
+      "freshness": [],
+      "latencyMs": 147
     },
     {
       "id": "K13",
@@ -2166,9 +2253,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 277
+      "freshness": [],
+      "latencyMs": 130
     },
     {
       "id": "K14",
@@ -2195,9 +2283,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 306
+      "freshness": [],
+      "latencyMs": 162
     },
     {
       "id": "K15",
@@ -2224,15 +2313,16 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 303
+      "freshness": [],
+      "latencyMs": 299
     },
     {
       "id": "K16",
       "category": "nse_universe",
       "query": "Explain Angel One",
-      "headline": "Angel One Limited: what's driving the gain",
+      "headline": "Angel One Limited: what's driving the fall",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -2253,9 +2343,10 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
-      "latencyMs": 11
+      "freshness": [],
+      "latencyMs": 16
     },
     {
       "id": "K17",
@@ -2284,7 +2375,8 @@
       "sources": 2,
       "limitations": 7,
       "leak": [],
-      "latencyMs": 15
+      "freshness": [],
+      "latencyMs": 18
     },
     {
       "id": "K18",
@@ -2313,7 +2405,8 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 12
+      "freshness": [],
+      "latencyMs": 16
     },
     {
       "id": "K19",
@@ -2342,7 +2435,8 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 222
+      "freshness": [],
+      "latencyMs": 130
     },
     {
       "id": "K20",
@@ -2369,9 +2463,250 @@
       "blocks": 6,
       "charts": 3,
       "sources": 2,
-      "limitations": 2,
+      "limitations": 3,
       "leak": [],
-      "latencyMs": 152
+      "freshness": [],
+      "latencyMs": 146
+    },
+    {
+      "id": "M1",
+      "category": "freshness",
+      "query": "Analyze Blue Star",
+      "headline": "Blue Star Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 18
+    },
+    {
+      "id": "M2",
+      "category": "freshness",
+      "query": "Why is Blue Star moving today?",
+      "headline": "Blue Star Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 16
+    },
+    {
+      "id": "M3",
+      "category": "freshness",
+      "query": "Blue Star market share",
+      "headline": "Blue Star Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 37
+    },
+    {
+      "id": "M4",
+      "category": "freshness",
+      "query": "Latest results for Blue Star",
+      "headline": "Blue Star Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 16
+    },
+    {
+      "id": "M5",
+      "category": "freshness",
+      "query": "What was Blue Star's FY24 performance?",
+      "headline": "Blue Star Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 36
+    },
+    {
+      "id": "M6",
+      "category": "freshness",
+      "query": "Analyze Voltas",
+      "headline": "Voltas Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 486
+    },
+    {
+      "id": "M7",
+      "category": "freshness",
+      "query": "Latest results for Poonawalla Fincorp",
+      "headline": "Poonawalla Fincorp Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 17
+    },
+    {
+      "id": "M8",
+      "category": "freshness",
+      "query": "Shareholding pattern of Blue Star",
+      "headline": "Blue Star Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 17
     }
   ]
 }

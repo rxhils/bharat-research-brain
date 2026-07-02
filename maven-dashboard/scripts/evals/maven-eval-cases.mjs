@@ -123,6 +123,18 @@ export const CASES = [
   { id: "K18", query: "Compare HAL and BEL", category: "nse_universe", expectedAnswerType: "stock_comparison", expectedSymbols: ["HAL", "BEL"], blocks: true, charts: false, sources: true },
   { id: "K19", query: "Compare ONGC and Oil India", category: "nse_universe", expectedAnswerType: "stock_comparison", expectedSymbols: ["ONGC"], blocks: true, charts: false, sources: true },
   { id: "K20", query: "Compare Tata Elxsi and KPIT Tech", category: "nse_universe", expectedAnswerType: "stock_comparison", blocks: true, charts: false, sources: true },
+
+  // M. Freshness & metrics lock (Latest Data Engine v1). Stock answers must not show stale FY
+  // metrics or unsourced approximate figures as current; the scorer's scanFreshness enforces this
+  // for every stock-typed case. historical:true marks explicit historical requests (FY24 allowed).
+  { id: "M1", query: "Analyze Blue Star", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], blocks: true, charts: false, sources: true },
+  { id: "M2", query: "Why is Blue Star moving today?", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], blocks: true, charts: false, sources: true },
+  { id: "M3", query: "Blue Star market share", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], blocks: true, charts: false, sources: true },
+  { id: "M4", query: "Latest results for Blue Star", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], blocks: true, charts: false, sources: true },
+  { id: "M5", query: "What was Blue Star's FY24 performance?", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], historical: true, blocks: true, charts: false, sources: true, notes: "historical request - FY24 allowed only if sourced" },
+  { id: "M6", query: "Analyze Voltas", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Voltas"], blocks: true, charts: false, sources: true },
+  { id: "M7", query: "Latest results for Poonawalla Fincorp", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Poonawalla"], blocks: true, charts: false, sources: true },
+  { id: "M8", query: "Shareholding pattern of Blue Star", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], blocks: true, charts: false, sources: true },
 ];
 
 export default CASES;
