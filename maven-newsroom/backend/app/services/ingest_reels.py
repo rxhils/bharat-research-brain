@@ -45,6 +45,20 @@ FILES = {
     "09_asset_picker.json": ("asset_picker", "json"),
     "cost_guard.json": ("cost_guard", "json"),
     "11_higgsfield_request.json": ("scene_studio", "json"),
+    "12_fresh_video_scenes.json": ("scene_studio", "json"),
+    "08_renderer_selection.json": ("run_vault", "json"),
+    "09_higgsfield_creative_direction.json": ("higgsfield_creative_director", "json"),
+    "10_higgsfield_shot_plan.json": ("higgsfield_shot_planner", "json"),
+    "11_higgsfield_prompts.json": ("higgsfield_prompt_builder", "json"),
+    "12_higgsfield_generation.json": ("higgsfield_scene_generator", "json"),
+    "13_scene_quality.json": ("scene_quality_inspector", "json"),
+    "17_final_reel.json": ("final_reel_assembler", "json"),
+    "shot_01.mp4": ("higgsfield_scene_generator", "video"),
+    "shot_02.mp4": ("higgsfield_scene_generator", "video"),
+    "shot_03.mp4": ("higgsfield_scene_generator", "video"),
+    "shot_04.mp4": ("higgsfield_scene_generator", "video"),
+    "shot_05.mp4": ("higgsfield_scene_generator", "video"),
+    "shot_06.mp4": ("higgsfield_scene_generator", "video"),
     "09_scenes.json": ("scene_studio", "json"),
     "10_voiceover.json": ("voice_studio", "json"),
     "11_captions.json": ("subtitle_engine", "json"),
@@ -69,6 +83,8 @@ FILES = {
 
 # artifacts stored in the run's assets/ subdirectory rather than the run root
 ASSET_SUBDIR = {"asset_bg_dark.jpg", "asset_bg_panel.jpg", "asset_bg_end.jpg"}
+# Higgsfield clips live in higgsfield_clips/
+CLIPS_SUBDIR = {f"shot_{i:02d}.mp4" for i in range(1, 7)}
 
 
 def _load(d: Path, name: str):
@@ -150,7 +166,9 @@ def ingest_run(date: str) -> str | None:
     }, conflict_keys=["job_id"])
 
     for fname, (nid, atype) in FILES.items():
-        fp = (dd / "assets" / fname) if fname in ASSET_SUBDIR else (dd / fname)
+        fp = ((dd / "assets" / fname) if fname in ASSET_SUBDIR else
+              (dd / "higgsfield_clips" / fname) if fname in CLIPS_SUBDIR else
+              (dd / fname))
         if not fp.exists():
             continue
         db.upsert("artifacts", {
@@ -213,9 +231,53 @@ def ingest_all() -> list[str]:
 def _node_state(nid, dd: Path, quality, viral, hooks, final, published):
     has = lambda f: (dd / f).exists()
     has_asset = lambda f: (dd / "assets" / f).exists()
+    n_clips = len(list((dd / "higgsfield_clips").glob("shot_*.mp4"))) \
+        if (dd / "higgsfield_clips").exists() else 0
+    # ---- Higgsfield-primary chain --------------------------------------
+    if nid == "higgsfield_creative_director":
+        cd = _load(dd, "09_higgsfield_creative_direction.json") or {}
+        name = (cd.get("selected_direction") or {}).get("name")
+        return ("completed", f"Direction: {name}", "09_higgsfield_creative_direction.json") \
+            if name else ("pending", "Awaiting creative direction.", None)
+    if nid == "higgsfield_shot_planner":
+        sp = _load(dd, "10_higgsfield_shot_plan.json") or {}
+        return ("completed", f"{sp.get('shot_count')} shots / {sp.get('total_duration')}s planned",
+                "10_higgsfield_shot_plan.json") if sp.get("shots") \
+            else ("pending", "Awaiting shot plan.", None)
+    if nid == "higgsfield_prompt_builder":
+        return ("completed", "Seed+motion prompts built (no baked text).",
+                "11_higgsfield_prompts.json") if has("11_higgsfield_prompts.json") \
+            else ("pending", "Awaiting prompts.", None)
+    if nid == "higgsfield_scene_generator":
+        gen = _load(dd, "12_higgsfield_generation.json") or {}
+        if n_clips:
+            return ("completed", f"{n_clips} animated clip(s) generated.",
+                    "12_higgsfield_generation.json")
+        st = gen.get("generation_status", "not_planned")
+        return ("pending",
+                f"{st}: ~{gen.get('estimated_cost_credits', '?')}cr — paid generation "
+                "needs the UI trigger + Claude Code conductor.",
+                "12_higgsfield_generation.json" if gen else None)
+    if nid == "scene_quality_inspector":
+        sq = _load(dd, "13_scene_quality.json") or {}
+        if sq:
+            return ("completed" if sq.get("passed") else "failed",
+                    f"scene quality {sq.get('overall_scene_quality_score')}/100",
+                    "13_scene_quality.json")
+        return "pending", "Runs once clips exist.", None
+    if nid == "final_reel_assembler":
+        fr = _load(dd, "17_final_reel.json") or {}
+        return ("completed", f"reel.mp4 assembled ({fr.get('duration')}s, "
+                             f"{fr.get('scene_count')} clips).", "17_final_reel.json") \
+            if fr.get("status") == "completed" \
+            else ("pending", "Assembles once clips + audio exist.", None)
+    if nid == "motion_graphics":
+        # legacy Remotion renderer — only 'completed' for runs it actually made
+        if has("reel.mp4") and not has("17_final_reel.json"):
+            return "completed", "reel.mp4 (Remotion legacy run)", "reel.mp4"
+        return "pending", "Fallback renderer — not used (Higgsfield primary).", None
     # media-producing nodes: completed only if their file exists on disk
-    media = {"voice_studio": "voiceover.mp3", "motion_graphics": "reel.mp4",
-             "cover_studio": "cover.jpg"}
+    media = {"voice_studio": "voiceover.mp3", "cover_studio": "cover.jpg"}
     if nid == "scene_studio":
         return ("completed", "3 background plates ready", "asset_bg_dark.jpg") \
             if has_asset("asset_bg_dark.jpg") \

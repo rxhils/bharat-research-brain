@@ -1,0 +1,169 @@
+{
+  "date": "reel-2026-07-02-1319-003",
+  "dimensions": [
+    "importance",
+    "curiosity",
+    "emotional",
+    "simplicity",
+    "visual",
+    "shareability",
+    "retail_relevance"
+  ],
+  "formula": {
+    "importance": 0.25,
+    "curiosity": 0.2,
+    "simplicity": 0.15,
+    "visual": 0.15,
+    "shareability": 0.15,
+    "emotional": 0.1
+  },
+  "min_fit": 6.0,
+  "chosen": {
+    "headline": "Sensex jumps 444 points and Nifty reclaims 24,000 as the market snaps a two-day slide",
+    "viral_fit": 7.19,
+    "dims": {
+      "importance": 9.0,
+      "curiosity": 5,
+      "emotional": 4.0,
+      "simplicity": 5.6,
+      "visual": 10.0,
+      "shareability": 8.0,
+      "retail_relevance": 10.0
+    },
+    "story": {
+      "rank": 1,
+      "headline": "Sensex jumps 444 points and Nifty reclaims 24,000 as the market snaps a two-day slide",
+      "category": "Market Indices / Benchmarks",
+      "what_happened": "Indian benchmark indices ended a two-day losing streak on Wednesday. The Sensex rose 443.97 points (+0.58%) to close at 76,922.64 and the Nifty 50 added 140.85 points (+0.59%) to end at 24,005.85, moving back above the psychologically watched 24,000 level. The rebound was broad, powered by FMCG, auto and realty names, and helped the benchmarks recover the ground lost in the previous two sessions.",
+      "why_it_matters": "Reclaiming 24,000 on the Nifty after a two-session decline shows buyers stepped back in at lower levels, with strength spread across domestic-facing sectors rather than a single heavyweight. It marks a shift in short-term tone back toward the upside, even as export-led IT lagged.",
+      "affected_sectors": [
+        "FMCG",
+        "Auto",
+        "Realty",
+        "Banking",
+        "Information Technology"
+      ],
+      "affected_companies": [
+        "Eternal",
+        "Nestle India",
+        "Asian Paints",
+        "Adani Enterprises"
+      ],
+      "key_numbers": [
+        "Sensex: 76,922.64 (+443.97 pts, +0.58%)",
+        "Nifty 50: 24,005.85 (+140.85 pts, +0.59%)",
+        "Prior close (30 Jun): Sensex 76,478.67 / Nifty 23,865.75",
+        "Snapped a two-day losing streak"
+      ],
+      "investor_takeaway": "For educational context only: a broad-based bounce that reclaims a round-number level like 24,000, led by domestic sectors while IT lags, illustrates rotation and short-term sentiment - not a directional call. Not investment advice.",
+      "sources": [
+        {
+          "name": "Upstox - Market Wrap, July 1: Nifty50 ends above 24,000, Sensex rises 444 points",
+          "url": "https://upstox.com/news/market-news/stocks/market-wrap-july-1-nifty-50-ends-above-24-000-sensex-rises-444-points-led-fmcg-auto-stocks-eternal-top-gainer/article-196219/"
+        },
+        {
+          "name": "Business Standard - Stock Market Close: Sensex gains 444 pts, Nifty ends at 24,006",
+          "url": "https://www.business-standard.com/markets/news/stock-market-live-july-1-nse-bse-sensex-today-nifty-gift-nifty-us-iran-talks-brent-crude-oil-prices-ipos-it-share-market-today-126070100116_1.html"
+        }
+      ],
+      "importance_score": 9,
+      "confidence_score": 10
+    }
+  },
+  "ranked": [
+    {
+      "headline": "Sensex jumps 444 points and Nifty reclaims 24,000 as the market snaps a two-day slide",
+      "viral_fit": 7.19,
+      "dims": {
+        "importance": 9.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 5.6,
+        "visual": 10.0,
+        "shareability": 8.0,
+        "retail_relevance": 10.0
+      }
+    },
+    {
+      "headline": "Domestic institutions outbuy foreign sellers as DIIs absorb FII outflows",
+      "viral_fit": 7.02,
+      "dims": {
+        "importance": 7.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 5.8,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 5.5
+      },
+      "rejected_reason": "Lower viral fit (7.02 vs 7.19); weaker on "
+    },
+    {
+      "headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+      "viral_fit": 6.09,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 8.0,
+        "simplicity": 5.3,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 4.0
+      },
+      "rejected_reason": "Lower viral fit (6.09 vs 7.19); weaker on "
+    }
+  ],
+  "reel_worthy": true,
+  "selected_story_is_duplicate": false,
+  "selected_story": {
+    "rank": 1,
+    "headline": "Sensex jumps 444 points and Nifty reclaims 24,000 as the market snaps a two-day slide",
+    "category": "Market Indices / Benchmarks",
+    "what_happened": "Indian benchmark indices ended a two-day losing streak on Wednesday. The Sensex rose 443.97 points (+0.58%) to close at 76,922.64 and the Nifty 50 added 140.85 points (+0.59%) to end at 24,005.85, moving back above the psychologically watched 24,000 level. The rebound was broad, powered by FMCG, auto and realty names, and helped the benchmarks recover the ground lost in the previous two sessions.",
+    "why_it_matters": "Reclaiming 24,000 on the Nifty after a two-session decline shows buyers stepped back in at lower levels, with strength spread across domestic-facing sectors rather than a single heavyweight. It marks a shift in short-term tone back toward the upside, even as export-led IT lagged.",
+    "affected_sectors": [
+      "FMCG",
+      "Auto",
+      "Realty",
+      "Banking",
+      "Information Technology"
+    ],
+    "affected_companies": [
+      "Eternal",
+      "Nestle India",
+      "Asian Paints",
+      "Adani Enterprises"
+    ],
+    "key_numbers": [
+      "Sensex: 76,922.64 (+443.97 pts, +0.58%)",
+      "Nifty 50: 24,005.85 (+140.85 pts, +0.59%)",
+      "Prior close (30 Jun): Sensex 76,478.67 / Nifty 23,865.75",
+      "Snapped a two-day losing streak"
+    ],
+    "investor_takeaway": "For educational context only: a broad-based bounce that reclaims a round-number level like 24,000, led by domestic sectors while IT lags, illustrates rotation and short-term sentiment - not a directional call. Not investment advice.",
+    "sources": [
+      {
+        "name": "Upstox - Market Wrap, July 1: Nifty50 ends above 24,000, Sensex rises 444 points",
+        "url": "https://upstox.com/news/market-news/stocks/market-wrap-july-1-nifty-50-ends-above-24-000-sensex-rises-444-points-led-fmcg-auto-stocks-eternal-top-gainer/article-196219/"
+      },
+      {
+        "name": "Business Standard - Stock Market Close: Sensex gains 444 pts, Nifty ends at 24,006",
+        "url": "https://www.business-standard.com/markets/news/stock-market-live-july-1-nse-bse-sensex-today-nifty-gift-nifty-us-iran-talks-brent-crude-oil-prices-ipos-it-share-market-today-126070100116_1.html"
+      }
+    ],
+    "importance_score": 9,
+    "confidence_score": 10
+  },
+  "viral_fit_score": 7.19,
+  "why_this_story_can_work_as_a_reel": "Scores 7.19/10 on the weighted reel formula — strong on curiosity (5), visual (10.0) and shareability (8.0); explainable in 15-20s.",
+  "rejected_stories": [
+    {
+      "headline": "Domestic institutions outbuy foreign sellers as DIIs absorb FII outflows",
+      "reason": "Lower viral fit (7.02 vs 7.19); weaker on "
+    },
+    {
+      "headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+      "reason": "Lower viral fit (6.09 vs 7.19); weaker on "
+    }
+  ]
+}

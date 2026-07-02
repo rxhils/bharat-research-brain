@@ -13,6 +13,7 @@ export default function ReelsDashboard() {
   const router = useRouter();
   const [job, setJob] = useState<Job | null>(null);
   const [quality, setQuality] = useState<any>(null);
+  const [freshVideo, setFreshVideo] = useState<any>(null);
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
@@ -20,6 +21,8 @@ export default function ReelsDashboard() {
       api.job(id).then(setJob).catch(() => {});
       fetch(api.artifactUrl(id, "16_quality.json"))
         .then((x) => x.ok ? x.json() : null).then(setQuality).catch(() => {});
+      fetch(api.artifactUrl(id, "12_higgsfield_generation.json"))
+        .then((x) => x.ok ? x.json() : null).then(setFreshVideo).catch(() => {});
     };
     api.reelsLatest().then((l) => load(l.job_id)).catch(() =>
       api.jobs("reel").then((r) => {
@@ -53,11 +56,22 @@ export default function ReelsDashboard() {
               premium stills + ffmpeg motion → AI voiceover → Reel Auditor → Reels Courier.
             </p>
           </div>
-          <div className="flex items-center gap-2.5">
-            <button className="btn btn-primary" onClick={runReel} disabled={running}>
-              {running ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />} Run Reel
-            </button>
-            {job && <Link href={`/reels/run/${job.job_id}`} className="btn btn-ghost">Open latest <ArrowUpRight size={15} /></Link>}
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-2.5">
+              <button className="btn btn-primary" onClick={runReel} disabled={running}>
+                {running ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />} Run Reel
+              </button>
+              {job && <Link href={`/reels/run/${job.job_id}`} className="btn btn-ghost">Open latest <ArrowUpRight size={15} /></Link>}
+            </div>
+            <div className="text-[11px] text-ink-faint text-right max-w-xs">
+              <span className="text-teal">Renderer: Higgsfield Primary</span>
+              {freshVideo ? (
+                <> · {freshVideo.generation_status} (~{freshVideo.estimated_cost_credits}cr/reel)</>
+              ) : (
+                <> — animated scenes generated per reel (~34–41cr), assembled locally.
+                  Generation only runs after you approve it in Reel Review.</>
+              )}
+            </div>
           </div>
         </div>
       </div>

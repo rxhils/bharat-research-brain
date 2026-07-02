@@ -1,0 +1,19 @@
+{
+  "run_key": "reel-2026-07-02-1319-003",
+  "recent_reel_topics": [
+    "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+    "Sensex, Nifty close ~0.3% lower as IT selloff overpowers broad-market gains",
+    "Nifty IT plunges ~2.7% to a three-year low; TCS, Infosys, HCLTech hit 52-week lows",
+    "Auto stocks lead the decline as crude oil and dollar strength pressure cyclicals"
+  ],
+  "duplicate_risk": "high",
+  "penalized_stories": [
+    {
+      "headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+      "similarity": 1.0,
+      "matched_recent": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore"
+    }
+  ],
+  "selected_story_is_duplicate": false,
+  "reason": "1 candidate(s) overlap recent reels; they are penalized in the Viral Fit Gate unless clearly the day's biggest event."
+}

@@ -73,6 +73,90 @@ def reel_continue(job_id: str):
     return reel_studio.continue_after_research(job_id)
 
 
+@router.get("/reels/{job_id}/clips")
+def reel_clips(job_id: str):
+    """Higgsfield clips + generation status for a job."""
+    import json as _json
+    from pathlib import Path as _P
+    gen_path = reel_studio.REEL_OUTPUT_ROOT / job_id / "12_higgsfield_generation.json"
+    if not gen_path.exists():
+        return {"job_id": job_id, "generation_status": "not_planned", "clips": []}
+    gen = _json.loads(gen_path.read_text(encoding="utf-8"))
+    clips_dir = reel_studio.REEL_OUTPUT_ROOT / job_id / "higgsfield_clips"
+    on_disk = {p.stem for p in clips_dir.glob("shot_*.mp4")} if clips_dir.exists() else set()
+    return {"job_id": job_id,
+            "generation_status": gen.get("generation_status"),
+            "approved_from_ui": gen.get("approved_from_ui", False),
+            "estimated_cost_credits": gen.get("estimated_cost_credits"),
+            "actual_cost_credits": gen.get("actual_cost_credits"),
+            "planned": gen.get("planned", []),
+            "clips": gen.get("clips", []),
+            "clips_on_disk": sorted(on_disk)}
+
+
+@router.post("/reels/{job_id}/approve-generation")
+def reel_approve_generation(job_id: str, body: dict = Body(default={})):
+    """Operator's explicit UI trigger for PAID scene generation (all shots)."""
+    _require_reel_job(job_id)
+    return reel_studio.approve_generation(job_id, source=body.get("source", "ui_run_reel"))
+
+
+@router.post("/reels/{job_id}/regenerate-scene/{shot_id}")
+def reel_regen_scene(job_id: str, shot_id: str):
+    """Approve PAID regeneration of ONE failed/weak scene."""
+    _require_reel_job(job_id)
+    return reel_studio.approve_generation(job_id, shot_ids=[shot_id],
+                                          source="ui_regenerate_scene")
+
+
+@router.post("/reels/{job_id}/regenerate-all-scenes")
+def reel_regen_all(job_id: str):
+    """Approve PAID regeneration of ALL scenes."""
+    _require_reel_job(job_id)
+    return reel_studio.approve_generation(job_id, source="ui_regenerate_all")
+
+
+@router.post("/reels/{job_id}/improve-animation")
+def reel_improve_animation(job_id: str):
+    """Rebuild direction/plan/prompts at HIGH intensity (free); regeneration
+    itself still needs the confirm + conductor."""
+    _require_reel_job(job_id)
+    try:
+        return reel_studio.improve_animation(job_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(409, f"run artifacts incomplete: {exc}")
+
+
+@router.post("/reels/{job_id}/reassemble")
+def reel_reassemble(job_id: str):
+    """Re-run the local assembler + auditor (free). Requires clips on disk."""
+    _require_reel_job(job_id)
+    try:
+        return reel_studio.assemble_and_audit(job_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(409, f"cannot assemble: {exc}")
+
+
+@router.post("/reels/{job_id}/approve-publish")
+def reel_approve_publish(job_id: str):
+    """Approve + run the honest publish preflight in one click. Real publishing
+    still returns requires_conductor (Composio lives in the Claude runtime)."""
+    _require_reel_job(job_id)
+    db.upsert("jobs", {"job_id": job_id, "approval_status": "approved"},
+              conflict_keys=["job_id"])
+    bus.emit(job_id, "publish_gate", "reel.approval.received",
+             "Operator approved via Approve & Publish.", status="approved")
+    from .actions import publish as _publish
+    return _publish(job_id)
+
+
+def _require_reel_job(job_id: str) -> dict:
+    job = db.query_one("SELECT * FROM jobs WHERE job_id=?", (job_id,))
+    if not job:
+        raise HTTPException(404, f"job {job_id} not found")
+    return job
+
+
 @router.post("/jobs/{job_id}/publish-confirm")
 def publish_confirm(job_id: str, body: dict = Body(default={})):
     """Record a REAL Instagram publish result (called by the conductor AFTER

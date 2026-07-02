@@ -97,6 +97,13 @@ export default function ReelReviewPage() {
   const template = useArtifact(jobId, "07_template.json");
   const variation = useArtifact(jobId, "08_motion_variation.json");
   const picker = useArtifact(jobId, "09_asset_picker.json");
+  const direction = useArtifact(jobId, "09_higgsfield_creative_direction.json");
+  const shotPlan = useArtifact(jobId, "10_higgsfield_shot_plan.json");
+  const sceneQuality = useArtifact(jobId, "13_scene_quality.json");
+  const [clips, setClips] = useState<any>(null);
+  useEffect(() => {
+    api.reelClips(jobId).then(setClips).catch(() => setClips(null));
+  }, [jobId]);
 
   const refresh = useCallback(() => { api.job(jobId).then(setJob).catch(() => {}); }, [jobId]);
   useEffect(() => {
@@ -283,13 +290,22 @@ export default function ReelReviewPage() {
                   act("higgs", "Higgsfield request", () => api.requestHiggsfield(jobId, true));
                 else act("higgs", "Higgsfield request", () => api.requestHiggsfield(jobId, false));
               }} />
+              <Btn k="regenall" label="Regenerate All Scenes ⚠" icon={<Film size={15} />} onClick={() => {
+                if (window.confirm(`This will use Higgsfield credits to regenerate ALL animated scenes (~${clips?.estimated_cost_credits ?? "?"}cr). Continue?`))
+                  act("regenall", "Regenerate All Scenes", () => api.regenerateAllScenes(jobId));
+              }} />
+              <Btn k="anim" label="Improve Animation Quality ⚠" icon={<Wand2 size={15} />} onClick={() => {
+                if (window.confirm("This rebuilds all prompts at HIGH motion intensity, then regenerating the scenes will use Higgsfield credits. Continue?"))
+                  act("anim", "Improve Animation Quality", () => api.improveAnimation(jobId));
+              }} />
+              <Btn k="reasm" label="Reassemble Reel" icon={<RefreshCw size={15} />} onClick={() => act("reasm", "Reassemble Reel", () => api.reassembleReel(jobId))} />
             </div>
 
             <div className="eyebrow mb-3 mt-5">Approval &amp; publish (Telegram-mirror)</div>
             <div className="grid gap-2">
               <Btn k="tg" label="Send Preview to Telegram" icon={<MessageSquare size={15} />} onClick={() => act("tg", "Telegram preview", () => api.telegramPreview(jobId))} />
               <Btn k="approve" label="Approve" icon={<CheckCircle2 size={15} />} onClick={() => act("approve", "Approve", () => api.approve(jobId))} disabled={!passed || job?.approval_status === "approved"} />
-              <Btn k="publish" label="Approve & Publish Reel" tone="primary" icon={<Send size={15} />} onClick={() => act("publish", "Publish", async () => { await api.approve(jobId); return api.publish(jobId); })} disabled={!passed} />
+              <Btn k="publish" label="Approve & Publish Reel" tone="primary" icon={<Send size={15} />} onClick={() => act("publish", "Publish", () => api.approveAndPublish(jobId))} disabled={!passed} />
               <Btn k="reject" label="Reject" tone="danger" icon={<X size={15} />} onClick={() => act("reject", "Reject", () => api.reject(jobId))} />
             </div>
             {toast && <div className="mt-3 text-xs text-teal">{toast}</div>}
@@ -366,6 +382,65 @@ export default function ReelReviewPage() {
           </div>
         </div>
       </Section>
+
+      {/* Higgsfield Scenes — the reel's actual video (primary renderer) */}
+      {clips && clips.generation_status !== "not_planned" && (
+        <Section title="Higgsfield Animated Scenes — primary renderer"
+          right={<Pill tone={
+            clips.generation_status === "completed" ? "ok" :
+            clips.generation_status === "partial" ? "warn" :
+            clips.approved_from_ui ? "teal" : "muted"
+          }>{clips.generation_status}</Pill>}>
+          <div className="flex flex-wrap items-center gap-4 text-xs text-ink-faint mb-3">
+            {direction?.selected_direction?.name && <span>Direction: <span className="text-ink">{direction.selected_direction.name}</span></span>}
+            {shotPlan?.shot_count && <span>{shotPlan.shot_count} shots · {shotPlan.total_duration}s</span>}
+            <span>Est: {clips.estimated_cost_credits}cr</span>
+            {clips.actual_cost_credits != null && <span>Actual: {clips.actual_cost_credits}cr</span>}
+            {sceneQuality && <span>Scene quality: <span className={sceneQuality.passed ? "text-ok" : "text-warn"}>{sceneQuality.overall_scene_quality_score}/100</span></span>}
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            {(clips.planned ?? []).map((p: any) => {
+              const onDisk = (clips.clips_on_disk ?? []).includes(p.shot_id);
+              const sq = (sceneQuality?.scene_quality ?? []).find((r: any) => r.shot_id === p.shot_id);
+              return (
+                <div key={p.shot_id} className={`rounded-lg border p-1.5 text-center text-[11px] ${onDisk ? (sq?.passed === false ? "border-warn/40 bg-warn/10" : "border-teal/40 bg-teal/10") : "border-line"}`}>
+                  {onDisk ? (
+                    <video muted loop playsInline className="w-full rounded mb-1" style={{ aspectRatio: "9/16", objectFit: "cover" }}
+                      src={api.artifactUrl(jobId, `${p.shot_id}.mp4`)}
+                      onMouseEnter={(e) => (e.target as HTMLVideoElement).play()}
+                      onMouseLeave={(e) => (e.target as HTMLVideoElement).pause()} />
+                  ) : (
+                    <div className="w-full rounded mb-1 bg-white/[0.03] flex items-center justify-center text-ink-faint" style={{ aspectRatio: "9/16" }}>awaiting</div>
+                  )}
+                  <div className="font-mono text-ink-faint">{p.shot_id}</div>
+                  {sq && <div className={sq.passed ? "text-ok" : "text-warn"}>{sq.score}/100</div>}
+                  {onDisk && sq?.passed === false && (
+                    <button className="mt-1 text-[10px] text-warn underline"
+                      onClick={() => {
+                        if (window.confirm(`This will use Higgsfield credits to regenerate ${p.shot_id}. Continue?`))
+                          act(`regen-${p.shot_id}`, `Regenerate ${p.shot_id}`, () => api.regenerateScene(jobId, p.shot_id));
+                      }}>regenerate</button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {!clips.approved_from_ui && clips.generation_status === "requires_user_action" && (
+            <button className="btn btn-primary w-full mt-3"
+              onClick={() => {
+                if (window.confirm(`This will use Higgsfield credits to generate animated video scenes (~${clips.estimated_cost_credits}cr). Continue?`))
+                  act("gen", "Generate Scenes", () => api.approveGeneration(jobId));
+              }}>
+              <Sparkles size={15} /> Generate Animated Scenes (~{clips.estimated_cost_credits}cr) ⚠
+            </button>
+          )}
+          <p className="text-[11px] text-mcp mt-2">
+            Higgsfield generates the animated clips (the reel's actual video); the local
+            assembler adds voiceover, music, subtitles and branding. Generation executes
+            via the Claude Code conductor after your approval — never automatically.
+          </p>
+        </Section>
+      )}
 
       {/* full artifact surface */}
       <div className="grid lg:grid-cols-2 gap-5">

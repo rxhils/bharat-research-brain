@@ -119,22 +119,167 @@ def create_reel_job(source: str = "manual_run") -> dict:
                        "Claude Code conductor — nothing stale is reused."}
 
 
-def continue_after_research(job_id: str) -> dict:
+def continue_after_research(job_id: str, renderer: str | None = None) -> dict:
     """Once 01_research.json exists (conductor dropped it), run the full
-    deterministic pipeline + local Remotion render + audit, then ingest."""
-    from maven_reels.pipeline import orchestrator  # noqa: PLC0415
+    deterministic pipeline. HIGGSFIELD-PRIMARY (default): if clips are not on
+    disk yet, STOP at 'awaiting_scene_generation' (paid generation needs the
+    UI trigger + conductor — never silent, never auto-rendered by Remotion).
+    If clips exist: inspect -> assemble -> audit -> ingest. Remotion renders
+    ONLY when explicitly requested (renderer='remotion_fallback')."""
+    from maven_reels.pipeline import orchestrator, step_higgsfield_scene_generator  # noqa: PLC0415
 
     run_dir = REEL_OUTPUT_ROOT / job_id
     if not (run_dir / "01_research.json").exists():
         return {"status": "needs_research", "job_id": job_id}
-    prep = orchestrator.prepare(job_id)
-    result = _render_and_audit(job_id)
+    prep = orchestrator.prepare(job_id, renderer=renderer)
+
+    if prep.get("renderer") == "remotion_fallback":
+        result = _render_and_audit(job_id)   # explicit legacy path only
+        ingest_reels.ingest_run(job_id)
+        mark_latest(job_id)
+        bus.emit(job_id, "reel_auditor", "reel.review.ready",
+                 f"Reel (Remotion fallback) ready — verdict {result.get('verdict')}.",
+                 status=result.get("verdict", ""))
+        return {"status": "ready", "job_id": job_id,
+                **{**prep, "verdict": result["verdict"], "scores": result["scores"]}}
+
+    if not step_higgsfield_scene_generator.clips_on_disk(job_id):
+        db.upsert("jobs", {"job_id": job_id, "status": "awaiting_scene_generation",
+                           "current_node": "higgsfield_scene_generator",
+                           "updated_at": _now(),
+                           "summary": (f"Awaiting Higgsfield scene generation "
+                                       f"(~{prep.get('estimated_generation_cost')}cr, "
+                                       "operator-triggered).")},
+                  conflict_keys=["job_id"])
+        ingest_reels.ingest_run(job_id)
+        mark_latest(job_id)
+        bus.emit(job_id, "higgsfield_scene_generator", "reel.scenes.awaiting",
+                 f"Plan ready: {prep.get('shots')} shots, "
+                 f"~{prep.get('estimated_generation_cost')}cr. Paid generation "
+                 "runs after the UI trigger, executed by the Claude Code conductor.",
+                 status="requires_user_action")
+        return {"status": "awaiting_scene_generation", "job_id": job_id, **prep}
+
+    return assemble_and_audit(job_id, prep=prep)
+
+
+def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
+    """Local + free: inspect clips -> assemble final reel (ffmpeg) -> audit ->
+    ingest. Requires Higgsfield clips on disk."""
+    from maven_reels.pipeline import (state as rstate,  # noqa: PLC0415
+                                       step_final_reel_assembler,
+                                       step_scene_quality_inspector, step16_quality)
+
+    def _opt(key):
+        try:
+            return rstate.load_artifact(job_id, key)
+        except FileNotFoundError:
+            return None
+
+    scene_gen = rstate.load_artifact(job_id, "scene_generation")
+    inspection = step_scene_quality_inspector.run(job_id, scene_generation=scene_gen)
+    bus.emit(job_id, "scene_quality_inspector", "reel.scenes.inspected",
+             f"Scene quality {inspection['overall_scene_quality_score']}/100 "
+             f"({'pass' if inspection['passed'] else 'FAIL: ' + ', '.join(inspection['failed_shots'])}).",
+             status="completed" if inspection["passed"] else "failed")
+
+    shot_plan = rstate.load_artifact(job_id, "shot_plan")
+    subtitles = rstate.load_artifact(job_id, "subtitles")
+    hooks = rstate.load_artifact(job_id, "hooks")
+    vo = REEL_OUTPUT_ROOT / job_id / "voiceover.mp3"
+    bus.emit(job_id, "final_reel_assembler", "reel.video.render.started",
+             "Assembling final reel (local ffmpeg, zero credits).", status="running")
+    meta = step_final_reel_assembler.run(
+        job_id, shot_plan=shot_plan, subtitles=subtitles, hooks=hooks,
+        voiceover_mp3=str(vo) if vo.exists() else None)
+    bus.emit(job_id, "final_reel_assembler", "reel.video.render.completed",
+             f"reel.mp4 assembled ({meta['duration']}s, {meta['scene_count']} clips).",
+             status="completed")
+
+    audit = step16_quality.run(
+        job_id, hooks=hooks, script_edited=rstate.load_artifact(job_id, "script_edited"),
+        storyboard=rstate.load_artifact(job_id, "storyboard"),
+        compliance=rstate.load_artifact(job_id, "compliance"),
+        caption=_opt("caption"), subtitles=subtitles, reel_video=meta,
+        aesthetic_score=92, asset_picker=_opt("asset_picker"),
+        cost_guard=_opt("cost_guard"), research=_opt("research"),
+        visual_uniqueness=_opt("visual_uniqueness"), fresh_video=scene_gen,
+        viral_fit=_opt("viral_fit"), scene_quality=inspection,
+        renderer="higgsfield_primary")
+    bus.emit(job_id, "reel_auditor", "reel.audit.completed",
+             f"Auditor verdict: {audit['verdict']}.", status=audit["verdict"])
+
     ingest_reels.ingest_run(job_id)
     mark_latest(job_id)
     bus.emit(job_id, "reel_auditor", "reel.review.ready",
-             f"Reel ready for review — verdict {result.get('verdict')}.",
-             status=result.get("verdict", ""))
-    return {"status": "ready", "job_id": job_id, **prep}
+             f"Reel ready for review — verdict {audit['verdict']}.",
+             status=audit["verdict"])
+    return {"status": "ready", "job_id": job_id, **(prep or {}),
+            "verdict": audit["verdict"], "scores": audit["scores"],
+            "scene_quality": inspection["overall_scene_quality_score"]}
+
+
+def approve_generation(job_id: str, shot_ids: list[str] | None = None,
+                       source: str = "ui") -> dict:
+    """Record the operator's explicit paid-generation trigger from the UI."""
+    from maven_reels.pipeline import step_higgsfield_scene_generator  # noqa: PLC0415
+    gen = step_higgsfield_scene_generator.approve_from_ui(
+        job_id, shot_ids=shot_ids, source=source)
+    bus.emit(job_id, "higgsfield_scene_generator", "reel.generation.approved",
+             f"Operator approved paid generation ({len(gen.get('approved_shot_ids', []))} "
+             f"shot(s), ~{gen.get('estimated_cost_credits')}cr). The Claude Code "
+             "conductor executes next — the backend never calls Higgsfield itself.",
+             status=gen["generation_status"])
+    db.upsert("jobs", {"job_id": job_id, "status": "generation_approved",
+                       "updated_at": _now(),
+                       "summary": "Scene generation approved — awaiting conductor."},
+              conflict_keys=["job_id"])
+    return {"status": gen["generation_status"], "job_id": job_id,
+            "approved_shots": gen.get("approved_shot_ids", []),
+            "estimated_cost_credits": gen.get("estimated_cost_credits"),
+            "requires_conductor": True,
+            "message": "Approved. Generation executes via the Claude Code conductor "
+                       "(Higgsfield MCP) — nothing has been charged yet."}
+
+
+def improve_animation(job_id: str) -> dict:
+    """One-click 'Improve Animation Quality': locally rebuilds direction/plan/
+    prompts at HIGH intensity and marks all scenes for regeneration. The paid
+    regeneration itself still needs the UI-confirmed approval + conductor."""
+    from maven_reels.pipeline import (state as rstate,  # noqa: PLC0415
+                                       step_higgsfield_creative_director,
+                                       step_higgsfield_prompt_builder,
+                                       step_higgsfield_scene_generator,
+                                       step_higgsfield_shot_planner,
+                                       step_renderer_selector)
+
+    viral = rstate.load_artifact(job_id, "viral_fit")
+    story = viral["chosen"]["story"]
+    angle = rstate.load_artifact(job_id, "angle")
+    hooks = rstate.load_artifact(job_id, "hooks")
+    edited = rstate.load_artifact(job_id, "script_edited")
+
+    direction = step_higgsfield_creative_director.run(job_id, story=story,
+                                                      angle=angle, hooks=hooks)
+    plan = step_higgsfield_shot_planner.run(job_id, story=story, hooks=hooks,
+                                            script_edited=edited,
+                                            creative_direction=direction)
+    prompts = step_higgsfield_prompt_builder.run(job_id, shot_plan=plan,
+                                                 creative_direction=direction,
+                                                 intensity="high")
+    renderer = rstate.load_artifact(job_id, "renderer_selection")
+    gen = step_higgsfield_scene_generator.plan(job_id, shot_prompts=prompts,
+                                               renderer=renderer)
+    bus.emit(job_id, "higgsfield_creative_director", "reel.improvement.started",
+             "Animation quality pass: HIGH-intensity prompts rebuilt for all "
+             f"{gen['total_clips']} shots (~{gen['estimated_cost_credits']}cr to regenerate).",
+             status="requires_user_action")
+    return {"status": "prompts_rebuilt", "job_id": job_id,
+            "intensity": "high", "shots": gen["total_clips"],
+            "estimated_cost_credits": gen["estimated_cost_credits"],
+            "requires_confirmation": True,
+            "message": "Stronger-motion prompts ready. Confirm regeneration to "
+                       "spend credits (executed by the conductor)."}
 
 
 def _render_and_audit(job_id: str) -> dict:

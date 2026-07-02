@@ -1,0 +1,114 @@
+{
+  "date": "reel-2026-07-02-1727-004",
+  "mode": "fresh_video",
+  "scene_count": 8,
+  "requests": [
+    {
+      "scene": 1,
+      "kind": "hook",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Hook slams in over dark market grid. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_1.mp4"
+    },
+    {
+      "scene": 2,
+      "kind": "stat",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Index stat card + number counter. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_2.mp4"
+    },
+    {
+      "scene": 3,
+      "kind": "chips",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Sector chips stagger in. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_3.mp4"
+    },
+    {
+      "scene": 4,
+      "kind": "reason",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Key reason kinetic text. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_4.mp4"
+    },
+    {
+      "scene": 5,
+      "kind": "chart",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Mini index line draws down. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_5.mp4"
+    },
+    {
+      "scene": 6,
+      "kind": "reason",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Second reason kinetic text. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_6.mp4"
+    },
+    {
+      "scene": 7,
+      "kind": "reason",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Takeaway kinetic text. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_7.mp4"
+    },
+    {
+      "scene": 8,
+      "kind": "outro",
+      "seed_prompt": "Vertical 9:16 premium finance motion background plate for Maven, an Indian stock market brand. Scene concept: Maven end card. premium Indian market dashboard, clean dark navy/black, subtle teal/green/blue accents, soft grid lines, minimal chart lines, high-end editorial finance aesthetic, lots of negative space, NO readable text.",
+      "seed_negative_prompt": "cheap AI look, cartoon, meme, random candlestick spam, fake logos, fake numbers, clutter, unreadable text, gibberish text, watermark, bull/bear mascots, buy/sell arrows, 3D coins, overdesigned",
+      "seed_model": "nano_banana_pro",
+      "video_model": "seedance1_5",
+      "video_duration": 4,
+      "video_motion_hint": "slow cinematic push-in, subtle parallax, smooth moving data glow, calm premium motion, no chaotic movement",
+      "clip_path": "fresh_video/scene_8.mp4"
+    }
+  ],
+  "estimated_cost_credits": 54.4,
+  "max_credits_per_reel": 100,
+  "cost_guard": {
+    "date": "reel-2026-07-02-1727-004",
+    "requested": 1,
+    "approved": false,
+    "allow_paid_generation": false,
+    "use_existing_asset_library": true,
+    "max_per_daily_run": 0,
+    "max_with_approval": 1,
+    "allowed": false,
+    "requires_approval": true,
+    "reason": "1 paid Higgsfield generation(s) requested but ALLOW_PAID_GENERATION=false. Explicit approval required.",
+    "cap": 0
+  },
+  "status": "disabled",
+  "allowed": false,
+  "results": [],
+  "note": "Spec only — the conductor executes these via Higgsfield MCP and calls record_results(). If blocked/over-budget, the WHOLE reel falls back to the reusable-library system (consistent look, not a mix)."
+}

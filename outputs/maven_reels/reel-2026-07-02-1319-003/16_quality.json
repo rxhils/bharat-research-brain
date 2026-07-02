@@ -1,0 +1,52 @@
+{
+  "date": "reel-2026-07-02-1319-003",
+  "passed": true,
+  "scores": {
+    "hook": 92,
+    "retention": 100,
+    "edit_quality": 92,
+    "visual_quality": 92,
+    "subtitle": 100,
+    "voiceover": 92,
+    "compliance": 100,
+    "brand": 100,
+    "cost_efficiency": 90,
+    "freshness": 100,
+    "visual_uniqueness": 90,
+    "publish": 100
+  },
+  "gates": {
+    "hook": 90,
+    "retention": 90,
+    "edit_quality": 90,
+    "visual_quality": 90,
+    "subtitle": 90,
+    "voiceover": 85,
+    "compliance": 95,
+    "brand": 90,
+    "cost_efficiency": 85,
+    "visual_uniqueness": 85,
+    "freshness": 95
+  },
+  "gate_passed": {
+    "hook": true,
+    "retention": true,
+    "edit_quality": true,
+    "visual_quality": true,
+    "subtitle": true,
+    "voiceover": true,
+    "compliance": true,
+    "brand": true,
+    "cost_efficiency": true,
+    "visual_uniqueness": true,
+    "freshness": true
+  },
+  "issues": [
+    "edit_quality: avg scene 2.4s (>2.0s)",
+    "cost_efficiency: cost guard flagged: requires approval"
+  ],
+  "fixes_required": [],
+  "suggested_buttons": [],
+  "reroute_to": "",
+  "verdict": "PUBLISH_OK"
+}

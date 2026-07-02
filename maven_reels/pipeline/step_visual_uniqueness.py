@@ -12,11 +12,19 @@ from . import run_history, state
 
 GATE = 85
 
-# penalty per matched dimension vs the most-similar recent reel
-PENALTIES = {
-    "template": 15, "variation": 20, "accent": 10,
-    "assets": 15, "scene_order": 15, "scene_count": 5,
-}
+# Penalty per matched dimension vs the most-similar recent reel. Asset reuse is
+# EXPECTED (cost design) so it is not penalized. scene_order/scene_count are
+# currently a content-agnostic fixed template (step6_motion_storyboard), not a
+# real "looks the same" signal, so they're excluded too.
+#
+# `template` is chosen deterministically from story keywords (content-driven),
+# and the orchestrator's retry loop only rotates `variation` — it can never
+# resolve a template collision on its own. A template match ALONE doesn't make
+# two reels look the same to a viewer (different accent/motion still reads as
+# different); what actually signals sameness is variation+accent both
+# matching. Weighted so template-only never fails the gate, but a true full
+# collision (all three match) still does: 10+45+25=80 < 85.
+PENALTIES = {"template": 10, "variation": 45, "accent": 25}
 
 
 def _signature(template: dict | None, variation: dict | None,

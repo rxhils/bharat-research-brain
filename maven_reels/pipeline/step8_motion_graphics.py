@@ -21,6 +21,21 @@ FPS = 30
 W, H = 1080, 1920
 
 
+def _fresh_video_clip_for_scene(date: str, scene_num: int) -> str | None:
+    """Primary background source: a completed Fresh Video Mode clip for this
+    scene (see step_fresh_video_scenes.py). Only used if actually on disk."""
+    try:
+        spec = state.load_artifact(date, "fresh_video_scenes")
+    except FileNotFoundError:
+        return None
+    for r in spec.get("results", []):
+        if r.get("scene") == scene_num and r.get("status") == "completed":
+            clip = config.run_dir(date) / r.get("clip_path", "")
+            if clip.exists():
+                return clip.name  # staged flat into remotion/public/run/
+    return None
+
+
 def build_props(date: str, storyboard: dict, subtitles: list[dict]) -> dict:
     assets_dir = config.run_dir(date) / "assets"
     scenes = []
@@ -29,9 +44,13 @@ def build_props(date: str, storyboard: dict, subtitles: list[dict]) -> dict:
         for k in ("title", "label", "value", "suffix", "sub", "chips", "text", "points", "accent"):
             if s.get(k) not in (None, "", []):
                 sc[k] = s[k]
-        asset = s.get("asset")
-        if asset and (assets_dir / f"{asset}.jpg").exists():
-            sc["bg"] = f"{asset}.jpg"   # served from remotion/public/run/
+        clip = _fresh_video_clip_for_scene(date, s["scene"])
+        if clip:
+            sc["bg_video"] = clip   # PRIMARY: fresh Higgsfield video
+        else:
+            asset = s.get("asset")
+            if asset and (assets_dir / f"{asset}.jpg").exists():
+                sc["bg"] = f"{asset}.jpg"   # FALLBACK 1: static library plate
         scenes.append(sc)
     return {"fps": FPS, "durationSeconds": round(storyboard["total_duration"], 2),
             "brand": {"name": config.BRAND_NAME, "site": config.BRAND_SITE},
@@ -63,17 +82,22 @@ def _music(ff: str, seconds: float, rd: Path) -> Path:
 
 
 def _stage_assets(date: str) -> int:
-    """Copy this run's background plates into remotion/public/run/ so the
-    composition can load them via staticFile('run/<name>.jpg')."""
-    src = config.run_dir(date) / "assets"
+    """Copy this run's background plates AND any Fresh Video Mode clips into
+    remotion/public/run/ so the composition can load them via staticFile()."""
+    rd = config.run_dir(date)
     dst = REMOTION_DIR / "public" / "run"
     if dst.exists():
         shutil.rmtree(dst, ignore_errors=True)
     dst.mkdir(parents=True, exist_ok=True)
     n = 0
-    if src.exists():
-        for jpg in src.glob("*.jpg"):
+    plates = rd / "assets"
+    if plates.exists():
+        for jpg in plates.glob("*.jpg"):
             shutil.copy2(jpg, dst / jpg.name); n += 1
+    clips = rd / "fresh_video"
+    if clips.exists():
+        for mp4 in clips.glob("*.mp4"):
+            shutil.copy2(mp4, dst / mp4.name); n += 1
     return n
 
 

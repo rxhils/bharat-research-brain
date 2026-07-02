@@ -1,15 +1,16 @@
 import React from "react";
 import {
-  AbsoluteFill, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig,
-  interpolate, spring, Easing,
+  AbsoluteFill, Img, OffthreadVideo, Sequence, staticFile, useCurrentFrame,
+  useVideoConfig, interpolate, spring, Easing,
 } from "remotion";
 
 // ---------------------------------------------------------------- types
 export type Scene = {
   start: number; duration: number;
   kind: "hook" | "stat" | "chips" | "reason" | "chart" | "outro";
-  bg?: string; title?: string; label?: string; value?: number; suffix?: string;
-  sub?: string; chips?: string[]; text?: string; points?: number[]; accent?: string;
+  bg?: string; bg_video?: string; title?: string; label?: string; value?: number;
+  suffix?: string; sub?: string; chips?: string[]; text?: string; points?: number[];
+  accent?: string;
 };
 export type Caption = { start: number; end: number; text: string; emphasis?: string };
 export type ReelProps = {
@@ -31,12 +32,22 @@ const useEnter = (delay = 0, dur = 12) => {
 };
 
 // ---------------------------------------------------------------- background
+// Three-tier: fresh Higgsfield video (primary, Fresh Video Mode) > static
+// library plate (fallback 1) > procedural grid/glow only (fallback 2, last
+// resort). Rendered inside each scene's own <Sequence> so useCurrentFrame()
+// is scene-relative — required for OffthreadVideo to play each clip from its
+// own frame 0 instead of seeking by the global reel timeline.
 const Background: React.FC<{ scene?: Scene }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const drift = interpolate(frame, [0, 300], [0, -40]);
   return (
     <AbsoluteFill style={{ backgroundColor: "#05070A" }}>
-      {scene?.bg && (
+      {scene?.bg_video ? (
+        <AbsoluteFill style={{ opacity: 0.7 }}>
+          <OffthreadVideo src={staticFile(`run/${scene.bg_video}`)} muted
+            style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </AbsoluteFill>
+      ) : scene?.bg && (
         <AbsoluteFill style={{ opacity: 0.55 }}>
           <Img src={staticFile(`run/${scene.bg}`)}
             style={{ width: "100%", height: "100%", objectFit: "cover",
@@ -231,15 +242,12 @@ const Chrome: React.FC<{ brand: ReelProps["brand"]; accent: string }> = ({ brand
 
 // ---------------------------------------------------------------- root
 export const MavenReel: React.FC<ReelProps> = ({ fps, brand, scenes, subtitles, theme }) => {
-  const frame = useCurrentFrame();
-  const t = frame / fps;
   const accent = theme?.accent || TEAL;
-  const active = [...scenes].reverse().find((s) => t >= s.start) ?? scenes[0];
   return (
     <AbsoluteFill>
-      <Background scene={active} />
       {scenes.map((s, i) => (
         <Sequence key={i} from={Math.round(s.start * fps)} durationInFrames={Math.round(s.duration * fps)} layout="none">
+          <Background scene={s} />
           <SceneBody s={s} brand={brand} accent={accent} />
         </Sequence>
       ))}

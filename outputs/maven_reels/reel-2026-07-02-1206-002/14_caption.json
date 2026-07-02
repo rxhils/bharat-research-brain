@@ -1,0 +1,14 @@
+{
+  "date": "reel-2026-07-02-1206-002",
+  "caption": "Here's what investors missed today.\n\nJune GST collections rose 13.9% year-on-year to ₹1.94 lakh crore, led by a 34.6% surge in import revenue — a sign of resilient domestic demand and tax buoyancy even as the market digested a mixed session.\n\nFollow Maven for clean Indian market research → trymaven.in\n\nEducational content only. Not investment advice. Maven is not a SEBI-registered adviser or research analyst.",
+  "hook": "Here's what investors missed today.",
+  "cta": "Follow Maven → trymaven.in",
+  "disclaimer": "Educational content only. Not investment advice. Maven is not a SEBI-registered adviser or research analyst.",
+  "char_count": 429,
+  "_compliance": {
+    "ok": true,
+    "violations": [],
+    "score": 100
+  },
+  "_edit_note": "Original was truncated mid-sentence by a char-limit bug in step14_caption.py; hand-corrected to complete sentences using the same verified facts before publish."
+}

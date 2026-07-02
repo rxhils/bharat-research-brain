@@ -14,13 +14,17 @@ from . import (config, state, step01_research, step02_viral_fit, step03_angle,
                step04_hooks, step05_script, step06_retention, step_duplicate_check,
                step_template_selector, step_motion_variation, step_visual_uniqueness,
                step6_motion_storyboard, step7_asset_director, step_asset_picker,
-               step_higgsfield_asset_request, step11_subtitles, step14_caption,
-               step15_compliance, step16_quality)
+               step_higgsfield_asset_request, step11_subtitles,
+               step14_caption, step15_compliance, step16_quality,
+               step_renderer_selector, step_higgsfield_creative_director,
+               step_higgsfield_shot_planner, step_higgsfield_prompt_builder,
+               step_higgsfield_scene_generator)
 
 
-def prepare(date: str) -> dict:
+def prepare(date: str, renderer: str | None = None) -> dict:
     """date is a run key: 'YYYY-MM-DD' (legacy) or a job id like
-    'reel-2026-07-02-1700-001' — both map to outputs/maven_reels/<key>/."""
+    'reel-2026-07-02-1700-001' — both map to outputs/maven_reels/<key>/.
+    renderer: higgsfield_primary (default) | remotion_fallback | simulation_only."""
     research = state.load_artifact(date, "research")   # produced by reel research agent
     step01_research.run(date, research)
     dup = step_duplicate_check.run(date, research)
@@ -31,6 +35,8 @@ def prepare(date: str) -> dict:
     hooks = step04_hooks.run(date, angle, viral_fit)
     script = step05_script.run(date, story, hooks)
     edited = step06_retention.run(date, script)
+
+    renderer_sel = step_renderer_selector.run(date, requested=renderer)
 
     # cost-optimized path: choose a template + motion variation, then storyboard.
     # If the composition is too similar to recent reels, rotate the variation and
@@ -57,6 +63,26 @@ def prepare(date: str) -> dict:
         variation = step_motion_variation.run(date, force_id=nxt)
     higgs = step_higgsfield_asset_request.run(date, asset_picker=asset_picker)
 
+    # HIGGSFIELD-PRIMARY chain (free/deterministic here): creative direction ->
+    # shot plan -> prompts -> generation plan (gated; conductor executes after a
+    # UI trigger). The template/storyboard/asset chain above stays intact as the
+    # explicit Remotion fallback path — never used silently.
+    direction = step_higgsfield_creative_director.run(date, story=story,
+                                                      angle=angle, hooks=hooks)
+    shot_plan = step_higgsfield_shot_planner.run(date, story=story, hooks=hooks,
+                                                 script_edited=edited,
+                                                 creative_direction=direction)
+    shot_prompts = step_higgsfield_prompt_builder.run(date, shot_plan=shot_plan,
+                                                      creative_direction=direction)
+    scene_gen = step_higgsfield_scene_generator.plan(date, shot_prompts=shot_prompts,
+                                                     renderer=renderer_sel)
+
+    # if clips already exist on disk (conductor already generated), inspect them
+    scene_quality = None
+    if step_higgsfield_scene_generator.clips_on_disk(date):
+        from . import step_scene_quality_inspector
+        scene_quality = step_scene_quality_inspector.run(date, scene_generation=scene_gen)
+
     subtitles = step11_subtitles.run(date, edited)
     caption = step14_caption.run(date, story, hooks, angle)
     compliance = step15_compliance.run(date, hooks=hooks, angle=angle,
@@ -66,22 +92,30 @@ def prepare(date: str) -> dict:
                                  caption=caption, subtitles=subtitles,
                                  asset_picker=asset_picker,
                                  cost_guard=asset_picker.get("cost_guard"),
-                                 research=research, visual_uniqueness=uniqueness)
+                                 research=research, visual_uniqueness=uniqueness,
+                                 fresh_video=scene_gen, viral_fit=viral_fit,
+                                 scene_quality=scene_quality,
+                                 renderer=renderer_sel["renderer"])
 
     rs = state.RunState.load_or_new(date)
     for k in ("research", "viral_fit", "angle", "hooks", "script", "retention",
-              "template", "motion_variation", "storyboard", "asset_picker",
-              "higgsfield_request", "subtitles", "caption", "compliance", "quality"):
+              "renderer_selection", "creative_direction", "shot_plan",
+              "shot_prompts", "scene_generation", "template", "motion_variation",
+              "storyboard", "asset_picker", "higgsfield_request", "subtitles",
+              "caption", "compliance", "quality"):
         rs.mark(k)
     return {"date": date, "chosen_story": story.get("headline"),
             "viral_fit": viral_fit["chosen"]["viral_fit"],
             "duplicate_risk": dup["duplicate_risk"],
-            "hook": hooks["chosen"]["text"], "scenes": storyboard["scene_count"],
+            "hook": hooks["chosen"]["text"],
+            "renderer": renderer_sel["renderer"],
+            "creative_direction": direction["selected_direction"].get("name"),
+            "shots": shot_plan["shot_count"],
+            "generation_status": scene_gen["generation_status"],
+            "estimated_generation_cost": scene_gen["estimated_cost_credits"],
             "template": template["selected_template"],
             "variation": variation["variation_id"],
             "visual_uniqueness": (uniqueness or {}).get("visual_uniqueness_score"),
-            "paid_generation_required": asset_picker["paid_generation_required"],
-            "new_generations": asset_picker["estimated_new_generations"],
             "verdict": quality["verdict"], "scores": quality["scores"]}
 
 

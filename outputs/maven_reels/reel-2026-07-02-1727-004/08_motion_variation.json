@@ -1,0 +1,18 @@
+{
+  "date": "reel-2026-07-02-1727-004",
+  "variation_id": "teal_terminal",
+  "accent_color": "#22D3EE",
+  "hook_animation": "scale-pop",
+  "transition_style": "flash",
+  "chart_style": "thin-line",
+  "subtitle_style": "highlight-teal",
+  "card_style": "slide-up",
+  "reason": "Rotated to 'teal_terminal' by date for freshness.",
+  "all_variations": [
+    "teal_terminal",
+    "green_pulse",
+    "white_brief",
+    "blue_newsroom",
+    "orange_alert"
+  ]
+}

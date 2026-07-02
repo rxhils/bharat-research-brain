@@ -12,16 +12,27 @@ from .config import BRAND_NAME, BRAND_SITE
 
 
 def _clean(text: str, limit: int) -> str:
+    """Truncate to `limit` chars WITHOUT leaving a dangling mid-sentence
+    fragment (the old `[:limit] + "…"` behavior read as broken/garbled when
+    spoken by TTS — e.g. "The Sensex rose 443.97…"). Prefers cutting at the
+    last complete sentence within the limit; falls back to a clean
+    word-boundary cut ending in a period (TTS-friendly, unlike "…")."""
     text = " ".join(str(text).split())
-    return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
+    if len(text) <= limit:
+        return text
+    truncated = text[:limit]
+    cut = max(truncated.rfind(". "), truncated.rfind("! "), truncated.rfind("? "))
+    if cut >= limit * 0.4:  # a real sentence boundary, not too aggressive a cut
+        return truncated[:cut + 1].strip()
+    return truncated.rsplit(" ", 1)[0].rstrip(",;:") + "."
 
 
 def run(date: str, story: dict, hooks: dict) -> dict:
     # Tight 15-20s reel: short, punchy lines (45-65 words total).
     hook = hooks["chosen"]["text"]
-    what = _clean(story.get("what_happened", ""), 95)
-    why = _clean(story.get("why_it_matters", ""), 110)
-    take = _clean(story.get("investor_takeaway", ""), 85)
+    what = _clean(story.get("what_happened", ""), 110)
+    why = _clean(story.get("why_it_matters", ""), 130)
+    take = _clean(story.get("investor_takeaway", ""), 100)
 
     segments = [
         {"label": "hook", "t0": 0.0, "seconds": 1.5, "narration": hook},

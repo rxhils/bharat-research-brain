@@ -1,0 +1,159 @@
+{
+  "date": "reel-2026-07-02-1206-002",
+  "dimensions": [
+    "importance",
+    "curiosity",
+    "emotional",
+    "simplicity",
+    "visual",
+    "shareability",
+    "retail_relevance"
+  ],
+  "formula": {
+    "importance": 0.25,
+    "curiosity": 0.2,
+    "simplicity": 0.15,
+    "visual": 0.15,
+    "shareability": 0.15,
+    "emotional": 0.1
+  },
+  "min_fit": 6.0,
+  "chosen": {
+    "headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+    "viral_fit": 7.59,
+    "dims": {
+      "importance": 8.0,
+      "curiosity": 5,
+      "emotional": 8.0,
+      "simplicity": 5.3,
+      "visual": 10.0,
+      "shareability": 10.0,
+      "retail_relevance": 4.0
+    },
+    "story": {
+      "rank": 2,
+      "headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+      "category": "Macro / Public Finance",
+      "what_happened": "Provisional Finance Ministry data showed India's gross Goods and Services Tax (GST) collections climbed to Rs 1,94,812 crore in June 2026, a 13.9% increase over Rs 1,71,105 crore in June 2025. The growth was led by import revenue, which surged 34.6% to Rs 60,038 crore, while gross domestic revenue grew a more modest 6.5% to Rs 1,34,774 crore. Net GST revenue for the month stood at Rs 1,62,377 crore, up 11.2% year-on-year.",
+      "why_it_matters": "GST collections are a widely watched real-time gauge of economic activity and consumption. A near-14% year-on-year rise points to resilient underlying demand and tax buoyancy, and the surge in import-linked revenue signals firm domestic consumption of imported goods - a supportive macro backdrop for the day's move in consumption-facing sectors.",
+      "affected_sectors": [
+        "Macro / Economy",
+        "Consumption",
+        "FMCG",
+        "Trade"
+      ],
+      "affected_companies": [],
+      "key_numbers": [
+        "Gross GST (June 2026): Rs 1,94,812 crore, +13.9% YoY",
+        "June 2025 base: Rs 1,71,105 crore",
+        "Gross import revenue: Rs 60,038 crore, +34.6% YoY",
+        "Gross domestic revenue: Rs 1,34,774 crore, +6.5% YoY",
+        "Net GST revenue: Rs 1,62,377 crore, +11.2% YoY"
+      ],
+      "investor_takeaway": "For educational context only: rising GST collections are one indicator of economic momentum and consumption strength, useful as backdrop rather than as a signal on any stock or index. Not investment advice.",
+      "sources": [
+        {
+          "name": "ANI - India's gross GST collections surge 13.9% YoY to Rs 1.94 lakh crore in June 2026",
+          "url": "https://aninews.in/news/business/indias-gross-gst-collections-surge-139-yoy-to-rs-194-lakh-crore-in-june-202620260701115556/"
+        },
+        {
+          "name": "Business Today - GST collections for June grow 13.9% to Rs 1,94,812 crore",
+          "url": "https://www.businesstoday.in/latest/economy/story/gst-collections-for-june-grow-13-9-percent-to-rs-194812-crore-540210-2026-07-01"
+        }
+      ],
+      "importance_score": 8,
+      "confidence_score": 9
+    }
+  },
+  "ranked": [
+    {
+      "headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+      "viral_fit": 7.59,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 8.0,
+        "simplicity": 5.3,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 4.0
+      }
+    },
+    {
+      "headline": "Sensex jumps 444 points and Nifty reclaims 24,000 as the market snaps a two-day slide",
+      "viral_fit": 7.19,
+      "dims": {
+        "importance": 9.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 5.6,
+        "visual": 10.0,
+        "shareability": 8.0,
+        "retail_relevance": 10.0
+      },
+      "rejected_reason": "Lower viral fit (7.19 vs 7.59); weaker on emotional, shareability"
+    },
+    {
+      "headline": "Domestic institutions outbuy foreign sellers as DIIs absorb FII outflows",
+      "viral_fit": 7.02,
+      "dims": {
+        "importance": 7.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 5.8,
+        "visual": 10.0,
+        "shareability": 10.0,
+        "retail_relevance": 5.5
+      },
+      "rejected_reason": "Lower viral fit (7.02 vs 7.59); weaker on emotional"
+    }
+  ],
+  "reel_worthy": true,
+  "selected_story_is_duplicate": false,
+  "selected_story": {
+    "rank": 2,
+    "headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+    "category": "Macro / Public Finance",
+    "what_happened": "Provisional Finance Ministry data showed India's gross Goods and Services Tax (GST) collections climbed to Rs 1,94,812 crore in June 2026, a 13.9% increase over Rs 1,71,105 crore in June 2025. The growth was led by import revenue, which surged 34.6% to Rs 60,038 crore, while gross domestic revenue grew a more modest 6.5% to Rs 1,34,774 crore. Net GST revenue for the month stood at Rs 1,62,377 crore, up 11.2% year-on-year.",
+    "why_it_matters": "GST collections are a widely watched real-time gauge of economic activity and consumption. A near-14% year-on-year rise points to resilient underlying demand and tax buoyancy, and the surge in import-linked revenue signals firm domestic consumption of imported goods - a supportive macro backdrop for the day's move in consumption-facing sectors.",
+    "affected_sectors": [
+      "Macro / Economy",
+      "Consumption",
+      "FMCG",
+      "Trade"
+    ],
+    "affected_companies": [],
+    "key_numbers": [
+      "Gross GST (June 2026): Rs 1,94,812 crore, +13.9% YoY",
+      "June 2025 base: Rs 1,71,105 crore",
+      "Gross import revenue: Rs 60,038 crore, +34.6% YoY",
+      "Gross domestic revenue: Rs 1,34,774 crore, +6.5% YoY",
+      "Net GST revenue: Rs 1,62,377 crore, +11.2% YoY"
+    ],
+    "investor_takeaway": "For educational context only: rising GST collections are one indicator of economic momentum and consumption strength, useful as backdrop rather than as a signal on any stock or index. Not investment advice.",
+    "sources": [
+      {
+        "name": "ANI - India's gross GST collections surge 13.9% YoY to Rs 1.94 lakh crore in June 2026",
+        "url": "https://aninews.in/news/business/indias-gross-gst-collections-surge-139-yoy-to-rs-194-lakh-crore-in-june-202620260701115556/"
+      },
+      {
+        "name": "Business Today - GST collections for June grow 13.9% to Rs 1,94,812 crore",
+        "url": "https://www.businesstoday.in/latest/economy/story/gst-collections-for-june-grow-13-9-percent-to-rs-194812-crore-540210-2026-07-01"
+      }
+    ],
+    "importance_score": 8,
+    "confidence_score": 9
+  },
+  "viral_fit_score": 7.59,
+  "why_this_story_can_work_as_a_reel": "Scores 7.59/10 on the weighted reel formula — strong on curiosity (5), visual (10.0) and shareability (10.0); explainable in 15-20s.",
+  "rejected_stories": [
+    {
+      "headline": "Sensex jumps 444 points and Nifty reclaims 24,000 as the market snaps a two-day slide",
+      "reason": "Lower viral fit (7.19 vs 7.59); weaker on emotional, shareability"
+    },
+    {
+      "headline": "Domestic institutions outbuy foreign sellers as DIIs absorb FII outflows",
+      "reason": "Lower viral fit (7.02 vs 7.59); weaker on emotional"
+    }
+  ]
+}

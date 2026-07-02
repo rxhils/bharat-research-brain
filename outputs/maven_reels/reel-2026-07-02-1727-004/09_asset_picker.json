@@ -1,0 +1,69 @@
+{
+  "date": "reel-2026-07-02-1727-004",
+  "use_existing_asset_library": true,
+  "slots_required": [
+    "asset_bg_dark",
+    "asset_bg_end",
+    "asset_bg_panel"
+  ],
+  "selected_assets": [
+    {
+      "slot": "asset_bg_dark",
+      "asset_id": "dark_dashboard_001",
+      "category": "dark_dashboard",
+      "file_path": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\reel-2026-07-02-1727-004\\assets\\asset_bg_dark.jpg",
+      "library_path": "C:\\Users\\fazea\\bharat research brain\\maven_reels\\assets\\library\\dark_dashboard\\dark_dashboard_001.jpg",
+      "used_in_scenes": [
+        1,
+        2,
+        4,
+        5,
+        7
+      ],
+      "reason": "Best library match for 'asset_bg_dark' (dark_dashboard)."
+    },
+    {
+      "slot": "asset_bg_end",
+      "asset_id": "end_cards_001",
+      "category": "end_cards",
+      "file_path": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\reel-2026-07-02-1727-004\\assets\\asset_bg_end.jpg",
+      "library_path": "C:\\Users\\fazea\\bharat research brain\\maven_reels\\assets\\library\\end_cards\\end_cards_001.jpg",
+      "used_in_scenes": [
+        8
+      ],
+      "reason": "Best library match for 'asset_bg_end' (end_cards)."
+    },
+    {
+      "slot": "asset_bg_panel",
+      "asset_id": "white_data_cards_001",
+      "category": "white_data_cards",
+      "file_path": "C:\\Users\\fazea\\bharat research brain\\outputs\\maven_reels\\reel-2026-07-02-1727-004\\assets\\asset_bg_panel.jpg",
+      "library_path": "C:\\Users\\fazea\\bharat research brain\\maven_reels\\assets\\library\\white_data_cards\\white_data_cards_001.jpg",
+      "used_in_scenes": [
+        3,
+        6
+      ],
+      "reason": "Best library match for 'asset_bg_panel' (white_data_cards)."
+    }
+  ],
+  "missing_assets": [],
+  "paid_generation_required": false,
+  "paid_generation_allowed": false,
+  "requires_approval": false,
+  "generation_request": null,
+  "estimated_new_generations": 0,
+  "estimated_cost": "0 (library reuse)",
+  "cost_guard": {
+    "date": "reel-2026-07-02-1727-004",
+    "requested": 0,
+    "approved": false,
+    "allow_paid_generation": false,
+    "use_existing_asset_library": true,
+    "max_per_daily_run": 0,
+    "max_with_approval": 1,
+    "allowed": true,
+    "requires_approval": false,
+    "reason": "No paid generation requested — reusing asset library.",
+    "cap": 0
+  }
+}

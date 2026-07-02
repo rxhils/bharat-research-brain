@@ -1,0 +1,18 @@
+{
+  "date": "reel-2026-07-02-1206-002",
+  "variation_id": "orange_alert",
+  "accent_color": "#F59E0B",
+  "hook_animation": "impact",
+  "transition_style": "impact",
+  "chart_style": "bold-line",
+  "subtitle_style": "highlight-amber",
+  "card_style": "alert",
+  "reason": "Rotated to 'orange_alert' by date for freshness.",
+  "all_variations": [
+    "teal_terminal",
+    "green_pulse",
+    "white_brief",
+    "blue_newsroom",
+    "orange_alert"
+  ]
+}

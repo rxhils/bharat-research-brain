@@ -42,6 +42,14 @@ ARTIFACTS = {
     "storyboard": "07_storyboard.json",
     "asset_picker": "09_asset_picker.json",
     "higgsfield_request": "11_higgsfield_request.json",
+    "fresh_video_scenes": "12_fresh_video_scenes.json",   # legacy (folded into scene_generation)
+    "renderer_selection": "08_renderer_selection.json",
+    "creative_direction": "09_higgsfield_creative_direction.json",
+    "shot_plan": "10_higgsfield_shot_plan.json",
+    "shot_prompts": "11_higgsfield_prompts.json",
+    "scene_generation": "12_higgsfield_generation.json",
+    "scene_quality": "13_scene_quality.json",
+    "final_reel": "17_final_reel.json",
     "cost_guard": "cost_guard.json",
     "visual_uniqueness": "10_visual_uniqueness.json",
     "improvement_plan": "improvement_plan.json",
@@ -155,6 +163,50 @@ MOTION_VARIATIONS = {
     "blue_newsroom":  {"accent": "#38BDF8", "hook_animation": "block-in",   "transition_style": "wipe",   "chart_style": "dashboard",   "subtitle_style": "highlight-blue",   "card_style": "panel"},
     "orange_alert":   {"accent": "#F59E0B", "hook_animation": "impact",     "transition_style": "impact", "chart_style": "bold-line",   "subtitle_style": "highlight-amber",  "card_style": "alert"},
 }
+
+# ---------------------------------------------------------------------------
+# HIGGSFIELD-PRIMARY RENDERER — Higgsfield generates the animated scene clips
+# (the actual video); a local ffmpeg assembler stitches them + voiceover +
+# music/SFX + burned subtitles into the final reel. Remotion is DEMOTED to an
+# explicit fallback (never used silently). Real costs, confirmed 2026-07-02:
+#   seed still (nano_banana_pro, 9:16, 1k): 2 credits
+#   video clip (seedance1_5, image-to-video, 9:16, 4s): 4.8 credits
+#   => ~6.8 credits/shot, ~34-41 credits/reel (5-6 shots). NOT free.
+# Paid generation NEVER runs automatically from Claude Code during builds —
+# it requires an explicit UI trigger (Run Reel / Regenerate) or operator
+# approval, executed by the conductor.
+# ---------------------------------------------------------------------------
+def _envstr(name: str, default: str) -> str:
+    import os
+    return (os.getenv(name) or default).strip().lower()
+
+
+PRIMARY_REEL_RENDERER = _envstr("PRIMARY_REEL_RENDERER", "higgsfield")
+ALLOW_REMOTION_FALLBACK = _envbool("ALLOW_REMOTION_FALLBACK", True)
+ALLOW_PAID_HIGGSFIELD_FROM_UI = _envbool("ALLOW_PAID_HIGGSFIELD_FROM_UI", True)
+ALLOW_PAID_HIGGSFIELD_FROM_CLAUDE_CODE = _envbool("ALLOW_PAID_HIGGSFIELD_FROM_CLAUDE_CODE", False)
+MAX_HIGGSFIELD_SCENES_PER_REEL = _envint("MAX_HIGGSFIELD_SCENES_PER_REEL", 6)
+TARGET_REEL_DURATION_SECONDS = _envint("TARGET_REEL_DURATION_SECONDS", 18)
+HIGGSFIELD_SCENE_DURATION_SECONDS = _envint("HIGGSFIELD_SCENE_DURATION_SECONDS", 3)
+REQUIRE_USER_TRIGGER_FOR_PAID_GENERATION = _envbool("REQUIRE_USER_TRIGGER_FOR_PAID_GENERATION", True)
+REQUIRE_APPROVAL_BEFORE_PUBLISH = _envbool("REQUIRE_APPROVAL_BEFORE_PUBLISH", True)
+
+# Generation economics (folded in from the retired Fresh Video Mode)
+HIGGSFIELD_VIDEO_MODEL = "seedance1_5"
+HIGGSFIELD_SEED_MODEL = IMAGE_MODEL            # nano_banana_pro seed still
+HIGGSFIELD_GEN_CLIP_SECONDS = 4                # seedance1_5 allowed: 4/8/12; trimmed to ~3s in assembly
+HIGGSFIELD_SEED_COST_CREDITS = 2.0             # confirmed via get_cost
+HIGGSFIELD_CLIP_COST_CREDITS = 4.8             # confirmed via get_cost
+HIGGSFIELD_MAX_CREDITS_PER_REEL = 60           # hard ceiling for a 5-6 shot reel
+
+# Legacy aliases (Fresh Video Mode is retired; kept so old artifacts still load)
+FRESH_VIDEO_MODE_ENABLED = False
+FRESH_VIDEO_MODEL = HIGGSFIELD_VIDEO_MODEL
+FRESH_VIDEO_SEED_MODEL = HIGGSFIELD_SEED_MODEL
+FRESH_VIDEO_CLIP_DURATION = HIGGSFIELD_GEN_CLIP_SECONDS
+FRESH_VIDEO_SEED_COST_CREDITS = HIGGSFIELD_SEED_COST_CREDITS
+FRESH_VIDEO_CLIP_COST_CREDITS = HIGGSFIELD_CLIP_COST_CREDITS
+FRESH_VIDEO_MAX_CREDITS_PER_REEL = HIGGSFIELD_MAX_CREDITS_PER_REEL
 
 IG_USER_ID = "36492003990443127"       # try.maven business account
 COMPOSIO_TOOLS = {

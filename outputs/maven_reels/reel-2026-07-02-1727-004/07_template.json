@@ -1,0 +1,27 @@
+{
+  "date": "reel-2026-07-02-1727-004",
+  "selected_template": "company_shock",
+  "template_reason": "Single company/earnings/M&A/order event (Reliance/HDFC/Adani…).",
+  "scene_structure": [
+    "hook",
+    "company_card",
+    "what_happened",
+    "market_reaction",
+    "why_matters",
+    "cta"
+  ],
+  "recommended_assets": {
+    "asset_bg_dark": "company_news",
+    "asset_bg_panel": "white_data_cards",
+    "asset_bg_end": "end_cards"
+  },
+  "motion_style": "blue_newsroom",
+  "accent_color": "#38BDF8",
+  "all_templates": [
+    "market_move_explainer",
+    "sector_breakdown",
+    "policy_impact",
+    "company_shock",
+    "what_investors_missed"
+  ]
+}

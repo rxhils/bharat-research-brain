@@ -1,0 +1,40 @@
+{
+  "run_key": "reel-2026-07-02-1727-004",
+  "visual_uniqueness_score": 90,
+  "gate": 85,
+  "passed": true,
+  "signature": {
+    "template": "company_shock",
+    "variation": "teal_terminal",
+    "accent": "#22D3EE",
+    "assets": [
+      "dark_dashboard_001",
+      "end_cards_001",
+      "white_data_cards_001"
+    ],
+    "scene_order": [
+      "hook",
+      "stat",
+      "chips",
+      "reason",
+      "chart",
+      "reason",
+      "reason",
+      "outro"
+    ],
+    "scene_count": 8
+  },
+  "reused_assets": [
+    "dark_dashboard_001",
+    "end_cards_001",
+    "white_data_cards_001"
+  ],
+  "new_variations": [
+    "teal_terminal"
+  ],
+  "too_similar_to": [],
+  "matched_dimensions": [
+    "template"
+  ],
+  "note": "Asset reuse is fine for cost; sameness of template+variation+composition is what this gate blocks."
+}

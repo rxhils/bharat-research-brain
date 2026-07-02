@@ -1,0 +1,18 @@
+{
+  "date": "reel-2026-07-02-1319-003",
+  "variation_id": "white_brief",
+  "accent_color": "#16A34A",
+  "hook_animation": "rise",
+  "transition_style": "wipe",
+  "chart_style": "clean-reveal",
+  "subtitle_style": "underline",
+  "card_style": "editorial",
+  "reason": "Rotated to 'white_brief' by date for freshness.",
+  "all_variations": [
+    "teal_terminal",
+    "green_pulse",
+    "white_brief",
+    "blue_newsroom",
+    "orange_alert"
+  ]
+}

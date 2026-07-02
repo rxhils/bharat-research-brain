@@ -1,0 +1,13 @@
+{
+  "date": "reel-2026-07-02-1319-003",
+  "requested": 1,
+  "approved": false,
+  "allow_paid_generation": false,
+  "use_existing_asset_library": true,
+  "max_per_daily_run": 0,
+  "max_with_approval": 1,
+  "allowed": false,
+  "requires_approval": true,
+  "reason": "1 paid Higgsfield generation(s) requested but ALLOW_PAID_GENERATION=false. Explicit approval required.",
+  "cap": 0
+}

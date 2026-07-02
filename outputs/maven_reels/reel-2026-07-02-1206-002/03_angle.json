@@ -1,0 +1,72 @@
+{
+  "date": "reel-2026-07-02-1206-002",
+  "story_headline": "June GST collections rise 13.9% year-on-year to Rs 1.94 lakh crore",
+  "candidates": [
+    {
+      "type": "money_flow",
+      "angle": "Where the money actually went today — and why macro felt it.",
+      "angle_score": 88
+    },
+    {
+      "type": "curiosity",
+      "angle": "The market moved today, but the real story was macro.",
+      "angle_score": 80
+    },
+    {
+      "type": "hidden_reason",
+      "angle": "The real reason macro moved today.",
+      "angle_score": 80
+    },
+    {
+      "type": "what_people_missed",
+      "angle": "Everyone watched the index. Few watched macro.",
+      "angle_score": 80
+    },
+    {
+      "type": "market_under_surface",
+      "angle": "The market looked calm on the surface. Underneath, it wasn't.",
+      "angle_score": 80
+    },
+    {
+      "type": "myth_busting",
+      "angle": "You think the index tells the story. Today it didn't.",
+      "angle_score": 80
+    },
+    {
+      "type": "contrarian",
+      "angle": "The market didn't move because of one stock. It moved because of macro.",
+      "angle_score": 74
+    },
+    {
+      "type": "why_this_matters",
+      "angle": "Why macro changed the market mood today.",
+      "angle_score": 72
+    },
+    {
+      "type": "simple_explainer",
+      "angle": "Today's market move, explained through macro, in 15 seconds.",
+      "angle_score": 72
+    },
+    {
+      "type": "shock",
+      "angle": "Gross GST (June 2026): Rs 1,94,812 crore, +13.9% YoY — and it came down to one sector.",
+      "angle_score": 66
+    }
+  ],
+  "count": 10,
+  "chosen": {
+    "type": "money_flow",
+    "angle": "Where the money actually went today — and why macro felt it.",
+    "angle_score": 88
+  },
+  "selected_angle": "Where the money actually went today — and why macro felt it.",
+  "angle_type": "money_flow",
+  "angle_score": 88,
+  "why_selected": "Highest scroll-stop (88) — frames the event as a why/hidden-reason, not a recap, and fits 15-20s.",
+  "backup_angles": [
+    "The market moved today, but the real story was macro.",
+    "The real reason macro moved today.",
+    "Everyone watched the index. Few watched macro.",
+    "The market looked calm on the surface. Underneath, it wasn't."
+  ]
+}

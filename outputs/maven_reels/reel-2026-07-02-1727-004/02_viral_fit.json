@@ -1,0 +1,129 @@
+{
+  "date": "reel-2026-07-02-1727-004",
+  "dimensions": [
+    "importance",
+    "curiosity",
+    "emotional",
+    "simplicity",
+    "visual",
+    "shareability",
+    "retail_relevance"
+  ],
+  "formula": {
+    "importance": 0.25,
+    "curiosity": 0.2,
+    "simplicity": 0.15,
+    "visual": 0.15,
+    "shareability": 0.15,
+    "emotional": 0.1
+  },
+  "min_fit": 6.0,
+  "chosen": {
+    "headline": "Auto stocks in focus on strong June sales numbers",
+    "viral_fit": 7.06,
+    "dims": {
+      "importance": 8.0,
+      "curiosity": 5,
+      "emotional": 6.0,
+      "simplicity": 6.6,
+      "visual": 8.5,
+      "shareability": 8.0,
+      "retail_relevance": 10.0
+    },
+    "story": {
+      "rank": 3,
+      "headline": "Auto stocks in focus on strong June sales numbers",
+      "what_happened": "The Nifty Auto index gained around 1% as automakers reported robust June 2026 dispatches. Mahindra & Mahindra rose after reporting an about 37% year-on-year jump in total June vehicle sales, while Maruti Suzuki and Tata Motors also advanced and Ashok Leyland gained on healthy commercial-vehicle dispatches.",
+      "why_it_matters": "Monthly wholesale dispatch figures are a widely watched, fundamentals-linked data point for the auto sector, showing how real business updates (unit sales) feed into how a sector trades that day.",
+      "investor_takeaway": "Monthly sales are one input among many; a strong month is company disclosure to study, not a recommendation to act.",
+      "affected_sectors": [
+        "Auto"
+      ],
+      "key_numbers": [
+        "Nifty Auto: +~1%",
+        "M&M June total vehicle sales: about +37% YoY",
+        "Maruti Suzuki and Tata Motors: advanced ~2%"
+      ],
+      "sources": [
+        "https://upstox.com/news/market-news/stocks/market-wrap-july-1-nifty-50-ends-above-24-000-sensex-rises-444-points-led-fmcg-auto-stocks-eternal-top-gainer/article-196219/",
+        "https://www.goodreturns.in/news/stock-market-outlook-next-week-june-29-july-3-2026-sensex-nifty-prediction-key-triggers-q1result-fii-1518547.html"
+      ]
+    }
+  },
+  "ranked": [
+    {
+      "headline": "Auto stocks in focus on strong June sales numbers",
+      "viral_fit": 7.06,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 6.0,
+        "simplicity": 6.6,
+        "visual": 8.5,
+        "shareability": 8.0,
+        "retail_relevance": 10.0
+      }
+    },
+    {
+      "headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+      "viral_fit": 6.04,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 8.0,
+        "simplicity": 6.4,
+        "visual": 8.5,
+        "shareability": 10.0,
+        "retail_relevance": 10.0
+      },
+      "rejected_reason": "Lower viral fit (6.04 vs 7.06); weaker on "
+    },
+    {
+      "headline": "Sensex and Nifty extend gains, close higher on Thursday",
+      "viral_fit": 5.68,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 7.2,
+        "visual": 10.0,
+        "shareability": 8.0,
+        "retail_relevance": 7.0
+      },
+      "rejected_reason": "Lower viral fit (5.68 vs 7.06); weaker on emotional"
+    }
+  ],
+  "reel_worthy": true,
+  "selected_story_is_duplicate": false,
+  "selected_story": {
+    "rank": 3,
+    "headline": "Auto stocks in focus on strong June sales numbers",
+    "what_happened": "The Nifty Auto index gained around 1% as automakers reported robust June 2026 dispatches. Mahindra & Mahindra rose after reporting an about 37% year-on-year jump in total June vehicle sales, while Maruti Suzuki and Tata Motors also advanced and Ashok Leyland gained on healthy commercial-vehicle dispatches.",
+    "why_it_matters": "Monthly wholesale dispatch figures are a widely watched, fundamentals-linked data point for the auto sector, showing how real business updates (unit sales) feed into how a sector trades that day.",
+    "investor_takeaway": "Monthly sales are one input among many; a strong month is company disclosure to study, not a recommendation to act.",
+    "affected_sectors": [
+      "Auto"
+    ],
+    "key_numbers": [
+      "Nifty Auto: +~1%",
+      "M&M June total vehicle sales: about +37% YoY",
+      "Maruti Suzuki and Tata Motors: advanced ~2%"
+    ],
+    "sources": [
+      "https://upstox.com/news/market-news/stocks/market-wrap-july-1-nifty-50-ends-above-24-000-sensex-rises-444-points-led-fmcg-auto-stocks-eternal-top-gainer/article-196219/",
+      "https://www.goodreturns.in/news/stock-market-outlook-next-week-june-29-july-3-2026-sensex-nifty-prediction-key-triggers-q1result-fii-1518547.html"
+    ]
+  },
+  "viral_fit_score": 7.06,
+  "why_this_story_can_work_as_a_reel": "Scores 7.06/10 on the weighted reel formula — strong on curiosity (5), visual (8.5) and shareability (8.0); explainable in 15-20s.",
+  "rejected_stories": [
+    {
+      "headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+      "reason": "Lower viral fit (6.04 vs 7.06); weaker on "
+    },
+    {
+      "headline": "Sensex and Nifty extend gains, close higher on Thursday",
+      "reason": "Lower viral fit (5.68 vs 7.06); weaker on emotional"
+    }
+  ]
+}
