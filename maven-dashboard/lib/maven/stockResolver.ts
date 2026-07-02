@@ -1,4 +1,5 @@
-import type { ResolvedStock } from "./types";
+import type { ResolvedStock, StockResolution } from "./types";
+import { resolveFromUniverse, universeNameForSymbol } from "./nseUniverse";
 
 type Def = { name: string; symbol: string; sector: string; aliases: string[] };
 
@@ -40,19 +41,39 @@ function matches(alias: string, s: string): boolean {
   return new RegExp(body).test(s);
 }
 
-export function extractSymbols(query: string): string[] {
-  const s = (query || "").toLowerCase(); const out: string[] = [];
-  for (const d of STOCKS) if (d.aliases.some((a) => matches(a, s)) && !out.includes(d.symbol)) out.push(d.symbol);
-  return out.slice(0, 3);
-}
-
-export function resolveStock(query: string): ResolvedStock | null {
+function manualBest(query: string): { d: Def; len: number } | null {
   const s = (query || "").toLowerCase();
   let best: { d: Def; len: number } | null = null;
   for (const d of STOCKS) for (const a of d.aliases) if (matches(a, s)) { const len = a.replace(/\\b/g, "").length; if (!best || len > best.len) best = { d, len }; }
-  if (!best) return null;
-  const d = best.d;
-  return { companyName: d.name, symbol: d.symbol + ".NS", exchange: "NSE", sector: d.sector, confidence: best.len >= 4 ? "high" : "medium" };
+  return best;
+}
+
+export function extractSymbols(query: string): string[] {
+  const s = (query || "").toLowerCase(); const out: string[] = [];
+  for (const d of STOCKS) if (d.aliases.some((a) => matches(a, s)) && !out.includes(d.symbol)) out.push(d.symbol);
+  // fall back to the full NSE universe - resolve the whole query and each comparison side
+  const parts = [query, ...query.split(/\b(?:vs|versus|and|&)\b|,/i)];
+  for (const part of parts) {
+    if (out.length >= 3) break;
+    const u = resolveFromUniverse(part);
+    if (u.status === "resolved" && u.primary && !out.includes(u.primary.symbol)) out.push(u.primary.symbol);
+  }
+  return out.slice(0, 3);
+}
+
+// Full resolution with ambiguity: manual map first (tuned aliases like RIL/BEL), then the NSE universe.
+export function resolveStockEntity(query: string): StockResolution {
+  const best = manualBest(query);
+  if (best) return { status: "resolved", confidence: best.len >= 4 ? 0.9 : 0.7, reason: "known alias", primary: { symbol: best.d.symbol, companyName: best.d.name, segment: "equity", yahooSymbol: best.d.symbol + ".NS", aliases: best.d.aliases, oldSymbols: [], oldNames: [], status: "active", lastUpdated: "" } };
+  return resolveFromUniverse(query);
+}
+
+export function resolveStock(query: string): ResolvedStock | null {
+  const best = manualBest(query);
+  if (best) { const d = best.d; return { companyName: d.name, symbol: d.symbol + ".NS", exchange: "NSE", sector: d.sector, confidence: best.len >= 4 ? "high" : "medium" }; }
+  const u = resolveFromUniverse(query);
+  if (u.status === "resolved" && u.primary) return { companyName: u.primary.companyName, symbol: u.primary.symbol + ".NS", exchange: "NSE", sector: "", confidence: u.confidence >= 0.9 ? "high" : "medium" };
+  return null; // ambiguous / not_found -> caller decides (clarification vs generic)
 }
 
 export function sectorGroup(sector: string): "banks" | "energy" | "exporter" | "other" {
@@ -64,5 +85,5 @@ export function sectorGroup(sector: string): "banks" | "energy" | "exporter" | "
 }
 export function nameForSymbol(symbol: string): string | undefined {
   const sym = symbol.replace(/\.ns$/i, "").toUpperCase();
-  return STOCKS.find((d) => d.symbol === sym)?.name;
+  return STOCKS.find((d) => d.symbol === sym)?.name || universeNameForSymbol(sym);
 }

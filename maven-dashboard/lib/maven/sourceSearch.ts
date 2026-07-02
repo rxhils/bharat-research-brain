@@ -138,22 +138,26 @@ async function enrichTop(list: SourceResult[], n: number): Promise<SourceResult[
   });
 }
 
-export async function searchSources(queries: string[]): Promise<SourceResult[]> {
+export async function searchSources(queries: string[], opts?: { budget?: number }): Promise<SourceResult[]> {
   if (!queries.length) return [];
-  const qs = queries.slice(0, 4);
+  // budget scales how many sources we keep: light ~6, standard ~12, deep ~22. Default 8 (legacy).
+  const budget = Math.max(4, Math.min(opts?.budget ?? 8, 25));
+  const qCap = budget >= 18 ? 8 : budget >= 10 ? 6 : 4;
+  const qs = queries.slice(0, qCap);
 
   // 1 + 2: official-domain queries and plain queries through the free SearXNG layer.
-  const free = searxngConfigured() ? await searchSearxngMany([...officialQueries(qs), ...qs].slice(0, 8)) : [];
+  const free = searxngConfigured() ? await searchSearxngMany([...officialQueries(qs), ...qs].slice(0, qCap * 2)) : [];
   let ranked = rankAndDedupe(free);
 
   // 3: only reach for a paid provider when the free layer didn't find enough official/quality sources.
-  const enough = ranked.some((r) => (r.sourceRank ?? 9) <= 3) || ranked.length >= 3;
+  const enoughCount = budget >= 18 ? 6 : budget >= 10 ? 4 : 3;
+  const enough = ranked.filter((r) => (r.sourceRank ?? 9) <= 3).length >= 2 || ranked.length >= enoughCount;
   if (!enough && pickProvider()) {
     const paid = await runPaid(qs);
     ranked = rankAndDedupe([...free, ...paid]);
   }
 
-  // 7: keep 5-7, enrich the top slots with extracted page text (targeted, bounded, silent on failure).
-  const top = ranked.slice(0, 7);
-  return enrichTop(top, 5);
+  // 7: keep up to the budget, enrich the top slots with extracted page text (bounded, silent on failure).
+  const top = ranked.slice(0, budget);
+  return enrichTop(top, Math.min(5, budget));
 }

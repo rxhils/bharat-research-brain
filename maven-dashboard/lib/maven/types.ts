@@ -132,4 +132,25 @@ export type MavenAnswer = {
 };
 
 export type ResolvedStock = { companyName: string; symbol: string; exchange: string; sector: string; confidence: "high" | "medium" | "low" };
+
+export type NseSecurity = {
+  symbol: string; companyName: string; series?: string; isin?: string;
+  faceValue?: number; dateOfListing?: string; paidUpValue?: number; marketLot?: number;
+  segment: "equity" | "sme" | "etf" | "reit" | "invit" | "permitted" | "unknown";
+  yahooSymbol?: string; bseCode?: string;
+  aliases: string[]; oldSymbols: string[]; oldNames: string[];
+  status: "active" | "suspended" | "delisted" | "unknown"; lastUpdated: string;
+};
+
+export type StockResolution = {
+  status: "resolved" | "ambiguous" | "not_found";
+  primary?: NseSecurity; candidates?: NseSecurity[];
+  confidence: number; reason: string;
+};
+
+export type StockDepth = "light" | "standard" | "deep";
+export type StockSourcePlan = {
+  depth: StockDepth; sourceBudget: number;
+  requiredSources: string[]; searchQueries: string[]; officialQueries: string[]; chartNeeds: string[];
+};
 export type Catalyst = { primaryCatalyst: string; secondaryCatalysts: string[]; confidence: "none" | "low" | "medium" | "high"; evidence: string[] };

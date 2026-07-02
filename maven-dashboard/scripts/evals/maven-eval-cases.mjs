@@ -99,6 +99,30 @@ export const CASES = [
   { id: "J3", query: "how does Maven work?", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
   { id: "J4", query: "introduce yourself", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
   { id: "J5", query: "help me get started", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
+
+  // K. Full NSE universe (non-Nifty500) - resolved from the NSE securities master, not the manual map.
+  // charts:false = lenient (chart presence is Yahoo-dependent and already covered by D/E cases);
+  // these assert resolution (symbol/name present), routing, blocks, sources, and zero leakage.
+  { id: "K1", query: "Why is Poonawalla Fincorp moving?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Poonawalla"], blocks: true, charts: false, sources: true, mustNotContain: ["searxng", "scraper", "provider error", "fetch error"] },
+  { id: "K2", query: "Explain Lloyds Metals", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Lloyds"], blocks: true, charts: false, sources: true },
+  { id: "K3", query: "What happened to Apar Industries?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Apar"], blocks: true, charts: false, sources: true },
+  { id: "K4", query: "Latest announcement for Coromandel", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Coromandel"], blocks: true, charts: false, sources: true },
+  { id: "K5", query: "Why is Garden Reach Shipbuilders moving?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Garden Reach"], blocks: true, charts: false, sources: true },
+  { id: "K6", query: "Explain Mazagon Dock", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Mazagon"], blocks: true, charts: false, sources: true },
+  { id: "K7", query: "What changed in Angel One?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Angel One"], blocks: true, charts: false, sources: true },
+  { id: "K8", query: "Why is KFin Tech moving?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Kfin"], blocks: true, charts: false, sources: true },
+  { id: "K9", query: "Explain BSE Ltd", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["BSE"], blocks: true, charts: false, sources: true },
+  { id: "K10", query: "Latest results for Polycab", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Polycab"], blocks: true, charts: false, sources: true },
+  { id: "K11", query: "Shareholding pattern of Dixon Technologies", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Dixon"], blocks: true, charts: false, sources: true },
+  { id: "K12", query: "Why is Kaynes Technology moving?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Kaynes"], blocks: true, charts: false, sources: true },
+  { id: "K13", query: "Explain Cochin Shipyard", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Cochin Shipyard"], blocks: true, charts: false, sources: true },
+  { id: "K14", query: "What happened to APL Apollo?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["APL Apollo"], blocks: true, charts: false, sources: true },
+  { id: "K15", query: "Why is Newgen Software moving?", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Newgen"], blocks: true, charts: false, sources: true },
+  { id: "K16", query: "Explain Angel One", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Angel One"], blocks: true, charts: false, sources: true },
+  { id: "K17", query: "Give me a full research view on Tata Motors", category: "nse_universe", expectedAnswerType: "single_stock_research", expectedSymbols: ["Tata Motors"], blocks: true, charts: false, sources: true },
+  { id: "K18", query: "Compare HAL and BEL", category: "nse_universe", expectedAnswerType: "stock_comparison", expectedSymbols: ["HAL", "BEL"], blocks: true, charts: false, sources: true },
+  { id: "K19", query: "Compare ONGC and Oil India", category: "nse_universe", expectedAnswerType: "stock_comparison", expectedSymbols: ["ONGC"], blocks: true, charts: false, sources: true },
+  { id: "K20", query: "Compare Tata Elxsi and KPIT Tech", category: "nse_universe", expectedAnswerType: "stock_comparison", blocks: true, charts: false, sources: true },
 ];
 
 export default CASES;

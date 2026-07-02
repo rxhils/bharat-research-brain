@@ -5,6 +5,7 @@ import { lookupKnowledge } from "./indiaMarketKnowledge";
 import { buildMechanism } from "./mechanismBuilder";
 import { extractSymbols, nameForSymbol } from "./stockResolver";
 import { extractCatalyst } from "./stockCatalystExtractor";
+import { planStockSources } from "./stockSourcePlanner";
 
 const pct = (n: number | null) => (n == null ? "n/a" : (n >= 0 ? "+" : "") + n.toFixed(2) + "%");
 const round = (n: number | null): number | null => (n == null ? null : Math.round(n * 100) / 100);
@@ -37,7 +38,11 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
     jobs.push(getShareholdingContext(syms[0], nameOf(syms[0])).then((d) => { md.shareholding = [d]; }));
   }
 
-  const sourcesP = searchSources(plan.searchQueries);
+  // For stock questions, deepen source retrieval via the depth-based planner (light/standard/deep budget).
+  const isStock = singleStock || answerType === "stock_comparison";
+  const stockPlan = isStock ? planStockSources(query, syms[0] ? nameOf(syms[0]) : plan.topic, answerType) : null;
+  const sourceQueries = stockPlan ? [...stockPlan.officialQueries, ...stockPlan.searchQueries, ...plan.searchQueries] : plan.searchQueries;
+  const sourcesP = searchSources(sourceQueries, stockPlan ? { budget: stockPlan.sourceBudget } : undefined);
   await Promise.all(jobs);
   const sourceSnippets = await sourcesP;
 

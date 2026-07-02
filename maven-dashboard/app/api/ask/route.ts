@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { routeAnswerType, greetingTimeOfDay } from "@/lib/maven/answerTypeRouter";
+import { resolveStockEntity } from "@/lib/maven/stockResolver";
 import { classifyIntent } from "@/lib/maven/intentClassifier";
 import { planResearch } from "@/lib/maven/researchPlanner";
 import { buildContextPack } from "@/lib/maven/contextPackBuilder";
@@ -67,6 +68,18 @@ function outOfScope(query: string): MavenAnswer {
   };
 }
 
+function clarify(query: string, cands: { symbol: string; name: string }[]): MavenAnswer {
+  return {
+    type: "single_stock_research", disclaimerLevel: "light",
+    headline: "Which company did you mean?",
+    summary: `Several NSE-listed companies match that name. Pick one and Maven will research it.`,
+    keyData: [], charts: [], blocks: [], sources: [],
+    introSections: cands.slice(0, 5).map((c) => ({ title: c.name, body: `NSE: ${c.symbol}` })),
+    followUps: cands.slice(0, 5).map((c) => `Why is ${c.name} moving today?`),
+    disclaimer: "Educational market context only. Not investment advice.",
+  };
+}
+
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const query = typeof body?.query === "string" ? body.query : "";
@@ -76,6 +89,14 @@ export async function POST(req: Request) {
   if (answerType === "greeting") return NextResponse.json(greeting(query));
   if (answerType === "unsafe_advice") return NextResponse.json(REFUSAL);
   if (answerType === "out_of_scope") return NextResponse.json(outOfScope(query));
+
+  // Ambiguous company name (e.g. multiple entities share a brand) -> ask, never guess.
+  if (answerType !== "stock_comparison") {
+    const amb = resolveStockEntity(query);
+    if (amb.status === "ambiguous" && amb.candidates && amb.candidates.length > 1) {
+      return NextResponse.json(clarify(query, amb.candidates.map((c) => ({ symbol: c.symbol, name: c.companyName }))));
+    }
+  }
 
   const intent = classifyIntent(query);
   const plan = planResearch(query, intent);
