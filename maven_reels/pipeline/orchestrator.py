@@ -18,7 +18,7 @@ from . import (config, state, step01_research, step02_viral_fit, step03_angle,
                step14_caption, step15_compliance, step16_quality,
                step_renderer_selector, step_higgsfield_creative_director,
                step_higgsfield_shot_planner, step_higgsfield_prompt_builder,
-               step_higgsfield_scene_generator)
+               step_higgsfield_scene_generator, step_higgsfield_model_router)
 
 
 def prepare(date: str, renderer: str | None = None) -> dict:
@@ -43,14 +43,18 @@ def prepare(date: str, renderer: str | None = None) -> dict:
     # retry (up to the number of presets) — uniqueness without new generation.
     template = step_template_selector.run(date, story=story, angle=angle)
     variation = step_motion_variation.run(date, template=template)
-    uniqueness = None
+    is_higgsfield = renderer_sel["renderer"] != "remotion_fallback"
+    uniqueness, asset_picker = None, None
     for attempt in range(len(config.MOTION_VARIATIONS)):
         storyboard = step6_motion_storyboard.run(date, story=story, hooks=hooks,
                                                  script_edited=edited, viral_fit=viral_fit,
                                                  template=template, variation=variation)
-        step7_asset_director.run(date, storyboard)
-        asset_picker = step_asset_picker.run(date, storyboard=storyboard,
-                                             template=template, story=story)
+        if not is_higgsfield:
+            # STATIC PLATES exist ONLY for the explicit Remotion fallback —
+            # Higgsfield-primary reels never touch still-image assets.
+            step7_asset_director.run(date, storyboard)
+            asset_picker = step_asset_picker.run(date, storyboard=storyboard,
+                                                 template=template, story=story)
         uniqueness = step_visual_uniqueness.run(date, template=template,
                                                 variation=variation,
                                                 storyboard=storyboard,
@@ -61,7 +65,8 @@ def prepare(date: str, renderer: str | None = None) -> dict:
         order = list(config.MOTION_VARIATIONS)
         nxt = order[(order.index(variation["variation_id"]) + 1) % len(order)]
         variation = step_motion_variation.run(date, force_id=nxt)
-    higgs = step_higgsfield_asset_request.run(date, asset_picker=asset_picker)
+    higgs = (step_higgsfield_asset_request.run(date, asset_picker=asset_picker)
+             if asset_picker is not None else None)
 
     # HIGGSFIELD-PRIMARY chain (free/deterministic here): creative direction ->
     # shot plan -> prompts -> generation plan (gated; conductor executes after a
@@ -72,8 +77,11 @@ def prepare(date: str, renderer: str | None = None) -> dict:
     shot_plan = step_higgsfield_shot_planner.run(date, story=story, hooks=hooks,
                                                  script_edited=edited,
                                                  creative_direction=direction)
+    # per-scene cheapest-suitable model routing BEFORE prompts are built
+    model_plan = step_higgsfield_model_router.run(date, shot_plan=shot_plan)
     shot_prompts = step_higgsfield_prompt_builder.run(date, shot_plan=shot_plan,
-                                                      creative_direction=direction)
+                                                      creative_direction=direction,
+                                                      model_plan=model_plan)
     scene_gen = step_higgsfield_scene_generator.plan(date, shot_prompts=shot_prompts,
                                                      renderer=renderer_sel)
 
@@ -91,7 +99,7 @@ def prepare(date: str, renderer: str | None = None) -> dict:
                                  storyboard=storyboard, compliance=compliance,
                                  caption=caption, subtitles=subtitles,
                                  asset_picker=asset_picker,
-                                 cost_guard=asset_picker.get("cost_guard"),
+                                 cost_guard=(asset_picker or {}).get("cost_guard"),
                                  research=research, visual_uniqueness=uniqueness,
                                  fresh_video=scene_gen, viral_fit=viral_fit,
                                  scene_quality=scene_quality,

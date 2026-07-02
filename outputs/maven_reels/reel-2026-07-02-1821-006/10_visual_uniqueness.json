@@ -7,11 +7,7 @@
     "template": "company_shock",
     "variation": "green_pulse",
     "accent": "#27C281",
-    "assets": [
-      "dark_dashboard_001",
-      "end_cards_001",
-      "white_data_cards_001"
-    ],
+    "assets": [],
     "scene_order": [
       "hook",
       "stat",
@@ -24,11 +20,7 @@
     ],
     "scene_count": 8
   },
-  "reused_assets": [
-    "dark_dashboard_001",
-    "end_cards_001",
-    "white_data_cards_001"
-  ],
+  "reused_assets": [],
   "new_variations": [
     "green_pulse"
   ],

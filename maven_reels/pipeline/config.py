@@ -47,6 +47,7 @@ ARTIFACTS = {
     "creative_direction": "09_higgsfield_creative_direction.json",
     "shot_plan": "10_higgsfield_shot_plan.json",
     "shot_prompts": "11_higgsfield_prompts.json",
+    "scene_model_plan": "10_model_router.json",
     "scene_generation": "12_higgsfield_generation.json",
     "scene_quality": "13_scene_quality.json",
     "final_reel": "17_final_reel.json",
@@ -198,6 +199,10 @@ HIGGSFIELD_GEN_CLIP_SECONDS = 4                # seedance1_5 allowed: 4/8/12; tr
 HIGGSFIELD_SEED_COST_CREDITS = 2.0             # confirmed via get_cost
 HIGGSFIELD_CLIP_COST_CREDITS = 4.8             # confirmed via get_cost
 HIGGSFIELD_MAX_CREDITS_PER_REEL = 60           # hard ceiling for a 5-6 shot reel
+MAX_REEL_GENERATION_COST = _envint("MAX_REEL_GENERATION_COST", HIGGSFIELD_MAX_CREDITS_PER_REEL)
+REQUIRE_COST_CONFIRMATION = _envbool("REQUIRE_COST_CONFIRMATION", True)
+# generation method: text_to_video (cheapest, default) | image_seed (adds ~2cr/scene)
+HIGGSFIELD_GENERATION_METHOD = _envstr("HIGGSFIELD_GENERATION_METHOD", "text_to_video")
 
 # Legacy aliases (Fresh Video Mode is retired; kept so old artifacts still load)
 FRESH_VIDEO_MODE_ENABLED = False

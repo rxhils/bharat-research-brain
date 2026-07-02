@@ -14,6 +14,7 @@ export default function ReelsDashboard() {
   const [job, setJob] = useState<Job | null>(null);
   const [quality, setQuality] = useState<any>(null);
   const [freshVideo, setFreshVideo] = useState<any>(null);
+  const [research, setResearch] = useState<any>(null);
   const [running, setRunning] = useState(false);
 
   useEffect(() => {
@@ -23,6 +24,8 @@ export default function ReelsDashboard() {
         .then((x) => x.ok ? x.json() : null).then(setQuality).catch(() => {});
       fetch(api.artifactUrl(id, "12_higgsfield_generation.json"))
         .then((x) => x.ok ? x.json() : null).then(setFreshVideo).catch(() => {});
+      fetch(api.artifactUrl(id, "01_research.json"))
+        .then((x) => x.ok ? x.json() : null).then(setResearch).catch(() => {});
     };
     api.reelsLatest().then((l) => load(l.job_id)).catch(() =>
       api.jobs("reel").then((r) => {
@@ -63,13 +66,22 @@ export default function ReelsDashboard() {
               </button>
               {job && <Link href={`/reels/run/${job.job_id}`} className="btn btn-ghost">Open latest <ArrowUpRight size={15} /></Link>}
             </div>
-            <div className="text-[11px] text-ink-faint text-right max-w-xs">
-              <span className="text-teal">Renderer: Higgsfield Primary</span>
-              {freshVideo ? (
-                <> · {freshVideo.generation_status} (~{freshVideo.estimated_cost_credits}cr/reel)</>
-              ) : (
-                <> — animated scenes generated per reel (~34–41cr), assembled locally.
-                  Generation only runs after you approve it in Reel Review.</>
+            <div className="text-[11px] text-ink-faint text-right max-w-xs space-y-0.5">
+              <div><span className="text-teal">Renderer: Higgsfield Animated Clips</span>
+                {freshVideo && <> · {freshVideo.generation_status} (~{freshVideo.estimated_cost_credits}cr)</>}
+              </div>
+              {research && (
+                <div>
+                  Data Mode: <span className="text-ink">{
+                    research.data_window === "intraday" ? "Intraday"
+                    : research.data_window === "post_market" ? "Post-market"
+                    : "Latest trading day"}</span>
+                  {" · "}Research: <span className={research.research_status === "completed" ? "text-ok" : "text-danger"}>{research.research_status}</span>
+                  {research.sources_used?.length > 0 && <> · {research.sources_used.join(", ")}</>}
+                </div>
+              )}
+              {research?.research_status === "failed" && (
+                <div className="text-danger">Research failed: {research.error}</div>
               )}
             </div>
           </div>

@@ -50,6 +50,7 @@ FILES = {
     "09_higgsfield_creative_direction.json": ("higgsfield_creative_director", "json"),
     "10_higgsfield_shot_plan.json": ("higgsfield_shot_planner", "json"),
     "11_higgsfield_prompts.json": ("higgsfield_prompt_builder", "json"),
+    "10_model_router.json": ("higgsfield_model_router", "json"),
     "12_higgsfield_generation.json": ("higgsfield_scene_generator", "json"),
     "13_scene_quality.json": ("scene_quality_inspector", "json"),
     "17_final_reel.json": ("final_reel_assembler", "json"),

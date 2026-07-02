@@ -1,46 +1,65 @@
 {
   "date": "reel-2026-07-02-1821-006",
   "clips_dir": "higgsfield_clips",
+  "method": "text_to_video",
   "planned": [
     {
       "shot_id": "shot_01",
       "clip_path": "higgsfield_clips/shot_01.mp4",
       "duration": 4,
-      "model": "seedance1_5"
+      "model": "cinematic_studio_video_v2",
+      "fallback_model": "cinematic_studio_video_v2",
+      "scene_complexity": "hero_motion",
+      "estimated_cost": 9.0
     },
     {
       "shot_id": "shot_02",
       "clip_path": "higgsfield_clips/shot_02.mp4",
       "duration": 4,
-      "model": "seedance1_5"
+      "model": "seedance1_5",
+      "fallback_model": "kling3_0_turbo",
+      "scene_complexity": "simple_motion",
+      "estimated_cost": 4.8
     },
     {
       "shot_id": "shot_03",
       "clip_path": "higgsfield_clips/shot_03.mp4",
       "duration": 4,
-      "model": "seedance1_5"
+      "model": "kling3_0_turbo",
+      "fallback_model": "grok_video",
+      "scene_complexity": "medium_motion",
+      "estimated_cost": 7.5
     },
     {
       "shot_id": "shot_04",
       "clip_path": "higgsfield_clips/shot_04.mp4",
       "duration": 4,
-      "model": "seedance1_5"
+      "model": "kling3_0_turbo",
+      "fallback_model": "grok_video",
+      "scene_complexity": "medium_motion",
+      "estimated_cost": 7.5
     },
     {
       "shot_id": "shot_05",
       "clip_path": "higgsfield_clips/shot_05.mp4",
       "duration": 4,
-      "model": "seedance1_5"
+      "model": "seedance1_5",
+      "fallback_model": "kling3_0_turbo",
+      "scene_complexity": "simple_motion",
+      "estimated_cost": 4.8
     },
     {
       "shot_id": "shot_06",
       "clip_path": "higgsfield_clips/shot_06.mp4",
       "duration": 4,
-      "model": "seedance1_5"
+      "model": "seedance1_5",
+      "fallback_model": "kling3_0_turbo",
+      "scene_complexity": "simple_motion",
+      "estimated_cost": 4.8
     }
   ],
   "total_clips": 6,
-  "estimated_cost_credits": 40.8,
+  "estimated_cost_credits": 38.4,
   "max_credits_per_reel": 60,
   "generation_status": "requires_user_action",
   "approved_from_ui": false,

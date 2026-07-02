@@ -1,0 +1,65 @@
+{
+  "_comment": "Editable Higgsfield video-model ranking for the per-scene router. relative_cost is credits for one ~3-4s 9:16 clip; entries marked confirmed were preflighted via get_cost on 2026-07-02. The conductor can refresh this via models_explore.",
+  "models": [
+    {
+      "model": "seedance1_5",
+      "supports_text_to_video": true,
+      "supports_image_to_video": true,
+      "supports_9_16": true,
+      "max_duration": 12,
+      "relative_cost": 4.8,
+      "cost_confirmed": true,
+      "quality_tier": "standard",
+      "reliability": "high",
+      "best_for": ["simple_motion", "background_motion", "subtle_dashboard", "cta_motion", "data_panels"]
+    },
+    {
+      "model": "kling3_0_turbo",
+      "supports_text_to_video": true,
+      "supports_image_to_video": true,
+      "supports_9_16": true,
+      "max_duration": 15,
+      "relative_cost": 7.5,
+      "cost_confirmed": true,
+      "quality_tier": "good",
+      "reliability": "high",
+      "best_for": ["medium_motion", "data_wall", "sector_tiles", "camera_glide"]
+    },
+    {
+      "model": "grok_video",
+      "supports_text_to_video": true,
+      "supports_image_to_video": true,
+      "supports_9_16": true,
+      "max_duration": 15,
+      "relative_cost": 8,
+      "cost_confirmed": false,
+      "quality_tier": "good",
+      "reliability": "medium",
+      "best_for": ["medium_motion", "cinematic_reveal"]
+    },
+    {
+      "model": "kling2_6",
+      "supports_text_to_video": false,
+      "supports_image_to_video": true,
+      "supports_9_16": true,
+      "max_duration": 10,
+      "relative_cost": 12,
+      "cost_confirmed": false,
+      "quality_tier": "cinematic",
+      "reliability": "high",
+      "best_for": ["hero_motion", "advanced_physics", "cinematic_hook"]
+    },
+    {
+      "model": "cinematic_studio_video_v2",
+      "supports_text_to_video": true,
+      "supports_image_to_video": true,
+      "supports_9_16": true,
+      "max_duration": 12,
+      "relative_cost": 9,
+      "cost_confirmed": false,
+      "quality_tier": "cinematic",
+      "reliability": "high",
+      "best_for": ["hero_motion", "cinematic_hook", "market_shock", "data_wall_reveal"]
+    }
+  ]
+}

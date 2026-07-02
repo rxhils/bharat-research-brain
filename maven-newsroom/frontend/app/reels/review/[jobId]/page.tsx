@@ -447,6 +447,7 @@ export default function ReelReviewPage() {
                     <div className="w-full rounded mb-1 bg-white/[0.03] flex items-center justify-center text-ink-faint" style={{ aspectRatio: "9/16" }}>awaiting</div>
                   )}
                   <div className="font-mono text-ink-faint">{p.shot_id}</div>
+                  {p.model && <div className="text-[10px] text-ink-faint truncate" title={`${p.scene_complexity ?? ""} → ${p.model}`}>{p.model}{p.estimated_cost != null ? ` · ${p.estimated_cost}cr` : ""}</div>}
                   {sq && <div className={sq.passed ? "text-ok" : "text-warn"}>{sq.score}/100</div>}
                   {onDisk && sq?.passed === false && (
                     <button className="mt-1 text-[10px] text-warn underline"
@@ -469,9 +470,10 @@ export default function ReelReviewPage() {
             </button>
           )}
           <p className="text-[11px] text-mcp mt-2">
-            Higgsfield generates the animated clips (the reel's actual video); the local
-            assembler adds voiceover, music, subtitles and branding. Generation executes
-            via the Claude Code conductor after your approval — never automatically.
+            Higgsfield animated clips generated per scene using lowest-cost suitable
+            model — no static plates, no slideshows. The local assembler adds voiceover,
+            music, subtitles and branding. Generation executes via the Claude Code
+            conductor after your approval — never automatically.
           </p>
         </Section>
       )}

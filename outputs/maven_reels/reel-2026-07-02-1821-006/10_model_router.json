@@ -1,0 +1,71 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "scene_model_plan": [
+    {
+      "scene_id": "shot_01",
+      "purpose": "hook",
+      "scene_complexity": "hero_motion",
+      "selected_model": "cinematic_studio_video_v2",
+      "reason": "cheapest cinematic-tier model meeting the hero_motion floor at 9.0cr (cost estimated)",
+      "estimated_cost": 9.0,
+      "fallback_model": "cinematic_studio_video_v2",
+      "quality_target": 90
+    },
+    {
+      "scene_id": "shot_02",
+      "purpose": "context",
+      "scene_complexity": "simple_motion",
+      "selected_model": "seedance1_5",
+      "reason": "cheapest standard-tier model meeting the simple_motion floor at 4.8cr",
+      "estimated_cost": 4.8,
+      "fallback_model": "kling3_0_turbo",
+      "quality_target": 80
+    },
+    {
+      "scene_id": "shot_03",
+      "purpose": "data",
+      "scene_complexity": "medium_motion",
+      "selected_model": "kling3_0_turbo",
+      "reason": "cheapest good-tier model meeting the medium_motion floor at 7.5cr",
+      "estimated_cost": 7.5,
+      "fallback_model": "grok_video",
+      "quality_target": 85
+    },
+    {
+      "scene_id": "shot_04",
+      "purpose": "reason",
+      "scene_complexity": "medium_motion",
+      "selected_model": "kling3_0_turbo",
+      "reason": "cheapest good-tier model meeting the medium_motion floor at 7.5cr",
+      "estimated_cost": 7.5,
+      "fallback_model": "grok_video",
+      "quality_target": 85
+    },
+    {
+      "scene_id": "shot_05",
+      "purpose": "impact",
+      "scene_complexity": "simple_motion",
+      "selected_model": "seedance1_5",
+      "reason": "cheapest standard-tier model meeting the simple_motion floor at 4.8cr",
+      "estimated_cost": 4.8,
+      "fallback_model": "kling3_0_turbo",
+      "quality_target": 80
+    },
+    {
+      "scene_id": "shot_06",
+      "purpose": "cta",
+      "scene_complexity": "simple_motion",
+      "selected_model": "seedance1_5",
+      "reason": "cheapest standard-tier model meeting the simple_motion floor at 4.8cr",
+      "estimated_cost": 4.8,
+      "fallback_model": "kling3_0_turbo",
+      "quality_target": 80
+    }
+  ],
+  "total_estimated_cost": 38.4,
+  "max_reel_generation_cost": 60,
+  "blocked_over_budget": false,
+  "paid_generation_required": true,
+  "requires_ui_confirmation": true,
+  "note": "Per-scene cheapest-suitable routing from model_cost_config.json (editable; conductor refreshes it from models_explore)."
+}

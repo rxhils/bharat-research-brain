@@ -152,34 +152,52 @@ def create_reel_job(source: str = "manual_run") -> dict:
               started_at=_now(), completed_at=_now(),
               summary="Manual Run Reel trigger.")
 
-    found = _same_day_research(job_id)
-    if found:
-        (run_dir / "01_research.json").write_text(
-            _json.dumps(found["research"], indent=2, ensure_ascii=False),
-            encoding="utf-8")
-        _set_node(job_id, "market_sentinel", status="completed", progress=100,
-                  started_at=_now(), completed_at=_now(),
-                  summary=f"Reused same-day verified research ({found['source']}) "
-                          "— sources + timestamps preserved.")
-        bus.emit(job_id, "market_sentinel", "reel.research.reused",
-                 f"Same-day verified research reused from {found['source']} "
-                 "(sources preserved, nothing stale).", status="completed")
-        result = continue_after_research(job_id)
-        return {"job_id": job_id, "run_dir": str(run_dir),
-                "review_url": f"/reels/review/{job_id}",
-                "research_source": found["source"], **result}
+    # BACKEND RESEARCH — runs right here, any time of day. Never blocks on the
+    # conductor; provider failures surface as a clear config error instead.
+    from maven_reels.pipeline import step1_research_backend  # noqa: PLC0415
 
-    _set_node(job_id, "market_sentinel", status="pending",
-              summary="No research from today exists yet. It arrives via the "
-                      "5:20 PM cron or the Claude Code conductor — the backend "
-                      "cannot do live web research and never reuses stale data.")
+    _set_node(job_id, "market_sentinel", status="running", started_at=_now(),
+              summary="Fetching latest Indian market news (backend providers)…")
     bus.emit(job_id, "market_sentinel", "reel.research.started",
-             "No same-day research available yet — waiting for the cron/"
-             "conductor. Stale data is never reused.", status="pending")
-    return {"job_id": job_id, "status": "needs_research", "run_dir": str(run_dir),
+             "Backend research: fetching today's Indian market news "
+             "(RSS + configured providers)…", status="running")
+    try:
+        research = step1_research_backend.run(job_id)
+    except Exception as exc:
+        research = {"research_status": "failed", "error": str(exc)}
+    if research.get("research_status") != "completed":
+        err = research.get("error", "unknown research error")
+        _set_node(job_id, "market_sentinel", status="failed",
+                  completed_at=_now(),
+                  summary=f"Research failed: {err}", error=err)
+        bus.emit(job_id, "market_sentinel", "reel.research.failed",
+                 f"Research failed: {err} "
+                 f"({research.get('next_action', 'check provider config')})",
+                 status="failed")
+        db.upsert("jobs", {"job_id": job_id, "status": "research_failed",
+                           "updated_at": _now(),
+                           "summary": f"Research failed: {err}"},
+                  conflict_keys=["job_id"])
+        return {"job_id": job_id, "status": "research_failed",
+                "error": err, "next_action": research.get("next_action"),
+                "review_url": f"/reels/review/{job_id}"}
+
+    n = len(research.get("candidate_stories", []))
+    _set_node(job_id, "market_sentinel", status="completed", progress=100,
+              completed_at=_now(),
+              summary=(f"{n} candidate stories ({research['data_window']}, "
+                       f"sources: {', '.join(research['sources_used'])})."),
+              output_artifact="01_research.json")
+    bus.emit(job_id, "market_sentinel", "reel.research.completed",
+             f"Research completed: {n} candidates | mode {research['data_window']} "
+             f"| market {research['market_status']} | sources: "
+             f"{', '.join(research['sources_used'])}.", status="completed")
+    result = continue_after_research(job_id)
+    return {"job_id": job_id, "run_dir": str(run_dir),
             "review_url": f"/reels/review/{job_id}",
-            "message": "New unique run created. No research from today exists "
-                       "yet — it arrives via the 5:20 PM cron or the conductor."}
+            "data_window": research["data_window"],
+            "market_status": research["market_status"],
+            "sources_used": research["sources_used"], **result}
 
 
 def continue_after_research(job_id: str, renderer: str | None = None) -> dict:

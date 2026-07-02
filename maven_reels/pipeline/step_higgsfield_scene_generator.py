@@ -26,16 +26,20 @@ from . import config, state
 CLIPS_DIR = "higgsfield_clips"
 
 
-def _estimated_cost(n_shots: int) -> float:
-    return round(n_shots * (config.HIGGSFIELD_SEED_COST_CREDITS +
-                            config.HIGGSFIELD_CLIP_COST_CREDITS), 1)
+def _scene_cost(p: dict) -> float:
+    """Per-scene cost from the model router; seed still added only when the
+    image_seed method is configured."""
+    clip = float(p.get("estimated_cost") or config.HIGGSFIELD_CLIP_COST_CREDITS)
+    seed = (config.HIGGSFIELD_SEED_COST_CREDITS
+            if config.HIGGSFIELD_GENERATION_METHOD == "image_seed" else 0.0)
+    return clip + seed
 
 
 def plan(date: str, *, shot_prompts: dict, renderer: dict) -> dict:
     """Deterministic + free: the generation plan + gate decision."""
     prompts = shot_prompts.get("shot_prompts", [])[: config.MAX_HIGGSFIELD_SCENES_PER_REEL]
-    est = _estimated_cost(len(prompts))
-    over_budget = est > config.HIGGSFIELD_MAX_CREDITS_PER_REEL
+    est = round(sum(_scene_cost(p) for p in prompts), 1)
+    over_budget = est > config.MAX_REEL_GENERATION_COST
     is_primary = renderer.get("renderer") == "higgsfield_primary"
 
     status = ("not_selected" if not is_primary else
@@ -44,10 +48,14 @@ def plan(date: str, *, shot_prompts: dict, renderer: dict) -> dict:
     payload = {
         "date": date,
         "clips_dir": CLIPS_DIR,
+        "method": shot_prompts.get("method", config.HIGGSFIELD_GENERATION_METHOD),
         "planned": [{"shot_id": p["shot_id"],
                      "clip_path": f"{CLIPS_DIR}/{p['shot_id']}.mp4",
                      "duration": p["duration"],
-                     "model": p["model_recommendation"]} for p in prompts],
+                     "model": p["model_recommendation"],
+                     "fallback_model": p.get("fallback_model"),
+                     "scene_complexity": p.get("scene_complexity"),
+                     "estimated_cost": round(_scene_cost(p), 1)} for p in prompts],
         "total_clips": len(prompts),
         "estimated_cost_credits": est,
         "max_credits_per_reel": config.HIGGSFIELD_MAX_CREDITS_PER_REEL,
