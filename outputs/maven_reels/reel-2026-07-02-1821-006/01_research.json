@@ -1,0 +1,71 @@
+{
+  "date": "2026-07-02",
+  "retrieved_at": "2026-07-02T17:32:00+05:30",
+  "top_3_stories": [
+    {
+      "rank": 1,
+      "headline": "Sensex and Nifty extend gains, close higher on Thursday",
+      "what_happened": "Indian benchmarks ended firmly higher on July 2, 2026. The Nifty 50 closed at 24,175.70, up about 169.85 points (+0.71%), and the BSE Sensex closed at 77,502.12, up about 579.48 points (+0.75%) versus the previous session, extending the market's recovery.",
+      "why_it_matters": "A second straight up-day was led by a broad rebound, with technology stocks swinging from the prior session's biggest drag to the day's biggest support, showing how quickly sector leadership can rotate.",
+      "investor_takeaway": "Index levels and daily point moves are backward-looking data, not signals; educational value is in seeing how sector rotation drives a benchmark's daily move.",
+      "affected_sectors": [
+        "IT",
+        "Auto",
+        "FMCG",
+        "Financials"
+      ],
+      "key_numbers": [
+        "Nifty 50 close: 24,175.70 (+0.71%)",
+        "Sensex close: 77,502.12 (+0.75%)",
+        "Prev close Nifty: 24,005.85 | Sensex: 76,922.64"
+      ],
+      "sources": [
+        "https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI",
+        "https://query1.finance.yahoo.com/v8/finance/chart/%5EBSESN",
+        "https://tradingeconomics.com/india/stock-market"
+      ]
+    },
+    {
+      "rank": 2,
+      "headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+      "what_happened": "The Nifty IT index surged more than 3% on July 2 after four consecutive sessions of losses. Infosys rose about 3.9%, HCLTech about 3.4%, TCS about 2.6% and Tech Mahindra about 2.3%, with several IT names among the top Nifty gainers. The bounce followed the prior day's slump triggered by a KPIT Technologies revenue warning.",
+      "why_it_matters": "The one-day swing from worst-performing to best-performing sector illustrates mean-reversion / bargain-buying dynamics after a sharp correction, and how single-stock news (a KPIT warning) can move a whole index for a day before sentiment resets.",
+      "investor_takeaway": "A single day's sector bounce reflects short-term positioning, not a change in fundamentals; understanding why an index moved matters more than the move itself.",
+      "affected_sectors": [
+        "IT"
+      ],
+      "key_numbers": [
+        "Nifty IT: +~3% (rebound after 4-day slide)",
+        "Infosys +3.9%, HCLTech +3.4%, TCS +2.6%, TechM +2.3%"
+      ],
+      "sources": [
+        "https://www.tradingview.com/news/moneycontrol:0715c6131094b:0-nifty-it-jumps-3-after-four-day-slide-infosys-hcltech-tcs-lead-rebound-despite-mixed-global-tech-cues/",
+        "https://www.indiainfoline.com/news/companies/nifty-it-index-jumps-over-3-why-it-stocks-are-up-today"
+      ]
+    },
+    {
+      "rank": 3,
+      "headline": "Auto stocks in focus on strong June sales numbers",
+      "what_happened": "The Nifty Auto index gained around 1% as automakers reported robust June 2026 dispatches. Mahindra & Mahindra rose after reporting an about 37% year-on-year jump in total June vehicle sales, while Maruti Suzuki and Tata Motors also advanced and Ashok Leyland gained on healthy commercial-vehicle dispatches.",
+      "why_it_matters": "Monthly wholesale dispatch figures are a widely watched, fundamentals-linked data point for the auto sector, showing how real business updates (unit sales) feed into how a sector trades that day.",
+      "investor_takeaway": "Monthly sales are one input among many; a strong month is company disclosure to study, not a recommendation to act.",
+      "affected_sectors": [
+        "Auto"
+      ],
+      "key_numbers": [
+        "Nifty Auto: +~1%",
+        "M&M June total vehicle sales: about +37% YoY",
+        "Maruti Suzuki and Tata Motors: advanced ~2%"
+      ],
+      "sources": [
+        "https://upstox.com/news/market-news/stocks/market-wrap-july-1-nifty-50-ends-above-24-000-sensex-rises-444-points-led-fmcg-auto-stocks-eternal-top-gainer/article-196219/",
+        "https://www.goodreturns.in/news/stock-market-outlook-next-week-june-29-july-3-2026-sensex-nifty-prediction-key-triggers-q1result-fii-1518547.html"
+      ]
+    }
+  ],
+  "_meta": {
+    "story_count": 3,
+    "reused_from": "reel run reel-2026-07-02-1820-005",
+    "reuse_note": "same-day verified research; sources, figures and timestamps unchanged"
+  }
+}

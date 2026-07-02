@@ -1,0 +1,94 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "passed": false,
+  "scores": {
+    "hook": 92,
+    "story": 90,
+    "scene_quality": 0,
+    "animation_quality": 0,
+    "retention": 100,
+    "edit_quality": 100,
+    "visual_quality": 0,
+    "subtitle": 100,
+    "voiceover": 70,
+    "compliance": 100,
+    "brand": 100,
+    "cost_efficiency": 100,
+    "freshness": 100,
+    "visual_uniqueness": 90,
+    "publish": 0
+  },
+  "gates": {
+    "hook": 90,
+    "story": 85,
+    "scene_quality": 85,
+    "animation_quality": 90,
+    "retention": 90,
+    "edit_quality": 90,
+    "visual_quality": 90,
+    "subtitle": 90,
+    "voiceover": 85,
+    "compliance": 95,
+    "brand": 90,
+    "cost_efficiency": 85,
+    "visual_uniqueness": 85,
+    "freshness": 95
+  },
+  "renderer": "higgsfield_primary",
+  "gate_passed": {
+    "hook": true,
+    "story": true,
+    "scene_quality": false,
+    "animation_quality": false,
+    "retention": true,
+    "edit_quality": true,
+    "visual_quality": false,
+    "subtitle": true,
+    "voiceover": false,
+    "compliance": true,
+    "brand": true,
+    "cost_efficiency": true,
+    "visual_uniqueness": true,
+    "freshness": true
+  },
+  "issues": [
+    "scene_quality: awaiting Higgsfield clip generation",
+    "animation_quality: awaiting Higgsfield clip generation",
+    "visual_quality: reel.mp4 not built",
+    "voiceover: no voiceover (captions-only)"
+  ],
+  "fixes_required": [
+    "scene_quality (0<85) -> higgsfield_scene_generator",
+    "animation_quality (0<90) -> higgsfield_creative_director",
+    "visual_quality (0<90) -> motion_graphics",
+    "voiceover (70<85) -> voice_studio"
+  ],
+  "suggested_buttons": [
+    {
+      "gate": "scene_quality",
+      "score": 0,
+      "min": 85,
+      "click": "Regenerate Failed Scene"
+    },
+    {
+      "gate": "animation_quality",
+      "score": 0,
+      "min": 90,
+      "click": "Improve Animation Quality"
+    },
+    {
+      "gate": "visual_quality",
+      "score": 0,
+      "min": 90,
+      "click": "Improve Animations & Quality / Regenerate Visuals"
+    },
+    {
+      "gate": "voiceover",
+      "score": 70,
+      "min": 85,
+      "click": "Regenerate Voiceover"
+    }
+  ],
+  "reroute_to": "higgsfield_scene_generator",
+  "verdict": "BLOCKED"
+}

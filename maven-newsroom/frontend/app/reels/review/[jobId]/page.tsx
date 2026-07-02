@@ -195,24 +195,58 @@ export default function ReelReviewPage() {
           {hasReel ? (
             <video controls className="w-full rounded-xl border border-line bg-black" style={{ aspectRatio: "9/16" }}
               src={api.artifactUrl(jobId, "reel.mp4")} poster={hasCover ? api.artifactUrl(jobId, "cover.jpg") : undefined} />
+          ) : clips && clips.generation_status !== "not_planned" ? (
+            <div className="w-full rounded-xl border border-teal/30 bg-teal/[0.04] flex flex-col items-center justify-center gap-4 p-6 text-center" style={{ aspectRatio: "9/16" }}>
+              <Sparkles size={28} className="text-teal" />
+              <div className="text-sm text-ink">
+                {clips.generation_status === "requires_user_action"
+                  ? "Nothing is generating yet — the animated scenes wait for your approval."
+                  : clips.generation_status === "approved_awaiting_conductor"
+                  ? "Approved ✓ — the Claude Code conductor generates the scenes next."
+                  : `Scene generation: ${clips.generation_status}`}
+              </div>
+              {clips.generation_status === "requires_user_action" && (
+                <button className="btn btn-primary"
+                  onClick={() => {
+                    if (window.confirm(`This will use Higgsfield credits to generate animated video scenes (~${clips.estimated_cost_credits}cr). Continue?`))
+                      act("gen-top", "Generate Scenes", () => api.approveGeneration(jobId));
+                  }}>
+                  <Sparkles size={15} /> Generate Animated Scenes (~{clips.estimated_cost_credits}cr) ⚠
+                </button>
+              )}
+              <p className="text-[11px] text-ink-faint">
+                The cover frame is extracted from the Higgsfield hook scene after
+                generation — unique to this reel&apos;s creative direction.
+              </p>
+            </div>
           ) : hasCover ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img src={api.artifactUrl(jobId, "cover.jpg")} alt="cover" className="w-full rounded-xl border border-line" style={{ aspectRatio: "9/16", objectFit: "cover" }} />
           ) : (
-            <EmptyState title="No reel yet" hint="Motion Graphics Engine builds reel.mp4 in the Claude Code conductor once plates + voiceover exist." />
+            <EmptyState title="No reel yet" hint="Approve scene generation to build this reel." />
           )}
-          <div className="grid grid-cols-4 gap-2">
-            {hasCover && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={api.artifactUrl(jobId, "cover.jpg")} alt="cover" title="Cover" className="rounded-lg border border-line" style={{ aspectRatio: "9/16", objectFit: "cover" }} />
-            )}
-            {plates.map((p) => (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img key={p} src={api.artifactUrl(jobId, p)} alt={p} title={p.replace(".jpg", "")} className="rounded-lg border border-line opacity-80" style={{ aspectRatio: "9/16", objectFit: "cover" }} />
-            ))}
-          </div>
-          {(hasCover || plates.length > 0) && (
-            <p className="text-[11px] text-mcp">Cover frame + {plates.length} Higgsfield background plate{plates.length === 1 ? "" : "s"} (layered behind the animated scenes).</p>
+          {/* legacy static plates only shown for old Remotion-era runs */}
+          {!clips && (hasCover || plates.length > 0) && (
+            <>
+              <div className="grid grid-cols-4 gap-2">
+                {hasCover && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={api.artifactUrl(jobId, "cover.jpg")} alt="cover" title="Cover" className="rounded-lg border border-line" style={{ aspectRatio: "9/16", objectFit: "cover" }} />
+                )}
+                {plates.map((p) => (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img key={p} src={api.artifactUrl(jobId, p)} alt={p} title={p.replace(".jpg", "")} className="rounded-lg border border-line opacity-80" style={{ aspectRatio: "9/16", objectFit: "cover" }} />
+                ))}
+              </div>
+              <p className="text-[11px] text-mcp">Legacy run: cover + {plates.length} static plates (Remotion renderer).</p>
+            </>
+          )}
+          {hasReel && hasCover && clips && (
+            <div className="flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={api.artifactUrl(jobId, "cover.jpg")} alt="cover" title="Cover (from Higgsfield hook scene)" className="rounded-lg border border-line w-20" style={{ aspectRatio: "9/16", objectFit: "cover" }} />
+              <p className="text-[11px] text-ink-faint">Cover — extracted from this reel&apos;s Higgsfield hook scene (theme-specific, unique per reel).</p>
+            </div>
           )}
         </div>
 

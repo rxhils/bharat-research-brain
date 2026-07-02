@@ -1,0 +1,127 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "dimensions": [
+    "importance",
+    "curiosity",
+    "emotional",
+    "simplicity",
+    "visual",
+    "shareability",
+    "retail_relevance"
+  ],
+  "formula": {
+    "importance": 0.25,
+    "curiosity": 0.2,
+    "simplicity": 0.15,
+    "visual": 0.15,
+    "shareability": 0.15,
+    "emotional": 0.1
+  },
+  "min_fit": 6.0,
+  "chosen": {
+    "headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+    "viral_fit": 7.54,
+    "dims": {
+      "importance": 8.0,
+      "curiosity": 5,
+      "emotional": 8.0,
+      "simplicity": 6.4,
+      "visual": 8.5,
+      "shareability": 10.0,
+      "retail_relevance": 10.0
+    },
+    "story": {
+      "rank": 2,
+      "headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+      "what_happened": "The Nifty IT index surged more than 3% on July 2 after four consecutive sessions of losses. Infosys rose about 3.9%, HCLTech about 3.4%, TCS about 2.6% and Tech Mahindra about 2.3%, with several IT names among the top Nifty gainers. The bounce followed the prior day's slump triggered by a KPIT Technologies revenue warning.",
+      "why_it_matters": "The one-day swing from worst-performing to best-performing sector illustrates mean-reversion / bargain-buying dynamics after a sharp correction, and how single-stock news (a KPIT warning) can move a whole index for a day before sentiment resets.",
+      "investor_takeaway": "A single day's sector bounce reflects short-term positioning, not a change in fundamentals; understanding why an index moved matters more than the move itself.",
+      "affected_sectors": [
+        "IT"
+      ],
+      "key_numbers": [
+        "Nifty IT: +~3% (rebound after 4-day slide)",
+        "Infosys +3.9%, HCLTech +3.4%, TCS +2.6%, TechM +2.3%"
+      ],
+      "sources": [
+        "https://www.tradingview.com/news/moneycontrol:0715c6131094b:0-nifty-it-jumps-3-after-four-day-slide-infosys-hcltech-tcs-lead-rebound-despite-mixed-global-tech-cues/",
+        "https://www.indiainfoline.com/news/companies/nifty-it-index-jumps-over-3-why-it-stocks-are-up-today"
+      ]
+    }
+  },
+  "ranked": [
+    {
+      "headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+      "viral_fit": 7.54,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 8.0,
+        "simplicity": 6.4,
+        "visual": 8.5,
+        "shareability": 10.0,
+        "retail_relevance": 10.0
+      }
+    },
+    {
+      "headline": "Sensex and Nifty extend gains, close higher on Thursday",
+      "viral_fit": 7.18,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 4.0,
+        "simplicity": 7.2,
+        "visual": 10.0,
+        "shareability": 8.0,
+        "retail_relevance": 7.0
+      },
+      "rejected_reason": "Lower viral fit (7.18 vs 7.54); weaker on emotional, shareability"
+    },
+    {
+      "headline": "Auto stocks in focus on strong June sales numbers",
+      "viral_fit": 7.06,
+      "dims": {
+        "importance": 8.0,
+        "curiosity": 5,
+        "emotional": 6.0,
+        "simplicity": 6.6,
+        "visual": 8.5,
+        "shareability": 8.0,
+        "retail_relevance": 10.0
+      },
+      "rejected_reason": "Lower viral fit (7.06 vs 7.54); weaker on emotional, shareability"
+    }
+  ],
+  "reel_worthy": true,
+  "selected_story_is_duplicate": false,
+  "selected_story": {
+    "rank": 2,
+    "headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+    "what_happened": "The Nifty IT index surged more than 3% on July 2 after four consecutive sessions of losses. Infosys rose about 3.9%, HCLTech about 3.4%, TCS about 2.6% and Tech Mahindra about 2.3%, with several IT names among the top Nifty gainers. The bounce followed the prior day's slump triggered by a KPIT Technologies revenue warning.",
+    "why_it_matters": "The one-day swing from worst-performing to best-performing sector illustrates mean-reversion / bargain-buying dynamics after a sharp correction, and how single-stock news (a KPIT warning) can move a whole index for a day before sentiment resets.",
+    "investor_takeaway": "A single day's sector bounce reflects short-term positioning, not a change in fundamentals; understanding why an index moved matters more than the move itself.",
+    "affected_sectors": [
+      "IT"
+    ],
+    "key_numbers": [
+      "Nifty IT: +~3% (rebound after 4-day slide)",
+      "Infosys +3.9%, HCLTech +3.4%, TCS +2.6%, TechM +2.3%"
+    ],
+    "sources": [
+      "https://www.tradingview.com/news/moneycontrol:0715c6131094b:0-nifty-it-jumps-3-after-four-day-slide-infosys-hcltech-tcs-lead-rebound-despite-mixed-global-tech-cues/",
+      "https://www.indiainfoline.com/news/companies/nifty-it-index-jumps-over-3-why-it-stocks-are-up-today"
+    ]
+  },
+  "viral_fit_score": 7.54,
+  "why_this_story_can_work_as_a_reel": "Scores 7.54/10 on the weighted reel formula — strong on curiosity (5), visual (8.5) and shareability (10.0); explainable in 15-20s.",
+  "rejected_stories": [
+    {
+      "headline": "Sensex and Nifty extend gains, close higher on Thursday",
+      "reason": "Lower viral fit (7.18 vs 7.54); weaker on emotional, shareability"
+    },
+    {
+      "headline": "Auto stocks in focus on strong June sales numbers",
+      "reason": "Lower viral fit (7.06 vs 7.54); weaker on emotional, shareability"
+    }
+  ]
+}

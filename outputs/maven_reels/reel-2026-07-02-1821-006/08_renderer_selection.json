@@ -1,0 +1,13 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "renderer": "higgsfield_primary",
+  "reason": "User requested Higgsfield animated video generation as primary renderer.",
+  "fallback_available": true,
+  "paid_generation_required": true,
+  "requires_user_trigger": true,
+  "options": [
+    "higgsfield_primary",
+    "remotion_fallback",
+    "simulation_only"
+  ]
+}

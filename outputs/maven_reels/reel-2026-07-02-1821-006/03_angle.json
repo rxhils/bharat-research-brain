@@ -1,0 +1,72 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "story_headline": "Nifty IT jumps ~3%, leads rebound after four-day slide",
+  "candidates": [
+    {
+      "type": "money_flow",
+      "angle": "Where the money actually went today — and why it felt it.",
+      "angle_score": 88
+    },
+    {
+      "type": "curiosity",
+      "angle": "The market moved today, but the real story was it.",
+      "angle_score": 80
+    },
+    {
+      "type": "hidden_reason",
+      "angle": "The real reason it moved today.",
+      "angle_score": 80
+    },
+    {
+      "type": "what_people_missed",
+      "angle": "Everyone watched the index. Few watched it.",
+      "angle_score": 80
+    },
+    {
+      "type": "market_under_surface",
+      "angle": "The market looked calm on the surface. Underneath, it wasn't.",
+      "angle_score": 80
+    },
+    {
+      "type": "myth_busting",
+      "angle": "You think the index tells the story. Today it didn't.",
+      "angle_score": 80
+    },
+    {
+      "type": "contrarian",
+      "angle": "The market didn't move because of one stock. It moved because of it.",
+      "angle_score": 74
+    },
+    {
+      "type": "why_this_matters",
+      "angle": "Why it changed the market mood today.",
+      "angle_score": 72
+    },
+    {
+      "type": "simple_explainer",
+      "angle": "Today's market move, explained through it, in 15 seconds.",
+      "angle_score": 72
+    },
+    {
+      "type": "shock",
+      "angle": "Nifty IT: +~3% (rebound after 4-day slide) — and it came down to one sector.",
+      "angle_score": 66
+    }
+  ],
+  "count": 10,
+  "chosen": {
+    "type": "money_flow",
+    "angle": "Where the money actually went today — and why it felt it.",
+    "angle_score": 88
+  },
+  "selected_angle": "Where the money actually went today — and why it felt it.",
+  "angle_type": "money_flow",
+  "angle_score": 88,
+  "why_selected": "Highest scroll-stop (88) — frames the event as a why/hidden-reason, not a recap, and fits 15-20s.",
+  "backup_angles": [
+    "The market moved today, but the real story was it.",
+    "The real reason it moved today.",
+    "Everyone watched the index. Few watched it.",
+    "The market looked calm on the surface. Underneath, it wasn't."
+  ]
+}

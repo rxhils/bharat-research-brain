@@ -28,8 +28,28 @@ def _similarity(a: str, b: str) -> float:
     return len(ta & tb) / min(len(ta), len(tb))
 
 
+def _was_published(run_dir: str) -> bool:
+    """Only PUBLISHED reels count as 'used' topics — unpublished drafts and
+    test iterations of the same day never penalize their own story."""
+    import json
+    from pathlib import Path
+    d = Path(run_dir)
+    for name in ("_final_output.json", "17_publish.json", "20_publish.json"):
+        p = d / name
+        if p.exists():
+            try:
+                j = json.loads(p.read_text(encoding="utf-8"))
+                if j.get("status") == "published" or j.get("instagram_post_url") \
+                        or j.get("permalink"):
+                    return True
+            except Exception:
+                continue
+    return False
+
+
 def run(run_key: str, research: dict) -> dict:
-    recents = run_history.recent_runs(exclude=run_key, limit=10)
+    recents = [r for r in run_history.recent_runs(exclude=run_key, limit=10)
+               if _was_published(r["dir"])]
     recent_topics = [run_history.chosen_headline(r["viral_fit"]) for r in recents]
     recent_topics = [t for t in recent_topics if t]
 

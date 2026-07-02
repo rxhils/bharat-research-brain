@@ -1,0 +1,26 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "completed": {
+    "research": true,
+    "viral_fit": true,
+    "angle": true,
+    "hooks": true,
+    "script": true,
+    "retention": true,
+    "renderer_selection": true,
+    "creative_direction": true,
+    "shot_plan": true,
+    "shot_prompts": true,
+    "scene_generation": true,
+    "template": true,
+    "motion_variation": true,
+    "storyboard": true,
+    "asset_picker": true,
+    "higgsfield_request": true,
+    "subtitles": true,
+    "caption": true,
+    "compliance": true,
+    "quality": true
+  },
+  "notes": []
+}

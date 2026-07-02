@@ -1,0 +1,18 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "variation_id": "green_pulse",
+  "accent_color": "#27C281",
+  "hook_animation": "pulse",
+  "transition_style": "slide",
+  "chart_style": "glow-line",
+  "subtitle_style": "highlight-green",
+  "card_style": "pop",
+  "reason": "Rotated to 'green_pulse' by date for freshness.",
+  "all_variations": [
+    "teal_terminal",
+    "green_pulse",
+    "white_brief",
+    "blue_newsroom",
+    "orange_alert"
+  ]
+}

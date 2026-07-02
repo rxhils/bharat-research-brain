@@ -1,0 +1,123 @@
+{
+  "date": "reel-2026-07-02-1821-006",
+  "creative_directions": [
+    {
+      "name": "Green Market Pulse",
+      "style": "dark navy premium dashboard, green glowing cards, upward energy",
+      "mood": "confident, optimistic, premium",
+      "color_palette": [
+        "#0A1220",
+        "#27C281",
+        "#22D3EE",
+        "#E6EDF3"
+      ],
+      "motion_language": "rising camera glides, green glow pulses, upward parallax",
+      "visual_motifs": [
+        "ascending data columns",
+        "glowing green cards",
+        "light sweep"
+      ],
+      "why_it_fits": "Rallies, recoveries, positive sector moves.",
+      "avoid": [
+        "cartoon style",
+        "meme style",
+        "cheap stock footage",
+        "bull/bear mascots",
+        "fake company logos",
+        "fake numbers",
+        "buy/sell arrows",
+        "clutter",
+        "readable text baked into video"
+      ]
+    },
+    {
+      "name": "Sector Heatmap Motion",
+      "style": "animated sector tiles, heatmap panels, premium data wall",
+      "mood": "analytical, dynamic, precise",
+      "color_palette": [
+        "#05070A",
+        "#F59E0B",
+        "#27C281",
+        "#EF4444"
+      ],
+      "motion_language": "tiles shifting/settling, heat gradients breathing, camera drift over data wall",
+      "visual_motifs": [
+        "sector tile grid",
+        "heatmap panels",
+        "moving chips"
+      ],
+      "why_it_fits": "Banking / IT / energy / defence sector-driven days.",
+      "avoid": [
+        "cartoon style",
+        "meme style",
+        "cheap stock footage",
+        "bull/bear mascots",
+        "fake company logos",
+        "fake numbers",
+        "buy/sell arrows",
+        "clutter",
+        "readable text baked into video"
+      ]
+    },
+    {
+      "name": "What Investors Missed",
+      "style": "dark investigative newsroom, layered data reveals, premium mystery",
+      "mood": "curious, intelligent, reveal-driven",
+      "color_palette": [
+        "#05070A",
+        "#22D3EE",
+        "#8B5CF6",
+        "#E6EDF3"
+      ],
+      "motion_language": "slow zoom into data layers, spotlight reveals, focus pulls",
+      "visual_motifs": [
+        "hidden layer reveal",
+        "spotlight on data",
+        "depth-of-field shift"
+      ],
+      "why_it_fits": "Hidden-reason explainers, under-the-surface stories.",
+      "avoid": [
+        "cartoon style",
+        "meme style",
+        "cheap stock footage",
+        "bull/bear mascots",
+        "fake company logos",
+        "fake numbers",
+        "buy/sell arrows",
+        "clutter",
+        "readable text baked into video"
+      ]
+    }
+  ],
+  "selected_direction": {
+    "name": "Green Market Pulse",
+    "style": "dark navy premium dashboard, green glowing cards, upward energy",
+    "mood": "confident, optimistic, premium",
+    "color_palette": [
+      "#0A1220",
+      "#27C281",
+      "#22D3EE",
+      "#E6EDF3"
+    ],
+    "motion_language": "rising camera glides, green glow pulses, upward parallax",
+    "visual_motifs": [
+      "ascending data columns",
+      "glowing green cards",
+      "light sweep"
+    ],
+    "why_it_fits": "Rallies, recoveries, positive sector moves.",
+    "avoid": [
+      "cartoon style",
+      "meme style",
+      "cheap stock footage",
+      "bull/bear mascots",
+      "fake company logos",
+      "fake numbers",
+      "buy/sell arrows",
+      "clutter",
+      "readable text baked into video"
+    ],
+    "key": "green_market_pulse"
+  },
+  "selection_reason": "Best keyword-fit for the story (green_market_pulse)."
+}
