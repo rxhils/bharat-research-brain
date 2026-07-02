@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useMotionValue } from "framer-motion";
 import { useReducedMotionSafe } from "./motion";
 import { MavenChartRenderer, MechanismStepper } from "./maven-charts";
-import { MavenEvidenceSummaryCard } from "./maven-evidence";
+import { MavenEvidenceSummaryCard, MavenLatestDataChecklist } from "./maven-evidence";
 import { MavenSourcePanel } from "./maven-source-panel";
 import type { MavenAskResponse } from "@/lib/maven-types";
 
@@ -319,6 +319,7 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
           {!minimal && dataCharts.length > 0 && <div className="mt-6"><MavenChartRenderer charts={dataCharts} /></div>}
           {!minimal && flowChart?.data && flowChart.data.length > 0 && <div className="mt-4"><MechanismStepper steps={flowChart.data as { label?: string; step?: number }[]} /></div>}
           {!minimal && <MavenEvidenceSummaryCard evidence={a.evidence} />}
+          {!minimal && <MavenLatestDataChecklist items={a.latestDataChecklist} />}
 
           {blocks.length > 0 && (
             <motion.div className="mt-6 space-y-3" initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.1, delayChildren: 0.05 } } }}>

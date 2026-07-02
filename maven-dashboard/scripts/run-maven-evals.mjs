@@ -13,7 +13,7 @@ async function ask(query) {
 console.log(`Maven evals -> ${BASE}  (${CASES.length} cases)\n`);
 const results = [];
 for (const c of CASES) {
-  try { const { j, ms } = await ask(c.query); results.push({ id: c.id, category: c.category, query: c.query, headline: j.headline, evidence: j.evidence, ...scoreCase(c, j, ms) }); }
+  try { const { j, ms } = await ask(c.query); results.push({ id: c.id, category: c.category, query: c.query, headline: j.headline, evidence: j.evidence, latestDataChecklist: j.latestDataChecklist, ...scoreCase(c, j, ms) }); }
   catch (e) { results.push({ id: c.id, category: c.category, query: c.query, pass: false, score: 0, reasons: ["ERROR " + e.message], leak: [], refused: false, latencyMs: 0 }); }
 }
 
@@ -37,17 +37,22 @@ const evidenceFails = results.filter((r) => {
 const freshnessFails = results.filter((r) => r.freshness && r.freshness.length);
 const staleMetricFailures = freshnessFails.filter((r) => r.freshness.some((f) => f.startsWith("stale:")));
 const approxMetricFailures = freshnessFails.filter((r) => r.freshness.some((f) => f.startsWith("approx:")));
+// Verified Company Data Engine v2: company queries must carry a latest-data checklist.
+const checklistFails = results.filter((r) => {
+  const c = CASES.find((x) => x.id === r.id);
+  return c?.requireChecklist && (!Array.isArray(r.latestDataChecklist) || r.latestDataChecklist.length === 0);
+});
 
 console.log("ID   ACTUAL TYPE               P   SC  REASONS");
 for (const r of results) console.log(`${r.id.padEnd(4)} ${String(r.type || "-").padEnd(24)} ${r.pass ? "OK" : "XX"}  ${String(r.score).padStart(3)}  ${(r.reasons || []).join("; ")}`);
 
 console.log(`\nTOTAL ${results.length}   passed ${passed}   failed ${results.length - passed}   avgScore ${avg}   avgLatency ${avgLat}ms`);
 console.log("by category:  " + Object.entries(byCat).map(([k, v]) => `${k} ${v.p}/${v.n}`).join("   "));
-console.log(`leakage failures: ${leakFails.length}   refusal failures: ${refusalFails.length}   evidence-schema failures: ${evidenceFails.length}   stale-metric failures: ${staleMetricFailures.length}   approx-metric failures: ${approxMetricFailures.length}`);
+console.log(`leakage failures: ${leakFails.length}   refusal failures: ${refusalFails.length}   evidence-schema failures: ${evidenceFails.length}   stale-metric failures: ${staleMetricFailures.length}   approx-metric failures: ${approxMetricFailures.length}   checklist-missing failures: ${checklistFails.length}`);
 const top = results.filter((r) => !r.pass).slice(0, 10);
 if (top.length) { console.log("\nTop failures:"); for (const r of top) console.log(`  ${r.id}  ${r.query}  ->  ${(r.reasons || []).join("; ")}`); }
 
-const report = { generatedAtMs: Date.now(), base: BASE, total: results.length, passed, failed: results.length - passed, avgScore: avg, avgLatencyMs: avgLat, byCategory: byCat, leakageFailures: leakFails.map((r) => r.id), refusalFailures: refusalFails.map((r) => r.id), evidenceSchemaFailures: evidenceFails.map((r) => r.id), staleMetricFailures: staleMetricFailures.map((r) => r.id), approxMetricFailures: approxMetricFailures.map((r) => r.id), results };
+const report = { generatedAtMs: Date.now(), base: BASE, total: results.length, passed, failed: results.length - passed, avgScore: avg, avgLatencyMs: avgLat, byCategory: byCat, leakageFailures: leakFails.map((r) => r.id), refusalFailures: refusalFails.map((r) => r.id), evidenceSchemaFailures: evidenceFails.map((r) => r.id), staleMetricFailures: staleMetricFailures.map((r) => r.id), approxMetricFailures: approxMetricFailures.map((r) => r.id), checklistFailures: checklistFails.map((r) => r.id), results };
 writeFileSync(new URL("./evals/latest-report.json", import.meta.url), JSON.stringify(report, null, 2));
 console.log("\nreport -> scripts/evals/latest-report.json");
-process.exitCode = leakFails.length === 0 && refusalFails.length === 0 && evidenceFails.length === 0 && freshnessFails.length === 0 ? 0 : 1;
+process.exitCode = leakFails.length === 0 && refusalFails.length === 0 && evidenceFails.length === 0 && freshnessFails.length === 0 && checklistFails.length === 0 ? 0 : 1;

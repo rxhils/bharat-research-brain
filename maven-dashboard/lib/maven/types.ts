@@ -62,6 +62,9 @@ export type ShareholdingContext = {
   publicHolding: number | null; pledgedHolding: number | null; source: string; sourceUrl?: string; confidence: DataConfidence; limitation?: string;
 };
 
+export type DocumentType = "quarterly_result" | "investor_presentation" | "annual_report" | "shareholding_pattern" | "exchange_announcement" | "news" | "other";
+export type SourceTier = "exchange" | "investor_relations" | "filing" | "regulator" | "media" | "data_page" | "generic";
+
 export type SourceResult = {
   title: string; url: string; snippet: string; source: string; published?: string;
   provider?: string;                 // "searxng" | "tavily" | "serper" | ...
@@ -70,6 +73,10 @@ export type SourceResult = {
   domain?: string;
   date?: string;
   sourceRank?: number;               // 1 = NSE/BSE/RBI/SEBI, higher = less official
+  sourceQualityScore?: number;       // 0-100
+  sourceTier?: SourceTier;
+  official?: boolean;
+  docType?: DocumentType;
   extractionStatus?: "success" | "partial" | "failed";
 };
 
@@ -121,6 +128,7 @@ export type MavenEvidenceSummary = {
   sourceBudget?: number;
   coverageStatus?: CoverageStatus;
   latestPeriodFound?: string; // e.g. "Q4FY26" - latest fiscal period seen in retrieved sources
+  latestAnnualPeriodFound?: string; // e.g. "FY26" - latest annual (no-quarter) period seen
 };
 
 // Freshness lock: every company financial metric must be evidence-backed, period-labeled and
@@ -145,6 +153,28 @@ export type MetricEvidence = {
   limitation?: string;
 };
 
+// Latest-data checklist: for company-specific queries, Maven declares what it attempted to find
+// and whether it found it - shown to the user so "no data" is visibly a checked box, not a gap.
+export type ChecklistStatus = "found" | "missing" | "not_required";
+export type ChecklistItem = {
+  item: string; label: string; status: ChecklistStatus;
+  latestPeriod?: string; sourceId?: string; sourceUrl?: string; sourceDate?: string;
+  confidence?: "verified" | "retrieved" | "analysis_only" | "unavailable"; limitation?: string;
+};
+
+export type DiscoveredDocument = {
+  title: string; url: string; domain: string; docType: DocumentType;
+  confidence: "verified" | "retrieved" | "analysis_only"; sourceRank: number; sourceQualityScore: number;
+};
+
+export type CompanyFact = {
+  symbol: string; companyName: string; metric: MetricEvidence["metric"]; value: string | number | null;
+  unit?: string; period?: string; sourceId?: string; sourceUrl?: string; sourceDate?: string;
+  confidence: MetricEvidence["confidence"]; freshness: MetricFreshness; lastCheckedAt: number;
+};
+
+export type SourceQualitySummary = { officialCount: number; investorRelationsCount: number; mediaCount: number; genericCount: number; avgScore: number };
+
 export type ContextPack = {
   question: string; intent: Intent; topic: string;
   answerType: AnswerType; disclaimerLevel: DisclaimerLevel;
@@ -153,6 +183,9 @@ export type ContextPack = {
   knowledge: KnowledgeEntry | null; mechanism: { chain: string; flow: ChartSpec | null } | null;
   evidenceHint?: { evidenceDepth?: EvidenceDepth; sourceBudget?: number };
   metricEvidence?: MetricEvidence[];
+  latestDataChecklist?: ChecklistItem[];
+  latestAnnualPeriodFound?: string;
+  sourceQualitySummary?: SourceQualitySummary;
 };
 
 export type MavenBlock = { type: "DATA" | "POINT" | "MACRO" | "CONTEXT" | "RISK" | "TAKEAWAY"; title: string; body: string };
@@ -169,6 +202,7 @@ export type MavenAnswer = {
   limitations?: string[];
   introSections?: MavenIntroSection[];
   evidence?: MavenEvidenceSummary;
+  latestDataChecklist?: ChecklistItem[];
 };
 
 export type ResolvedStock = { companyName: string; symbol: string; exchange: string; sector: string; confidence: "high" | "medium" | "low" };

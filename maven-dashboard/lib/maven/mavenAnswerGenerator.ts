@@ -51,7 +51,7 @@ function buildEvidence(pack: ContextPack, sources: MavenSource[]): MavenEvidence
     }
   }
 
-  return { sourceCount, verifiedSourceCount, retrievedSourceCount, officialSourceCount, analysisOnlySourceCount, unavailableSourceCount, evidenceDepth, sourceBudget, coverageStatus, latestPeriodFound: latest ? formatFiscalPeriod(latest) : undefined };
+  return { sourceCount, verifiedSourceCount, retrievedSourceCount, officialSourceCount, analysisOnlySourceCount, unavailableSourceCount, evidenceDepth, sourceBudget, coverageStatus, latestPeriodFound: latest ? formatFiscalPeriod(latest) : undefined, latestAnnualPeriodFound: pack.latestAnnualPeriodFound };
 }
 
 function keyDataFrom(pack: ContextPack): MavenKeyData[] {
@@ -103,6 +103,7 @@ function synthesizeStock(pack: ContextPack, liveFacts: string[], disc: string): 
     followUps: [`What are the key drivers for ${pack.topic}?`, `How does ${pack.topic}'s sector look today?`, `What would change this view?`],
     disclaimer: disc,
     evidence: buildEvidence(pack, stockSources),
+    latestDataChecklist: pack.latestDataChecklist,
   };
 }
 
@@ -132,6 +133,7 @@ function synthesize(pack: ContextPack): MavenAnswer {
     followUps: kb?.followUps?.slice(0, 3) || ["What is driving this specifically?", "How do FII/DII flows affect it?", "What would change this view?"],
     disclaimer: disc,
     evidence: buildEvidence(pack, marketSources),
+    latestDataChecklist: pack.latestDataChecklist,
   };
 }
 
@@ -174,6 +176,7 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
       followUps: Array.isArray(out.followUps) && out.followUps.length ? out.followUps.map((f: any) => String(f)).slice(0, 4) : (single ? [`What are the key drivers for ${pack.topic}?`, "What would change this view?"] : (pack.knowledge?.followUps?.slice(0, 3) || [])),
       disclaimer: disc,
       evidence: buildEvidence(pack, sources),
+      latestDataChecklist: pack.latestDataChecklist,
     };
   }
   return synthesize(pack);

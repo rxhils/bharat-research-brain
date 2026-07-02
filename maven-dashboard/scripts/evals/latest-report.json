@@ -1,11 +1,11 @@
 {
-  "generatedAtMs": 1782978600063,
-  "base": "http://localhost:3011/api/ask",
-  "total": 97,
-  "passed": 97,
+  "generatedAtMs": 1783015849312,
+  "base": "http://localhost:3012/api/ask",
+  "total": 102,
+  "passed": 102,
   "failed": 0,
   "avgScore": 100,
-  "avgLatencyMs": 143,
+  "avgLatencyMs": 73,
   "byCategory": {
     "greeting": {
       "p": 10,
@@ -54,6 +54,10 @@
     "freshness": {
       "p": 8,
       "n": 8
+    },
+    "verified_data": {
+      "p": 5,
+      "n": 5
     }
   },
   "leakageFailures": [],
@@ -61,6 +65,7 @@
   "evidenceSchemaFailures": [],
   "staleMetricFailures": [],
   "approxMetricFailures": [],
+  "checklistFailures": [],
   "results": [
     {
       "id": "A1",
@@ -79,7 +84,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 150
+      "latencyMs": 60
     },
     {
       "id": "A2",
@@ -98,7 +103,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 11
     },
     {
       "id": "A3",
@@ -117,7 +122,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 11
+      "latencyMs": 10
     },
     {
       "id": "A4",
@@ -136,7 +141,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 11
+      "latencyMs": 9
     },
     {
       "id": "A5",
@@ -155,7 +160,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 9
     },
     {
       "id": "B1",
@@ -183,7 +188,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 411
+      "latencyMs": 45
     },
     {
       "id": "B2",
@@ -211,7 +216,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 15
     },
     {
       "id": "B3",
@@ -239,7 +244,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 31
     },
     {
       "id": "B4",
@@ -267,7 +272,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 30
     },
     {
       "id": "B5",
@@ -323,7 +328,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 24
+      "latencyMs": 26
     },
     {
       "id": "C1",
@@ -379,7 +384,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 28
+      "latencyMs": 26
     },
     {
       "id": "C3",
@@ -407,7 +412,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 25
+      "latencyMs": 26
     },
     {
       "id": "C4",
@@ -435,7 +440,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 27
+      "latencyMs": 29
     },
     {
       "id": "C5",
@@ -463,7 +468,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 27
+      "latencyMs": 26
     },
     {
       "id": "C6",
@@ -491,7 +496,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 26
     },
     {
       "id": "C7",
@@ -519,7 +524,7 @@
       "limitations": 1,
       "leak": [],
       "freshness": [],
-      "latencyMs": 26
+      "latencyMs": 27
     },
     {
       "id": "C8",
@@ -547,7 +552,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 26
     },
     {
       "id": "C9",
@@ -575,7 +580,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 25
     },
     {
       "id": "C10",
@@ -621,6 +626,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -633,13 +704,13 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 135
+      "latencyMs": 143
     },
     {
       "id": "D2",
       "category": "single_stock",
       "query": "Why is HDFC Bank down today?",
-      "headline": "HDFC Bank: what's driving the gain",
+      "headline": "HDFC Bank: what's driving the fall",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -651,6 +722,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -663,7 +800,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 137
+      "latencyMs": 145
     },
     {
       "id": "D3",
@@ -681,6 +818,72 @@
         "sourceBudget": 6,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -693,7 +896,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 143
+      "latencyMs": 150
     },
     {
       "id": "D4",
@@ -711,6 +914,71 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "missing",
+          "limitation": "Live price unavailable from current sources."
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "missing"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -723,7 +991,7 @@
       "limitations": 7,
       "leak": [],
       "freshness": [],
-      "latencyMs": 738
+      "latencyMs": 432
     },
     {
       "id": "D5",
@@ -741,6 +1009,71 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "missing",
+          "limitation": "Live price unavailable from current sources."
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "missing"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -753,7 +1086,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 547
+      "latencyMs": 477
     },
     {
       "id": "D6",
@@ -771,6 +1104,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -783,7 +1182,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 277
+      "latencyMs": 137
     },
     {
       "id": "D7",
@@ -801,6 +1200,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -813,7 +1278,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 604
+      "latencyMs": 134
     },
     {
       "id": "D8",
@@ -831,6 +1296,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -843,7 +1374,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 127
+      "latencyMs": 132
     },
     {
       "id": "D9",
@@ -861,6 +1392,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -873,7 +1470,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 276
+      "latencyMs": 133
     },
     {
       "id": "D10",
@@ -891,6 +1488,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -903,13 +1566,13 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 3188
+      "latencyMs": 135
     },
     {
       "id": "D11",
       "category": "single_stock",
       "query": "Why is Bharti Airtel moving?",
-      "headline": "Why is Bharti Airtel moving?: what's driving the fall",
+      "headline": "Why is Bharti Airtel moving?: what's driving the gain",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -921,6 +1584,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -933,7 +1662,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 149
+      "latencyMs": 247
     },
     {
       "id": "D12",
@@ -951,6 +1680,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -963,7 +1758,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 177
+      "latencyMs": 138
     },
     {
       "id": "E1",
@@ -981,6 +1776,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -993,7 +1854,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 40
+      "latencyMs": 20
     },
     {
       "id": "E2",
@@ -1011,6 +1872,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1023,7 +1950,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 245
+      "latencyMs": 142
     },
     {
       "id": "E3",
@@ -1041,6 +1968,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 90,
       "pass": true,
       "threshold": 80,
@@ -1055,7 +2048,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 294
+      "latencyMs": 131
     },
     {
       "id": "E4",
@@ -1073,6 +2066,71 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "missing",
+          "limitation": "Live price unavailable from current sources."
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "missing"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 90,
       "pass": true,
       "threshold": 80,
@@ -1087,7 +2145,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 140
+      "latencyMs": 135
     },
     {
       "id": "E5",
@@ -1105,6 +2163,71 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "missing",
+          "limitation": "Live price unavailable from current sources."
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "missing"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1117,13 +2240,13 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 144
+      "latencyMs": 143
     },
     {
       "id": "F1",
       "category": "company_data",
       "query": "What are the latest results for HDFC Bank?",
-      "headline": "HDFC Bank: what's driving the gain",
+      "headline": "HDFC Bank: what's driving the fall",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -1135,6 +2258,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1147,7 +2336,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 25
+      "latencyMs": 19
     },
     {
       "id": "F2",
@@ -1165,6 +2354,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1177,7 +2432,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 19
     },
     {
       "id": "F3",
@@ -1195,6 +2450,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1207,13 +2528,13 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 25
+      "latencyMs": 20
     },
     {
       "id": "F4",
       "category": "company_data",
       "query": "What is HDFC Bank's valuation context?",
-      "headline": "HDFC Bank: what's driving the gain",
+      "headline": "HDFC Bank: what's driving the fall",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -1225,6 +2546,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1237,7 +2624,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 25
+      "latencyMs": 17
     },
     {
       "id": "G1",
@@ -1256,7 +2643,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 7
     },
     {
       "id": "G2",
@@ -1275,7 +2662,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 11
+      "latencyMs": 8
     },
     {
       "id": "G3",
@@ -1294,7 +2681,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 7
     },
     {
       "id": "G4",
@@ -1313,7 +2700,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 8
     },
     {
       "id": "G5",
@@ -1332,7 +2719,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 7
     },
     {
       "id": "H1",
@@ -1351,7 +2738,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 6
     },
     {
       "id": "H2",
@@ -1370,7 +2757,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 7
     },
     {
       "id": "H3",
@@ -1389,7 +2776,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 6
     },
     {
       "id": "H4",
@@ -1408,7 +2795,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 8
     },
     {
       "id": "H5",
@@ -1427,7 +2814,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 15
+      "latencyMs": 9
     },
     {
       "id": "T1",
@@ -1455,7 +2842,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 10
     },
     {
       "id": "T2",
@@ -1483,7 +2870,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 20
+      "latencyMs": 9
     },
     {
       "id": "T3",
@@ -1511,7 +2898,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 16
+      "latencyMs": 10
     },
     {
       "id": "T4",
@@ -1529,6 +2916,71 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "missing",
+          "limitation": "Live price unavailable from current sources."
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "missing"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1541,7 +2993,7 @@
       "limitations": 1,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 16
     },
     {
       "id": "T5",
@@ -1569,7 +3021,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 32
+      "latencyMs": 24
     },
     {
       "id": "D13",
@@ -1587,6 +3039,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1599,7 +3117,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 147
+      "latencyMs": 136
     },
     {
       "id": "D14",
@@ -1617,6 +3135,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1629,7 +3213,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 338
+      "latencyMs": 138
     },
     {
       "id": "C11",
@@ -1657,7 +3241,7 @@
       "limitations": 1,
       "leak": [],
       "freshness": [],
-      "latencyMs": 37
+      "latencyMs": 24
     },
     {
       "id": "B7",
@@ -1685,13 +3269,13 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 35
+      "latencyMs": 26
     },
     {
       "id": "I1",
       "category": "official_source",
       "query": "Latest announcement for HDFC Bank",
-      "headline": "HDFC Bank: what's driving the gain",
+      "headline": "HDFC Bank: what's driving the fall",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -1703,6 +3287,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1715,7 +3365,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 21
+      "latencyMs": 14
     },
     {
       "id": "I2",
@@ -1743,7 +3393,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 37
+      "latencyMs": 27
     },
     {
       "id": "I3",
@@ -1771,7 +3421,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 32
+      "latencyMs": 27
     },
     {
       "id": "J1",
@@ -1790,7 +3440,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 7
     },
     {
       "id": "J2",
@@ -1809,7 +3459,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 7
     },
     {
       "id": "J3",
@@ -1828,7 +3478,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 6
     },
     {
       "id": "J4",
@@ -1847,7 +3497,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 7
     },
     {
       "id": "J5",
@@ -1866,7 +3516,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 7
     },
     {
       "id": "K1",
@@ -1884,6 +3534,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1896,7 +3612,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 297
+      "latencyMs": 133
     },
     {
       "id": "K2",
@@ -1914,6 +3630,72 @@
         "sourceBudget": 6,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1926,7 +3708,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 295
+      "latencyMs": 145
     },
     {
       "id": "K3",
@@ -1944,6 +3726,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1956,7 +3804,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 285
+      "latencyMs": 137
     },
     {
       "id": "K4",
@@ -1974,6 +3822,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -1986,7 +3900,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 148
+      "latencyMs": 151
     },
     {
       "id": "K5",
@@ -2004,6 +3918,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2016,7 +3996,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 157
+      "latencyMs": 153
     },
     {
       "id": "K6",
@@ -2034,6 +4014,72 @@
         "sourceBudget": 6,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2046,13 +4092,13 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 249
+      "latencyMs": 152
     },
     {
       "id": "K7",
       "category": "nse_universe",
       "query": "What changed in Angel One?",
-      "headline": "Angel One Limited: what's driving the fall",
+      "headline": "Angel One Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -2064,6 +4110,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2076,7 +4188,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 392
+      "latencyMs": 220
     },
     {
       "id": "K8",
@@ -2094,6 +4206,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2106,7 +4284,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 314
+      "latencyMs": 151
     },
     {
       "id": "K9",
@@ -2124,6 +4302,72 @@
         "sourceBudget": 6,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2136,7 +4380,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 139
+      "latencyMs": 136
     },
     {
       "id": "K10",
@@ -2154,6 +4398,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2166,7 +4476,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 310
+      "latencyMs": 155
     },
     {
       "id": "K11",
@@ -2184,6 +4494,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2196,7 +4572,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 160
+      "latencyMs": 177
     },
     {
       "id": "K12",
@@ -2214,6 +4590,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2226,7 +4668,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 147
+      "latencyMs": 167
     },
     {
       "id": "K13",
@@ -2244,6 +4686,72 @@
         "sourceBudget": 6,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2256,7 +4764,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 130
+      "latencyMs": 145
     },
     {
       "id": "K14",
@@ -2274,6 +4782,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2286,7 +4860,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 162
+      "latencyMs": 277
     },
     {
       "id": "K15",
@@ -2304,6 +4878,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2316,13 +4956,13 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 299
+      "latencyMs": 161
     },
     {
       "id": "K16",
       "category": "nse_universe",
       "query": "Explain Angel One",
-      "headline": "Angel One Limited: what's driving the fall",
+      "headline": "Angel One Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 2,
         "verifiedSourceCount": 0,
@@ -2334,6 +4974,72 @@
         "sourceBudget": 6,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2346,7 +5052,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 16
+      "latencyMs": 13
     },
     {
       "id": "K17",
@@ -2364,6 +5070,71 @@
         "sourceBudget": 22,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "missing",
+          "limitation": "Live price unavailable from current sources."
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "missing"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2376,7 +5147,7 @@
       "limitations": 7,
       "leak": [],
       "freshness": [],
-      "latencyMs": 18
+      "latencyMs": 15
     },
     {
       "id": "K18",
@@ -2394,6 +5165,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2406,7 +5243,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 16
+      "latencyMs": 14
     },
     {
       "id": "K19",
@@ -2424,6 +5261,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2436,7 +5339,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 130
+      "latencyMs": 135
     },
     {
       "id": "K20",
@@ -2454,6 +5357,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2466,7 +5435,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 146
+      "latencyMs": 144
     },
     {
       "id": "M1",
@@ -2484,6 +5453,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2496,7 +5531,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 18
+      "latencyMs": 15
     },
     {
       "id": "M2",
@@ -2514,6 +5549,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2526,7 +5627,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 16
+      "latencyMs": 15
     },
     {
       "id": "M3",
@@ -2544,6 +5645,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2556,7 +5723,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 37
+      "latencyMs": 38
     },
     {
       "id": "M4",
@@ -2574,6 +5741,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2586,7 +5819,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 16
+      "latencyMs": 26
     },
     {
       "id": "M5",
@@ -2604,6 +5837,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2616,7 +5915,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 36
+      "latencyMs": 52
     },
     {
       "id": "M6",
@@ -2634,6 +5933,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2646,7 +6011,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 486
+      "latencyMs": 148
     },
     {
       "id": "M7",
@@ -2664,6 +6029,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2676,7 +6107,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 17
+      "latencyMs": 26
     },
     {
       "id": "M8",
@@ -2694,6 +6125,72 @@
         "sourceBudget": 12,
         "coverageStatus": "unavailable"
       },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -2706,7 +6203,486 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 17
+      "latencyMs": 24
+    },
+    {
+      "id": "N1",
+      "category": "verified_data",
+      "query": "Latest capex update for Blue Star",
+      "headline": "Blue Star Limited: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 27
+    },
+    {
+      "id": "N2",
+      "category": "verified_data",
+      "query": "Shareholding pattern of Reliance",
+      "headline": "Reliance Industries: what's driving the fall",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 7,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 34
+    },
+    {
+      "id": "N3",
+      "category": "verified_data",
+      "query": "Latest investor presentation for Tata Motors",
+      "headline": "Tata Motors: what's driving the move",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "missing",
+          "limitation": "Live price unavailable from current sources."
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "missing"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 4,
+      "sources": 2,
+      "limitations": 7,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 25
+    },
+    {
+      "id": "N4",
+      "category": "verified_data",
+      "query": "Compare Tata Elxsi and KPIT Tech in a chart",
+      "headline": "Indian IT: the India read",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_comparison",
+      "refused": false,
+      "blocks": 6,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 3,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 20
+    },
+    {
+      "id": "N5",
+      "category": "verified_data",
+      "query": "Why is Poonawalla Fincorp moving today?",
+      "headline": "Poonawalla Fincorp Limited: what's driving the gain",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 18
     }
   ]
 }

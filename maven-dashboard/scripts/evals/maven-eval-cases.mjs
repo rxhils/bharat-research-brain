@@ -135,6 +135,14 @@ export const CASES = [
   { id: "M6", query: "Analyze Voltas", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Voltas"], blocks: true, charts: false, sources: true },
   { id: "M7", query: "Latest results for Poonawalla Fincorp", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Poonawalla"], blocks: true, charts: false, sources: true },
   { id: "M8", query: "Shareholding pattern of Blue Star", category: "freshness", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], blocks: true, charts: false, sources: true },
+
+  // N. Maven Verified Company Data Engine v2 - document extraction, latest-data checklist,
+  // cross-source verified metrics. requireChecklist:true asserts latestDataChecklist is present.
+  { id: "N1", query: "Latest capex update for Blue Star", category: "verified_data", expectedAnswerType: "single_stock_research", expectedSymbols: ["Blue Star"], blocks: true, charts: false, sources: true, requireChecklist: true },
+  { id: "N2", query: "Shareholding pattern of Reliance", category: "verified_data", expectedAnswerType: "single_stock_research", expectedSymbols: ["Reliance"], blocks: true, charts: false, sources: true, requireChecklist: true },
+  { id: "N3", query: "Latest investor presentation for Tata Motors", category: "verified_data", expectedAnswerType: "single_stock_research", expectedSymbols: ["Tata Motors"], blocks: true, charts: false, sources: true, requireChecklist: true },
+  { id: "N4", query: "Compare Tata Elxsi and KPIT Tech in a chart", category: "verified_data", expectedAnswerType: "stock_comparison", blocks: true, charts: false, sources: true, requireChecklist: true },
+  { id: "N5", query: "Why is Poonawalla Fincorp moving today?", category: "verified_data", expectedAnswerType: "single_stock_research", expectedSymbols: ["Poonawalla"], blocks: true, charts: false, sources: true, requireChecklist: true },
 ];
 
 export default CASES;

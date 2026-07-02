@@ -1,6 +1,7 @@
-import type { SourceResult, Confidence, ExtractedPage } from "./types";
+import type { SourceResult, Confidence, ExtractedPage, DocumentType, SourceTier } from "./types";
 import { searchSearxngMany, searxngConfigured } from "./freeSourceSearch";
 import { extractPage } from "./pageExtractor";
+import { scoreSource } from "./sourceQualityScorer";
 
 // Source retrieval pipeline (India-first):
 //   official-domain queries -> SearXNG (free) -> paid provider fallback -> rank -> extract -> dedupe.
@@ -77,22 +78,29 @@ function officialQueries(queries: string[]): string[] {
   return out.filter((s) => s.length > 12);
 }
 
-// ---- source ranking (task 6) ----
-const REGULATOR = /(^|\.)(nseindia\.com|bseindia\.com|rbi\.org\.in|sebi\.gov\.in)$/i;
-const MEDIA = /(thehindubusinessline|businessline|livemint|mint\.|economictimes|business-standard|moneycontrol|reuters|bloomberg|cnbctv18|financialexpress|ndtvprofit|thehindu)\./i;
-const FILING_PATH = /(investor-presentation|investor-relations|annual-report|quarterly|financial-result|results|shareholding|regulation-filings|corporate-announcement)/i;
+// ---- source ranking (task 6) ---- delegates to sourceQualityScorer.ts, the single source of
+// truth for domain -> tier/score/official, so the classification list is never duplicated.
+const TIER_RANK: Record<string, number> = { exchange: 1, investor_relations: 2, filing: 3, regulator: 1, media: 4, data_page: 5, generic: 6 };
+
+function docTypeOf(url: string, title: string): DocumentType {
+  const t = `${url} ${title}`.toLowerCase();
+  if (/shareholding|shareholding-pattern/.test(t)) return "shareholding_pattern";
+  if (/annual-report|annual report/.test(t)) return "annual_report";
+  if (/investor-presentation|investor presentation/.test(t)) return "investor_presentation";
+  if (/quarterly|q[1-4]\s*fy|results?\b/.test(t)) return "quarterly_result";
+  if (/announcement|corporate-announcement/.test(t)) return "exchange_announcement";
+  if (/nseindia\.com|bseindia\.com/.test(t)) return "exchange_announcement";
+  if (/thehindubusinessline|businessline|livemint|mint\.|economictimes|business-standard|moneycontrol|reuters|bloomberg|cnbctv18|ndtvprofit/.test(t)) return "news";
+  return "other";
+}
 
 // Returns { rank, confidence }: 1 = exchange/regulator, 2 = investor relations,
 // 3 = filings/presentations, 4 = reputable media, 5 = other finance/news, 6 = generic.
-function classify(url: string): { rank: number; confidence: Confidence } {
-  const host = hostOf(url);
-  const path = (() => { try { return new URL(url).pathname.toLowerCase(); } catch { return ""; } })();
-  if (REGULATOR.test(host)) return { rank: 1, confidence: "verified" };
-  if (/(^|\.)(investor|ir)\./i.test(host) || /investor|shareholding-pattern/.test(path)) return { rank: 2, confidence: "verified" };
-  if (FILING_PATH.test(path) || (/\.pdf($|\?)/i.test(path) && !MEDIA.test(host))) return { rank: 3, confidence: "verified" };
-  if (MEDIA.test(host)) return { rank: 4, confidence: "retrieved" };
-  if (/(news|market|finance|stock|invest|business)/i.test(host)) return { rank: 5, confidence: "retrieved" };
-  return { rank: 6, confidence: "retrieved" };
+function classify(url: string): { rank: number; confidence: Confidence; sourceQualityScore: number; sourceTier: SourceTier; official: boolean } {
+  const q = scoreSource(url);
+  const rank = TIER_RANK[q.sourceTier] ?? 6;
+  const confidence: Confidence = rank <= 3 ? "verified" : "retrieved";
+  return { rank, confidence, ...q };
 }
 
 function normUrl(u: string): string {
@@ -115,6 +123,8 @@ function rankAndDedupe(list: SourceResult[]): SourceResult[] {
       ...s, domain: hostOf(s.url), sourceRank: c.rank,
       confidence: c.confidence, freshness: s.freshness ?? "latest_available",
       date: s.date ?? s.published,
+      sourceQualityScore: c.sourceQualityScore, sourceTier: c.sourceTier, official: c.official,
+      docType: docTypeOf(s.url, s.title),
     });
   }
   out.sort((a, b) => (a.sourceRank ?? 9) - (b.sourceRank ?? 9));

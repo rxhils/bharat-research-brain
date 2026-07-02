@@ -80,9 +80,13 @@ export function getUniverseStats() {
 
 // strip leading intent phrases and trailing noise so we match the actual company subject
 const LEAD = /^(?:why (?:is|are|did)|what (?:happened to|changed in|is|are|was|were)|what's|whats|explain|tell me about|profile of|analy[sz]e|give me (?:a )?(?:full )?research (?:view )?on|full research on|how is|latest (?:announcement|results?|news) (?:for|of)|shareholding pattern of|share holding pattern of)\s+/i;
+// generic fallback for "latest <1-3 word topic> [update/news/data...] for/of <company>" phrasings
+// not covered by the specific LEAD list above (e.g. "latest capex update for Blue Star").
+const LEAD_GENERIC = /^latest\s+\S+(?:\s+\S+){0,3}?\s+(?:for|of)\s+/i;
 function subjectOf(q: string): string {
   let s = q.trim().replace(/[?.!]+$/, "");
   for (let i = 0; i < 3; i++) s = s.replace(LEAD, "");
+  if (LEAD_GENERIC.test(s)) s = s.replace(LEAD_GENERIC, "");
   s = s.replace(/\s+(moving today|moving|today|right now|in detail|doing|up|down|falling|rising)$/i, "").trim();
   return s;
 }

@@ -37,6 +37,14 @@ export type MavenEvidenceSummary = {
   sourceBudget?: number;
   coverageStatus?: MavenCoverageStatus;
   latestPeriodFound?: string;
+  latestAnnualPeriodFound?: string;
+};
+
+export type MavenChecklistStatus = "found" | "missing" | "not_required";
+export type MavenChecklistItem = {
+  item: string; label: string; status: MavenChecklistStatus;
+  latestPeriod?: string; sourceUrl?: string; sourceDate?: string;
+  confidence?: "verified" | "retrieved" | "analysis_only" | "unavailable"; limitation?: string;
 };
 
 export type MavenAskResponse = {
@@ -54,4 +62,5 @@ export type MavenAskResponse = {
   limitations?: string[];
   introSections?: MavenIntroSection[];
   evidence?: MavenEvidenceSummary;
+  latestDataChecklist?: MavenChecklistItem[];
 };

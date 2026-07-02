@@ -1,5 +1,6 @@
 "use client";
-import type { MavenEvidenceSummary } from "@/lib/maven-types";
+import { useState } from "react";
+import type { MavenEvidenceSummary, MavenChecklistItem } from "@/lib/maven-types";
 
 const COVERAGE: Record<string, { label: string; dot: string; text: string }> = {
   strong: { label: "Strong coverage", dot: "bg-emerald", text: "text-emerald" },
@@ -40,6 +41,46 @@ export function MavenEvidenceSummaryCard({ evidence }: { evidence?: MavenEvidenc
         <span className={"ml-auto inline-flex items-center gap-1.5 text-[10px] " + cov.text}>
           <span className={"h-1.5 w-1.5 rounded-full " + cov.dot} />{cov.label}
         </span>
+      )}
+    </div>
+  );
+}
+
+export function MavenLatestDataChecklist({ items }: { items?: MavenChecklistItem[] }) {
+  const [open, setOpen] = useState(false);
+  const list = (items ?? []).filter((i) => i.status !== "not_required");
+  if (!list.length) return null;
+  const foundCount = list.filter((i) => i.status === "found").length;
+  const preview = list.slice(0, 4);
+
+  return (
+    <div className="mt-2 rounded-xl border border-hairline bg-white/[0.015] px-3.5 py-2.5">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2 text-left">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-dim">Latest data checked</span>
+        <span className="text-[10px] text-dim">{foundCount}/{list.length} found</span>
+        <span className="ml-auto text-[10px] text-emerald">{open ? "Hide" : "Show"}</span>
+      </button>
+      {!open && (
+        <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
+          {preview.map((i) => (
+            <span key={i.item} className="inline-flex items-center gap-1 text-[10px] text-dim">
+              <span className={"h-1 w-1 rounded-full " + (i.status === "found" ? "bg-emerald" : "bg-white/25")} />
+              {i.label}
+            </span>
+          ))}
+          {list.length > preview.length && <span className="text-[10px] text-dim">+{list.length - preview.length} more</span>}
+        </div>
+      )}
+      {open && (
+        <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
+          {list.map((i) => (
+            <div key={i.item} className="flex items-center gap-1.5 text-[10px] text-ink/70">
+              <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (i.status === "found" ? "bg-emerald" : "bg-white/25")} />
+              <span className="text-ink/85">{i.label}:</span>
+              <span className={i.status === "found" ? "text-emerald" : "text-dim"}>{i.status === "found" ? (i.latestPeriod ? `found (${i.latestPeriod})` : "found") : "unavailable"}</span>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

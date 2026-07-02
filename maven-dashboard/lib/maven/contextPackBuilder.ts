@@ -1,6 +1,9 @@
-import type { ContextPack, ResearchPlan, MarketData, ChartSpec, AnswerType, DisclaimerLevel, SourceResult, CompanySnapshot, MetricEvidence } from "./types";
+import type { ContextPack, ResearchPlan, MarketData, ChartSpec, AnswerType, DisclaimerLevel, SourceResult, CompanySnapshot, MetricEvidence, CompanyFact } from "./types";
 import { validateMetricEvidence } from "./metricFreshnessValidator";
-import { parseAllFiscalTokens } from "./reportingPeriods";
+import { parseAllFiscalTokens, getLatestCompletedIndianFiscalYear } from "./reportingPeriods";
+import { extractCompanyMetrics, crossVerifyMetrics } from "./companyMetricExtractor";
+import { getFreshCompanyFacts, saveCompanyFacts } from "./companyFactStore";
+import { buildLatestDataChecklist } from "./latestDataChecklist";
 import { getIndexPerformance, getSectorPerformance, getStockPrice, getCrudePrice, getUSDINR, getGSecYield, getFIIDIIFlows, getIndiaMacroSnapshot, getCompanySnapshot, getCompanyAnnouncements, getLatestResultContext, getShareholdingContext } from "./dataTools";
 import { searchSources } from "./sourceSearch";
 import { lookupKnowledge } from "./indiaMarketKnowledge";
@@ -134,9 +137,13 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   if (cmp.length) charts.push({ type: "comparison_table", title: singleStock ? "Key metrics" : "Valuation comparison", dataSource: "snapshots", data: cmp });
   if (mechanism.flow) charts.push(mechanism.flow);
 
-  // ---- freshness lock: structured metric evidence + user-facing freshness note ----
+  // ---- verified company data engine: document-extracted + tool-derived metrics, cross-source
+  // verification, freshness lock, fact-cache backfill, latest-data checklist ----
   let metricEvidence: MetricEvidence[] | undefined;
+  let latestAnnualPeriodFound: string | undefined;
+  let sourceQualitySummary: ContextPack["sourceQualitySummary"];
   if (isStock) {
+    const companyName = syms[0] ? nameOf(syms[0]) : plan.topic;
     const raw: MetricEvidence[] = [];
     for (const s of md.stockSnapshots ?? []) {
       const add = (metric: MetricEvidence["metric"], label: string, value: number | null, unit?: string) => {
@@ -152,20 +159,53 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
     for (const sh of md.shareholding ?? []) {
       if (sh.promoterHolding != null) raw.push({ metric: "shareholding", label: "promoter holding", value: sh.promoterHolding, unit: "%", period: sh.date ?? undefined, sourceName: sh.source, sourceUrl: sh.sourceUrl, sourceDate: sh.date ?? undefined, confidence: sh.confidence === "verified" ? "verified" : "retrieved", freshness: "unverified", allowedVisible: false });
     }
-    metricEvidence = validateMetricEvidence(raw, query);
+    // NEW: metrics extracted from actual retrieved/extracted document text (not just tool snapshots)
+    raw.push(...extractCompanyMetrics(allSources, companyName));
+
+    const crossVerified = crossVerifyMetrics(raw);
+    metricEvidence = validateMetricEvidence(crossVerified, query);
+
+    // backfill: fill still-missing metric slots from the warm-instance fact cache (repeat/related
+    // questions on the same stock within TTL) - only adds what the current pass didn't already find
+    if (syms[0]) {
+      const haveMetrics = new Set(metricEvidence.filter((m) => m.allowedVisible).map((m) => `${m.metric}|${m.period ?? ""}`));
+      const cached = getFreshCompanyFacts(syms[0]).filter((f) => !haveMetrics.has(`${f.metric}|${f.period ?? ""}`));
+      for (const f of cached) metricEvidence.push({ metric: f.metric, label: `${companyName} ${f.metric}`, value: f.value, unit: f.unit, period: f.period, sourceId: f.sourceId, sourceUrl: f.sourceUrl, sourceDate: f.sourceDate, confidence: f.confidence, freshness: f.freshness, allowedVisible: true });
+      // save this pass's visible facts for future warm-instance reuse
+      const facts: CompanyFact[] = metricEvidence.filter((m) => m.allowedVisible).map((m) => ({ symbol: syms[0], companyName, metric: m.metric, value: m.value, unit: m.unit, period: m.period, sourceId: m.sourceId, sourceUrl: m.sourceUrl, sourceDate: m.sourceDate, confidence: m.confidence, freshness: m.freshness, lastCheckedAt: Date.now() }));
+      if (facts.length) saveCompanyFacts(syms[0], facts);
+    }
+
     for (const m of metricEvidence) if (!m.allowedVisible && m.limitation) limitations.push(m.limitation);
     // clean freshness note (task: user-facing, never technical)
     const hasFiscalEvidence = allSources.some((s) => parseAllFiscalTokens(`${s.title} ${s.snippet}`).length > 0) || metricEvidence.some((m) => m.allowedVisible && m.metric !== "price");
     limitations.push(hasFiscalEvidence
       ? "Financial metrics shown are the latest available from official/retrieved sources."
       : "Current financial metrics were not verified from available sources; Maven limits this answer to price action, sector context, and source-backed catalysts.");
+
+    // latest ANNUAL (no-quarter) fiscal period seen in source text, for the checklist/evidence UI
+    const cutoff = getLatestCompletedIndianFiscalYear() + 2; // ignore far-future projections
+    const annualFy = allSources.flatMap((s) => parseAllFiscalTokens(`${s.title} ${s.snippet}`)).filter((p) => !p.quarter && p.fy <= cutoff).map((p) => p.fy);
+    if (annualFy.length) latestAnnualPeriodFound = `FY${Math.max(...annualFy)}`;
+
+    // source quality summary (official/IR/media/generic mix + avg score)
+    if (allSources.length) {
+      const officialCount = allSources.filter((s) => s.sourceTier === "exchange" || s.sourceTier === "regulator").length;
+      const investorRelationsCount = allSources.filter((s) => s.sourceTier === "investor_relations" || s.sourceTier === "filing").length;
+      const mediaCount = allSources.filter((s) => s.sourceTier === "media").length;
+      const genericCount = allSources.length - officialCount - investorRelationsCount - mediaCount;
+      const avgScore = Math.round(allSources.reduce((a, s) => a + (s.sourceQualityScore ?? 0), 0) / allSources.length);
+      sourceQualitySummary = { officialCount, investorRelationsCount, mediaCount, genericCount, avgScore };
+    }
   }
+
+  const latestDataChecklist = isStock ? buildLatestDataChecklist(md, allSources, metricEvidence ?? []) : undefined;
 
   return {
     question: query, intent: plan.intent, topic: plan.topic, answerType, disclaimerLevel, marketData: md,
     extractedFacts: facts, sourceSnippets: allSources, chartData: charts, limitations, knowledge, mechanism,
     evidenceHint: stockPlan ? { evidenceDepth: stockPlan.depth, sourceBudget: stockPlan.sourceBudget } : undefined,
-    metricEvidence,
+    metricEvidence, latestDataChecklist, latestAnnualPeriodFound, sourceQualitySummary,
   };
 }
 
