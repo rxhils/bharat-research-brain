@@ -21,6 +21,7 @@ export type MavenSource = {
 };
 
 export type MavenKeyData = { label: string; value: string; change?: string };
+export type MavenIntroSection = { title: string; body: string };
 
 export type MavenAskResponse = {
   type?: MavenAnswerType;
@@ -35,4 +36,5 @@ export type MavenAskResponse = {
   disclaimer?: string;
   disclaimerLevel?: "none" | "light" | "standard" | "strong";
   limitations?: string[];
+  introSections?: MavenIntroSection[];
 };

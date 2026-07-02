@@ -2,7 +2,11 @@ import type { AnswerType, DisclaimerLevel } from "./types";
 import { isAdviceRequest } from "../guard";
 import { resolveStock } from "./stockResolver";
 
-const GREETING = /^\s*(hi+|hello+|hey+|yo+|hiya|namaste|sup|good (morning|afternoon|evening))\b[\s!.,]*$/i;
+// Matches messages made ONLY of greeting words/phrases, incl. compounds like "hi good morning".
+const GREETING = /^\s*(?:(?:hi+|hello+|hey+|yo+|hiya|namaste|sup|gm|good\s+(?:morning|afternoon|evening|night))[\s,!.]*)+$/i;
+const GREETING_TIME = /good\s+(morning|afternoon|evening|night)/i;
+// Requests to introduce/explain Maven itself - these don't need "Indian markets" in the text.
+const INTRO_REQUEST = /\bwhat can (you|maven) do\b|\bwho are you\b|\bhow do(?:es)? (?:you|maven) work\b|\bwhat do you do\b|\bwhat is maven\b|\bintroduce yourself\b|\bhelp me get started\b|\bget started\b/i;
 const OUT = /(polymarket|prediction market|crypto|bitcoin|ethereum|\bbtc\b|\beth\b|dogecoin|\bsolana\b|us stock|u\.s\. stock|nasdaq|dow jones|s&p ?500|tesla|nvidia|forex|gambl|bett?ing|casino|sportsbook|premier league|football)/i;
 const FNO = /(f&o|f and o|futures|options|leverage|margin trade|intraday tip|call option|put option|derivative strateg)/i;
 const COMPARE = /\b(vs|versus|compare|against|better than)\b/i;
@@ -15,7 +19,7 @@ export function routeAnswerType(query: string): { answerType: AnswerType; discla
   const s = (query || "").trim();
   const l = s.toLowerCase();
   if (!s) return { answerType: "out_of_scope", disclaimerLevel: "light" };
-  if (GREETING.test(s) || /\bwhat can (you|maven) do\b|\bwho are you\b|\bhow do you work\b|\bwhat do you do\b/i.test(l)) return { answerType: "greeting", disclaimerLevel: "none" };
+  if (GREETING.test(s) || INTRO_REQUEST.test(l)) return { answerType: "greeting", disclaimerLevel: "light" };
   if (isAdviceRequest(s) || FNO.test(l) || /\b(price target|target price|stock to buy|stocks? to buy|which stock|multibagger|guaranteed return)\b/i.test(l)) return { answerType: "unsafe_advice", disclaimerLevel: "strong" };
   if (OUT.test(l) && !/\b(india|indian|nifty|sensex|nse|bse|sebi)\b/i.test(l)) return { answerType: "out_of_scope", disclaimerLevel: "light" };
   if (COMPARE.test(l)) return { answerType: "stock_comparison", disclaimerLevel: "standard" };
@@ -25,6 +29,11 @@ export function routeAnswerType(query: string): { answerType: AnswerType; discla
   if (MACRO.test(l)) return { answerType: "macro_sector_impact", disclaimerLevel: "light" };
   if (INDIA.test(l)) return { answerType: "market_mechanism", disclaimerLevel: "light" };
   return { answerType: "out_of_scope", disclaimerLevel: "light" };
+}
+
+export function greetingTimeOfDay(query: string): "morning" | "afternoon" | "evening" | "night" | null {
+  const m = (query || "").toLowerCase().match(GREETING_TIME);
+  return (m ? m[1] : null) as "morning" | "afternoon" | "evening" | "night" | null;
 }
 
 export function disclaimerText(level: DisclaimerLevel): string {

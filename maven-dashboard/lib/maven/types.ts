@@ -119,6 +119,7 @@ export type ContextPack = {
 export type MavenBlock = { type: "DATA" | "POINT" | "MACRO" | "CONTEXT" | "RISK" | "TAKEAWAY"; title: string; body: string };
 export type MavenKeyData = { label: string; value: string; change?: string };
 export type MavenSource = { name: string; title?: string; url?: string; date?: string; snippet?: string; type?: string; confidence: Confidence };
+export type MavenIntroSection = { title: string; body: string };
 
 export type MavenAnswer = {
   type?: AnswerType;
@@ -127,6 +128,7 @@ export type MavenAnswer = {
   keyData: MavenKeyData[]; charts: ChartSpec[]; blocks: MavenBlock[];
   sources: MavenSource[]; followUps: string[]; disclaimer: string;
   limitations?: string[];
+  introSections?: MavenIntroSection[];
 };
 
 export type ResolvedStock = { companyName: string; symbol: string; exchange: string; sector: string; confidence: "high" | "medium" | "low" };

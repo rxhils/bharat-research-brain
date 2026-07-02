@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { routeAnswerType } from "@/lib/maven/answerTypeRouter";
+import { routeAnswerType, greetingTimeOfDay } from "@/lib/maven/answerTypeRouter";
 import { classifyIntent } from "@/lib/maven/intentClassifier";
 import { planResearch } from "@/lib/maven/researchPlanner";
 import { buildContextPack } from "@/lib/maven/contextPackBuilder";
@@ -10,14 +10,33 @@ import type { MavenAnswer } from "@/lib/maven/types";
 
 export const dynamic = "force-dynamic";
 
-const GREETING: MavenAnswer = {
-  type: "greeting", disclaimerLevel: "none",
-  headline: "Welcome to Maven.",
-  summary: "Ask about Indian markets, sectors, flows, RBI policy, crude, rupee, or NSE/BSE stocks. Maven explains the mechanism with data, sources, and charts where useful.",
-  keyData: [], charts: [], blocks: [], sources: [],
-  followUps: ["Summarize today's Indian market", "Why is Bank Nifty moving?", "How does crude affect Indian sectors?"],
-  disclaimer: "",
-};
+const GREETING_FOLLOWUPS = [
+  "Summarize today's Indian market",
+  "Why is Bank Nifty moving today?",
+  "Why is Reliance moving today?",
+  "Compare HDFC Bank and ICICI Bank",
+  "How do FII flows affect Indian markets?",
+  "What sectors benefit from softer crude?",
+];
+
+function greeting(query: string): MavenAnswer {
+  const tod = greetingTimeOfDay(query);
+  const headline = tod ? `Good ${tod} — Maven is ready.` : "Maven is ready.";
+  return {
+    type: "greeting", disclaimerLevel: "light",
+    headline,
+    summary: "Maven helps you understand Indian markets by connecting price action, flows, macro data, company news, and sector mechanisms into clear research-style answers.",
+    keyData: [], charts: [], blocks: [], sources: [],
+    introSections: [
+      { title: "What Maven explains", body: "Ask about Nifty, Bank Nifty, Indian sectors, FII/DII flows, RBI policy, crude, rupee, G-Sec yields, or NSE/BSE-listed companies." },
+      { title: "How Maven thinks", body: "Maven does not just summarize market moves. It builds a mechanism chain: what happened, what caused it, which variables changed, which sectors or stocks are affected, and what risks could reverse the view." },
+      { title: "What Maven can research", body: "For stocks, Maven can look at price action, sector context, company announcements, fundamentals where available, source-backed catalysts, peer comparison, and clean limitations when data is incomplete." },
+      { title: "Boundary", body: "Maven explains market context and mechanisms. It does not give buy/sell/hold calls, price targets, or assured-return predictions." },
+    ],
+    followUps: GREETING_FOLLOWUPS,
+    disclaimer: "Educational market context only. Not investment advice.",
+  };
+}
 
 const REFUSAL: MavenAnswer = {
   type: "unsafe_advice", disclaimerLevel: "strong",
@@ -54,7 +73,7 @@ export async function POST(req: Request) {
   if (!query.trim()) return NextResponse.json({ error: "empty query" }, { status: 400 });
 
   const { answerType, disclaimerLevel } = routeAnswerType(query);
-  if (answerType === "greeting") return NextResponse.json(GREETING);
+  if (answerType === "greeting") return NextResponse.json(greeting(query));
   if (answerType === "unsafe_advice") return NextResponse.json(REFUSAL);
   if (answerType === "out_of_scope") return NextResponse.json(outOfScope(query));
 

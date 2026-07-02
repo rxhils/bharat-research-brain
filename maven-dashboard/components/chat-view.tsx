@@ -12,7 +12,7 @@ const SUGGESTIONS = [
   { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison" },
 ];
 const MODELS = [
-  { id: "maven-v1", name: "Maven V1", tag: "Bharat Core", desc: "India-first market reasoning engine", live: true },
+  { id: "maven-v1", name: "Maven V1", tag: "Beta", desc: "India-first market reasoning engine", live: true },
   { id: "maven-pro", name: "Maven Pro", tag: "Deep Research", desc: "Multi-source deep dives — coming soon", live: false },
 ] as const;
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -286,6 +286,21 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
 
           <h3 className="mt-3 font-serif text-[1.6rem] leading-snug text-ink sm:text-[1.85rem]">{a.headline}</h3>
           {a.summary && <p className="mt-2.5 text-[0.95rem] leading-relaxed text-ink/75">{a.summary}</p>}
+
+          {!!a.introSections?.length && (
+            <motion.div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2" initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.05 } } }}>
+              {a.introSections.map((sec, i) => (
+                <motion.div key={i} variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } } }}
+                  className="rounded-xl border border-hairline bg-white/[0.02] p-4">
+                  <div className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                    <span className="text-[0.85rem] font-medium text-ink">{sec.title}</span>
+                  </div>
+                  <p className="mt-1.5 pl-3.5 text-[0.85rem] leading-relaxed text-ink/65">{sec.body}</p>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
 
           {!minimal && keyData.length > 0 && (
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">

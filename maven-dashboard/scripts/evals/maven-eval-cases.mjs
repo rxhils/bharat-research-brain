@@ -91,6 +91,14 @@ export const CASES = [
   { id: "I1", query: "Latest announcement for HDFC Bank", category: "official_source", expectedAnswerType: "single_stock_research", expectedSymbols: ["HDFC"], ...R, mustNotContain: ["searxng", "scraper", "fetch error", "provider error", "anti-bot"] },
   { id: "I2", query: "RBI latest repo rate decision", category: "official_source", expectedAnswerType: "current_market_research", blocks: true, charts: false, sources: true, mustNotContain: ["searxng", "scraper", "fetch error", "provider error", "anti-bot"] },
   { id: "I3", query: "SEBI latest circular", category: "official_source", expectedAnswerType: "current_market_research", blocks: true, charts: false, sources: true, mustNotContain: ["searxng", "scraper", "fetch error", "provider error", "anti-bot"] },
+
+  // J. Greeting / intro experience (Maven Intro & Greeting Experience v1) - compound greetings and
+  // "explain yourself" phrasing must route to greeting, not out_of_scope, without needing "India" in the text.
+  { id: "J1", query: "hi good morning", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
+  { id: "J2", query: "good morning", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
+  { id: "J3", query: "how does Maven work?", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
+  { id: "J4", query: "introduce yourself", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
+  { id: "J5", query: "help me get started", category: "greeting", expectedAnswerType: "greeting", ...MIN, mustNotContain: ["maven focuses on indian markets", "out of scope"] },
 ];
 
 export default CASES;

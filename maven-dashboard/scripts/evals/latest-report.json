@@ -1,15 +1,15 @@
 {
-  "generatedAtMs": 1782903309262,
-  "base": "http://localhost:3023/api/ask",
-  "total": 61,
-  "passed": 61,
+  "generatedAtMs": 1782974994149,
+  "base": "http://localhost:3008/api/ask",
+  "total": 69,
+  "passed": 69,
   "failed": 0,
   "avgScore": 100,
-  "avgLatencyMs": 75,
+  "avgLatencyMs": 73,
   "byCategory": {
     "greeting": {
-      "p": 5,
-      "n": 5
+      "p": 10,
+      "n": 10
     },
     "market_summary": {
       "p": 7,
@@ -42,6 +42,10 @@
     "concept": {
       "p": 5,
       "n": 5
+    },
+    "official_source": {
+      "p": 3,
+      "n": 3
     }
   },
   "leakageFailures": [],
@@ -51,7 +55,7 @@
       "id": "A1",
       "category": "greeting",
       "query": "hi",
-      "headline": "Welcome to Maven.",
+      "headline": "Maven is ready.",
       "score": 100,
       "pass": true,
       "threshold": 90,
@@ -63,13 +67,13 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 199
+      "latencyMs": 60
     },
     {
       "id": "A2",
       "category": "greeting",
       "query": "hello",
-      "headline": "Welcome to Maven.",
+      "headline": "Maven is ready.",
       "score": 100,
       "pass": true,
       "threshold": 90,
@@ -81,13 +85,13 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 16
+      "latencyMs": 10
     },
     {
       "id": "A3",
       "category": "greeting",
       "query": "hey",
-      "headline": "Welcome to Maven.",
+      "headline": "Maven is ready.",
       "score": 100,
       "pass": true,
       "threshold": 90,
@@ -99,13 +103,13 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 9
     },
     {
       "id": "A4",
       "category": "greeting",
       "query": "namaste",
-      "headline": "Welcome to Maven.",
+      "headline": "Maven is ready.",
       "score": 100,
       "pass": true,
       "threshold": 90,
@@ -117,13 +121,13 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 7
     },
     {
       "id": "A5",
       "category": "greeting",
       "query": "what can you do?",
-      "headline": "Welcome to Maven.",
+      "headline": "Maven is ready.",
       "score": 100,
       "pass": true,
       "threshold": 90,
@@ -135,7 +139,7 @@
       "sources": 0,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 14
+      "latencyMs": 8
     },
     {
       "id": "B1",
@@ -151,9 +155,9 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 2,
+      "limitations": 3,
       "leak": [],
-      "latencyMs": 289
+      "latencyMs": 224
     },
     {
       "id": "B2",
@@ -169,7 +173,7 @@
       "blocks": 4,
       "charts": 3,
       "sources": 2,
-      "limitations": 2,
+      "limitations": 3,
       "leak": [],
       "latencyMs": 13
     },
@@ -187,9 +191,9 @@
       "blocks": 5,
       "charts": 3,
       "sources": 2,
-      "limitations": 2,
+      "limitations": 3,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 12
     },
     {
       "id": "B4",
@@ -205,9 +209,9 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 2,
+      "limitations": 3,
       "leak": [],
-      "latencyMs": 15
+      "latencyMs": 14
     },
     {
       "id": "B5",
@@ -223,7 +227,7 @@
       "blocks": 4,
       "charts": 3,
       "sources": 2,
-      "limitations": 2,
+      "limitations": 3,
       "leak": [],
       "latencyMs": 13
     },
@@ -243,7 +247,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 15
+      "latencyMs": 8
     },
     {
       "id": "C1",
@@ -261,7 +265,7 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 16
+      "latencyMs": 12
     },
     {
       "id": "C2",
@@ -279,7 +283,7 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 16
+      "latencyMs": 13
     },
     {
       "id": "C3",
@@ -297,7 +301,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 9
     },
     {
       "id": "C4",
@@ -315,7 +319,7 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 14
+      "latencyMs": 11
     },
     {
       "id": "C5",
@@ -333,7 +337,7 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 15
+      "latencyMs": 12
     },
     {
       "id": "C6",
@@ -351,7 +355,7 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 14
+      "latencyMs": 12
     },
     {
       "id": "C7",
@@ -369,7 +373,7 @@
       "sources": 2,
       "limitations": 1,
       "leak": [],
-      "latencyMs": 14
+      "latencyMs": 12
     },
     {
       "id": "C8",
@@ -405,7 +409,7 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 12
     },
     {
       "id": "C10",
@@ -423,13 +427,13 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 12
     },
     {
       "id": "D1",
       "category": "single_stock",
       "query": "Why is Reliance moving today?",
-      "headline": "Reliance Industries: what's driving the gain",
+      "headline": "Reliance Industries: what's driving the fall",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -439,15 +443,15 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 378
+      "latencyMs": 231
     },
     {
       "id": "D2",
       "category": "single_stock",
       "query": "Why is HDFC Bank down today?",
-      "headline": "HDFC Bank: what's driving the fall",
+      "headline": "HDFC Bank: what's driving the gain",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -457,9 +461,9 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 6,
+      "limitations": 7,
       "leak": [],
-      "latencyMs": 127
+      "latencyMs": 135
     },
     {
       "id": "D3",
@@ -475,9 +479,9 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 6,
+      "limitations": 7,
       "leak": [],
-      "latencyMs": 129
+      "latencyMs": 128
     },
     {
       "id": "D4",
@@ -493,9 +497,9 @@
       "blocks": 5,
       "charts": 3,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 428
+      "latencyMs": 493
     },
     {
       "id": "D5",
@@ -511,9 +515,9 @@
       "blocks": 5,
       "charts": 3,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 488
+      "latencyMs": 590
     },
     {
       "id": "D6",
@@ -529,15 +533,15 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 179
+      "latencyMs": 278
     },
     {
       "id": "D7",
       "category": "single_stock",
       "query": "Why is BEL moving?",
-      "headline": "Bharat Electronics: what's driving the gain",
+      "headline": "Bharat Electronics: what's driving the fall",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -547,15 +551,15 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 123
+      "latencyMs": 284
     },
     {
       "id": "D8",
       "category": "single_stock",
       "query": "Why is HAL moving?",
-      "headline": "Hindustan Aeronautics: what's driving the gain",
+      "headline": "Hindustan Aeronautics: what's driving the fall",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -565,15 +569,15 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 127
+      "latencyMs": 284
     },
     {
       "id": "D9",
       "category": "single_stock",
       "query": "Why is Infosys moving today?",
-      "headline": "Infosys: what's driving the fall",
+      "headline": "Infosys: what's driving the gain",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -583,9 +587,9 @@
       "blocks": 5,
       "charts": 6,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 124
+      "latencyMs": 133
     },
     {
       "id": "D10",
@@ -601,15 +605,15 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 6,
+      "limitations": 7,
       "leak": [],
-      "latencyMs": 123
+      "latencyMs": 129
     },
     {
       "id": "D11",
       "category": "single_stock",
       "query": "Why is Bharti Airtel moving?",
-      "headline": "Why is Bharti Airtel moving?: what's driving the gain",
+      "headline": "Why is Bharti Airtel moving?: what's driving the fall",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -619,15 +623,15 @@
       "blocks": 5,
       "charts": 4,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 127
+      "latencyMs": 285
     },
     {
       "id": "D12",
       "category": "single_stock",
       "query": "Why is Coal India moving?",
-      "headline": "Coal India: what's driving the fall",
+      "headline": "Coal India: what's driving the gain",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -637,9 +641,9 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 120
+      "latencyMs": 127
     },
     {
       "id": "E1",
@@ -675,7 +679,7 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 123
+      "latencyMs": 137
     },
     {
       "id": "E3",
@@ -695,7 +699,7 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 121
+      "latencyMs": 120
     },
     {
       "id": "E4",
@@ -715,7 +719,7 @@
       "sources": 2,
       "limitations": 4,
       "leak": [],
-      "latencyMs": 123
+      "latencyMs": 231
     },
     {
       "id": "E5",
@@ -739,7 +743,7 @@
       "id": "F1",
       "category": "company_data",
       "query": "What are the latest results for HDFC Bank?",
-      "headline": "HDFC Bank: what's driving the fall",
+      "headline": "HDFC Bank: what's driving the gain",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -749,15 +753,15 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 6,
+      "limitations": 7,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 13
     },
     {
       "id": "F2",
       "category": "company_data",
       "query": "What is the shareholding pattern of Reliance?",
-      "headline": "Reliance Industries: what's driving the gain",
+      "headline": "Reliance Industries: what's driving the fall",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -767,15 +771,15 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 10
     },
     {
       "id": "F3",
       "category": "company_data",
       "query": "What are Reliance's key fundamentals?",
-      "headline": "Reliance Industries: what's driving the gain",
+      "headline": "Reliance Industries: what's driving the fall",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -785,15 +789,15 @@
       "blocks": 5,
       "charts": 7,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 10
     },
     {
       "id": "F4",
       "category": "company_data",
       "query": "What is HDFC Bank's valuation context?",
-      "headline": "HDFC Bank: what's driving the fall",
+      "headline": "HDFC Bank: what's driving the gain",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -803,9 +807,9 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 6,
+      "limitations": 7,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 10
     },
     {
       "id": "G1",
@@ -823,7 +827,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 6
     },
     {
       "id": "G2",
@@ -841,7 +845,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 9
     },
     {
       "id": "G3",
@@ -859,7 +863,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 9
     },
     {
       "id": "G4",
@@ -877,7 +881,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 8
+      "latencyMs": 12
     },
     {
       "id": "G5",
@@ -895,7 +899,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 6
     },
     {
       "id": "H1",
@@ -913,7 +917,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 7
     },
     {
       "id": "H2",
@@ -931,7 +935,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 6
     },
     {
       "id": "H3",
@@ -949,7 +953,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 5
     },
     {
       "id": "H4",
@@ -967,7 +971,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 9
+      "latencyMs": 6
     },
     {
       "id": "H5",
@@ -985,7 +989,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 10
+      "latencyMs": 6
     },
     {
       "id": "T1",
@@ -1021,7 +1025,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 8
     },
     {
       "id": "T3",
@@ -1039,7 +1043,7 @@
       "sources": 1,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 9
     },
     {
       "id": "T4",
@@ -1057,7 +1061,7 @@
       "sources": 2,
       "limitations": 0,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 9
     },
     {
       "id": "T5",
@@ -1075,7 +1079,7 @@
       "sources": 2,
       "limitations": 2,
       "leak": [],
-      "latencyMs": 12
+      "latencyMs": 10
     },
     {
       "id": "D13",
@@ -1091,9 +1095,9 @@
       "blocks": 5,
       "charts": 5,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 381
+      "latencyMs": 288
     },
     {
       "id": "D14",
@@ -1109,9 +1113,9 @@
       "blocks": 5,
       "charts": 6,
       "sources": 2,
-      "limitations": 4,
+      "limitations": 5,
       "leak": [],
-      "latencyMs": 251
+      "latencyMs": 290
     },
     {
       "id": "C11",
@@ -1129,7 +1133,7 @@
       "sources": 2,
       "limitations": 1,
       "leak": [],
-      "latencyMs": 11
+      "latencyMs": 12
     },
     {
       "id": "B7",
@@ -1145,9 +1149,153 @@
       "blocks": 6,
       "charts": 5,
       "sources": 2,
-      "limitations": 2,
+      "limitations": 3,
       "leak": [],
-      "latencyMs": 13
+      "latencyMs": 12
+    },
+    {
+      "id": "I1",
+      "category": "official_source",
+      "query": "Latest announcement for HDFC Bank",
+      "headline": "HDFC Bank: what's driving the gain",
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 7,
+      "leak": [],
+      "latencyMs": 12
+    },
+    {
+      "id": "I2",
+      "category": "official_source",
+      "query": "RBI latest repo rate decision",
+      "headline": "RBI policy: the India read",
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 6,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 3,
+      "leak": [],
+      "latencyMs": 11
+    },
+    {
+      "id": "I3",
+      "category": "official_source",
+      "query": "SEBI latest circular",
+      "headline": "SEBI latest circular: the India read",
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 5,
+      "sources": 2,
+      "limitations": 3,
+      "leak": [],
+      "latencyMs": 11
+    },
+    {
+      "id": "J1",
+      "category": "greeting",
+      "query": "hi good morning",
+      "headline": "Good morning — Maven is ready.",
+      "score": 100,
+      "pass": true,
+      "threshold": 90,
+      "reasons": [],
+      "type": "greeting",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 0,
+      "limitations": 0,
+      "leak": [],
+      "latencyMs": 7
+    },
+    {
+      "id": "J2",
+      "category": "greeting",
+      "query": "good morning",
+      "headline": "Good morning — Maven is ready.",
+      "score": 100,
+      "pass": true,
+      "threshold": 90,
+      "reasons": [],
+      "type": "greeting",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 0,
+      "limitations": 0,
+      "leak": [],
+      "latencyMs": 6
+    },
+    {
+      "id": "J3",
+      "category": "greeting",
+      "query": "how does Maven work?",
+      "headline": "Maven is ready.",
+      "score": 100,
+      "pass": true,
+      "threshold": 90,
+      "reasons": [],
+      "type": "greeting",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 0,
+      "limitations": 0,
+      "leak": [],
+      "latencyMs": 7
+    },
+    {
+      "id": "J4",
+      "category": "greeting",
+      "query": "introduce yourself",
+      "headline": "Maven is ready.",
+      "score": 100,
+      "pass": true,
+      "threshold": 90,
+      "reasons": [],
+      "type": "greeting",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 0,
+      "limitations": 0,
+      "leak": [],
+      "latencyMs": 8
+    },
+    {
+      "id": "J5",
+      "category": "greeting",
+      "query": "help me get started",
+      "headline": "Maven is ready.",
+      "score": 100,
+      "pass": true,
+      "threshold": 90,
+      "reasons": [],
+      "type": "greeting",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 0,
+      "limitations": 0,
+      "leak": [],
+      "latencyMs": 7
     }
   ]
 }

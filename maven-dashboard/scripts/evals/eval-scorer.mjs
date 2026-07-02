@@ -21,6 +21,10 @@ export function scoreCase(c, resp, latencyMs) {
   else score += 15;
 
   if (c.blocks) { const hasR = blocks.some((b) => b.type === "RISK"), hasT = blocks.some((b) => b.type === "TAKEAWAY"); if (blocks.length >= 3 && hasR && hasT) score += 10; else reasons.push("blocks/RISK/TAKEAWAY"); }
+  else if (c.expectedAnswerType === "greeting") {
+    const sections = resp.introSections || [];
+    if (sections.length >= 3 && blocks.length === 0) score += 10; else reasons.push("intro sections/blocks");
+  }
   else { if (blocks.length <= 3) score += 10; else reasons.push("unexpected blocks"); }
 
   if (c.charts === true) { if (charts.length >= 1) score += 10; else reasons.push("no charts"); }
