@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useReducedMotionSafe } from "./motion";
 import { MavenChartRenderer, MechanismStepper } from "./maven-charts";
 import { MavenEvidenceSummaryCard, MavenLatestDataChecklist } from "./maven-evidence";
@@ -14,8 +14,8 @@ const SUGGESTIONS = [
   { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison" },
 ];
 const MODELS = [
-  { id: "maven-v1", name: "Maven V1", tag: "Beta", desc: "India-first market reasoning engine", live: true },
-  { id: "maven-pro", name: "Maven Pro", tag: "Deep Research", desc: "Multi-source deep dives — coming soon", live: false },
+  { id: "maven-v1", name: "Maven V1", tag: "Beta", desc: "Fast India-market context", live: true },
+  { id: "maven-pro", name: "Maven Pro", tag: "Deep Research", desc: "Deeper source pack and document extraction", live: false },
 ] as const;
 const EASE = [0.22, 1, 0.36, 1] as const;
 const FLOW = ["flow", "flow_chart"];
@@ -171,7 +171,7 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
       <motion.p variants={up} className="mt-3 max-w-lg px-2 text-sm leading-relaxed text-ink/60">
         Ask about stocks, sectors, flows, RBI policy, crude, rupee, or macro &mdash; Maven explains the mechanism.
       </motion.p>
-      <motion.div className="mt-8 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.15 } } }}>
+      <motion.div className="mt-9 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.15 } } }}>
         {SUGGESTIONS.map((s) => <SuggestionCard key={s.t} s={s} onPick={onPick} />)}
       </motion.div>
     </motion.div>
@@ -180,31 +180,19 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
 
 function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q: string) => void }) {
   const reduce = useReducedMotionSafe();
-  const rx = useMotionValue(0);
-  const ry = useMotionValue(0);
-  function move(e: React.MouseEvent<HTMLButtonElement>) {
-    const r = e.currentTarget.getBoundingClientRect();
-    ry.set(((e.clientX - r.left) / r.width - 0.5) * 8);
-    rx.set(-((e.clientY - r.top) / r.height - 0.5) * 8);
-  }
-  function leave() { rx.set(0); ry.set(0); }
+  // Calm, editorial hover: border warms to emerald and the surface lightens - no tilt, no scale.
   return (
     <motion.button onClick={() => onPick(s.t)}
-      variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } } }}
-      onMouseMove={reduce ? undefined : move} onMouseLeave={leave}
-      style={reduce ? undefined : { rotateX: rx, rotateY: ry, transformPerspective: 700 }}
-      whileHover={reduce ? undefined : { scale: 1.02 }} transition={{ type: "spring", stiffness: 280, damping: 20 }}
-      className="group relative overflow-hidden rounded-2xl bg-gradient-to-b from-white/[0.08] to-transparent p-px text-left">
-      <div className="relative overflow-hidden rounded-2xl bg-panel/55 p-4 backdrop-blur-md transition-colors group-hover:bg-panel/75">
-        <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald/0 via-emerald to-emerald/0 transition-transform duration-500 group-hover:scale-x-100" aria-hidden />
-        <span className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald/0 blur-2xl transition-colors duration-500 group-hover:bg-emerald/15" aria-hidden />
-        <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-dim">
-          <span className="h-1 w-1 rounded-full bg-emerald/80" />{s.k}
-        </div>
-        <div className="mt-2 flex items-start justify-between gap-3">
-          <span className="text-[0.95rem] leading-snug text-ink">{s.t}</span>
-          <span className="mt-0.5 shrink-0 text-emerald opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
-        </div>
+      variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}
+      className="group relative overflow-hidden rounded-2xl border border-hairline bg-panel/45 p-4 text-left backdrop-blur-md transition-colors duration-300 hover:border-emerald/35 hover:bg-panel/65 focus-visible:border-emerald/50 focus-visible:outline-none">
+      <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald/0 via-emerald to-emerald/0 transition-transform duration-500 group-hover:scale-x-100" aria-hidden />
+      <span className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald/0 blur-2xl transition-colors duration-500 group-hover:bg-emerald/10" aria-hidden />
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-dim">
+        <span className="h-1 w-1 rounded-full bg-emerald/80" />{s.k}
+      </div>
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <span className="text-[0.95rem] leading-snug text-ink">{s.t}</span>
+        <span className="mt-0.5 shrink-0 text-emerald opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
       </div>
     </motion.button>
   );
@@ -364,16 +352,19 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
   );
 }
 
-function ModelSelector({ model, setModel }: { model: string; setModel: (id: string) => void }) {
+function ModelSelector({ model, setModel, direction = "up" }: { model: string; setModel: (id: string) => void; direction?: "up" | "down" }) {
   const reduce = useReducedMotionSafe();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const current = MODELS.find((m) => m.id === model) ?? MODELS[0];
+  const down = direction === "down";
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
     document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDoc); document.removeEventListener("keydown", onKey); };
   }, [open]);
   return (
     <div ref={ref} className="relative">
@@ -388,11 +379,14 @@ function ModelSelector({ model, setModel }: { model: string; setModel: (id: stri
       <AnimatePresence>
         {open && (
           <motion.div role="listbox"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.96 }}
-            transition={{ type: "spring", stiffness: 380, damping: 28 }}
-            className="absolute bottom-full right-0 z-30 mb-2 w-72 origin-bottom-right rounded-2xl bg-gradient-to-b from-emerald/25 via-white/[0.06] to-transparent p-px shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)]">
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: down ? -6 : 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: down ? -6 : 6 }}
+            transition={{ duration: 0.18, ease: EASE }}
+            className={"absolute left-0 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-2xl bg-gradient-to-b from-emerald/25 via-white/[0.06] to-transparent p-px shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)] " + (down
+              // empty state: downward into blank space; on wide (>=1536px) screens open up-and-left into the roomy left margin, clear of the prompt cards and never below the fold
+              ? "top-full mt-2 origin-top-left 2xl:left-auto 2xl:right-full 2xl:top-auto 2xl:bottom-0 2xl:mt-0 2xl:mr-2 2xl:w-64 2xl:origin-bottom-right"
+              : "bottom-full mb-2 origin-bottom-left")}>
             <div className="rounded-2xl bg-panel/95 p-1.5 backdrop-blur-xl">
               <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-dim">Model</div>
               <motion.div initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.05 } } }}>
@@ -428,22 +422,33 @@ function ModelSelector({ model, setModel }: { model: string; setModel: (id: stri
 function Composer({ input, setInput, send, empty, model, setModel }: {
   input: string; setInput: (s: string) => void; send: (q: string) => void; empty: boolean; model: string; setModel: (id: string) => void;
 }) {
+  // Row is placed ABOVE the input on the conversation view (opens up over messages) and BELOW the
+  // input on the empty state (opens down into the blank space, clear of the prompt cards).
+  const selectorRow = (
+    <div className="flex items-center justify-between px-1">
+      <ModelSelector model={model} setModel={setModel} direction={empty ? "down" : "up"} />
+      <span className="hidden items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-dim sm:inline-flex">
+        <span className="h-1 w-1 rounded-full bg-emerald/80 shadow-[0_0_6px_rgba(52,211,153,0.75)]" aria-hidden />India markets
+      </span>
+    </div>
+  );
   return (
-    <div className={(empty ? "mt-10 sm:mt-14 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
-      <div className="mb-2.5 flex items-center justify-end px-1">
-        <ModelSelector model={model} setModel={setModel} />
-      </div>
-      <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-all focus-within:from-emerald/60 focus-within:shadow-[0_0_30px_-10px_rgba(52,211,153,0.5)]">
+    <div className={(empty ? "mt-8 sm:mt-10 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
+      {!empty && <div className="mb-2.5">{selectorRow}</div>}
+      <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-all duration-300 focus-within:from-emerald/60 focus-within:shadow-[0_0_34px_-10px_rgba(52,211,153,0.55)]">
         <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2 rounded-2xl bg-panel/80 p-2 backdrop-blur-md">
           <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={1} placeholder="Ask Maven about Nifty, sectors, flows, macro, or Indian stocks&hellip;"
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
             className="max-h-36 flex-1 resize-none bg-transparent px-2.5 py-2 text-base leading-relaxed text-ink outline-none placeholder:text-dim sm:text-sm" />
-          <motion.button type="submit" whileTap={{ scale: 0.92 }} aria-label="Ask Maven"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-emerald to-emerald-deep text-bg shadow-[0_8px_24px_-8px_rgba(52,211,153,0.85)] transition-opacity hover:opacity-90">
+          <motion.button type="submit" whileTap={input.trim() ? { scale: 0.92 } : undefined} aria-label="Ask Maven" disabled={!input.trim()}
+            className={"grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-all duration-200 " + (input.trim()
+              ? "bg-gradient-to-br from-emerald to-emerald-deep text-bg shadow-[0_8px_24px_-8px_rgba(52,211,153,0.85)] hover:opacity-90"
+              : "cursor-not-allowed bg-white/[0.06] text-dim")}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </motion.button>
         </form>
       </div>
+      {empty && <div className="mt-2.5">{selectorRow}</div>}
       <div className="px-1 pb-1 pt-2 text-[10px] leading-relaxed text-dim">
         Maven gives educational market context for Indian markets - mechanisms, not investment advice.
       </div>
