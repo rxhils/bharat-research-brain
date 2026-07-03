@@ -1,12 +1,16 @@
-"""Backend Higgsfield Cloud API client — the localhost backend's own path to
-animated clips + TTS, so a normal Reel run needs NO Claude Code.
+"""Backend Higgsfield client — the localhost backend's own path to animated
+clips + TTS, so a normal Reel run needs NO Claude Code.
 
-Two modes, chosen automatically by `capabilities.check()`:
+Three transports, chosen automatically (see `transport()`):
 
-  REAL       — HIGGSFIELD_API_KEY/SECRET set. Calls the Higgsfield Cloud API
-               over HTTPS (POST generate -> poll /requests/{id}/status ->
-               download result). This SPENDS CREDITS. It runs only when the
-               operator triggers a run from the localhost UI.
+  CLI        — PREFERRED. The official `higgsfield` CLI, authenticated once via
+               `higgsfield auth login` (session in ~/.config/hf/session.json).
+               NO API key. Backend shells out to `higgsfield generate create ...
+               --wait --json`, reads the result URL, downloads it. SPENDS CREDITS,
+               and runs only when the operator triggers a run from the localhost UI.
+  REST       — Fallback. HIGGSFIELD_API_KEY/SECRET set. Calls the Higgsfield Cloud
+               API over HTTPS (POST generate -> poll /requests/{id}/status ->
+               download result). This SPENDS CREDITS. Operator-triggered only.
   SIMULATION — no keys (or force_simulate=True). Synthesizes a moving 9:16
                placeholder clip / silent audio locally with ffmpeg. FREE.
                Lets the entire backend pipeline (plan -> generate -> download ->
@@ -46,6 +50,17 @@ STATUS_PATH = os.getenv("HIGGSFIELD_STATUS_PATH") or "/requests/{id}/status"
 POLL_INTERVAL = float(os.getenv("HIGGSFIELD_POLL_INTERVAL") or 6)
 POLL_TIMEOUT = float(os.getenv("HIGGSFIELD_POLL_TIMEOUT") or 600)
 
+# --- CLI transport (login-based; no API key) -------------------------------
+# The official Higgsfield CLI (`higgsfield` / `hf`) authenticates via
+# `higgsfield auth login` and caches a session in ~/.config/hf/session.json.
+# When present, the backend drives generation through the CLI — no API key,
+# no Claude Code. Env-overridable so an operator can point at a custom binary
+# or session location.
+CLI_BIN = (os.getenv("HIGGSFIELD_CLI_BIN") or "").strip()
+CLI_TRANSPORT = (os.getenv("HIGGSFIELD_TRANSPORT") or "auto").strip().lower()
+CLI_SESSION_PATH = (os.getenv("HIGGSFIELD_SESSION_PATH")
+                    or str(Path.home() / ".config" / "hf" / "session.json"))
+
 _DONE = {"completed"}
 _FAILED = {"failed", "nsfw", "error", "cancelled"}
 
@@ -64,8 +79,79 @@ def _auth_header() -> str | None:
     return None
 
 
+# ---------------------------------------------------------------------------
+# Transport selection: CLI (logged in) -> REST (API key) -> none (simulation)
+# ---------------------------------------------------------------------------
+def cli_bin() -> str | None:
+    """Resolve the Higgsfield CLI binary, or None if not installed."""
+    if CLI_BIN:
+        return CLI_BIN if (shutil.which(CLI_BIN) or Path(CLI_BIN).exists()) else None
+    return shutil.which("higgsfield") or shutil.which("hf")
+
+
+def _cli_argv(binp: str, args: list[str]) -> list[str]:
+    """Windows .cmd/.bat shims (npm installs `higgsfield.CMD`) must be launched
+    via cmd.exe — Python's subprocess can't CreateProcess them directly. Real
+    executables / POSIX bins run as-is."""
+    if os.name == "nt" and binp.lower().endswith((".cmd", ".bat")):
+        return ["cmd", "/c", binp, *args]
+    return [binp, *args]
+
+
+_LOGIN_CACHE = {"t": -1e9, "ok": False}
+_LOGIN_TTL = 30.0
+
+
+def cli_logged_in(*, force: bool = False) -> bool:
+    """Authoritative login check: `higgsfield auth token` exits 0 and prints a
+    token when authenticated (no fragile session-file path guessing). Cached
+    ~30s so the UI's capability polling doesn't spawn a subprocess every few
+    seconds."""
+    binp = cli_bin()
+    if not binp:
+        return False
+    now = time.monotonic()
+    if not force and (now - _LOGIN_CACHE["t"]) < _LOGIN_TTL:
+        return bool(_LOGIN_CACHE["ok"])
+    ok = False
+    try:
+        proc = subprocess.run(_cli_argv(binp, ["auth", "token"]),
+                              capture_output=True, text=True, timeout=15)
+        ok = proc.returncode == 0 and bool((proc.stdout or "").strip())
+    except (subprocess.TimeoutExpired, OSError):
+        ok = False
+    _LOGIN_CACHE.update(t=now, ok=ok)
+    return ok
+
+
+def cli_available() -> bool:
+    return bool(cli_bin()) and cli_logged_in()
+
+
+def transport() -> str:
+    """Active real transport: 'cli' | 'rest' | 'none' (honors HIGGSFIELD_TRANSPORT).
+
+    Explicit HIGGSFIELD_TRANSPORT=cli trusts the installed binary (an escape
+    hatch when the session file is cached somewhere we don't auto-detect);
+    'auto' is conservative and requires a detected login session."""
+    t = CLI_TRANSPORT
+    if t == "cli":
+        return "cli" if cli_bin() else "none"
+    if t == "rest":
+        return "rest" if _auth_header() else "none"
+    if t in ("simulation", "none", "off"):
+        return "none"
+    # auto (default): prefer the login-based CLI, fall back to API keys
+    if cli_available():
+        return "cli"
+    if _auth_header() is not None:
+        return "rest"
+    return "none"
+
+
 def available() -> bool:
-    return _auth_header() is not None
+    """True when a REAL transport is usable (CLI logged in or API key set)."""
+    return transport() != "none"
 
 
 # ---------------------------------------------------------------------------
@@ -122,7 +208,67 @@ def _extract_media_url(resp: dict) -> str | None:
 
 
 # ---------------------------------------------------------------------------
-# Real generation
+# CLI generation (login-based, no API key). Reuses _extract_media_url + download.
+# ---------------------------------------------------------------------------
+# Router model ids -> CLI model ids. Passthrough unless the CLI names it
+# differently; extend after confirming with `higgsfield generate create --help`.
+_CLI_MODEL_ALIASES: dict[str, str] = {}
+
+
+def _cli_model(model: str) -> str:
+    return _CLI_MODEL_ALIASES.get(model, model)
+
+
+def _run_cli(args: list[str], *, timeout: float) -> dict:
+    """Run the Higgsfield CLI and parse its --json stdout into a dict."""
+    binp = cli_bin()
+    if not binp:
+        raise HiggsfieldError("Higgsfield CLI not found — install it and run "
+                              "`higgsfield auth login`")
+    try:
+        proc = subprocess.run(_cli_argv(binp, args), capture_output=True, text=True,
+                              timeout=timeout)
+    except subprocess.TimeoutExpired as e:
+        raise HiggsfieldError(f"Higgsfield CLI timed out after {timeout}s") from e
+    if proc.returncode != 0:
+        err = (proc.stderr or proc.stdout or "").strip()[:400]
+        raise HiggsfieldError(f"Higgsfield CLI exit {proc.returncode}: {err}")
+    out = (proc.stdout or "").strip()
+    for candidate in (out, out[out.find("{"):] if "{" in out else ""):
+        if candidate:
+            try:
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                continue
+    raise HiggsfieldError(f"Higgsfield CLI returned no JSON: {out[:300]}")
+
+
+def _cli_generate_video(prompt: str, *, model: str, duration: int,
+                        aspect_ratio: str = "9:16", image_url: str | None = None) -> str:
+    args = ["generate", "create", _cli_model(model), "--prompt", prompt,
+            "--duration", str(int(duration)), "--aspect-ratio", aspect_ratio,
+            "--mode", "std", "--sound", "off", "--wait", "--json"]
+    if image_url:
+        args += ["--start-image", image_url]
+    url = _extract_media_url(_run_cli(args, timeout=POLL_TIMEOUT))
+    if not url:
+        raise HiggsfieldError("Higgsfield CLI returned no media URL for the video")
+    return url
+
+
+def _cli_generate_audio(text: str, *, model: str = "text2speech_v2",
+                        voice_id: str | None = None) -> str:
+    args = ["generate", "create", model, "--prompt", text, "--wait", "--json"]
+    if voice_id:
+        args += ["--voice_id", voice_id]
+    url = _extract_media_url(_run_cli(args, timeout=POLL_TIMEOUT))
+    if not url:
+        raise HiggsfieldError("Higgsfield CLI returned no media URL for the audio")
+    return url
+
+
+# ---------------------------------------------------------------------------
+# Real generation (REST) — the CLI path above is preferred when logged in
 # ---------------------------------------------------------------------------
 def submit_video(prompt: str, *, model: str, duration: int, aspect_ratio: str = "9:16",
                  image_url: str | None = None) -> str:
@@ -181,22 +327,44 @@ def download(url: str, dest: Path) -> Path:
 
 def generate_video_to_file(prompt: str, dest: Path, *, model: str, duration: int,
                            aspect_ratio: str = "9:16", image_url: str | None = None) -> dict:
-    """Full real flow: submit -> wait -> download. Returns metadata dict."""
-    rid = submit_video(prompt, model=model, duration=duration,
-                       aspect_ratio=aspect_ratio, image_url=image_url)
-    url = wait(rid)
-    download(url, dest)
-    return {"request_id": rid, "media_url": url, "path": str(dest),
-            "bytes": dest.stat().st_size, "mode": "real"}
+    """Full real flow. CLI (login) when available, else REST (API key). Both end
+    in download(url, dest). Returns metadata stamped with the transport used."""
+    t = transport()
+    if t == "cli":
+        url = _cli_generate_video(prompt, model=model, duration=duration,
+                                  aspect_ratio=aspect_ratio, image_url=image_url)
+        download(url, dest)
+        return {"request_id": None, "media_url": url, "path": str(dest),
+                "bytes": dest.stat().st_size, "mode": "real", "transport": "cli",
+                "model": model}
+    if t == "rest":
+        rid = submit_video(prompt, model=model, duration=duration,
+                           aspect_ratio=aspect_ratio, image_url=image_url)
+        url = wait(rid)
+        download(url, dest)
+        return {"request_id": rid, "media_url": url, "path": str(dest),
+                "bytes": dest.stat().st_size, "mode": "real", "transport": "rest",
+                "model": model}
+    raise HiggsfieldError("No Higgsfield transport available — run `higgsfield "
+                          "auth login` (CLI) or set HIGGSFIELD_API_KEY.")
 
 
 def generate_audio_to_file(text: str, dest: Path, *, model: str = "seed_audio",
                            voice_id: str | None = None, speech_rate: float | None = None) -> dict:
-    rid = submit_audio(text, model=model, voice_id=voice_id, speech_rate=speech_rate)
-    url = wait(rid)
-    download(url, dest)
-    return {"request_id": rid, "media_url": url, "path": str(dest),
-            "bytes": dest.stat().st_size, "mode": "real"}
+    t = transport()
+    if t == "cli":
+        url = _cli_generate_audio(text, model="text2speech_v2", voice_id=voice_id)
+        download(url, dest)
+        return {"request_id": None, "media_url": url, "path": str(dest),
+                "bytes": dest.stat().st_size, "mode": "real", "transport": "cli"}
+    if t == "rest":
+        rid = submit_audio(text, model=model, voice_id=voice_id, speech_rate=speech_rate)
+        url = wait(rid)
+        download(url, dest)
+        return {"request_id": rid, "media_url": url, "path": str(dest),
+                "bytes": dest.stat().st_size, "mode": "real", "transport": "rest"}
+    raise HiggsfieldError("No Higgsfield transport available — run `higgsfield "
+                          "auth login` (CLI) or set HIGGSFIELD_API_KEY.")
 
 
 # ---------------------------------------------------------------------------

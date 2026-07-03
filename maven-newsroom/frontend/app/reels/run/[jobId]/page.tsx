@@ -12,7 +12,6 @@ import { PipelineGraph } from "@/components/pipeline/PipelineGraph";
 import { NodeInspector } from "@/components/pipeline/NodeInspector";
 import { LiveConsole } from "@/components/pipeline/LiveConsole";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { CapabilityBanner } from "@/components/reels/CapabilityBanner";
 
 export default function ReelRunPage() {
   const { jobId } = useParams<{ jobId: string }>();
@@ -58,8 +57,6 @@ export default function ReelRunPage() {
           <a href={job.instagram_post_url} target="_blank" rel="noreferrer" className="btn btn-primary">View reel</a>
         )}
       </div>
-
-      <div className="px-6 pt-3"><CapabilityBanner /></div>
 
       <div className="flex-1 grid grid-cols-[230px_1fr_360px] min-h-0">
         <div className="border-r border-line overflow-auto py-2">

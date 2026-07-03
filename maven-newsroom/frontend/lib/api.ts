@@ -49,7 +49,10 @@ export const api = {
   reelCapabilities: () => get<{
     research_provider_available: boolean; research_providers: string[];
     llm_provider_available: boolean; llm_api_configured: boolean; content_engine: string;
-    higgsfield_available: boolean; tts_available: boolean; tts_mode: string;
+    higgsfield_available: boolean;
+    higgsfield_transport: "cli" | "rest" | "none";
+    higgsfield_cli_installed: boolean; higgsfield_logged_in: boolean;
+    tts_available: boolean; tts_mode: string;
     voiceover_production_ready: boolean; composio_available: boolean; ffmpeg_available: boolean;
     can_run_full_reel_from_backend: boolean; can_generate_real_clips: boolean;
     generation_mode: "real" | "simulation";
@@ -68,6 +71,9 @@ export const api = {
   regenerateAllScenes: (id: string) => post(`/api/reels/${id}/regenerate-all-scenes`),
   improveAnimation: (id: string) => post<{ status: string; shots: number; estimated_cost_credits: number; message: string }>(`/api/reels/${id}/improve-animation`),
   reassembleReel: (id: string) => post<{ status: string; verdict?: string; scores?: any }>(`/api/reels/${id}/reassemble`),
+  improveText: (id: string, action = "improve_text", moveUp = false) =>
+    post<{ status: string; action?: string; verdict?: string; text_verdict?: string; text_scores?: any; scores?: any; credits_spent?: number; message?: string }>(
+      `/api/reels/${id}/improve-text`, { action, move_subtitles_up: moveUp }),
   approveAndPublish: (id: string) => post(`/api/reels/${id}/approve-publish`),
   reject: (id: string, reason?: string) => post(`/api/jobs/${id}/reject`, { reason }),
   publish: (id: string) => post(`/api/jobs/${id}/publish`),

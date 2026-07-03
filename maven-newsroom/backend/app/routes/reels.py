@@ -146,6 +146,19 @@ def reel_improve_animation(job_id: str):
         raise HTTPException(409, f"run artifacts incomplete: {exc}")
 
 
+@router.post("/reels/{job_id}/improve-text")
+def reel_improve_text(job_id: str, body: dict = Body(default={})):
+    """Text-only reassembly (Improve Text / Resync / Make Text More Viral / Move
+    Subtitles Up). Reuses existing clips + voiceover — NO Higgsfield, zero credits."""
+    _require_reel_job(job_id)
+    try:
+        return reel_studio.improve_text(
+            job_id, action=body.get("action", "improve_text"),
+            move_subtitles_up=bool(body.get("move_subtitles_up", False)))
+    except FileNotFoundError as exc:
+        raise HTTPException(409, f"cannot reassemble text: {exc}")
+
+
 @router.post("/reels/{job_id}/reassemble")
 def reel_reassemble(job_id: str):
     """Re-run the local assembler + auditor (free). Requires clips on disk."""

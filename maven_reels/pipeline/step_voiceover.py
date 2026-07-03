@@ -64,6 +64,7 @@ def run(date: str, *, script_edited: dict, mode: str | None = None,
             meta = hf.generate_audio_to_file(narration, dest, model="seed_audio")
             payload = {"voiceover_mode": "real_tts", "voiceover_path": str(dest),
                        "duration": seconds, "script_used": narration,
+                       "spoken_text": narration,   # source of truth for on-screen text
                        "provider": "higgsfield", "production_ready": True,
                        "request_id": meta.get("request_id"),
                        "notes": "Real Higgsfield TTS voiceover."}
@@ -77,7 +78,7 @@ def run(date: str, *, script_edited: dict, mode: str | None = None,
 
     _simulate(dest, seconds)
     payload = {"voiceover_mode": "local_simulation", "voiceover_path": str(dest),
-               "duration": seconds, "script_used": narration, "provider": "ffmpeg_sim",
-               "production_ready": False, "notes": note}
+               "duration": seconds, "script_used": narration, "spoken_text": narration,
+               "provider": "ffmpeg_sim", "production_ready": False, "notes": note}
     state.save_artifact(date, "voiceover_v2", payload)
     return payload

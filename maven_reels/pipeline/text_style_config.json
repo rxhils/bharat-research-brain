@@ -1,0 +1,63 @@
+{
+  "_note": "Maven Reels typography system. Editable. The assembler resolves font_family to the first installed face, falling back to a clean system sans (Segoe UI Semibold on Windows). No thick black outline anywhere — hierarchy comes from weight, size, soft shadow and a translucent backplate.",
+  "font_family": ["Inter", "Manrope", "Satoshi", "Segoe UI Semibold", "Segoe UI", "Arial"],
+  "palette": {
+    "text": "#F8FAFC",
+    "hook_highlight": "#2FE6A6",
+    "subtitle_highlight": "#20D6C3",
+    "backplate": "#0A1220",
+    "brand": "#E6EDF5"
+  },
+  "hook": {
+    "font_size": 96,
+    "font_weight": 800,
+    "line_height": 0.98,
+    "letter_spacing": -1.0,
+    "color": "#F8FAFC",
+    "highlight_color": "#2FE6A6",
+    "outline": 1,
+    "shadow": 3,
+    "backplate_alpha": 0.0,
+    "position": "upper_mid",
+    "margin_v": 620,
+    "max_lines": 2
+  },
+  "subtitle": {
+    "font_size": 62,
+    "font_weight": 700,
+    "line_height": 1.05,
+    "color": "#F8FAFC",
+    "highlight_color": "#20D6C3",
+    "outline": 0,
+    "shadow": 2,
+    "backplate_alpha": 0.55,
+    "position": "lower_third",
+    "safe_bottom": 300,
+    "max_lines": 2,
+    "max_words_per_cue": 6,
+    "max_chars_per_line": 26
+  },
+  "callout": {
+    "font_size": 52,
+    "font_weight": 750,
+    "color": "#F8FAFC",
+    "highlight_color": "#F59E0B",
+    "backplate_alpha": 0.6,
+    "style": "data_chip",
+    "position": "mid"
+  },
+  "cta": {
+    "font_size": 60,
+    "font_weight": 800,
+    "color": "#F8FAFC",
+    "highlight_color": "#2FE6A6",
+    "position": "center"
+  },
+  "brand": {
+    "font_size": 34,
+    "font_weight": 700,
+    "color": "#E6EDF5",
+    "position": "top_left",
+    "opacity": 0.85
+  }
+}

@@ -46,7 +46,13 @@ export function CapabilityBanner() {
           <div className="text-sm font-medium">{headline}</div>
           <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
             <Cap ok={caps.research_provider_available} label={`Research (${caps.research_providers.join(", ") || "none"})`} />
-            <Cap ok={caps.higgsfield_available} label="Higgsfield" />
+            <Cap ok={caps.higgsfield_available}
+                 soft={!caps.higgsfield_available && caps.higgsfield_cli_installed}
+                 label={`Higgsfield (${
+                   caps.higgsfield_transport === "cli" ? "CLI ✓ logged in"
+                   : caps.higgsfield_transport === "rest" ? "API key"
+                   : caps.higgsfield_cli_installed ? "CLI — run auth login"
+                   : "simulation"})`} />
             <Cap ok={caps.voiceover_production_ready} label={`Voiceover (${caps.tts_mode})`} soft={!caps.voiceover_production_ready} />
             <Cap ok={caps.ffmpeg_available} label="Assembly (ffmpeg)" />
             <Cap ok={caps.composio_available} label="Publishing (Composio)" />

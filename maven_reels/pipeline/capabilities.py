@@ -35,6 +35,7 @@ def _higgsfield_keys() -> bool:
 
 def check() -> dict:
     """Full capability report. Pure/free — reads env + PATH only."""
+    from . import higgsfield_client as hf
     from .research_providers.base import available_providers
 
     ffmpeg_ok = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
@@ -49,9 +50,13 @@ def check() -> dict:
     llm_key = _has("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "OLLAMA_HOST")
     content_ok = True
 
-    higgsfield_ok = _higgsfield_keys()
-    # TTS: real when Higgsfield audio (same keys) or a dedicated TTS key is set;
-    # otherwise a free local simulation placeholder is always available.
+    # Higgsfield transport: 'cli' (login, no key) > 'rest' (API key) > 'none'.
+    hf_transport = hf.transport()
+    higgsfield_ok = hf_transport != "none"
+    cli_installed = bool(hf.cli_bin())
+    logged_in = hf.cli_logged_in()
+    # TTS: real when a real Higgsfield transport (CLI or REST) is live, or a
+    # dedicated TTS key is set; otherwise a free local placeholder is used.
     real_tts = higgsfield_ok or _has("ELEVENLABS_API_KEY", "OPENAI_API_KEY")
     tts_ok = True  # simulation always available; real_tts flag distinguishes prod
     tts_mode = "real_tts" if real_tts else "local_simulation"
@@ -62,15 +67,21 @@ def check() -> dict:
         missing.append({"capability": "assembly",
                         "message": "ffmpeg/ffprobe not found on PATH. Install FFmpeg to assemble Reels."})
     if not higgsfield_ok:
-        missing.append({"capability": "higgsfield",
-                        "message": "Missing HIGGSFIELD_API_KEY / HIGGSFIELD_API_SECRET. "
-                                   "Add them in Settings to generate real animated clips. "
-                                   "Until then, Run Reel produces a free simulation preview."})
+        if cli_installed and not logged_in:
+            hf_msg = ("Higgsfield CLI found but not logged in. Run `higgsfield auth "
+                      "login` to generate real animated clips. Until then, Run Reel "
+                      "produces a free simulation preview.")
+        else:
+            hf_msg = ("Install the Higgsfield CLI and run `higgsfield auth login` "
+                      "(or set HIGGSFIELD_API_KEY) to generate real animated clips. "
+                      "Until then, Run Reel produces a free simulation preview.")
+        missing.append({"capability": "higgsfield", "message": hf_msg})
     if not real_tts:
         missing.append({"capability": "tts",
                         "message": "Voiceover provider missing. Preview runs with a "
                                    "simulated placeholder, but production voiceover is "
-                                   "not ready. Add HIGGSFIELD_API_KEY (or a TTS key) in Settings."})
+                                   "not ready. Log in with the Higgsfield CLI (or add a "
+                                   "TTS key) in Settings."})
     if not composio_ok:
         missing.append({"capability": "composio",
                         "message": "Composio not connected. Add COMPOSIO_API_KEY in Settings "
@@ -89,6 +100,9 @@ def check() -> dict:
         "llm_api_configured": llm_key,          # optional enhancer, not required
         "content_engine": "llm" if llm_key else "deterministic",
         "higgsfield_available": higgsfield_ok,
+        "higgsfield_transport": hf_transport,          # 'cli' | 'rest' | 'none'
+        "higgsfield_cli_installed": cli_installed,
+        "higgsfield_logged_in": logged_in,
         "tts_available": tts_ok,
         "tts_mode": tts_mode,
         "voiceover_production_ready": real_tts,

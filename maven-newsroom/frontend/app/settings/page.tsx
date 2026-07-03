@@ -75,7 +75,12 @@ export default function SettingsPage() {
           </div>
           <div className="grid sm:grid-cols-2 gap-2.5">
             <StatusRow label="Research provider" detail={caps.research_providers.join(", ") || "none"} ok={caps.research_provider_available} />
-            <StatusRow label="Higgsfield (real clips)" detail={caps.higgsfield_available ? "HIGGSFIELD_API_KEY set" : "HIGGSFIELD_API_KEY / SECRET missing"} ok={caps.higgsfield_available} />
+            <StatusRow label="Higgsfield (real clips)" ok={caps.higgsfield_available}
+              detail={
+                caps.higgsfield_transport === "cli" ? "CLI logged in (no API key needed)"
+                : caps.higgsfield_transport === "rest" ? "API key configured"
+                : caps.higgsfield_cli_installed ? "CLI installed — run `higgsfield auth login`"
+                : "Install Higgsfield CLI + `higgsfield auth login` (or set HIGGSFIELD_API_KEY)"} />
             <StatusRow label="Voiceover / TTS" detail={caps.tts_mode} ok={caps.voiceover_production_ready} soft={!caps.voiceover_production_ready} />
             <StatusRow label="Assembly (ffmpeg)" detail={caps.ffmpeg_available ? "installed" : "not on PATH"} ok={caps.ffmpeg_available} />
             <StatusRow label="Composio (publishing)" detail={caps.composio_available ? "connected" : "COMPOSIO_API_KEY missing"} ok={caps.composio_available} />

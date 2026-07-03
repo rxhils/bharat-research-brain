@@ -8,7 +8,6 @@ import type { Job } from "@/lib/types";
 import { StatCard, EmptyState } from "@/components/ui/Card";
 import { ScoreCard } from "@/components/ui/ScoreCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { CapabilityBanner } from "@/components/reels/CapabilityBanner";
 
 export default function ReelsDashboard() {
   const router = useRouter();
@@ -47,7 +46,6 @@ export default function ReelsDashboard() {
 
   return (
     <div className="px-6 py-6 max-w-[1400px] mx-auto">
-      <CapabilityBanner />
       <div className="glass card-pad relative overflow-hidden mb-6">
         <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-mcp/10 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">

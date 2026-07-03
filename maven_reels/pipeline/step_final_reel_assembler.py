@@ -32,8 +32,12 @@ def _ffmpeg() -> str:
 
 
 # ---------------------------------------------------------------- ASS overlays
+# Premium kinetic text: big word-pop hook (upper-mid, thin edge + soft shadow),
+# voice-synced phrase subtitles on a translucent navy pill (no thick outline),
+# one teal/green highlight word, subtle Maven brand mark. Driven by the Text
+# Studio's kinetic plan + text_style_config.json.
 def _ass_time(t: float) -> str:
-    cs = int(round(t * 100))
+    cs = int(round(max(0.0, t) * 100))
     h, cs = divmod(cs, 360000)
     m, cs = divmod(cs, 6000)
     s, cs = divmod(cs, 100)
@@ -41,47 +45,116 @@ def _ass_time(t: float) -> str:
 
 
 def _esc(text: str) -> str:
-    return text.replace("\\", "").replace("{", "(").replace("}", ")").replace("\n", " ")
+    return str(text).replace("\\", "").replace("{", "(").replace("}", ")").replace("\n", " ")
 
 
-TEAL_ASS = "&H00EED322&"   # #22D3EE in ASS BGR order
-WHITE_ASS = "&H00FFFFFF&"
+# ASS colours are &HAABBGGRR (AA=alpha, 00 opaque .. FF clear)
+WHITE_ASS = "&H00FCF8FA&"        # #F8FAFC
+SUB_HI_ASS = "&H00C3D620&"       # #20D6C3 teal
+HOOK_HI_ASS = "&H00A6E62F&"      # #2FE6A6 green
+BOX_ASS = "&H8C20120A&"          # translucent navy #0A1220 pill fill
+HOOK_EDGE_ASS = "&H90101010&"    # soft dark edge
+BRAND_ASS = "&H30E6EDF5&"        # subtle light brand
+
+_WIN_FONTS = {"segoe ui semibold", "segoe ui", "arial", "calibri", "tahoma", "verdana"}
 
 
-def _build_ass(hook_text: str, hook_until: float, cues: list[dict],
-               brand: str, total: float) -> str:
+def _resolve_font(families: list[str]) -> str:
+    """First installed family from the config stack, else a clean Windows sans."""
+    import os
+    fdir = Path(os.getenv("WINDIR", "C:/Windows")) / "Fonts"
+    have = {p.stem.lower().replace("-", " ") for p in fdir.glob("*.ttf")} if fdir.exists() else set()
+    for f in families:
+        fl = f.lower()
+        if fl in _WIN_FONTS or fl in have or fl.replace(" ", "") in {h.replace(' ', '') for h in have}:
+            return f
+    return "Segoe UI Semibold"
+
+
+def _emph_line(line: str, emphasis: list[str], hi: str, underline: bool = True) -> str:
+    """Colour + underline the single key word/phrase (the main idea)."""
+    ewords = {e.lower().strip(".,%—-") for e in (emphasis or []) if e}
+    u1, u0 = ("\\u1", "\\u0") if underline else ("", "")
+    out = []
+    for w in _esc(line).split():
+        if w.lower().strip(".,%—-") in ewords and ewords:
+            out.append(f"{{{u1}\\c{hi}}}{w}{{{u0}\\c{WHITE_ASS}}}")
+        else:
+            out.append(w)
+    return " ".join(out)
+
+
+# centred positions (x=540). Hook slightly above centre; cards mid; subs lower.
+_CENTER_X = W // 2
+_Y = {"hook": 780, "phrase_card": 910, "subtitle": 1360, "cta": 910}
+
+
+def _anim_tag(animation: str, y: int) -> str:
+    """Meaning-driven entrance, all centred via \\an5."""
+    x = _CENTER_X
+    a = {
+        "punch": f"\\an5\\pos({x},{y})\\fad(90,90)\\fscx58\\fscy58\\t(0,220,\\fscx100\\fscy100)",
+        "rise":  f"\\an5\\move({x},{y+90},{x},{y},0,240)\\fad(120,90)",
+        "drop":  f"\\an5\\move({x},{y-90},{x},{y},0,240)\\fad(120,90)",
+        "slide": f"\\an5\\move({x-130},{y},{x},{y},0,240)\\fad(120,90)",
+        "pulse": f"\\an5\\pos({x},{y})\\fad(90,90)\\t(0,140,\\fscx110\\fscy110)\\t(140,320,\\fscx100\\fscy100)",
+        "pop":   f"\\an5\\pos({x},{y})\\fad(80,70)\\fscx92\\fscy92\\t(0,130,\\fscx100\\fscy100)",
+    }
+    return a.get(animation, a["pop"])
+
+
+def _build_ass(*, hook: dict, subtitles: list[dict], cta: dict | None,
+               brand: str, style: dict, total: float) -> str:
+    font = _resolve_font(style.get("font_family", ["Segoe UI Semibold"]))
+    hk, sb, br = style["hook"], style["subtitle"], style["brand"]
+    # All text is CENTERED (Alignment=5); vertical placement + motion via tags.
     header = f"""[Script Info]
 ScriptType: v4.00+
 PlayResX: {W}
 PlayResY: {H}
 WrapStyle: 0
+ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Hook,Segoe UI,96,{WHITE_ASS},{WHITE_ASS},&H00000000&,&H96000000&,-1,0,0,0,100,100,0,0,1,4,2,8,60,60,560,1
-Style: Sub,Segoe UI,58,{WHITE_ASS},{WHITE_ASS},&H00000000&,&H96000000&,-1,0,0,0,100,100,0,0,1,3,2,2,80,80,300,1
-Style: Brand,Segoe UI,34,{WHITE_ASS},{WHITE_ASS},&H00000000&,&H96000000&,-1,0,0,0,100,100,0,0,1,2,1,7,60,60,60,1
+Style: Hook,{font},{hk['font_size']},{WHITE_ASS},{WHITE_ASS},{HOOK_EDGE_ASS},&H00000000&,-1,0,0,0,100,100,-1,0,1,1,4,5,60,60,60,1
+Style: Card,{font},76,{WHITE_ASS},{WHITE_ASS},{HOOK_EDGE_ASS},&H00000000&,-1,0,0,0,100,100,0,0,1,1,4,5,60,60,60,1
+Style: Sub,{font},{sb['font_size']},{WHITE_ASS},{WHITE_ASS},{BOX_ASS},{BOX_ASS},-1,0,0,0,100,100,0,0,3,14,0,5,90,90,60,1
+Style: Brand,{font},{br['font_size']},{BRAND_ASS},{BRAND_ASS},&H00000000&,&H00000000&,-1,0,0,0,100,100,1,0,1,0,1,7,54,54,60,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
-    events = []
-    if hook_text:
-        events.append(f"Dialogue: 1,{_ass_time(0)},{_ass_time(hook_until)},Hook,,0,0,0,,"
-                      f"{{\\fad(120,150)}}{_esc(hook_text)}")
-    events.append(f"Dialogue: 0,{_ass_time(0)},{_ass_time(total)},Brand,,0,0,0,,"
-                  f"{_esc(brand)}")
-    for c in cues:
-        words = _esc(str(c.get("text", ""))).split()
-        emph = str(c.get("emphasis", "")).lower().strip(".,%")
-        styled = " ".join(
-            f"{{\\c{TEAL_ASS}}}{w}{{\\c{WHITE_ASS}}}"
-            if emph and emph in w.lower().strip(".,%") else w
-            for w in words)
-        events.append(f"Dialogue: 2,{_ass_time(float(c['start']))},"
-                      f"{_ass_time(float(c['end']))},Sub,,0,0,0,,"
-                      f"{{\\fad(80,80)}}{styled}")
-    return header + "\n".join(events) + "\n"
+    ev = []
+    ev.append(f"Dialogue: 0,{_ass_time(0)},{_ass_time(total)},Brand,,0,0,0,,{_esc(brand)}")
+    if hook and hook.get("text"):
+        lines = "\\N".join(_emph_line(l, hook.get("emphasis_words", []), HOOK_HI_ASS,
+                                      hook.get("underline", True))
+                           for l in _wrap_ass(hook["text"], 15, 2))
+        ev.append(f"Dialogue: 2,{_ass_time(hook.get('start', 0))},{_ass_time(hook.get('end', 1.6))},"
+                  f"Hook,,0,0,0,,{{{_anim_tag(hook.get('animation', 'punch'), _Y['hook'])}}}{lines}")
+    for c in subtitles:
+        role = c.get("role", "subtitle")
+        stylename = "Card" if role == "phrase_card" else "Sub"
+        y = _Y["phrase_card"] if role == "phrase_card" else _Y["subtitle"]
+        lines = "\\N".join(_emph_line(l, c.get("emphasis_words", []), SUB_HI_ASS,
+                                      c.get("underline", True))
+                           for l in (c.get("lines") or [c.get("text", "")]))
+        ev.append(f"Dialogue: 3,{_ass_time(float(c['start']))},{_ass_time(float(c['end']))},"
+                  f"{stylename},,0,0,0,,{{{_anim_tag(c.get('animation', 'pop'), y)}}}{lines}")
+    return header + "\n".join(ev) + "\n"
+
+
+def _wrap_ass(text: str, max_chars: int, max_lines: int) -> list[str]:
+    lines, cur = [], ""
+    for w in _esc(text).split():
+        if cur and len(cur) + 1 + len(w) > max_chars:
+            lines.append(cur); cur = w
+        else:
+            cur = (cur + " " + w).strip()
+    if cur:
+        lines.append(cur)
+    return lines[:max_lines] or [text]
 
 
 # ---------------------------------------------------------------- assembly
@@ -97,7 +170,8 @@ def _normalize(ff: str, src: Path, dst: Path, seconds: float) -> None:
 
 
 def run(date: str, *, shot_plan: dict, subtitles: dict, hooks: dict,
-        voiceover_mp3: str | None = None) -> dict:
+        voiceover_mp3: str | None = None,
+        text_plan: dict | None = None, text_style: dict | None = None) -> dict:
     ff = _ffmpeg()
     rd = config.run_dir(date)
     work = rd / "_assembly"
@@ -127,14 +201,26 @@ def run(date: str, *, shot_plan: dict, subtitles: dict, hooks: dict,
 
     total = round(sum(float(s["duration"]) for s in shots), 2)
 
-    # 3) overlays (ASS) — hook big on shot 1, kinetic subs, brand line
-    hook_text = hooks.get("on_screen_hook", "") or hooks.get("selected_hook", "")
-    hook_until = float(shots[0]["duration"]) if shots else 2.0
-    cues = subtitles.get("subtitles", []) if isinstance(subtitles, dict) else []
+    # 3) overlays (ASS) — premium kinetic text from the Text Studio's plan.
+    #    Falls back to the legacy hook/subtitles artifacts if no plan is passed.
+    import json as _json  # noqa: PLC0415
+    style = text_style or _json.loads(
+        (Path(__file__).resolve().parent / "text_style_config.json").read_text(encoding="utf-8"))
+    if text_plan:
+        hook_block = text_plan.get("hook_text", {})
+        sub_cues = text_plan.get("subtitles", [])
+    else:  # legacy compatibility
+        hook_block = {"text": hooks.get("on_screen_hook", "") or hooks.get("selected_hook", ""),
+                      "start": 0.0, "end": float(shots[0]["duration"]) if shots else 1.6,
+                      "emphasis_words": []}
+        sub_cues = [{"start": c.get("start", 0), "end": c.get("end", 0),
+                     "text": c.get("text", ""), "lines": None,
+                     "emphasis_words": [c["emphasis"]] if c.get("emphasis") else []}
+                    for c in (subtitles.get("subtitles", []) if isinstance(subtitles, dict) else [])]
     ass_path = rd / "_overlays.ass"
     ass_path.write_text(
-        _build_ass(hook_text, hook_until, cues,
-                   f"{config.BRAND_NAME} · {config.BRAND_SITE}", total),
+        _build_ass(hook=hook_block, subtitles=sub_cues, cta=text_plan.get("cta") if text_plan else None,
+                   brand=f"{config.BRAND_NAME} · {config.BRAND_SITE}", style=style, total=total),
         encoding="utf-8")
 
     # 4) audio bed (music + SFX, original/ffmpeg-synth) + voiceover
@@ -185,11 +271,11 @@ def run(date: str, *, shot_plan: dict, subtitles: dict, hooks: dict,
         "clips_used": clips_used, "scene_count": len(clips_used),
         "audio_used": ("voiceover + original synth bed" if vo.exists()
                        else "original synth bed only"),
-        "subtitles_burned": bool(cues), "hook_overlay": bool(hook_text),
+        "subtitles_burned": bool(sub_cues), "hook_overlay": bool(hook_block.get("text")),
         "bytes": out.stat().st_size, "status": "completed",
         # compat keys so the existing auditor's mechanical checks keep working
         "reel": str(out), "cover": str(cover), "width": W, "height": H,
-        "seconds": total, "has_voiceover": vo.exists(), "has_subtitles": bool(cues),
+        "seconds": total, "has_voiceover": vo.exists(), "has_subtitles": bool(sub_cues),
     }
     state.save_artifact(date, "final_reel", meta)
     state.save_artifact(date, "reel_video", meta)   # single source for auditor/UI
