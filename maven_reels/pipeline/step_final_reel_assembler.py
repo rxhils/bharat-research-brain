@@ -22,6 +22,12 @@ from pathlib import Path
 from . import config, state, step_sound_design
 
 W, H, FPS = 1080, 1920, 30
+FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+
+
+def _fontsdir_escaped() -> str:
+    """Absolute bundled-fonts dir escaped for the ffmpeg filtergraph (Windows: / + \\:)."""
+    return str(FONTS_DIR).replace("\\", "/").replace(":", "\\:")
 
 
 def _ffmpeg() -> str:
@@ -117,10 +123,10 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Hook,{font},{hk['font_size']},{WHITE_ASS},{WHITE_ASS},{HOOK_EDGE_ASS},&H00000000&,-1,0,0,0,100,100,-1,0,1,1,4,5,60,60,60,1
-Style: Card,{font},76,{WHITE_ASS},{WHITE_ASS},{HOOK_EDGE_ASS},&H00000000&,-1,0,0,0,100,100,0,0,1,1,4,5,60,60,60,1
-Style: Sub,{font},{sb['font_size']},{WHITE_ASS},{WHITE_ASS},{BOX_ASS},{BOX_ASS},-1,0,0,0,100,100,0,0,3,14,0,5,90,90,60,1
-Style: Brand,{font},{br['font_size']},{BRAND_ASS},{BRAND_ASS},&H00000000&,&H00000000&,-1,0,0,0,100,100,1,0,1,0,1,7,54,54,60,1
+Style: Hook,Archivo Black,{hk['font_size']},{WHITE_ASS},{WHITE_ASS},{HOOK_EDGE_ASS},&H00000000&,-1,0,0,0,100,100,-1,0,1,1,0,5,60,60,60,1
+Style: Card,Bebas Neue,88,{WHITE_ASS},{WHITE_ASS},{HOOK_EDGE_ASS},&H00000000&,-1,0,0,0,100,100,0,0,1,1,0,5,60,60,60,1
+Style: Sub,Montserrat SemiBold,{sb['font_size']},{WHITE_ASS},{WHITE_ASS},{BOX_ASS},{BOX_ASS},-1,0,0,0,100,100,0,0,3,16,0,5,90,90,60,1
+Style: Brand,Montserrat SemiBold,{br['font_size']},{BRAND_ASS},{BRAND_ASS},&H00000000&,&H00000000&,-1,0,0,0,100,100,1,0,1,0,0,7,54,54,60,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -233,14 +239,21 @@ def run(date: str, *, shot_plan: dict, subtitles: dict, hooks: dict,
         bed = None
     vo = Path(voiceover_mp3) if voiceover_mp3 else (rd / "voiceover.mp3")
 
-    # 5) final pass: burn ASS + mix audio (run in rd so the ass filter gets a
-    #    relative path — dodges the Windows drive-letter filter-escaping issue)
+    # 5) final pass: burn ASS + mix audio (run in rd so the ass filter + fontsdir
+    #    get RELATIVE paths — dodges the spaces/drive-letter filter-escaping issue).
+    #    Copy the bundled fonts into a space-free local dir the filter can point at.
+    fonts_local = rd / "_fonts"
+    fonts_local.mkdir(exist_ok=True)
+    if FONTS_DIR.exists():
+        for _f in FONTS_DIR.glob("*.ttf"):
+            shutil.copy2(_f, fonts_local / _f.name)
     out = rd / "reel.mp4"
-    vf = "ass=_overlays.ass"
+    vf = "ass=_overlays.ass:fontsdir=_fonts"
     if vo.exists() and bed is not None:
         cmd = [ff, "-y", "-i", str(stitched), "-i", str(vo), "-i", str(bed),
                "-filter_complex",
-               f"[0:v]{vf}[v];[2:a]volume=0.5[m];[1:a][m]amix=inputs=2:duration=first[a]",
+               f"[0:v]{vf}[v];[2:a]volume=0.14,lowpass=f=2800[m];"
+               f"[1:a][m]amix=inputs=2:duration=first[a]",
                "-map", "[v]", "-map", "[a]"]
     elif vo.exists():
         cmd = [ff, "-y", "-i", str(stitched), "-i", str(vo),

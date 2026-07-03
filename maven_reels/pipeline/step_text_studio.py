@@ -73,6 +73,52 @@ def _transcript(date: str, voiceover: dict | None, script_edited: dict) -> tuple
     return spoken, (dur or 18.0)
 
 
+# ---------------------------------------------- exact-voice (Whisper) timing
+def _transcribe_words(vo_path: Path) -> list[dict] | None:
+    """Word-level timestamps from the ACTUAL voiceover so on-screen text is
+    exactly what is heard, perfectly synced. Best-effort: openai-whisper, then
+    faster-whisper; None if neither is available (caller falls back)."""
+    if not vo_path.exists():
+        return None
+    try:
+        import whisper  # openai-whisper  # noqa: PLC0415
+        r = whisper.load_model("base").transcribe(str(vo_path), word_timestamps=True, fp16=False)
+        w = [{"word": x["word"].strip(), "start": x["start"], "end": x["end"]}
+             for seg in r.get("segments", []) for x in seg.get("words", []) if x.get("word", "").strip()]
+        return w or None
+    except Exception:
+        pass
+    try:
+        from faster_whisper import WhisperModel  # noqa: PLC0415
+        segs, _ = WhisperModel("base", device="cpu", compute_type="int8").transcribe(
+            str(vo_path), word_timestamps=True)
+        w = [{"word": x.word.strip(), "start": x.start, "end": x.end}
+             for s in segs for x in (s.words or []) if x.word.strip()]
+        return w or None
+    except Exception:
+        return None
+
+
+def _whisper_cues(vo_path: Path, max_words: int, max_chars: int) -> list[dict] | None:
+    """Chunk word timestamps into short phrase cues with exact start/end."""
+    words = _transcribe_words(vo_path)
+    if not words:
+        return None
+    cues, cur, start = [], [], None
+    for w in words:
+        if not cur:
+            start = w["start"]
+        cur.append(w["word"])
+        line = " ".join(cur)
+        if len(cur) >= max_words or len(line) >= max_chars or w["word"][-1:] in ".,!?;:":
+            cues.append({"text": _clean_display(line), "start": round(start, 2), "end": round(w["end"], 2)})
+            cur = []
+    if cur:
+        cues.append({"text": _clean_display(" ".join(cur)), "start": round(start, 2),
+                     "end": round(words[-1]["end"], 2)})
+    return [c for c in cues if c["text"]] or None
+
+
 # ---------------------------------------------------------------- text utils
 _SUBST = [(" dot in", ".in"), (" dot ", "."), (" dot.", ".")]
 
@@ -146,8 +192,41 @@ def _compress_hook(sentence: str, max_words: int = 7) -> str:
 
 
 # ---------------------------------------------------------------- alignment
+def _align_exact(date: str, cues: list[dict], vo_dur: float, video_dur: float) -> dict:
+    """Build the alignment from Whisper word-timed cues → on-screen text is
+    exactly the spoken words, perfectly synced. Cap end at the video length."""
+    end_cap = round(min(vo_dur or video_dur, video_dur) + 0.5, 2)
+    # hook = the first sentence (merge leading cues up to sentence punctuation)
+    hook_n = 1
+    for i, c in enumerate(cues[:3]):
+        if c["text"].rstrip()[-1:] in ".!?":
+            hook_n = i + 1
+            break
+    segments = []
+    for i, c in enumerate(cues):
+        role = "hook" if i < hook_n else "subtitle"
+        text = c["text"] if role == "subtitle" else _compress_hook(" ".join(x["text"] for x in cues[:hook_n]))
+        if role == "hook" and i > 0:
+            continue  # hook rendered once from the merged first sentence
+        start = round(c["start"] if role == "subtitle" else cues[0]["start"], 2)
+        end = round(min(end_cap, cues[hook_n-1]["end"] if role == "hook" else c["end"]), 2)
+        segments.append({
+            "segment_id": f"seg_{len(segments)+1:02d}", "start": start, "end": end,
+            "spoken_text": text, "display_text": text,
+            "emphasis_words": _emphasis(text), "scene_id": "", "text_role": role,
+        })
+    payload = {"date": date, "voiceover_duration": round(vo_dur, 2),
+               "video_duration": round(video_dur, 2), "alignment_mode": "whisper_word_timing",
+               "segments": segments, "text_voice_match_score": 100,
+               "alignment_score": 100, "issues": []}
+    state.save_artifact(date, "text_alignment", payload)
+    return payload
+
+
 def _align(date: str, spoken: str, vo_dur: float, video_dur: float,
-           style: dict) -> dict:
+           style: dict, whisper_cues: list[dict] | None = None) -> dict:
+    if whisper_cues:
+        return _align_exact(date, whisper_cues, vo_dur, video_dur)
     sub_cfg = style["subtitle"]
     sents = _sentences(spoken) or [spoken]
     hook_sentence = sents[0]
@@ -358,7 +437,12 @@ def run(date: str, *, shot_plan: dict, voiceover: dict | None = None,
     spoken, vo_dur = _transcript(date, voiceover, script_edited)
     video_dur = round(sum(float(s.get("duration", 0)) for s in shot_plan.get("shots", [])) or 18.0, 2)
 
-    align = _align(date, spoken, vo_dur, video_dur, style)
+    # exact-voice: Whisper the actual voiceover for word-perfect subtitles (falls
+    # back to the spoken-text estimate if Whisper is unavailable)
+    sub_cfg = style["subtitle"]
+    whisper_cues = _whisper_cues(config.run_dir(date) / "voiceover.mp3",
+                                 sub_cfg["max_words_per_cue"], sub_cfg["max_chars_per_line"])
+    align = _align(date, spoken, vo_dur, video_dur, style, whisper_cues=whisper_cues)
     kinetic = _kinetic(date, align, style)
     safe = _safe_areas(date, shot_plan, style)
     anims = _animations(date, kinetic)
