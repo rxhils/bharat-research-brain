@@ -18,13 +18,19 @@ NEGATIVE = ("static image, still poster, slideshow, cheap Canva animation, "
             "distorted, ugly text, distorted charts, watermark, 3D coins")
 
 # Newsroom rework: realistic finance-MEDIA footage, not abstract AI dashboards.
-REALISTIC_NEGATIVE = ("no readable text, no fake text, no fake numbers, no fake "
-                      "stock tickers, no fake company names, no fake logos, no buy "
-                      "or sell arrows, no trading-signal visuals, no gibberish "
-                      "panels, no cluttered AI dashboard, no floating fake panels, "
-                      "no random candlestick wall, no cartoon bull, no cartoon "
-                      "bear, no meme style, no cheap AI look, no distorted faces, "
-                      "no warped hands, no morphing artifacts, no watermark")
+REALISTIC_NEGATIVE = ("no readable text, no fake text, no fake letters, no fake words, "
+                      "no fake numbers, no fake ticker symbols, no fake company names, no "
+                      "fake logos, no gibberish panels, no gibberish text, no stock tips, "
+                      "no buy or sell arrows, no trading-signal visuals, no cluttered AI "
+                      "dashboard, no floating fake panels, no random candlestick wall, no "
+                      "cartoon bull, no cartoon bear, no meme style, no cheap AI look, no "
+                      "distorted faces, no warped hands, no morphing artifacts, no watermark")
+
+# Positive steer: any visible screens stay NON-READABLE so no garbled text appears.
+NO_TEXT_POSITIVE = ("If any screens or panels are visible, use blurred or abstract "
+                    "NON-READABLE data blocks, abstract chart shapes and clean glowing "
+                    "shapes only — realistic financial screens without any legible text, "
+                    "numbers, tickers or logos.")
 
 
 def _realistic_prompt(shot: dict, scout: dict, idx: int) -> str:
@@ -46,8 +52,8 @@ def _realistic_prompt(shot: dict, scout: dict, idx: int) -> str:
             f"Colour: {st.get('color_palette','navy + teal + white')}. "
             f"Realism: {st.get('realism_level','photoreal')}.\n"
             f"Real continuous filmed motion throughout — never a static frame, never "
-            f"a slideshow, never floating fake UI. {rules}. Leave clean negative "
-            f"space for text overlays and subtitles.\n"
+            f"a slideshow, never floating fake UI. {rules}.\n{NO_TEXT_POSITIVE}\n"
+            f"Leave clean negative space for text overlays and subtitles.\n"
             f"Output: animated MP4 video clip, vertical 9:16, 2-4 seconds.")
 
 _STYLE = ("premium financial newsroom, modern Indian stock market intelligence, "

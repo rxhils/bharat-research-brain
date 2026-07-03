@@ -136,29 +136,51 @@ def run_backend(date: str, *, shot_prompts: dict, simulate: bool | None = None) 
     if gen.get("generation_status") == "over_budget":
         return gen
     run_dir = config.run_dir(date)
-    prompts = {p["shot_id"]: p for p in shot_prompts.get("shot_prompts", [])}
+
+    # PRIMARY input = the Prompt Bible (source of truth). Never fall back to
+    # generic AI-dashboard prompts: if the Bible is missing, fail clearly.
+    try:
+        bible = state.load_artifact(date, "prompt_bible")
+    except Exception:
+        bible = None
+    bible_shots = {s["shot_id"]: s for s in (bible or {}).get("shots", [])}
+    global_neg = (bible or {}).get("global_negative_prompt", "")
+    prompts = {p["shot_id"]: p for p in shot_prompts.get("shot_prompts", [])}  # secondary (duration/aspect)
+    if not bible_shots:
+        gen.update(generation_status="failed", source="missing_prompt_bible",
+                   failure_reason=("Prompt Bible (28_prompt_bible.json) missing — refusing to "
+                                   "generate generic scenes. Re-run prepare() to build it."),
+                   fallback_used=False)
+        state.save_artifact(date, "scene_generation", gen)
+        return gen
+
     use_real = hf.available() if simulate is None else (not simulate)
 
-    results, spent = [], 0.0
+    results, spent, models_used = [], 0.0, []
     for p in gen.get("planned", []):
         shot_id = p["shot_id"]
+        bs = bible_shots.get(shot_id, {})
         sp = prompts.get(shot_id, {})
         dest = run_dir / p["clip_path"]
-        model = sp.get("model_recommendation") or p.get("model")
+        prompt = bs.get("prompt") or sp.get("prompt", "")
+        neg = bs.get("negative_prompt") or global_neg or None
+        model = bs.get("model") or sp.get("model_recommendation") or p.get("model")
+        models_used.append(model)
         dur = int(round(float(sp.get("duration") or config.HIGGSFIELD_GEN_CLIP_SECONDS)))
         entry = {"shot_id": shot_id, "clip_path": p["clip_path"],
-                 "duration": p["duration"], "model_used": model, "retries": 0}
+                 "duration": p["duration"], "model_used": model,
+                 "footage_type": bs.get("footage_type"), "retries": 0}
         try:
             if use_real:
                 meta = hf.generate_video_to_file(
-                    sp.get("prompt", ""), dest, model=model, duration=dur,
+                    prompt, dest, model=model, duration=dur,
                     aspect_ratio=sp.get("aspect_ratio", "9:16"))
                 entry.update(status="completed", higgsfield_job_id=meta["request_id"],
                              cost_credits=float(p.get("estimated_cost", 0)), mode="real")
                 spent += float(p.get("estimated_cost", 0))
             else:
                 meta = hf.simulate_video_to_file(
-                    dest, purpose=sp.get("purpose", "hook"),
+                    dest, purpose=bs.get("purpose", sp.get("purpose", "hook")),
                     duration=float(sp.get("duration") or 4.0),
                     seed=abs(hash(shot_id)) % 100000)
                 entry.update(status="completed", higgsfield_job_id=meta["request_id"],
@@ -171,6 +193,10 @@ def run_backend(date: str, *, shot_prompts: dict, simulate: bool | None = None) 
     out = record_results(date, results)
     out["execution_mode"] = "real" if use_real else "simulation"
     out["generated_by"] = "backend"
+    out["source"] = "prompt_bible"
+    out["fallback_used"] = False
+    out["shots_generated"] = [r["shot_id"] for r in results if r.get("status") == "completed"]
+    out["models_used"] = models_used
     state.save_artifact(date, "scene_generation", out)
     return out
 

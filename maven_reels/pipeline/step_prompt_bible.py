@@ -16,10 +16,13 @@ from __future__ import annotations
 from . import state
 
 GLOBAL_NEGATIVE = (
-    "no readable text, no fake numbers, no fake stock tickers, no fake company logos, "
-    "no buy or sell arrows, no trading-signal overlays, no cartoon bull, no cartoon bear, "
+    "no readable text, no fake text, no fake letters, no fake words, no fake numbers, "
+    "no fake ticker symbols, no fake company names, no fake logos, no gibberish panels, "
+    "no gibberish text, no stock tips, no buy or sell arrows, no trading-signal overlays, "
+    "no cluttered AI dashboard, no floating fake panels, no cartoon bull, no cartoon bear, "
     "no meme style, no cheap AI look, no generic purple gradient finance background, "
-    "no distorted faces, no warped hands, no morphing artifacts, no watermark"
+    "no distorted faces, no warped hands, no morphing artifacts, no watermark. "
+    "If screens are visible, keep them blurred / non-readable abstract data blocks only."
 )
 
 
