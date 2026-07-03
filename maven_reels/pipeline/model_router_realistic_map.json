@@ -1,0 +1,87 @@
+{
+  "_note": "Camera Router realistic-footage map. Built ONLY from models confirmed present in the live Higgsfield catalog (models_explore). Editable. Costs are per 4s/720p 9:16 unless noted; unconfirmed costs are marked needs_pricing_confirmation=true and must be preflighted with get_cost before any real spend. NEVER fabricate pricing.",
+  "catalog_source": "higgsfield models_explore (live)",
+  "unavailable_requested": ["sora", "sora_2", "sora2"],
+  "confirmed_models": {
+    "veo3_1": {"name": "Google Veo 3.1", "t2v": true, "i2v": true, "audio": true, "aspect_9_16": true, "class": "hero_ultra_realistic", "cost_credits": null, "needs_pricing_confirmation": true},
+    "veo3": {"name": "Google Veo 3", "t2v": true, "i2v": true, "audio": true, "aspect_9_16": true, "class": "hero_realistic", "cost_credits": null, "needs_pricing_confirmation": true},
+    "veo3_1_lite": {"name": "Google Veo 3.1 Lite", "t2v": true, "i2v": true, "audio": true, "aspect_9_16": true, "class": "budget_realistic", "cost_credits": null, "needs_pricing_confirmation": true},
+    "cinematic_studio_3_0": {"name": "Cinema Studio 3.0", "t2v": true, "i2v": true, "audio": true, "aspect_9_16": true, "class": "cinematic_premium", "cost_credits": null, "needs_pricing_confirmation": true},
+    "cinematic_studio_video_v2": {"name": "Cinema Studio v2", "t2v": true, "i2v": true, "audio": true, "aspect_9_16": true, "class": "cinematic", "cost_credits": 6.0, "needs_pricing_confirmation": false},
+    "seedance_2_0": {"name": "Seedance 2.0", "t2v": true, "i2v": true, "audio": true, "reference": true, "aspect_9_16": true, "class": "reference_identity_4k", "cost_credits": null, "needs_pricing_confirmation": true},
+    "seedance_2_0_mini": {"name": "Seedance 2.0 Mini", "t2v": true, "i2v": true, "audio": true, "reference": true, "aspect_9_16": true, "class": "budget_reference", "cost_credits": null, "needs_pricing_confirmation": true},
+    "seedance1_5": {"name": "Seedance 1.5 Pro", "t2v": true, "i2v": true, "audio": true, "aspect_9_16": true, "class": "reliable_broll", "cost_credits": 4.8, "needs_pricing_confirmation": false},
+    "kling3_0": {"name": "Kling v3.0", "t2v": false, "i2v": true, "audio": true, "motion_transfer": true, "aspect_9_16": true, "class": "cinematic_motion", "cost_credits": null, "needs_pricing_confirmation": true},
+    "kling3_0_turbo": {"name": "Kling 3.0 Turbo", "t2v": true, "i2v": true, "audio": false, "aspect_9_16": true, "class": "fast_broll", "cost_credits": 7.5, "needs_pricing_confirmation": false},
+    "kling2_6": {"name": "Kling 2.6", "t2v": false, "i2v": true, "audio": true, "aspect_9_16": true, "class": "cinematic_motion", "cost_credits": null, "needs_pricing_confirmation": true},
+    "wan2_7": {"name": "Wan 2.7", "t2v": false, "i2v": true, "audio": true, "aspect_9_16": true, "class": "audio_sync_character", "cost_credits": null, "needs_pricing_confirmation": true},
+    "grok_video": {"name": "Grok Video", "t2v": true, "i2v": true, "audio": true, "aspect_9_16": true, "class": "audio_native_versatile", "cost_credits": null, "needs_pricing_confirmation": true},
+    "gemini_omni": {"name": "Gemini Omni Flash", "t2v": true, "i2v": true, "audio": true, "reference": true, "aspect_9_16": true, "class": "reference_audio", "cost_credits": null, "needs_pricing_confirmation": true},
+    "minimax_hailuo": {"name": "Minimax Hailuo 2.3", "t2v": false, "i2v": true, "audio": false, "aspect_9_16": "unconfirmed", "class": "realistic_people_emotion", "cost_credits": null, "needs_pricing_confirmation": true}
+  },
+  "routing_map": [
+    {
+      "footage_type": "hero_realistic",
+      "preferred_model": "veo3_1",
+      "fallback_model": "cinematic_studio_video_v2",
+      "cost_tier": "premium",
+      "cost_confirmed": false,
+      "quality_reason": "Veo 3.1 is the only confirmed ultra-realistic cinematic model; the scroll-stopping opener earns the best footage. Fallback cinematic_studio_video_v2 has a confirmed 6cr cost.",
+      "when_to_use": "shot 1 / scroll-stopping opener / premium real-world finance shot",
+      "supports": {"t2v": true, "i2v": true, "audio": true}
+    },
+    {
+      "footage_type": "real_world_broll",
+      "preferred_model": "seedance1_5",
+      "fallback_model": "kling3_0_turbo",
+      "cost_tier": "low",
+      "cost_confirmed": true,
+      "quality_reason": "seedance1_5 gives reliable realistic motion for investor/office/newsroom b-roll at a confirmed 4.8cr; kling3_0_turbo (7.5cr) is a solid confirmed fallback.",
+      "when_to_use": "investor-on-phone, finance office, market screens, newsroom movement",
+      "supports": {"t2v": true, "i2v": true, "audio": true}
+    },
+    {
+      "footage_type": "motion_control_reference",
+      "preferred_model": "seedance_2_0",
+      "fallback_model": "kling3_0",
+      "cost_tier": "high",
+      "cost_confirmed": false,
+      "quality_reason": "seedance_2_0 is reference-driven with consistent identity + start/end frame control; kling3_0 adds motion-transfer. Use when a reference image or camera control is available.",
+      "when_to_use": "reference image/video available, controlled camera, consistent recurring subject",
+      "supports": {"t2v": true, "i2v": true, "audio": true}
+    },
+    {
+      "footage_type": "simple_transition_cta",
+      "preferred_model": "veo3_1_lite",
+      "fallback_model": "seedance1_5",
+      "cost_tier": "budget",
+      "cost_confirmed": false,
+      "quality_reason": "Veo 3.1 Lite is the budget realistic batch model for low-stakes shots (end card, transitions); seedance1_5 (4.8cr confirmed) is the safe fallback. Never burn a premium model on a CTA.",
+      "when_to_use": "Maven end card, simple transition, calm background motion",
+      "supports": {"t2v": true, "i2v": true, "audio": true}
+    },
+    {
+      "footage_type": "audio_native",
+      "preferred_model": "grok_video",
+      "fallback_model": "kling3_0",
+      "cost_tier": "mid",
+      "cost_confirmed": false,
+      "quality_reason": "grok_video and kling3_0 support native audio/ambient — use only when scene ambient audio genuinely adds to a news/social beat (the reel's own voiceover usually covers audio, so this is rarely needed).",
+      "when_to_use": "news/social-style beat where scene ambient audio adds value",
+      "supports": {"t2v": true, "i2v": true, "audio": true}
+    }
+  ],
+  "footage_world_to_type": {
+    "finance_newsroom": {"hook": "hero_realistic", "default": "real_world_broll"},
+    "investor_phone_pov": {"hook": "hero_realistic", "default": "real_world_broll"},
+    "banking_financial_system": {"hook": "hero_realistic", "default": "real_world_broll"},
+    "policy_institutional": {"hook": "hero_realistic", "default": "real_world_broll"},
+    "sector_broll": {"hook": "hero_realistic", "default": "real_world_broll"},
+    "market_stress": {"hook": "hero_realistic", "default": "real_world_broll"},
+    "market_rally": {"hook": "hero_realistic", "default": "real_world_broll"}
+  },
+  "purpose_to_type_override": {
+    "cta": "simple_transition_cta",
+    "hook": "hero_realistic"
+  }
+}

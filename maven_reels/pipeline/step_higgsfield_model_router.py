@@ -21,6 +21,7 @@ from pathlib import Path
 from . import config, state
 
 CONFIG_PATH = Path(__file__).resolve().parent / "model_cost_config.json"
+REALISTIC_MAP_PATH = Path(__file__).resolve().parent / "model_router_realistic_map.json"
 
 # shot purpose -> complexity tier
 TIER_OF = {"hook": "hero_motion", "data": "medium_motion", "reason": "medium_motion",
@@ -86,4 +87,66 @@ def run(date: str, *, shot_plan: dict) -> dict:
                  "(editable; conductor refreshes it from models_explore)."),
     }
     state.save_artifact(date, "scene_model_plan", payload)
+    return payload
+
+
+# ---------------------------------------------------------------------------
+# Camera Router — realistic-footage routing (Newsroom rework, Chunk 1).
+# Picks a model per shot by FOOTAGE TYPE (from Location Scout) using only models
+# confirmed present in the live catalog. Honest about unconfirmed pricing.
+# ---------------------------------------------------------------------------
+def _realistic_map() -> dict:
+    return json.loads(REALISTIC_MAP_PATH.read_text(encoding="utf-8"))
+
+
+def _footage_type(purpose: str, world: str, m: dict) -> str:
+    ov = m.get("purpose_to_type_override", {})
+    if purpose in ov:
+        return ov[purpose]
+    world_map = m.get("footage_world_to_type", {}).get(world, {})
+    return world_map.get(purpose, world_map.get("default", "real_world_broll"))
+
+
+def route_realistic(date: str, *, shot_plan: dict, location_scout: dict | None = None) -> dict:
+    """Per-shot realistic-footage model routing → model_routing_plan.json.
+    Reads Location Scout's footage world; falls back to finance_newsroom."""
+    m = _realistic_map()
+    routes = {r["footage_type"]: r for r in m["routing_map"]}
+    world = (location_scout or {}).get("selected_footage_world", "finance_newsroom")
+
+    per_scene, unknown_cost = [], False
+    for s in shot_plan.get("shots", []):
+        ft = _footage_type(s.get("purpose", ""), world, m)
+        r = routes.get(ft, routes["real_world_broll"])
+        model_meta = m["confirmed_models"].get(r["preferred_model"], {})
+        cost = model_meta.get("cost_credits")
+        needs = model_meta.get("needs_pricing_confirmation", True)
+        unknown_cost = unknown_cost or needs
+        per_scene.append({
+            "scene_id": s["shot_id"], "purpose": s.get("purpose"),
+            "footage_type": ft,
+            "selected_model": r["preferred_model"],
+            "fallback_model": r["fallback_model"],
+            "reason": r["quality_reason"],
+            "cost_tier": r["cost_tier"],
+            "estimated_cost": cost,
+            "cost_confirmed": not needs,
+            "needs_pricing_confirmation": needs,
+            "quality_target": 90 if ft == "hero_realistic" else 82,
+        })
+    payload = {
+        "date": date, "available_models_checked": True,
+        "model_catalog_source": m["catalog_source"],
+        "footage_world": world,
+        "unavailable_requested": m.get("unavailable_requested", []),
+        "routing_map": m["routing_map"],
+        "per_scene_model_plan": per_scene,
+        "pricing_note": ("Some routed models have unconfirmed credit cost — marked "
+                         "needs_pricing_confirmation. Preflight with get_cost before any "
+                         "real spend; never fabricate pricing."
+                         if unknown_cost else "All routed model costs confirmed."),
+        "paid_generation_required": True,
+        "requires_ui_confirmation": True,
+    }
+    state.save_artifact(date, "model_routing_plan", payload)
     return payload
