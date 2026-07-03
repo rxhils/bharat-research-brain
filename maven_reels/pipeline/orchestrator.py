@@ -19,7 +19,8 @@ from . import (config, state, step01_research, step02_viral_fit, step03_angle,
                step_renderer_selector, step_higgsfield_creative_director,
                step_higgsfield_shot_planner, step_higgsfield_prompt_builder,
                step_higgsfield_scene_generator, step_higgsfield_model_router,
-               step_reel_creative_brief)
+               step_reel_creative_brief, step_trendscout, step_location_scout,
+               step_prompt_bible)
 
 
 def prepare(date: str, renderer: str | None = None) -> dict:
@@ -32,12 +33,19 @@ def prepare(date: str, renderer: str | None = None) -> dict:
     viral_fit = step02_viral_fit.run(date, research, duplicate_check=dup)
     story = viral_fit["chosen"]["story"]
 
+    # Newsroom: Trendscout studies winning finance-Reel patterns for this story
+    trendscout = step_trendscout.run(date, story=story)
+
     angle = step03_angle.run(date, viral_fit)
     creative_brief = step_reel_creative_brief.run(date, viral_fit=viral_fit,
                                                   angle=angle, research=research)
     hooks = step04_hooks.run(date, angle, viral_fit, creative_brief=creative_brief)
     script = step05_script.run(date, story, hooks)
     edited = step06_retention.run(date, script)
+
+    # Newsroom: Location Scout picks the realistic FOOTAGE WORLD (real newsroom /
+    # investor POV / banking hall / sector b-roll …) — drives realistic prompts.
+    location_scout = step_location_scout.run(date, story=story)
 
     renderer_sel = step_renderer_selector.run(date, requested=renderer)
 
@@ -82,9 +90,16 @@ def prepare(date: str, renderer: str | None = None) -> dict:
                                                  creative_direction=direction)
     # per-scene cheapest-suitable model routing BEFORE prompts are built
     model_plan = step_higgsfield_model_router.run(date, shot_plan=shot_plan)
+    # Camera Router: realistic-footage model per shot (confirmed catalog only)
+    routing_plan = step_higgsfield_model_router.route_realistic(
+        date, shot_plan=shot_plan, location_scout=location_scout)
     shot_prompts = step_higgsfield_prompt_builder.run(date, shot_plan=shot_plan,
                                                       creative_direction=direction,
-                                                      model_plan=model_plan)
+                                                      model_plan=model_plan,
+                                                      location_scout=location_scout,
+                                                      routing_plan=routing_plan)
+    # Prompt Bible: one continuity doc assembling every agent's output
+    prompt_bible = step_prompt_bible.run(date)
     scene_gen = step_higgsfield_scene_generator.plan(date, shot_prompts=shot_prompts,
                                                      renderer=renderer_sel)
 
@@ -109,13 +124,17 @@ def prepare(date: str, renderer: str | None = None) -> dict:
                                  renderer=renderer_sel["renderer"])
 
     rs = state.RunState.load_or_new(date)
-    for k in ("research", "viral_fit", "angle", "creative_brief", "hooks", "script", "retention",
-              "renderer_selection", "creative_direction", "shot_plan",
-              "shot_prompts", "scene_generation", "template", "motion_variation",
+    for k in ("research", "viral_fit", "trendscout", "angle", "creative_brief", "hooks",
+              "script", "retention", "location_scout", "renderer_selection",
+              "creative_direction", "shot_plan", "model_routing_plan", "shot_prompts",
+              "prompt_bible", "scene_generation", "template", "motion_variation",
               "storyboard", "asset_picker", "higgsfield_request", "subtitles",
               "caption", "compliance", "quality"):
         rs.mark(k)
     return {"date": date, "chosen_story": story.get("headline"),
+            "footage_world": location_scout["selected_footage_world"],
+            "trendscout_structure": trendscout.get("recommended_reel_structure"),
+            "prompt_bible_shots": len(prompt_bible.get("shots", [])),
             "viral_fit": viral_fit["chosen"]["viral_fit"],
             "duplicate_risk": dup["duplicate_risk"],
             "hook": hooks["chosen"]["text"],

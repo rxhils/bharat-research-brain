@@ -10,6 +10,8 @@ import { api } from "@/lib/api";
 import type { Job } from "@/lib/types";
 import { Card, EmptyState } from "@/components/ui/Card";
 import { ScoreCard } from "@/components/ui/ScoreCard";
+import { TextLayerPanel } from "@/components/reels/TextLayerPanel";
+import { CreativeIntelPanel } from "@/components/reels/CreativeIntelPanel";
 
 /* ---- small presentational helpers ------------------------------------- */
 function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
@@ -342,6 +344,10 @@ export default function ReelReviewPage() {
             <ScoreCard label="Uniqueness" score={s.visual_uniqueness} threshold={gates.visual_uniqueness ?? 85} sub="vs last 5 reels" />
             <ScoreCard label="Freshness" score={s.freshness} threshold={gates.freshness ?? 95} sub="data currency + sources" />
           </div>
+
+          <CreativeIntelPanel jobId={jobId} />
+
+          <TextLayerPanel jobId={jobId} />
 
           {!passed && hasScores && (
             <Card className="border-warn/30">

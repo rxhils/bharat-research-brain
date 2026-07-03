@@ -17,6 +17,39 @@ NEGATIVE = ("static image, still poster, slideshow, cheap Canva animation, "
             "trading call, cluttered trading screen, overexposed, blurry, "
             "distorted, ugly text, distorted charts, watermark, 3D coins")
 
+# Newsroom rework: realistic finance-MEDIA footage, not abstract AI dashboards.
+REALISTIC_NEGATIVE = ("no readable text, no fake text, no fake numbers, no fake "
+                      "stock tickers, no fake company names, no fake logos, no buy "
+                      "or sell arrows, no trading-signal visuals, no gibberish "
+                      "panels, no cluttered AI dashboard, no floating fake panels, "
+                      "no random candlestick wall, no cartoon bull, no cartoon "
+                      "bear, no meme style, no cheap AI look, no distorted faces, "
+                      "no warped hands, no morphing artifacts, no watermark")
+
+
+def _realistic_prompt(shot: dict, scout: dict, idx: int) -> str:
+    """Realistic finance-media b-roll prompt from the Location Scout footage world."""
+    world = scout.get("selected_footage_world", "finance_newsroom")
+    refs = scout.get("realistic_visual_references") or ["premium finance newsroom"]
+    ref = refs[idx % len(refs)]
+    st = scout.get("shot_style", {})
+    rules = "; ".join(scout.get("scene_environment_rules", []))
+    return (f"Realistic, premium FINANCE-MEDIA b-roll footage for Maven, an Indian "
+            f"stock-market research brand — filmed-documentary look, photoreal, NOT "
+            f"an abstract dashboard.\n"
+            f"Scene purpose: {shot['purpose']}.\n"
+            f"Footage world: {world}. Real environment: {ref}.\n"
+            f"Motion: {shot.get('motion','subtle real camera motion')}. "
+            f"Camera: {st.get('camera', shot.get('camera','controlled glide'))}. "
+            f"Lighting: {st.get('lighting','clean broadcast')}. "
+            f"Mood: {st.get('mood','credible, premium')}. "
+            f"Colour: {st.get('color_palette','navy + teal + white')}. "
+            f"Realism: {st.get('realism_level','photoreal')}.\n"
+            f"Real continuous filmed motion throughout — never a static frame, never "
+            f"a slideshow, never floating fake UI. {rules}. Leave clean negative "
+            f"space for text overlays and subtitles.\n"
+            f"Output: animated MP4 video clip, vertical 9:16, 2-4 seconds.")
+
 _STYLE = ("premium financial newsroom, modern Indian stock market intelligence, "
           "cinematic data visualization, high-end dark finance aesthetic, clean "
           "market dashboard, elegant lighting, crisp depth, sophisticated motion "
@@ -62,25 +95,35 @@ def _motion_prompt(shot: dict, direction: dict, intensity: str | None = None) ->
 
 
 def run(date: str, *, shot_plan: dict, creative_direction: dict,
-        intensity: str | None = None, model_plan: dict | None = None) -> dict:
+        intensity: str | None = None, model_plan: dict | None = None,
+        location_scout: dict | None = None, routing_plan: dict | None = None) -> dict:
+    """When location_scout + routing_plan are supplied (Newsroom live run), build
+    REALISTIC finance-media b-roll prompts and route the model per shot from the
+    Camera Router. Falls back to the legacy abstract prompt when they are absent."""
     direction = creative_direction.get("selected_direction", {})
+    # prefer the realistic Camera Router routing; fall back to the cost router
+    realistic = {p["scene_id"]: p for p in (routing_plan or {}).get("per_scene_model_plan", [])}
     routed = {p["scene_id"]: p for p in (model_plan or {}).get("scene_model_plan", [])}
+    scout = location_scout if (location_scout and location_scout.get("selected_footage_world")) else None
     method = config.HIGGSFIELD_GENERATION_METHOD
     prompts = []
-    for s in shot_plan.get("shots", []):
-        route = routed.get(s["shot_id"], {})
+    for i, s in enumerate(shot_plan.get("shots", [])):
+        route = realistic.get(s["shot_id"]) or routed.get(s["shot_id"], {})
         prompts.append({
             "shot_id": s["shot_id"],
             "purpose": s["purpose"],
-            "prompt": _motion_prompt(s, direction, intensity),
+            "prompt": (_realistic_prompt(s, scout, i) if scout else _motion_prompt(s, direction, intensity)),
             "seed_image_prompt": _seed_prompt(s, direction) if method == "image_seed" else None,
-            "negative_prompt": NEGATIVE,
+            "negative_prompt": REALISTIC_NEGATIVE if scout else NEGATIVE,
             "duration": config.HIGGSFIELD_GEN_CLIP_SECONDS,
             "target_duration_in_reel": s["duration"],
             "aspect_ratio": "9:16",
             "model_recommendation": route.get("selected_model", config.HIGGSFIELD_VIDEO_MODEL),
             "fallback_model": route.get("fallback_model"),
             "estimated_cost": route.get("estimated_cost"),
+            "cost_confirmed": route.get("cost_confirmed"),
+            "needs_pricing_confirmation": route.get("needs_pricing_confirmation"),
+            "footage_type": route.get("footage_type"),
             "scene_complexity": route.get("scene_complexity"),
             "seed_model": config.HIGGSFIELD_SEED_MODEL if method == "image_seed" else None,
             "requires_paid_generation": True,
@@ -88,6 +131,8 @@ def run(date: str, *, shot_plan: dict, creative_direction: dict,
 
     payload = {"date": date, "shot_prompts": prompts, "count": len(prompts),
                "intensity": intensity or "standard",
+               "footage_world": (scout or {}).get("selected_footage_world"),
+               "prompt_style": "realistic_finance_media" if scout else "abstract_premium",
                "method": method,
                "why": ("direct text-to-video (cheapest); the no-text/no-numbers "
                        "compliance rule is enforced by prompt + negative prompt "

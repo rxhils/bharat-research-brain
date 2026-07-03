@@ -339,14 +339,34 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
     subtitles = rstate.load_artifact(job_id, "subtitles")
     hooks = rstate.load_artifact(job_id, "hooks")
     vo = REEL_OUTPUT_ROOT / job_id / "voiceover.mp3"
+
+    # Text Studio: align all on-screen text to the voiceover, build the premium
+    # kinetic plan (hook / synced subtitles / safe areas / animations). Free.
+    from maven_reels.pipeline import step_text_studio, step_text_quality  # noqa: PLC0415
+    text = step_text_studio.run(job_id, shot_plan=shot_plan,
+                                voiceover=_opt("voiceover_v2"),
+                                script_edited=_opt("script_edited"))
+    bus.emit(job_id, "text_studio", "reel.text.aligned",
+             f"Text aligned to voice ({text['alignment']['text_voice_match_score']}% match, "
+             f"{len(text['kinetic']['subtitles'])} subtitle cues).", status="completed")
+
     bus.emit(job_id, "final_reel_assembler", "reel.video.render.started",
              "Assembling final reel (local ffmpeg, zero credits).", status="running")
     meta = step_final_reel_assembler.run(
         job_id, shot_plan=shot_plan, subtitles=subtitles, hooks=hooks,
-        voiceover_mp3=str(vo) if vo.exists() else None)
+        voiceover_mp3=str(vo) if vo.exists() else None,
+        text_plan=text["kinetic"], text_style=text["style"])
     bus.emit(job_id, "final_reel_assembler", "reel.video.render.completed",
              f"reel.mp4 assembled ({meta['duration']}s, {meta['scene_count']} clips).",
              status="completed")
+
+    text_audit = step_text_quality.run(
+        job_id, alignment=text["alignment"], kinetic=text["kinetic"],
+        safe_area=text["safe_area"], animations=text["animations"])
+    bus.emit(job_id, "text_auditor", "reel.text.audited",
+             f"Text quality {text_audit['scores']['overall_text_quality_score']}/100 "
+             f"({text_audit['verdict']}).",
+             status="completed" if text_audit["passed"] else "failed")
 
     from maven_reels.pipeline import capabilities as _caps  # noqa: PLC0415
     audit = step16_quality.run(
@@ -366,6 +386,14 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
     bus.emit(job_id, "reel_auditor", "reel.audit.completed",
              f"Auditor verdict: {audit['verdict']}.", status=audit["verdict"])
 
+    # Editor-in-Chief: holistic executive review (realism / AI-slop / story fit)
+    from maven_reels.pipeline import step_editor_in_chief  # noqa: PLC0415
+    editor = step_editor_in_chief.run(job_id)
+    bus.emit(job_id, "editor_in_chief", "reel.editor.reviewed",
+             f"Editor-in-Chief {editor['overall_score']}/100 "
+             f"({'PASS' if editor['passed'] else 'HOLD'}): {editor['editor_note'][:100]}",
+             status="completed" if editor["passed"] else "failed")
+
     ingest_reels.ingest_run(job_id)
     mark_latest(job_id)
     bus.emit(job_id, "reel_auditor", "reel.review.ready",
@@ -377,7 +405,53 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
             "production_ready": audit["production_ready"],
             "generation_mode": audit["generation_mode"],
             "voiceover_mode": audit.get("voiceover_mode"),
-            "scene_quality": inspection["overall_scene_quality_score"]}
+            "scene_quality": inspection["overall_scene_quality_score"],
+            "text_scores": text_audit["scores"], "text_verdict": text_audit["verdict"],
+            "editor_score": editor["overall_score"], "editor_passed": editor["passed"],
+            "editor_note": editor["editor_note"]}
+
+
+def improve_text(job_id: str, *, action: str = "improve_text",
+                 move_subtitles_up: bool = False) -> dict:
+    """Text-only reassembly (FREE, no Higgsfield). Re-aligns text to the voice,
+    rebuilds the kinetic plan + premium overlays, reassembles the SAME clips +
+    voiceover, and re-audits the text layer. Never regenerates a scene or spends
+    a credit — this is 'Improve Text / Resync / Make Text More Viral'."""
+    from maven_reels.pipeline import step_higgsfield_scene_generator  # noqa: PLC0415
+    if not step_higgsfield_scene_generator.clips_on_disk(job_id):
+        return {"status": "no_clips", "job_id": job_id,
+                "message": "No Higgsfield clips on disk yet — generate the reel first."}
+    bus.emit(job_id, "text_studio", "reel.text.improve.started",
+             f"Reassembling text layer only ({action}) — clips + voiceover unchanged, "
+             "zero credits.", status="running")
+    if move_subtitles_up:
+        _nudge_subtitles_up(job_id)
+    result = assemble_and_audit(job_id)
+    bus.emit(job_id, "text_studio", "reel.text.improve.completed",
+             f"Text layer reassembled — text {result.get('text_verdict')}, "
+             f"reel {result.get('verdict')}.", status="completed")
+    return {"status": "ready", "job_id": job_id, "action": action,
+            "text_scores": result.get("text_scores"),
+            "text_verdict": result.get("text_verdict"),
+            "verdict": result.get("verdict"), "scores": result.get("scores"),
+            "credits_spent": 0,
+            "message": "Text layer improved and reassembled (no Higgsfield credits used)."}
+
+
+def _nudge_subtitles_up(job_id: str, extra_px: int = 130) -> None:
+    """'Move Subtitles Up' — persist a per-job override that the Text Studio
+    reads to raise the subtitle safe_bottom (further from the IG controls).
+    Text-only and reversible (delete the file to reset)."""
+    import json as _json  # noqa: PLC0415
+    from maven_reels.pipeline import config as rcfg  # noqa: PLC0415
+    p = rcfg.run_dir(job_id) / "_text_style_override.json"
+    cur = 0
+    if p.exists():
+        try:
+            cur = int(_json.loads(p.read_text(encoding="utf-8")).get("subtitle_safe_bottom_extra", 0))
+        except Exception:
+            cur = 0
+    p.write_text(_json.dumps({"subtitle_safe_bottom_extra": cur + extra_px}), encoding="utf-8")
 
 
 def approve_generation(job_id: str, shot_ids: list[str] | None = None,
