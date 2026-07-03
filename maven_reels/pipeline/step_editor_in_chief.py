@@ -35,6 +35,7 @@ def run(date: str) -> dict:
     scout = _opt(date, "location_scout")
     reel = _opt(date, "reel_video") or _opt(date, "final_reel") or {}
     viral = _opt(date, "viral_fit") or {}
+    vision = _opt(date, "scene_vision") or {}
 
     renderer = reel.get("renderer", "")
     is_sim = (_opt(date, "scene_generation") or {}).get("generation_mode") == "simulation" \
@@ -77,6 +78,24 @@ def run(date: str) -> dict:
         slop += 15; issues.append(f"static/near-still scenes: {', '.join(r['shot_id'] for r in static)}")
     ai_slop_risk = _clamp(slop)
 
+    # Vision evidence: when a reviewer has actually scored the frames, use it as
+    # the authoritative realism / relevance / fake-text signal.
+    fake_text_seen = False
+    if vision.get("vision_review_available"):
+        vr = [r for r in vision.get("scene_reviews", []) if r.get("realism_score") is not None]
+        if vr:
+            realism = _clamp(round(sum(r["realism_score"] for r in vr) / len(vr)))
+            rel = [r["visual_relevance_score"] for r in vr if r.get("visual_relevance_score") is not None]
+            if rel:
+                visual_relevance = _clamp(round(sum(rel) / len(rel)))
+            fake_text_seen = bool(vision.get("fake_text_scenes"))
+            if fake_text_seen:
+                ai_slop_risk = _clamp(ai_slop_risk + 40)
+                issues.append(f"fake/gibberish text seen in: {', '.join(vision['fake_text_scenes'])}")
+            notes.append("Realism/relevance from a real vision review of the frames.")
+    elif vision.get("vision_review_required"):
+        notes.append("Vision frames extracted but not yet reviewed — realism unverified by a model.")
+
     teaching = _clamp(int(qs.get("teaching_clarity", tq.get("subtitle_readability_score", 85))))
     pacing = _clamp(min(int(qs.get("retention", 90)), int(qs.get("edit_quality", 90))))
     brand = _clamp(int(qs.get("brand", 90)))
@@ -92,6 +111,8 @@ def run(date: str) -> dict:
     overall = _clamp(round(sum(positive) / len(positive) - ai_slop_risk * 0.25))
 
     fails = []
+    if fake_text_seen:
+        fails.append("fake/gibberish text detected in footage")
     if hook_strength < 90:
         fails.append("hook not scroll-stopping enough")
     if ai_slop_risk > 35:
@@ -104,7 +125,8 @@ def run(date: str) -> dict:
         fails.append("footage not premium/realistic enough")
 
     passed = overall >= GATE and not fails
-    reroute = ("location_scout" if visual_relevance < 85 or ai_slop_risk > 35
+    reroute = ("scene_generator" if fake_text_seen
+               else "location_scout" if visual_relevance < 85 or ai_slop_risk > 35
                else "hook_lab" if hook_strength < 90
                else "scriptroom" if teaching < 85 else "")
     editor_note = ("Premium finance-media quality — clears the desk." if passed else

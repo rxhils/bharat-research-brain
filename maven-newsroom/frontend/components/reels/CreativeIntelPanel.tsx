@@ -1,6 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { Brain, MapPin, Camera, BookOpen, Gavel, ChevronDown, TrendingUp } from "lucide-react";
+import { Brain, MapPin, Camera, BookOpen, Gavel, ChevronDown, TrendingUp, Eye } from "lucide-react";
 import { api } from "@/lib/api";
 
 /** Maven Reels Newsroom — creative intelligence for this reel: why this story,
@@ -12,6 +12,7 @@ export function CreativeIntelPanel({ jobId }: { jobId: string }) {
   const [cr, setCr] = useState<any>(null);
   const [pb, setPb] = useState<any>(null);
   const [ei, setEi] = useState<any>(null);
+  const [sv, setSv] = useState<any>(null);
   const [open, setOpen] = useState<string | null>("editor");
 
   const load = useCallback(() => {
@@ -19,11 +20,11 @@ export function CreativeIntelPanel({ jobId }: { jobId: string }) {
       fetch(api.artifactUrl(jobId, f)).then((x) => (x.ok ? x.json() : null)).then(set).catch(() => {});
     g("25_trendscout.json", setTs); g("26_location_scout.json", setLs);
     g("27_model_routing_plan.json", setCr); g("28_prompt_bible.json", setPb);
-    g("29_editor_in_chief.json", setEi);
+    g("29_editor_in_chief.json", setEi); g("30_scene_vision_inspection.json", setSv);
   }, [jobId]);
   useEffect(() => { load(); const id = setInterval(load, 15000); return () => clearInterval(id); }, [load]);
 
-  if (!ts && !ls && !cr && !ei) return null;
+  if (!ts && !ls && !cr && !ei && !sv) return null;
 
   const Section = ({ id, icon, title, chip, chipTone, children }: any) => (
     <div className="border border-line rounded-lg overflow-hidden">
@@ -52,6 +53,23 @@ export function CreativeIntelPanel({ jobId }: { jobId: string }) {
             </div>
             {ei.required_fixes?.length > 0 && <div className="text-amber-400 mt-1">Fixes: {ei.required_fixes.join("; ")}</div>}
             {ei.is_simulation_preview && <div className="text-ink-faint">Simulation preview — realism unverified until real footage.</div>}
+          </Section>
+        )}
+        {sv && (
+          <Section id="vision" icon={<Eye size={14} className="text-teal" />} title="Scene Vision"
+                   chip={sv.vision_review_available ? (sv.overall_passed ? "reviewed · pass" : "reviewed · issues") : (sv.vision_review_required ? "review required" : "no frames")}
+                   chipTone={sv.vision_review_available ? (sv.overall_passed ? "border-ok/40 text-ok bg-ok/10" : "border-amber-500/40 text-amber-400 bg-amber-500/10") : "border-line text-ink-muted"}>
+            <div className="text-ink">{sv.frames_extracted?.length || 0} frames extracted from {sv.scene_reviews?.length || 0} scenes.</div>
+            {!sv.vision_review_available && <div className="text-ink-faint">{sv.note}</div>}
+            {(sv.scene_reviews || []).map((r: any) => (
+              <div key={r.scene_id} className="flex items-center gap-2">
+                <span className="text-ink-faint w-14">{r.scene_id}</span>
+                <span>{r.frames?.length || 0} frames</span>
+                {r.realism_score != null && <span className="chip border-line">realism {r.realism_score}</span>}
+                {r.fake_text_detected === true && <span className="chip border-danger/40 text-danger">fake text</span>}
+                {r.passed === false && <span className="chip border-danger/40 text-danger">regenerate</span>}
+              </div>
+            ))}
           </Section>
         )}
         {ls && (

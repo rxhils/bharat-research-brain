@@ -110,6 +110,11 @@ def check() -> dict:
         "ffmpeg_available": ffmpeg_ok,
         "can_run_full_reel_from_backend": can_run_full,
         "can_generate_real_clips": can_run_real,
+        "real_generation_available": higgsfield_ok,
+        "simulation_available": ffmpeg_ok,
+        "vision_inspection_available": ffmpeg_ok,   # can extract frames for review
+        "vision_review_available": False,           # no backend vision model yet
+        "can_run_production_reel": bool(can_run_real and real_tts),
         "generation_mode": "real" if can_run_real else "simulation",
         "missing": missing,
     }

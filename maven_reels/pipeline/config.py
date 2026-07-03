@@ -62,6 +62,7 @@ ARTIFACTS = {
     "model_routing_plan": "27_model_routing_plan.json",
     "prompt_bible": "28_prompt_bible.json",
     "editor_in_chief": "29_editor_in_chief.json",
+    "scene_vision": "30_scene_vision_inspection.json",
     "final_reel": "17_final_reel.json",
     "cost_guard": "cost_guard.json",
     "visual_uniqueness": "10_visual_uniqueness.json",

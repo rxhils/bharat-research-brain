@@ -335,6 +335,16 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
              f"({'pass' if inspection['passed'] else 'FAIL: ' + ', '.join(inspection['failed_shots'])}).",
              status="completed" if inspection["passed"] else "failed")
 
+    # Scene Vision Inspector: extract real frames so Editor-in-Chief / a vision
+    # reviewer can actually SEE the footage (backend marks review-required).
+    from maven_reels.pipeline import step_scene_vision_inspector  # noqa: PLC0415
+    vision = step_scene_vision_inspector.run(job_id, scene_generation=scene_gen)
+    bus.emit(job_id, "scene_vision_inspector", "reel.scenes.vision",
+             f"Extracted {len(vision['frames_extracted'])} frames from "
+             f"{len(vision['scene_reviews'])} scenes; "
+             f"{'vision review required' if vision['vision_review_required'] else 'no frames'}.",
+             status="completed")
+
     shot_plan = rstate.load_artifact(job_id, "shot_plan")
     subtitles = rstate.load_artifact(job_id, "subtitles")
     hooks = rstate.load_artifact(job_id, "hooks")

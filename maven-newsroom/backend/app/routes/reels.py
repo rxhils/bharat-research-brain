@@ -120,6 +120,27 @@ def reel_approve_generation(job_id: str, body: dict = Body(default={})):
     return reel_studio.approve_generation(job_id, source=body.get("source", "ui_run_reel"))
 
 
+@router.post("/reels/{job_id}/confirm-generation")
+def reel_confirm_generation(job_id: str, body: dict = Body(default={})):
+    """Explicit localhost-UI confirmation gate for REAL Higgsfield generation.
+    Marks higgsfield_generation_approved=true and runs backend generation — real
+    when Higgsfield credentials are configured, else a free simulation. Reports
+    the selected models + cost + pricing confidence + any missing credentials.
+    Never confirmed via Claude Code; the operator clicks this in the UI."""
+    _require_reel_job(job_id)
+    from maven_reels.pipeline import capabilities  # noqa: PLC0415
+    caps = capabilities.check()
+    result = reel_studio.approve_generation(job_id, source="ui_confirm_generation")
+    result["higgsfield_generation_approved"] = True
+    result["real_generation_available"] = caps.get("higgsfield_available", False)
+    result["missing"] = caps.get("missing", [])
+    result["note"] = ("Real Higgsfield generation will run (credentials configured)."
+                      if caps.get("higgsfield_available")
+                      else "No Higgsfield credentials — a free simulation preview will run instead. "
+                           "Log in with the Higgsfield CLI (or add a key) for real clips.")
+    return result
+
+
 @router.post("/reels/{job_id}/regenerate-scene/{shot_id}")
 def reel_regen_scene(job_id: str, shot_id: str):
     """Approve PAID regeneration of ONE failed/weak scene."""
