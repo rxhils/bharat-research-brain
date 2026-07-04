@@ -15,7 +15,11 @@ RENDERERS = ("higgsfield_primary", "remotion_fallback", "simulation_only")
 
 def run(date: str, *, requested: str | None = None,
         higgsfield_available: bool = True) -> dict:
-    default = ("higgsfield_primary" if config.PRIMARY_REEL_RENDERER == "higgsfield"
+    # any higgsfield* value (incl. higgsfield_full_stack) => Higgsfield path;
+    # Remotion is never the default while DISABLE_REMOTION_FOR_REELS is set.
+    default = ("higgsfield_primary"
+               if (str(config.PRIMARY_REEL_RENDERER).startswith("higgsfield")
+                   or config.DISABLE_REMOTION_FOR_REELS)
                else "remotion_fallback")
     renderer = requested if requested in RENDERERS else default
 

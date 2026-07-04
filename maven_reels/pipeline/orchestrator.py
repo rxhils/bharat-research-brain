@@ -100,6 +100,14 @@ def prepare(date: str, renderer: str | None = None) -> dict:
                                                       routing_plan=routing_plan)
     # Prompt Bible: one continuity doc assembling every agent's output
     prompt_bible = step_prompt_bible.run(date)
+    # FULL-STACK production plan: blueprint (footage + designed text/popup/CTA
+    # card scenes) -> capability-matrix routing -> production prompts. Planning
+    # only — generation stays UI-confirmed.
+    from . import (step_higgsfield_blueprint, step_higgsfield_production_router,
+                   step_higgsfield_production_prompts)  # noqa: PLC0415
+    blueprint = step_higgsfield_blueprint.run(date)
+    prod_routing = step_higgsfield_production_router.run(date, blueprint=blueprint)
+    step_higgsfield_production_prompts.run(date, blueprint=blueprint, routing=prod_routing)
     scene_gen = step_higgsfield_scene_generator.plan(date, shot_prompts=shot_prompts,
                                                      renderer=renderer_sel)
 

@@ -63,6 +63,10 @@ ARTIFACTS = {
     "prompt_bible": "28_prompt_bible.json",
     "editor_in_chief": "29_editor_in_chief.json",
     "scene_vision": "30_scene_vision_inspection.json",
+    "higgsfield_blueprint": "31_higgsfield_blueprint.json",
+    "production_routing": "32_production_routing.json",
+    "production_prompts": "33_production_prompts.json",
+    "production_result": "34_production_result.json",
     "final_reel": "17_final_reel.json",
     "cost_guard": "cost_guard.json",
     "visual_uniqueness": "10_visual_uniqueness.json",
@@ -195,7 +199,15 @@ def _envstr(name: str, default: str) -> str:
     return (os.getenv(name) or default).strip().lower()
 
 
-PRIMARY_REEL_RENDERER = _envstr("PRIMARY_REEL_RENDERER", "higgsfield")
+PRIMARY_REEL_RENDERER = _envstr("PRIMARY_REEL_RENDERER", "higgsfield_full_stack")
+# --- Higgsfield full-stack production (text/cards/captions via Higgsfield) ---
+DISABLE_REMOTION_FOR_REELS = _envbool("DISABLE_REMOTION_FOR_REELS", True)
+USE_HIGGSFIELD_TEXT_TOOLS = _envbool("USE_HIGGSFIELD_TEXT_TOOLS", True)
+USE_HIGGSFIELD_EDITOR = _envbool("USE_HIGGSFIELD_EDITOR", True)
+USE_HIGGSFIELD_MONTAGE = _envbool("USE_HIGGSFIELD_MONTAGE", True)
+ALLOW_LOCAL_TEXT_FALLBACK = _envbool("ALLOW_LOCAL_TEXT_FALLBACK", False)
+REQUIRE_CREDIT_CONFIRMATION = _envbool("REQUIRE_CREDIT_CONFIRMATION", True)
+ALLOW_PRODUCTION_FROM_CLAUDE = _envbool("ALLOW_PRODUCTION_FROM_CLAUDE", False)
 ALLOW_REMOTION_FALLBACK = _envbool("ALLOW_REMOTION_FALLBACK", True)
 ALLOW_PAID_HIGGSFIELD_FROM_UI = _envbool("ALLOW_PAID_HIGGSFIELD_FROM_UI", True)
 ALLOW_PAID_HIGGSFIELD_FROM_CLAUDE_CODE = _envbool("ALLOW_PAID_HIGGSFIELD_FROM_CLAUDE_CODE", False)
