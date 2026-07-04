@@ -13,6 +13,8 @@ export function CreativeIntelPanel({ jobId }: { jobId: string }) {
   const [pb, setPb] = useState<any>(null);
   const [ei, setEi] = useState<any>(null);
   const [sv, setSv] = useState<any>(null);
+  const [bp, setBp] = useState<any>(null);
+  const [pr, setPr] = useState<any>(null);
   const [open, setOpen] = useState<string | null>("editor");
 
   const load = useCallback(() => {
@@ -21,6 +23,7 @@ export function CreativeIntelPanel({ jobId }: { jobId: string }) {
     g("25_trendscout.json", setTs); g("26_location_scout.json", setLs);
     g("27_model_routing_plan.json", setCr); g("28_prompt_bible.json", setPb);
     g("29_editor_in_chief.json", setEi); g("30_scene_vision_inspection.json", setSv);
+    g("31_higgsfield_blueprint.json", setBp); g("32_production_routing.json", setPr);
   }, [jobId]);
   useEffect(() => { load(); const id = setInterval(load, 15000); return () => clearInterval(id); }, [load]);
 
@@ -99,6 +102,21 @@ export function CreativeIntelPanel({ jobId }: { jobId: string }) {
             <div className="text-ink">{ts.recommended_reel_structure}</div>
             <div>Visual: {ts.recommended_visual_style}</div>
             <div className="text-ink-faint">Avoid: {(ts.ai_slop_traps || []).slice(0, 4).join("; ")}</div>
+          </Section>
+        )}
+        {bp && (
+          <Section id="blueprint" icon={<BookOpen size={14} className="text-teal" />} title="Production Blueprint"
+                   chip={`${(bp.scenes||[]).length} scenes · full-stack`} chipTone="border-teal/40 text-teal bg-teal/10">
+            <div className="text-ink">{bp.trend_structure || bp.production_mode}</div>
+            {(bp.scenes || []).map((s: any) => (
+              <div key={s.scene_id} className="flex items-center gap-2">
+                <span className="text-ink-faint w-14">{s.scene_id}</span>
+                <span className={`chip ${s.requires_text_fidelity ? "border-teal/40 text-teal" : "border-line"}`}>{s.scene_type}</span>
+                {s.exact_text && <span className="text-ink truncate">“{s.exact_text}”</span>}
+                {pr && <span className="text-ink-faint">→ {(pr.routes||[]).find((r:any)=>r.scene_id===s.scene_id)?.selected_model_or_tool}</span>}
+              </div>
+            ))}
+            {pr && <div className="text-ink-faint mt-1">Captions: {pr.global_tools?.captions} · Excluded: {(pr.excluded||[]).slice(0,3).join(", ")}</div>}
           </Section>
         )}
         {pb && (

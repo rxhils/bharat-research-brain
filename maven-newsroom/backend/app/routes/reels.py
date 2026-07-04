@@ -120,6 +120,25 @@ def reel_approve_generation(job_id: str, body: dict = Body(default={})):
     return reel_studio.approve_generation(job_id, source=body.get("source", "ui_run_reel"))
 
 
+@router.post("/reels/{job_id}/produce")
+def reel_produce(job_id: str, body: dict = Body(default={})):
+    """Full-stack production (footage + Higgsfield-designed card scenes).
+    Real mode requires confirm=true from the localhost UI; otherwise runs the
+    free simulation. Never spends credits without explicit confirmation."""
+    _require_reel_job(job_id)
+    return reel_studio.run_production(
+        job_id, simulate=body.get("simulate"),
+        approved_from_ui=bool(body.get("confirm", False)))
+
+
+@router.post("/reels/{job_id}/metrics")
+def reel_metrics(job_id: str, body: dict = Body(default={})):
+    """Record REAL post-publish metrics (views/likes/saves/shares) for the
+    feedback loop. Never fabricated — operator/conductor supplies them."""
+    _require_reel_job(job_id)
+    return reel_studio.record_reel_metrics(job_id, body)
+
+
 @router.post("/reels/{job_id}/confirm-generation")
 def reel_confirm_generation(job_id: str, body: dict = Body(default={})):
     """Explicit localhost-UI confirmation gate for REAL Higgsfield generation.

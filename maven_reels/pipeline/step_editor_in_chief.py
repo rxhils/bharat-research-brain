@@ -100,10 +100,28 @@ def run(date: str) -> dict:
     pacing = _clamp(min(int(qs.get("retention", 90)), int(qs.get("edit_quality", 90))))
     brand = _clamp(int(qs.get("brand", 90)))
 
+    # typography / popup design (full-stack): judge the designed card scenes.
+    prod = _opt(date, "production_result") or {}
+    cards = prod.get("text_cards", [])
+    if cards:
+        sim_cards = prod.get("mode") != "production"
+        typography = 65 if sim_cards else 88
+        popup_design = 65 if sim_cards else 86
+        if sim_cards:
+            notes.append("Cards are simulation placeholders — typography unjudgeable until real nano_banana cards.")
+        else:
+            notes.append("Typography from real designed cards — verify exact text via vision frames.")
+    else:
+        typography = _clamp(int(tq.get("hook_typography_score", 80)))
+        popup_design = 70
+        if not tq:
+            issues.append("no designed text layer found (neither cards nor kinetic titles)")
+
     scores = {
         "realism": realism, "story_fit": story_fit, "hook_strength": hook_strength,
         "visual_relevance": visual_relevance, "ai_slop_risk": ai_slop_risk,
         "teaching_clarity": teaching, "pacing": pacing, "brand_quality": brand,
+        "typography": typography, "popup_design": popup_design,
         "save_share_potential": save_share,
     }
     # overall = mean of the positive axes, penalised by slop risk
@@ -111,6 +129,8 @@ def run(date: str) -> dict:
     overall = _clamp(round(sum(positive) / len(positive) - ai_slop_risk * 0.25))
 
     fails = []
+    if cards and prod.get("mode") == "production" and typography < 80:
+        fails.append("typography looks generic/ugly — regenerate card scenes")
     if fake_text_seen:
         fails.append("fake/gibberish text detected in footage")
     if hook_strength < 90:

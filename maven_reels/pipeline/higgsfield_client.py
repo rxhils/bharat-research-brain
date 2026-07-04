@@ -367,6 +367,24 @@ def generate_audio_to_file(text: str, dest: Path, *, model: str = "seed_audio",
                           "auth login` (CLI) or set HIGGSFIELD_API_KEY.")
 
 
+def generate_image_to_file(prompt: str, dest: Path, *, model: str = "nano_banana_pro",
+                           aspect_ratio: str = "9:16") -> dict:
+    """Designed still (e.g. nano_banana_pro text card). CLI transport only —
+    no image REST endpoint is confirmed, so REST honestly refuses rather than
+    guessing a URL. SPENDS CREDITS; UI/operator-gated like video."""
+    if transport() == "cli":
+        url = _extract_media_url(_run_cli(
+            ["generate", "create", _cli_model(model), "--prompt", prompt,
+             "--aspect-ratio", aspect_ratio, "--wait", "--json"], timeout=POLL_TIMEOUT))
+        if not url:
+            raise HiggsfieldError("Higgsfield CLI returned no media URL for the image")
+        download(url, dest)
+        return {"media_url": url, "path": str(dest), "bytes": dest.stat().st_size,
+                "mode": "real", "transport": "cli", "model": model}
+    raise HiggsfieldError("Image generation needs the Higgsfield CLI (run `higgsfield "
+                          "auth login`) — no confirmed REST image endpoint.")
+
+
 # ---------------------------------------------------------------------------
 # Simulation (free, ffmpeg) — deterministic per (seed, purpose) so scenes differ
 # ---------------------------------------------------------------------------

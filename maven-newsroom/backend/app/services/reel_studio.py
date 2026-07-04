@@ -360,12 +360,22 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
              f"Text aligned to voice ({text['alignment']['text_voice_match_score']}% match, "
              f"{len(text['kinetic']['subtitles'])} subtitle cues).", status="completed")
 
+    # FULL-STACK gating: when Higgsfield-designed card scenes carry the text
+    # (production_result has text_cards) and local text fallback is disabled,
+    # the assembler must NOT burn local hook/subtitles — stitch/mux only.
+    from maven_reels.pipeline import config as rcfg  # noqa: PLC0415
+    prod = _opt("production_result") or {}
+    cards_carry_text = bool(prod.get("text_cards")) and not rcfg.ALLOW_LOCAL_TEXT_FALLBACK
+    text_plan_used = ({"hook_text": {}, "subtitles": [], "cta": None}
+                      if cards_carry_text else text["kinetic"])
     bus.emit(job_id, "final_reel_assembler", "reel.video.render.started",
-             "Assembling final reel (local ffmpeg, zero credits).", status="running")
+             "Assembling final reel (local ffmpeg, zero credits"
+             + ("; text lives in Higgsfield card scenes" if cards_carry_text else "")
+             + ").", status="running")
     meta = step_final_reel_assembler.run(
         job_id, shot_plan=shot_plan, subtitles=subtitles, hooks=hooks,
         voiceover_mp3=str(vo) if vo.exists() else None,
-        text_plan=text["kinetic"], text_style=text["style"])
+        text_plan=text_plan_used, text_style=text["style"])
     bus.emit(job_id, "final_reel_assembler", "reel.video.render.completed",
              f"reel.mp4 assembled ({meta['duration']}s, {meta['scene_count']} clips).",
              status="completed")
@@ -419,6 +429,40 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
             "text_scores": text_audit["scores"], "text_verdict": text_audit["verdict"],
             "editor_score": editor["overall_score"], "editor_passed": editor["passed"],
             "editor_note": editor["editor_note"]}
+
+
+def run_production(job_id: str, *, simulate: bool | None = None,
+                   approved_from_ui: bool = False) -> dict:
+    """Full-stack production (footage + designed card scenes) then assemble+audit.
+    Real mode is UI-confirmation-gated; simulation is free."""
+    from maven_reels.pipeline import step_higgsfield_production_agent as pa  # noqa: PLC0415
+    bus.emit(job_id, "higgsfield_production", "reel.production.started",
+             f"Full-stack production ({'sim' if simulate else 'auto'}).", status="running")
+    result = pa.run(job_id, simulate=simulate, approved_from_ui=approved_from_ui)
+    if result.get("mode") == "blocked":
+        bus.emit(job_id, "higgsfield_production", "reel.production.blocked",
+                 "Real production needs localhost-UI confirmation.", status="requires_user_action")
+        return {"status": "requires_confirmation", "job_id": job_id, **result}
+    bus.emit(job_id, "higgsfield_production", "reel.production.completed",
+             f"{result['mode']}: {len(result.get('text_cards', []))} card scene(s), "
+             f"{len(result.get('errors', []))} error(s).", status="completed")
+    out = assemble_and_audit(job_id)
+    return {**out, "production": result}
+
+
+def record_reel_metrics(job_id: str, metrics: dict) -> dict:
+    """Phase 18 feedback: store real post-publish metrics; Trendscout can read
+    them as recent-performance context on future runs."""
+    row = {"job_id": job_id, **{k: metrics.get(k) for k in
+           ("views", "likes", "saves", "shares", "comments", "reach", "captured_at")}}
+    with db.connect() as conn:
+        conn.execute("CREATE TABLE IF NOT EXISTS reel_metrics (job_id TEXT PRIMARY KEY, "
+                     "views INT, likes INT, saves INT, shares INT, comments INT, "
+                     "reach INT, captured_at TEXT)")
+    db.upsert("reel_metrics", row, conflict_keys=["job_id"])
+    bus.emit(job_id, "signal_tracker", "reel.metrics.recorded",
+             f"Metrics recorded: {row}", status="completed")
+    return {"status": "recorded", **row}
 
 
 def improve_text(job_id: str, *, action: str = "improve_text",
