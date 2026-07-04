@@ -1,7 +1,8 @@
 // Frontend contract for the /api/ask Research Layer v2 response.
 export type MavenAnswerType =
   | "greeting" | "basic_concept" | "market_mechanism" | "current_market_research"
-  | "stock_comparison" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data";
+  | "stock_comparison" | "single_stock_research" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data"
+  | "deep_research_report" | "comparison_research_report";
 
 export type MavenBlock = { type: "DATA" | "POINT" | "MACRO" | "CONTEXT" | "RISK" | "TAKEAWAY"; title: string; body: string };
 
@@ -47,6 +48,19 @@ export type MavenChecklistItem = {
   confidence?: "verified" | "retrieved" | "analysis_only" | "unavailable"; limitation?: string;
 };
 
+export type MavenReportMetric = {
+  metric: string; label: string; value: string | number | null; unit?: string; period?: string;
+  sourceName?: string; confidence: "verified" | "retrieved" | "cross_verified" | "analysis_only" | "unavailable";
+  freshness: "current" | "latest_available" | "stale" | "historical_requested" | "unverified";
+};
+export type MavenReportSectionKind =
+  | "business_overview" | "price_action" | "latest_results" | "catalysts" | "financial_metrics"
+  | "valuation" | "shareholding" | "peer_comparison" | "sector_macro" | "risks" | "watch_items" | "evidence";
+export type MavenReportSection = {
+  id: string; title: string; kind: MavenReportSectionKind;
+  summary: string; blocks?: MavenBlock[]; charts?: MavenChart[]; metrics?: MavenReportMetric[]; sources?: MavenSource[]; limitations?: string[];
+};
+
 export type MavenAskResponse = {
   type?: MavenAnswerType;
   answerType?: MavenAnswerType;
@@ -63,4 +77,8 @@ export type MavenAskResponse = {
   introSections?: MavenIntroSection[];
   evidence?: MavenEvidenceSummary;
   latestDataChecklist?: MavenChecklistItem[];
+  reportMode?: boolean;
+  reportTitle?: string;
+  reportSummary?: string;
+  reportSections?: MavenReportSection[];
 };

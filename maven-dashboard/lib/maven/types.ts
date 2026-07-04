@@ -5,7 +5,8 @@ export type Intent =
 
 export type AnswerType =
   | "greeting" | "basic_concept" | "market_mechanism" | "current_market_research"
-  | "stock_comparison" | "single_stock_research" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data";
+  | "stock_comparison" | "single_stock_research" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data"
+  | "deep_research_report" | "comparison_research_report";
 
 export type DisclaimerLevel = "none" | "light" | "standard" | "strong";
 export type Confidence = "verified" | "retrieved" | "analysis_only" | "unavailable";
@@ -193,6 +194,18 @@ export type MavenKeyData = { label: string; value: string; change?: string };
 export type MavenSource = { name: string; title?: string; url?: string; date?: string; snippet?: string; type?: string; confidence: Confidence; domain?: string };
 export type MavenIntroSection = { title: string; body: string };
 
+// Deep Research Report Mode: a company/comparison report is a sequence of self-contained
+// sections instead of one short chat card. Every section still runs through the same
+// freshness lock / evidence rules as a normal answer - it is a different shape, not a
+// different trust model.
+export type MavenReportSectionKind =
+  | "business_overview" | "price_action" | "latest_results" | "catalysts" | "financial_metrics"
+  | "valuation" | "shareholding" | "peer_comparison" | "sector_macro" | "risks" | "watch_items" | "evidence";
+export type MavenReportSection = {
+  id: string; title: string; kind: MavenReportSectionKind;
+  summary: string; blocks?: MavenBlock[]; charts?: ChartSpec[]; metrics?: MetricEvidence[]; sources?: MavenSource[]; limitations?: string[];
+};
+
 export type MavenAnswer = {
   type?: AnswerType;
   disclaimerLevel?: DisclaimerLevel;
@@ -203,6 +216,10 @@ export type MavenAnswer = {
   introSections?: MavenIntroSection[];
   evidence?: MavenEvidenceSummary;
   latestDataChecklist?: ChecklistItem[];
+  reportMode?: boolean;
+  reportTitle?: string;
+  reportSummary?: string;
+  reportSections?: MavenReportSection[];
 };
 
 export type ResolvedStock = { companyName: string; symbol: string; exchange: string; sector: string; confidence: "high" | "medium" | "low" };

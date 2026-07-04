@@ -1,11 +1,11 @@
 {
-  "generatedAtMs": 1783079520376,
-  "base": "http://localhost:63249/api/ask",
-  "total": 102,
-  "passed": 102,
+  "generatedAtMs": 1783171399852,
+  "base": "http://localhost:58043/api/ask",
+  "total": 107,
+  "passed": 107,
   "failed": 0,
   "avgScore": 100,
-  "avgLatencyMs": 86,
+  "avgLatencyMs": 68,
   "byCategory": {
     "greeting": {
       "p": 10,
@@ -58,6 +58,10 @@
     "verified_data": {
       "p": 5,
       "n": 5
+    },
+    "report_mode": {
+      "p": 5,
+      "n": 5
     }
   },
   "leakageFailures": [],
@@ -84,7 +88,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 75
+      "latencyMs": 57
     },
     {
       "id": "A2",
@@ -103,7 +107,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 10
     },
     {
       "id": "A3",
@@ -122,7 +126,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 8
     },
     {
       "id": "A4",
@@ -141,7 +145,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 9
     },
     {
       "id": "A5",
@@ -160,7 +164,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 8
     },
     {
       "id": "B1",
@@ -188,7 +192,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 296
+      "latencyMs": 315
     },
     {
       "id": "B2",
@@ -216,7 +220,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 20
+      "latencyMs": 15
     },
     {
       "id": "B3",
@@ -244,7 +248,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 36
+      "latencyMs": 31
     },
     {
       "id": "B4",
@@ -272,7 +276,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 32
+      "latencyMs": 28
     },
     {
       "id": "B5",
@@ -300,7 +304,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 27
     },
     {
       "id": "B6",
@@ -328,7 +332,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 25
+      "latencyMs": 22
     },
     {
       "id": "C1",
@@ -356,7 +360,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 24
     },
     {
       "id": "C2",
@@ -384,7 +388,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 25
     },
     {
       "id": "C3",
@@ -412,7 +416,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 26
+      "latencyMs": 23
     },
     {
       "id": "C4",
@@ -440,7 +444,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 31
+      "latencyMs": 26
     },
     {
       "id": "C5",
@@ -468,7 +472,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 28
+      "latencyMs": 24
     },
     {
       "id": "C6",
@@ -496,7 +500,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 25
     },
     {
       "id": "C7",
@@ -524,7 +528,7 @@
       "limitations": 1,
       "leak": [],
       "freshness": [],
-      "latencyMs": 27
+      "latencyMs": 23
     },
     {
       "id": "C8",
@@ -552,7 +556,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 24
     },
     {
       "id": "C9",
@@ -580,7 +584,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 24
     },
     {
       "id": "C10",
@@ -608,7 +612,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 27
+      "latencyMs": 23
     },
     {
       "id": "D1",
@@ -704,7 +708,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 265
+      "latencyMs": 205
     },
     {
       "id": "D2",
@@ -800,7 +804,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 151
+      "latencyMs": 123
     },
     {
       "id": "D3",
@@ -896,7 +900,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 143
+      "latencyMs": 135
     },
     {
       "id": "D4",
@@ -991,7 +995,7 @@
       "limitations": 7,
       "leak": [],
       "freshness": [],
-      "latencyMs": 494
+      "latencyMs": 302
     },
     {
       "id": "D5",
@@ -1086,7 +1090,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 372
+      "latencyMs": 426
     },
     {
       "id": "D6",
@@ -1182,7 +1186,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 140
+      "latencyMs": 121
     },
     {
       "id": "D7",
@@ -1278,7 +1282,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 149
+      "latencyMs": 115
     },
     {
       "id": "D8",
@@ -1374,7 +1378,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 142
+      "latencyMs": 118
     },
     {
       "id": "D9",
@@ -1470,7 +1474,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 251
+      "latencyMs": 112
     },
     {
       "id": "D10",
@@ -1566,7 +1570,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 138
+      "latencyMs": 111
     },
     {
       "id": "D11",
@@ -1662,7 +1666,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 149
+      "latencyMs": 118
     },
     {
       "id": "D12",
@@ -1758,7 +1762,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 240
+      "latencyMs": 212
     },
     {
       "id": "E1",
@@ -1854,7 +1858,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 22
+      "latencyMs": 20
     },
     {
       "id": "E2",
@@ -1950,7 +1954,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 138
+      "latencyMs": 152
     },
     {
       "id": "E3",
@@ -2048,7 +2052,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 129
+      "latencyMs": 112
     },
     {
       "id": "E4",
@@ -2145,7 +2149,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 136
+      "latencyMs": 116
     },
     {
       "id": "E5",
@@ -2240,7 +2244,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 142
+      "latencyMs": 116
     },
     {
       "id": "F1",
@@ -2336,7 +2340,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 18
     },
     {
       "id": "F2",
@@ -2432,7 +2436,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 32
+      "latencyMs": 17
     },
     {
       "id": "F3",
@@ -2528,7 +2532,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 18
     },
     {
       "id": "F4",
@@ -2624,7 +2628,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 29
+      "latencyMs": 17
     },
     {
       "id": "G1",
@@ -2643,7 +2647,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 6
     },
     {
       "id": "G2",
@@ -2662,7 +2666,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 6
     },
     {
       "id": "G3",
@@ -2681,7 +2685,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 6
     },
     {
       "id": "G4",
@@ -2700,7 +2704,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 6
     },
     {
       "id": "G5",
@@ -2719,7 +2723,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 5
     },
     {
       "id": "H1",
@@ -2738,7 +2742,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 11
+      "latencyMs": 6
     },
     {
       "id": "H2",
@@ -2757,7 +2761,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 15
+      "latencyMs": 6
     },
     {
       "id": "H3",
@@ -2776,7 +2780,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 6
     },
     {
       "id": "H4",
@@ -2795,7 +2799,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 16
+      "latencyMs": 6
     },
     {
       "id": "H5",
@@ -2814,7 +2818,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 19
+      "latencyMs": 9
     },
     {
       "id": "T1",
@@ -2842,7 +2846,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 18
+      "latencyMs": 9
     },
     {
       "id": "T2",
@@ -2870,7 +2874,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 21
+      "latencyMs": 9
     },
     {
       "id": "T3",
@@ -2898,7 +2902,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 23
+      "latencyMs": 9
     },
     {
       "id": "T4",
@@ -2993,7 +2997,7 @@
       "limitations": 1,
       "leak": [],
       "freshness": [],
-      "latencyMs": 36
+      "latencyMs": 14
     },
     {
       "id": "T5",
@@ -3021,7 +3025,7 @@
       "limitations": 2,
       "leak": [],
       "freshness": [],
-      "latencyMs": 51
+      "latencyMs": 23
     },
     {
       "id": "D13",
@@ -3117,7 +3121,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 267
+      "latencyMs": 124
     },
     {
       "id": "D14",
@@ -3213,7 +3217,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 150
+      "latencyMs": 133
     },
     {
       "id": "C11",
@@ -3241,7 +3245,7 @@
       "limitations": 1,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 23
     },
     {
       "id": "B7",
@@ -3269,7 +3273,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 30
+      "latencyMs": 23
     },
     {
       "id": "I1",
@@ -3365,7 +3369,7 @@
       "limitations": 8,
       "leak": [],
       "freshness": [],
-      "latencyMs": 19
+      "latencyMs": 12
     },
     {
       "id": "I2",
@@ -3393,7 +3397,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 33
+      "latencyMs": 24
     },
     {
       "id": "I3",
@@ -3421,7 +3425,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 37
+      "latencyMs": 24
     },
     {
       "id": "J1",
@@ -3440,7 +3444,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 6
     },
     {
       "id": "J2",
@@ -3459,7 +3463,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 11
+      "latencyMs": 6
     },
     {
       "id": "J3",
@@ -3478,7 +3482,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 5
     },
     {
       "id": "J4",
@@ -3497,7 +3501,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 6
     },
     {
       "id": "J5",
@@ -3516,7 +3520,7 @@
       "limitations": 0,
       "leak": [],
       "freshness": [],
-      "latencyMs": 13
+      "latencyMs": 5
     },
     {
       "id": "K1",
@@ -3612,7 +3616,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 155
+      "latencyMs": 123
     },
     {
       "id": "K2",
@@ -3708,7 +3712,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 269
+      "latencyMs": 133
     },
     {
       "id": "K3",
@@ -3804,7 +3808,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 246
+      "latencyMs": 118
     },
     {
       "id": "K4",
@@ -3900,7 +3904,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 212
+      "latencyMs": 144
     },
     {
       "id": "K5",
@@ -3996,7 +4000,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 161
+      "latencyMs": 137
     },
     {
       "id": "K6",
@@ -4092,7 +4096,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 153
+      "latencyMs": 139
     },
     {
       "id": "K7",
@@ -4188,7 +4192,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 137
+      "latencyMs": 119
     },
     {
       "id": "K8",
@@ -4284,7 +4288,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 152
+      "latencyMs": 241
     },
     {
       "id": "K9",
@@ -4380,7 +4384,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 246
+      "latencyMs": 120
     },
     {
       "id": "K10",
@@ -4476,7 +4480,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 262
+      "latencyMs": 136
     },
     {
       "id": "K11",
@@ -4572,7 +4576,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 162
+      "latencyMs": 240
     },
     {
       "id": "K12",
@@ -4668,7 +4672,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 157
+      "latencyMs": 138
     },
     {
       "id": "K13",
@@ -4764,7 +4768,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 132
+      "latencyMs": 114
     },
     {
       "id": "K14",
@@ -4860,7 +4864,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 177
+      "latencyMs": 293
     },
     {
       "id": "K15",
@@ -4956,7 +4960,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 159
+      "latencyMs": 141
     },
     {
       "id": "K16",
@@ -5052,7 +5056,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 15
+      "latencyMs": 10
     },
     {
       "id": "K17",
@@ -5147,7 +5151,7 @@
       "limitations": 7,
       "leak": [],
       "freshness": [],
-      "latencyMs": 17
+      "latencyMs": 11
     },
     {
       "id": "K18",
@@ -5243,7 +5247,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 15
+      "latencyMs": 11
     },
     {
       "id": "K19",
@@ -5339,7 +5343,7 @@
       "limitations": 4,
       "leak": [],
       "freshness": [],
-      "latencyMs": 244
+      "latencyMs": 114
     },
     {
       "id": "K20",
@@ -5435,7 +5439,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 141
+      "latencyMs": 118
     },
     {
       "id": "M1",
@@ -5531,7 +5535,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 144
+      "latencyMs": 116
     },
     {
       "id": "M2",
@@ -5627,7 +5631,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 12
     },
     {
       "id": "M3",
@@ -5723,7 +5727,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 34
+      "latencyMs": 29
     },
     {
       "id": "M4",
@@ -5819,7 +5823,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 15
+      "latencyMs": 11
     },
     {
       "id": "M5",
@@ -5915,7 +5919,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 33
+      "latencyMs": 28
     },
     {
       "id": "M6",
@@ -6011,7 +6015,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 149
+      "latencyMs": 124
     },
     {
       "id": "M7",
@@ -6107,7 +6111,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 11
     },
     {
       "id": "M8",
@@ -6203,7 +6207,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 12
     },
     {
       "id": "N1",
@@ -6299,7 +6303,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 15
+      "latencyMs": 11
     },
     {
       "id": "N2",
@@ -6395,7 +6399,7 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 21
+      "latencyMs": 17
     },
     {
       "id": "N3",
@@ -6490,7 +6494,7 @@
       "limitations": 7,
       "leak": [],
       "freshness": [],
-      "latencyMs": 15
+      "latencyMs": 11
     },
     {
       "id": "N4",
@@ -6586,7 +6590,7 @@
       "limitations": 3,
       "leak": [],
       "freshness": [],
-      "latencyMs": 17
+      "latencyMs": 14
     },
     {
       "id": "N5",
@@ -6682,7 +6686,487 @@
       "limitations": 6,
       "leak": [],
       "freshness": [],
-      "latencyMs": 17
+      "latencyMs": 11
+    },
+    {
+      "id": "O1",
+      "category": "report_mode",
+      "query": "Give me a full research report on Blue Star",
+      "headline": "Blue Star Limited: Deep Research Report",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "deep",
+        "sourceBudget": 22,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "deep_research_report",
+      "refused": true,
+      "blocks": 2,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 13
+    },
+    {
+      "id": "O2",
+      "category": "report_mode",
+      "query": "Analyze Poonawalla Fincorp in detail",
+      "headline": "Poonawalla Fincorp Limited: Deep Research Report",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "deep",
+        "sourceBudget": 22,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "deep_research_report",
+      "refused": true,
+      "blocks": 2,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 11
+    },
+    {
+      "id": "O3",
+      "category": "report_mode",
+      "query": "Deep research on Tata Elxsi",
+      "headline": "Tata Elxsi Limited: Deep Research Report",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "deep",
+        "sourceBudget": 22,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "deep_research_report",
+      "refused": true,
+      "blocks": 2,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 219
+    },
+    {
+      "id": "O4",
+      "category": "report_mode",
+      "query": "Compare HDFC Bank and ICICI Bank deeply",
+      "headline": "Banks: Deep Research Comparison",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "deep",
+        "sourceBudget": 22,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "comparison_research_report",
+      "refused": true,
+      "blocks": 2,
+      "charts": 2,
+      "sources": 2,
+      "limitations": 4,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 23
+    },
+    {
+      "id": "O5",
+      "category": "report_mode",
+      "query": "Full view on Reliance",
+      "headline": "Reliance Industries: Deep Research Report",
+      "evidence": {
+        "sourceCount": 2,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 1,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "deep",
+        "sourceBudget": 22,
+        "coverageStatus": "unavailable"
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "missing",
+          "limitation": "No recent company announcement found from current sources."
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "missing"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "deep_research_report",
+      "refused": true,
+      "blocks": 2,
+      "charts": 3,
+      "sources": 2,
+      "limitations": 6,
+      "leak": [],
+      "freshness": [],
+      "latencyMs": 19
     }
   ]
 }

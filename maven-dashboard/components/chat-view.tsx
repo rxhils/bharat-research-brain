@@ -5,6 +5,7 @@ import { useReducedMotionSafe } from "./motion";
 import { MavenChartRenderer, MechanismStepper } from "./maven-charts";
 import { MavenEvidenceSummaryCard, MavenLatestDataChecklist } from "./maven-evidence";
 import { MavenSourcePanel } from "./maven-source-panel";
+import { MavenReportCard } from "./maven-report";
 import type { MavenAskResponse } from "@/lib/maven-types";
 
 const SUGGESTIONS = [
@@ -20,7 +21,11 @@ const MODELS = [
 const EASE = [0.22, 1, 0.36, 1] as const;
 const FLOW = ["flow", "flow_chart"];
 
-type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean };
+export type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean; looksLikeReport?: boolean };
+// Client-only heuristic mirroring reportModeDetector.ts's trigger words - used ONLY to pick which
+// loading copy to show optimistically while waiting; the server is the sole source of truth for
+// whether a response actually is report mode.
+const REPORT_HINT = /\b(full research report|full report|deep research|deep dive|deeply|in detail|full view|detailed analysis|investment thesis|business breakdown|risks? in detail|complete report|research note|institutional[- ]?style report)\b/i;
 
 function MavenMark({ size = 26, draw = false }: { size?: number; draw?: boolean }) {
   const reduce = useReducedMotionSafe();
@@ -101,8 +106,8 @@ function GlassPanel({ children, className = "", tlSharp = false }: { children: R
   );
 }
 
-export function ChatView() {
-  const [msgs, setMsgs] = useState<Msg[]>([]);
+export function ChatView({ initialMessages, onMessagesChange }: { initialMessages?: Msg[]; onMessagesChange?: (msgs: Msg[]) => void } = {}) {
+  const [msgs, setMsgs] = useState<Msg[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [model, setModel] = useState<string>(MODELS[0].id);
   const idRef = useRef(1);
@@ -111,6 +116,8 @@ export function ChatView() {
 
   // On a new question, bring the latest exchange to the top so the answer reads top-down.
   useEffect(() => { turnRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [msgs.length]);
+  // Let the parent (ChatShell) persist this conversation as it grows.
+  useEffect(() => { onMessagesChange?.(msgs); }, [msgs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function send(q: string) {
     const text = q.trim();
@@ -119,7 +126,7 @@ export function ChatView() {
     const uid = idRef.current++;
     const aid = idRef.current++;
     lastUserId.current = uid;
-    setMsgs((m) => [...m, { id: uid, role: "user", text }, { id: aid, role: "assistant", loading: true }]);
+    setMsgs((m) => [...m, { id: uid, role: "user", text }, { id: aid, role: "assistant", loading: true, looksLikeReport: REPORT_HINT.test(text) }]);
     try {
       const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text, model }) });
       const answer: MavenAskResponse = await r.json();
@@ -143,7 +150,7 @@ export function ChatView() {
             <motion.div key={m.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE }} className="flex gap-3">
               <Avatar thinking={!!m.loading} />
               <div className="min-w-0 flex-1">
-                {m.loading ? <ReasoningLoader /> : m.answer ? <AnswerCard a={m.answer} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
+                {m.loading ? <ReasoningLoader reportMode={m.looksLikeReport} /> : m.answer ? <AnswerCard a={m.answer} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
               </div>
             </motion.div>
           )))}
@@ -208,8 +215,10 @@ function UserBubble({ text }: { text: string }) {
   );
 }
 
-function ReasoningLoader() {
-  const steps = ["Reading market context", "Checking sector drivers", "Building mechanism chain", "Preparing Maven view"];
+function ReasoningLoader({ reportMode }: { reportMode?: boolean } = {}) {
+  const steps = reportMode
+    ? ["Building company evidence pack", "Checking latest filings and sources", "Validating financial metrics", "Preparing Maven research report"]
+    : ["Reading market context", "Checking sector drivers", "Building mechanism chain", "Preparing Maven view"];
   const [i, setI] = useState(0);
   const reduce = useReducedMotionSafe();
   useEffect(() => {
@@ -246,6 +255,9 @@ function blockGlyph(type: string): { dot: string; label: string } {
 }
 
 function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string) => void }) {
+  // Deep Research Report Mode renders as its own premium report card - normal chat-card flow
+  // below is completely unaffected for every other answer type.
+  if (a.reportMode) return <MavenReportCard a={a} onFollow={onFollow} />;
   const reduce = useReducedMotionSafe();
   const answerType = a.answerType ?? a.type ?? "market_mechanism";
   const minimal = answerType === "greeting" || answerType === "out_of_scope";

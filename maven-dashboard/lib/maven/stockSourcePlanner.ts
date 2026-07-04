@@ -5,7 +5,9 @@ import { getExpectedLatestQuarter, getCurrentIndianFiscalYear, formatFiscalPerio
 // query, but does go deep on explicit "full research" requests. Query strings target official
 // domains first (resolved by sourceSearch's ranker) then reputable media.
 
-const DEEP = /\b(full research|in detail|detailed|deep(?:\s+dive)?|analy[sz]e\b.*\b(fully|detail)|risks?\s+in|complete (view|picture|analysis)|everything about|thesis on)\b/i;
+// Kept in sync with reportModeDetector.ts's trigger phrases so a Deep Research Report always
+// gets the deep (22-source) budget, regardless of which detector's wording happened to match.
+const DEEP = /\b(full research|full report|full view|in detail|detailed|deep(?:ly|\s+dive)?|analy[sz]e\b.*\b(fully|detail)|risks?\s+in|complete (view|picture|analysis|report)|everything about|thesis on|investment thesis|business breakdown|research note|institutional[- ]?style report)\b/i;
 const LIGHT = /^\s*(what is|who is|explain|profile of|tell me about)\b/i;
 
 export function stockDepthFor(query: string, answerType: AnswerType): StockDepth {

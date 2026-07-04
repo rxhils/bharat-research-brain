@@ -7,7 +7,7 @@ import { getCurrentIndianFiscalYear, getLatestCompletedIndianFiscalYear, getExpe
 const arrowize = (chain: string) => chain.replace(/->/g, "→");
 const SOURCE_CAP = 20; // enough for a deep (22-budget) research pack without an unbounded payload
 
-function realSources(pack: ContextPack): MavenSource[] {
+export function realSources(pack: ContextPack): MavenSource[] {
   const out: MavenSource[] = pack.sourceSnippets.slice(0, SOURCE_CAP).map((s) => ({
     name: s.source, title: s.title, url: s.url, date: s.date ?? s.published, snippet: s.snippet,
     domain: s.domain ?? s.source,
@@ -22,7 +22,7 @@ function realSources(pack: ContextPack): MavenSource[] {
 
 // Evidence summary is derived from the exact sources array shown to the user, so counts always
 // match what the UI renders. Only produced when there is something to report.
-function buildEvidence(pack: ContextPack, sources: MavenSource[]): MavenEvidenceSummary | undefined {
+export function buildEvidence(pack: ContextPack, sources: MavenSource[]): MavenEvidenceSummary | undefined {
   const sourceCount = sources.length;
   if (sourceCount === 0 && !pack.evidenceHint) return undefined;
   const verifiedSourceCount = sources.filter((s) => s.confidence === "verified").length;

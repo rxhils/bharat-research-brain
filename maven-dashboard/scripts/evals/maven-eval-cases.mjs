@@ -143,6 +143,15 @@ export const CASES = [
   { id: "N3", query: "Latest investor presentation for Tata Motors", category: "verified_data", expectedAnswerType: "single_stock_research", expectedSymbols: ["Tata Motors"], blocks: true, charts: false, sources: true, requireChecklist: true },
   { id: "N4", query: "Compare Tata Elxsi and KPIT Tech in a chart", category: "verified_data", expectedAnswerType: "stock_comparison", blocks: true, charts: false, sources: true, requireChecklist: true },
   { id: "N5", query: "Why is Poonawalla Fincorp moving today?", category: "verified_data", expectedAnswerType: "single_stock_research", expectedSymbols: ["Poonawalla"], blocks: true, charts: false, sources: true, requireChecklist: true },
+
+  // O. Deep Research Report Mode - explicit "full report/deep research/in detail" phrasing must
+  // produce a structured, multi-section report (not a normal short card); freshness lock and
+  // evidence rules still apply to every section (checked via STOCK_TYPES + reportOk in the scorer).
+  { id: "O1", query: "Give me a full research report on Blue Star", category: "report_mode", expectedAnswerType: "deep_research_report", expectedSymbols: ["Blue Star"], minReportSections: 6, blocks: false, charts: false, sources: true },
+  { id: "O2", query: "Analyze Poonawalla Fincorp in detail", category: "report_mode", expectedAnswerType: "deep_research_report", expectedSymbols: ["Poonawalla"], minReportSections: 6, blocks: false, charts: false, sources: true, notes: "no fake catalyst - covered by scanFreshness/no-invent rules" },
+  { id: "O3", query: "Deep research on Tata Elxsi", category: "report_mode", expectedAnswerType: "deep_research_report", expectedSymbols: ["Tata Elxsi"], minReportSections: 6, blocks: false, charts: false, sources: true },
+  { id: "O4", query: "Compare HDFC Bank and ICICI Bank deeply", category: "report_mode", expectedAnswerType: "comparison_research_report", expectedSymbols: ["HDFC", "ICICI"], minReportSections: 6, blocks: false, charts: false, sources: true },
+  { id: "O5", query: "Full view on Reliance", category: "report_mode", expectedAnswerType: "deep_research_report", expectedSymbols: ["Reliance"], minReportSections: 6, blocks: false, charts: false, sources: true },
 ];
 
 export default CASES;

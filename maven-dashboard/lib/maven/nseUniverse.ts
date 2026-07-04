@@ -79,7 +79,10 @@ export function getUniverseStats() {
 }
 
 // strip leading intent phrases and trailing noise so we match the actual company subject
-const LEAD = /^(?:why (?:is|are|did)|what (?:happened to|changed in|is|are|was|were)|what's|whats|explain|tell me about|profile of|analy[sz]e|give me (?:a )?(?:full )?research (?:view )?on|full research on|how is|latest (?:announcement|results?|news) (?:for|of)|shareholding pattern of|share holding pattern of)\s+/i;
+// Deep Research Report Mode adds report-request phrasings ("full research report on X",
+// "deep research on X", "complete/detailed report on X", "investment thesis on X") to the set of
+// leading phrases stripped before matching the company subject.
+const LEAD = /^(?:why (?:is|are|did)|what (?:happened to|changed in|is|are|was|were)|what's|whats|explain|tell me about|profile of|analy[sz]e|give me (?:a )?(?:full )?research(?:\s+report|\s+view)?\s+on|full research on|deep\s+research\s+on|(?:full|complete|detailed)\s+(?:report|analysis)\s+(?:on|of|for)|investment thesis\s+(?:on|for)|business breakdown\s+(?:on|of|for)|research note\s+(?:on|for)|how is|latest (?:announcement|results?|news) (?:for|of)|shareholding pattern of|share holding pattern of)\s+/i;
 // generic fallback for "latest <1-3 word topic> [update/news/data...] for/of <company>" phrasings
 // not covered by the specific LEAD list above (e.g. "latest capex update for Blue Star").
 const LEAD_GENERIC = /^latest\s+\S+(?:\s+\S+){0,3}?\s+(?:for|of)\s+/i;

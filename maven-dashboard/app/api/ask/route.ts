@@ -7,6 +7,8 @@ import { buildContextPack } from "@/lib/maven/contextPackBuilder";
 import { generateAnswer } from "@/lib/maven/mavenAnswerGenerator";
 import { validateAnswer } from "@/lib/maven/answerValidator";
 import { scoreAnswer } from "@/lib/maven/answerQualityScorer";
+import { detectReportMode } from "@/lib/maven/reportModeDetector";
+import { generateDeepResearchReport } from "@/lib/maven/deepResearchReportGenerator";
 import type { MavenAnswer } from "@/lib/maven/types";
 
 export const dynamic = "force-dynamic";
@@ -102,15 +104,27 @@ export async function POST(req: Request) {
   const plan = planResearch(query, intent);
   const pack = await buildContextPack(query, plan, answerType, disclaimerLevel);
 
-  let { fixed } = validateAnswer(await generateAnswer(pack), pack);
-  const first = scoreAnswer(fixed, pack).score;
-  if (first < 80) {
-    try {
-      const v2 = validateAnswer(await generateAnswer(pack, true), pack);
-      if (scoreAnswer(v2.fixed, pack).score > first) fixed = v2.fixed;
-    } catch { /* keep first */ }
+  // Deep Research Report Mode: explicit "full report / deep research / in detail" phrasing on a
+  // company or comparison question. Reuses the exact same context pack (official-source-first
+  // retrieval, freshness lock, evidence system) - only the final shaping differs, and the
+  // deterministic assembler never calls the LLM, so there is no new hallucination surface.
+  const report = detectReportMode(query, answerType);
+
+  let fixed: MavenAnswer;
+  if (report.reportMode) {
+    fixed = validateAnswer(generateDeepResearchReport(pack, report.reportType as "company_deep_research" | "stock_comparison_report"), pack).fixed;
+  } else {
+    const first = validateAnswer(await generateAnswer(pack), pack);
+    fixed = first.fixed;
+    const firstScore = scoreAnswer(fixed, pack).score;
+    if (firstScore < 80) {
+      try {
+        const v2 = validateAnswer(await generateAnswer(pack, true), pack);
+        if (scoreAnswer(v2.fixed, pack).score > firstScore) fixed = v2.fixed;
+      } catch { /* keep first */ }
+    }
   }
-  fixed.type = answerType;
+  fixed.type = report.reportMode ? (report.reportType === "stock_comparison_report" ? "comparison_research_report" : "deep_research_report") : answerType;
   fixed.disclaimerLevel = disclaimerLevel;
   // merge pack limitations with any added by validation (e.g. freshness-lock removals)
   fixed.limitations = [...new Set([...pack.limitations, ...(fixed.limitations ?? [])])];
