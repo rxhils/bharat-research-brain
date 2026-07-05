@@ -32,7 +32,13 @@ def _story_blob(date: str, story: dict | None) -> tuple[dict, str]:
 def run(date: str, *, story: dict | None = None) -> dict:
     story, blob = _story_blob(date, story)
     scores = format_taxonomy.score_formats(blob)
-    fid = format_taxonomy.best_format(blob)
+    # Learning loop tie-breaker: nudge by empirical save/share performance, but
+    # only among formats the story actually supports (score > 0) — relevance first.
+    from .step_learning_loop import load_performance  # noqa: PLC0415
+    fboost = load_performance().get("boosts", {}).get("format", {})
+    weighted = {f: scores[f] * fboost.get(f, 1.0) for f in scores}
+    fid = (max(weighted, key=lambda k: weighted[k])
+           if any(v > 0 for v in scores.values()) else format_taxonomy.best_format(blob))
     fmt = format_taxonomy.get(fid)
     ref = patterns_for(fid)
 

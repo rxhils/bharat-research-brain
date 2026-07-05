@@ -129,7 +129,6 @@ def create_reel_job(source: str = "manual_run") -> dict:
     'awaiting_scene_generation' with the Generate button live in the UI.
     Only when today has no research at all does the job hold at
     'needs_research' (the backend cannot do live web research itself)."""
-    import json as _json
 
     job_id = new_job_id()
     run_dir = REEL_OUTPUT_ROOT / job_id
@@ -267,9 +266,12 @@ def run_generation(job_id: str, *, simulate: bool | None = None,
     point. No Claude Code, no MCP — the backend calls Higgsfield's Cloud API
     directly (or synthesizes a preview) and downloads every clip itself.
     """
-    from maven_reels.pipeline import (capabilities,  # noqa: PLC0415
-                                      orchestrator, state as rstate,
-                                      step_higgsfield_scene_generator)
+    from maven_reels.pipeline import (  # noqa: PLC0415
+        capabilities,
+        orchestrator,
+        step_higgsfield_scene_generator,
+    )
+    from maven_reels.pipeline import state as rstate
     if prep is None:
         prep = orchestrator.prepare(job_id)
     shot_prompts = rstate.load_artifact(job_id, "shot_prompts")
@@ -318,9 +320,12 @@ def run_generation(job_id: str, *, simulate: bool | None = None,
 def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
     """Local + free: inspect clips -> assemble final reel (ffmpeg) -> audit ->
     ingest. Requires Higgsfield clips on disk."""
-    from maven_reels.pipeline import (state as rstate,  # noqa: PLC0415
-                                       step_final_reel_assembler,
-                                       step_scene_quality_inspector, step16_quality)
+    from maven_reels.pipeline import state as rstate  # noqa: PLC0415
+    from maven_reels.pipeline import (
+        step16_quality,
+        step_final_reel_assembler,
+        step_scene_quality_inspector,
+    )
 
     def _opt(key):
         try:
@@ -352,7 +357,7 @@ def assemble_and_audit(job_id: str, prep: dict | None = None) -> dict:
 
     # Text Studio: align all on-screen text to the voiceover, build the premium
     # kinetic plan (hook / synced subtitles / safe areas / animations). Free.
-    from maven_reels.pipeline import step_text_studio, step_text_quality  # noqa: PLC0415
+    from maven_reels.pipeline import step_text_quality, step_text_studio  # noqa: PLC0415
     text = step_text_studio.run(job_id, shot_plan=shot_plan,
                                 voiceover=_opt("voiceover_v2"),
                                 script_edited=_opt("script_edited"))
@@ -460,9 +465,18 @@ def record_reel_metrics(job_id: str, metrics: dict) -> dict:
                      "views INT, likes INT, saves INT, shares INT, comments INT, "
                      "reach INT, captured_at TEXT)")
     db.upsert("reel_metrics", row, conflict_keys=["job_id"])
+    # Learning loop: rebuild empirical performance boosts from ALL real metrics.
+    try:
+        from maven_reels.pipeline import step_learning_loop as ll  # noqa: PLC0415
+        with db.connect() as conn:
+            rows = [dict(r) for r in conn.execute("SELECT * FROM reel_metrics").fetchall()]
+        perf = ll.rebuild(rows)
+    except Exception as exc:  # never let learning break metric recording
+        perf = {"error": str(exc)[:120]}
     bus.emit(job_id, "signal_tracker", "reel.metrics.recorded",
-             f"Metrics recorded: {row}", status="completed")
-    return {"status": "recorded", **row}
+             f"Metrics recorded; learning loop updated ({perf.get('reels_with_metrics', '?')} "
+             f"reels).", status="completed")
+    return {"status": "recorded", "learning": perf, **row}
 
 
 def improve_text(job_id: str, *, action: str = "improve_text",
@@ -497,6 +511,7 @@ def _nudge_subtitles_up(job_id: str, extra_px: int = 130) -> None:
     reads to raise the subtitle safe_bottom (further from the IG controls).
     Text-only and reversible (delete the file to reset)."""
     import json as _json  # noqa: PLC0415
+
     from maven_reels.pipeline import config as rcfg  # noqa: PLC0415
     p = rcfg.run_dir(job_id) / "_text_style_override.json"
     cur = 0
@@ -513,8 +528,7 @@ def approve_generation(job_id: str, shot_ids: list[str] | None = None,
     """UI 'Confirm Generation': the operator confirmed the cost — run generation
     on the backend NOW (real Higgsfield if keys are configured, else a free
     simulation), then assemble + audit. No Claude Code, no MCP."""
-    from maven_reels.pipeline import (capabilities,  # noqa: PLC0415
-                                      step_higgsfield_scene_generator)
+    from maven_reels.pipeline import capabilities, step_higgsfield_scene_generator  # noqa: PLC0415
     step_higgsfield_scene_generator.approve_from_ui(job_id, shot_ids=shot_ids, source=source)
     mode = capabilities.generation_mode()
     bus.emit(job_id, "higgsfield_scene_generator", "reel.generation.approved",
@@ -527,12 +541,13 @@ def improve_animation(job_id: str) -> dict:
     """One-click 'Improve Animation Quality': locally rebuilds direction/plan/
     prompts at HIGH intensity and marks all scenes for regeneration. The paid
     regeneration itself still needs the UI-confirmed approval + conductor."""
-    from maven_reels.pipeline import (state as rstate,  # noqa: PLC0415
-                                       step_higgsfield_creative_director,
-                                       step_higgsfield_prompt_builder,
-                                       step_higgsfield_scene_generator,
-                                       step_higgsfield_shot_planner,
-                                       step_renderer_selector)
+    from maven_reels.pipeline import state as rstate  # noqa: PLC0415
+    from maven_reels.pipeline import (
+        step_higgsfield_creative_director,
+        step_higgsfield_prompt_builder,
+        step_higgsfield_scene_generator,
+        step_higgsfield_shot_planner,
+    )
 
     viral = rstate.load_artifact(job_id, "viral_fit")
     story = viral["chosen"]["story"]
@@ -565,8 +580,9 @@ def improve_animation(job_id: str) -> dict:
 
 def _render_and_audit(job_id: str) -> dict:
     """Local Remotion render + sound + cover + strict audit for a run folder."""
-    from maven_reels.pipeline import (config as rconfig, state as rstate,  # noqa: PLC0415
-                                       step8_motion_graphics, step16_quality)
+    from maven_reels.pipeline import config as rconfig  # noqa: PLC0415
+    from maven_reels.pipeline import state as rstate
+    from maven_reels.pipeline import step8_motion_graphics, step16_quality
 
     bus.emit(job_id, "motion_graphics", "reel.video.render.started",
              "Remotion render started (local, zero credits).", status="running")
@@ -726,10 +742,15 @@ async def _run_improvement(new_id: str, parent_id: str, plan: dict) -> None:
 
 
 def _improvement_steps(new_id: str, parent_id: str, plan: dict) -> None:
-    from maven_reels.pipeline import (state as rstate,  # noqa: PLC0415
-                                       step_asset_picker, step_motion_variation,
-                                       step_template_selector, step_visual_uniqueness,
-                                       step6_motion_storyboard, step11_subtitles)
+    from maven_reels.pipeline import state as rstate  # noqa: PLC0415
+    from maven_reels.pipeline import (
+        step6_motion_storyboard,
+        step11_subtitles,
+        step_asset_picker,
+        step_motion_variation,
+        step_template_selector,
+        step_visual_uniqueness,
+    )
 
     rerun = set(plan["improvement_plan"]["rerun_steps"])
     viral = rstate.load_artifact(new_id, "viral_fit")
