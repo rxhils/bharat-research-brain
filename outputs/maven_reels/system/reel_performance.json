@@ -1,0 +1,44 @@
+{
+  "reels_with_metrics": 2,
+  "dimensions": {
+    "format": {
+      "retail_mistake": {
+        "n": 1,
+        "engagement": 1327.0
+      }
+    },
+    "hook_bucket": {
+      "retail_mistake": {
+        "n": 1,
+        "engagement": 1327.0
+      }
+    },
+    "visual_pack": {
+      "premium_newsroom": {
+        "n": 1,
+        "engagement": 1327.0
+      }
+    },
+    "saveable_lesson": {
+      "earnings_expectations": {
+        "n": 1,
+        "engagement": 1327.0
+      }
+    }
+  },
+  "boosts": {
+    "format": {
+      "retail_mistake": 1.0
+    },
+    "hook_bucket": {
+      "retail_mistake": 1.0
+    },
+    "visual_pack": {
+      "premium_newsroom": 1.0
+    },
+    "saveable_lesson": {
+      "earnings_expectations": 1.0
+    }
+  },
+  "note": "Empirical performance boosts (0.8-1.2) from real saves/shares. Consulted as a tie-breaker only \u2014 never overrides sourced relevance."
+}

@@ -74,6 +74,10 @@ export const api = {
   improveText: (id: string, action = "improve_text", moveUp = false) =>
     post<{ status: string; action?: string; verdict?: string; text_verdict?: string; text_scores?: any; scores?: any; credits_spent?: number; message?: string }>(
       `/api/reels/${id}/improve-text`, { action, move_subtitles_up: moveUp }),
+  // pipeline diagram: free re-plan (no credits) + full-stack produce (gated)
+  replan: (id: string) => post<{ status: string; selected_format?: string; format_hook?: string; format_hook_score?: number; hook_lab_blocked?: boolean; saveable_lesson?: string; script_blocked?: boolean; chosen_variant?: string; visual_pack?: string; watch_through_passed?: boolean; visual_taste_status?: string; verdict?: string }>(`/api/reels/${id}/replan`),
+  produce: (id: string, confirm = false, simulate?: boolean) =>
+    post<{ status: string; mode?: string; verdict?: string; scores?: any; production?: any }>(`/api/reels/${id}/produce`, { confirm, simulate }),
   approveAndPublish: (id: string) => post(`/api/reels/${id}/approve-publish`),
   reject: (id: string, reason?: string) => post(`/api/jobs/${id}/reject`, { reason }),
   publish: (id: string) => post(`/api/jobs/${id}/publish`),

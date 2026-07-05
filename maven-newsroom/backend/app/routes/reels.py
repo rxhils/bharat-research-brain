@@ -96,7 +96,6 @@ def reel_generate(job_id: str, body: dict = Body(default={})):
 def reel_clips(job_id: str):
     """Higgsfield clips + generation status for a job."""
     import json as _json
-    from pathlib import Path as _P
     gen_path = reel_studio.REEL_OUTPUT_ROOT / job_id / "12_higgsfield_generation.json"
     if not gen_path.exists():
         return {"job_id": job_id, "generation_status": "not_planned", "clips": []}
@@ -118,6 +117,23 @@ def reel_approve_generation(job_id: str, body: dict = Body(default={})):
     """Operator's explicit UI trigger for PAID scene generation (all shots)."""
     _require_reel_job(job_id)
     return reel_studio.approve_generation(job_id, source=body.get("source", "ui_run_reel"))
+
+
+@router.post("/reels/{job_id}/replan")
+def reel_replan(job_id: str):
+    """FREE: re-run the deterministic PLAN phase (orchestrator.prepare) — story/
+    format/hook/script/blueprint. No credits, no generation, no publish. Backs the
+    Pipeline diagram's free planning actions."""
+    _require_reel_job(job_id)
+    from maven_reels.pipeline import orchestrator  # noqa: PLC0415
+    try:
+        r = orchestrator.prepare(job_id)
+    except FileNotFoundError as exc:
+        raise HTTPException(409, f"cannot re-plan (missing input): {exc}") from exc
+    keys = ("selected_format", "format_hook", "format_hook_score", "hook_lab_blocked",
+            "saveable_lesson", "script_blocked", "chosen_variant", "visual_pack",
+            "watch_through_passed", "visual_taste_status", "verdict")
+    return {"status": "replanned", "job_id": job_id, **{k: r.get(k) for k in keys}}
 
 
 @router.post("/reels/{job_id}/produce")

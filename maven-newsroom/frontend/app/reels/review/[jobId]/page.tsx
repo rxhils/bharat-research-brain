@@ -12,6 +12,7 @@ import { Card, EmptyState } from "@/components/ui/Card";
 import { ScoreCard } from "@/components/ui/ScoreCard";
 import { TextLayerPanel } from "@/components/reels/TextLayerPanel";
 import { CreativeIntelPanel } from "@/components/reels/CreativeIntelPanel";
+import { PipelineDiagram } from "@/components/reels/PipelineDiagram";
 
 /* ---- small presentational helpers ------------------------------------- */
 function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
@@ -344,6 +345,8 @@ export default function ReelReviewPage() {
             <ScoreCard label="Uniqueness" score={s.visual_uniqueness} threshold={gates.visual_uniqueness ?? 85} sub="vs last 5 reels" />
             <ScoreCard label="Freshness" score={s.freshness} threshold={gates.freshness ?? 95} sub="data currency + sources" />
           </div>
+
+          <PipelineDiagram jobId={jobId} publishStatus={job?.publish_status} hasReel={hasReel} />
 
           <CreativeIntelPanel jobId={jobId} />
 
