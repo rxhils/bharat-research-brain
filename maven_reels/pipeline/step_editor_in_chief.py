@@ -14,6 +14,9 @@ from __future__ import annotations
 from . import state
 
 GATE = 85
+# Chunk 4 harsher gate — applied when the format brain + real reviews are present.
+HARSH = {"overall": 92, "first_frame": 94, "save_reason": 90, "share_reason": 85,
+         "typography": 90, "visual_relevance": 90}
 
 
 def _opt(date: str, key: str) -> dict | None:
@@ -144,7 +147,36 @@ def run(date: str) -> dict:
     if realism < 80:
         fails.append("footage not premium/realistic enough")
 
-    passed = overall >= GATE and not fails
+    # --- Chunk 4: harsher, format-aware executive gate --------------------
+    fdir = _opt(date, "format_director") or {}
+    wt = _opt(date, "watch_through") or {}
+    vt = _opt(date, "visual_taste") or {}
+    harsh_active = bool(fdir)  # only when the format brain drove this reel
+    save_reason_score = _clamp(save_share)
+    share_reason_score = _clamp(int(story_fit))
+    first_frame_score = _clamp(hook_strength)
+    if harsh_active:
+        notes.append("Harsher Editor-in-Chief gate active (format-driven reel).")
+        if wt and not wt.get("passed"):
+            fails.append(f"watch-through gaps: {wt.get('verdict', '')}")
+        if vt.get("review_available") and not vt.get("passed"):
+            fails.append(f"visual taste gate: {vt.get('verdict', '')}")
+        if overall < HARSH["overall"]:
+            fails.append(f"overall {overall} < {HARSH['overall']} (viral bar)")
+        if first_frame_score < HARSH["first_frame"]:
+            fails.append(f"first frame {first_frame_score} < {HARSH['first_frame']}")
+        if save_reason_score < HARSH["save_reason"]:
+            fails.append(f"save-reason {save_reason_score} < {HARSH['save_reason']}")
+        if typography < HARSH["typography"] and prod.get("mode") == "production":
+            fails.append(f"typography {typography} < {HARSH['typography']}")
+        if visual_relevance < HARSH["visual_relevance"]:
+            fails.append(f"visual relevance {visual_relevance} < {HARSH['visual_relevance']}")
+    scores["first_frame"] = first_frame_score
+    scores["save_reason"] = save_reason_score
+    scores["share_reason"] = share_reason_score
+
+    gate_value = HARSH["overall"] if harsh_active else GATE
+    passed = overall >= gate_value and not fails
     reroute = ("scene_generator" if fake_text_seen
                else "location_scout" if visual_relevance < 85 or ai_slop_risk > 35
                else "hook_lab" if hook_strength < 90
