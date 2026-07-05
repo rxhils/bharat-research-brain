@@ -1,0 +1,97 @@
+{
+  "version": "1.0",
+  "authored_at": "2026-07-05",
+  "note": "Proven beat sheets per viral format. Each Reel is chosen from a template, not invented from scratch. Durations are targets (retimed to the real voiceover). scene_types map to the full-stack blueprint: hero_text / realistic_broll / popup_card / key_takeaway / cta.",
+  "templates": {
+    "hidden_mechanism": {
+      "template_id": "A_index_hid_the_story",
+      "title": "The Index Hid The Story",
+      "scene_count": 6,
+      "beats": [
+        {"t": "0.0-1.5", "scene_type": "hero_text", "role": "hook", "text_moment": true},
+        {"t": "1.5-4.0", "scene_type": "realistic_broll", "role": "context", "world": "finance_newsroom"},
+        {"t": "4.0-7.0", "scene_type": "popup_card", "role": "mechanism", "popup": "INDEX vs SECTOR"},
+        {"t": "7.0-11.0", "scene_type": "realistic_broll", "role": "reason", "world": "sector_broll"},
+        {"t": "11.0-16.0", "scene_type": "key_takeaway", "role": "lesson", "text_moment": true},
+        {"t": "16.0-20.0", "scene_type": "cta", "role": "cta", "text_moment": true}
+      ],
+      "camera_style": "slow push-ins, reveal motion", "color_style": "navy + teal, cool",
+      "audio_style": "calm reveal bed", "model_routing_rules": "cards->nano_banana_pro; hero broll->veo3_1; broll->seedance1_5"
+    },
+    "one_sector": {
+      "template_id": "B_one_sector_moved_the_market",
+      "title": "One Sector Moved The Market",
+      "scene_count": 6,
+      "beats": [
+        {"t": "0.0-1.5", "scene_type": "hero_text", "role": "hook", "text_moment": true},
+        {"t": "1.5-5.0", "scene_type": "realistic_broll", "role": "sector", "world": "sector_broll"},
+        {"t": "5.0-8.0", "scene_type": "popup_card", "role": "cause", "popup": "SECTOR -> INDEX"},
+        {"t": "8.0-13.0", "scene_type": "realistic_broll", "role": "reaction", "world": "market_rally"},
+        {"t": "13.0-18.0", "scene_type": "key_takeaway", "role": "lesson", "text_moment": true},
+        {"t": "18.0-22.0", "scene_type": "cta", "role": "cta", "text_moment": true}
+      ],
+      "camera_style": "confident tracking, parallax", "color_style": "sector-tinted + teal",
+      "audio_style": "momentum bed", "model_routing_rules": "cards->nano_banana_pro; sector broll->veo3_1; reaction->seedance1_5"
+    },
+    "policy_signal": {
+      "template_id": "C_one_signal_moved_stocks",
+      "title": "One Signal Moved Stocks",
+      "scene_count": 6,
+      "beats": [
+        {"t": "0.0-1.5", "scene_type": "hero_text", "role": "hook", "text_moment": true},
+        {"t": "1.5-5.0", "scene_type": "realistic_broll", "role": "policy", "world": "policy_institutional"},
+        {"t": "5.0-9.0", "scene_type": "popup_card", "role": "transmission", "popup": "POLICY -> SECTOR"},
+        {"t": "9.0-14.0", "scene_type": "realistic_broll", "role": "affected_sector", "world": "sector_broll"},
+        {"t": "14.0-19.0", "scene_type": "key_takeaway", "role": "lesson", "text_moment": true},
+        {"t": "19.0-23.0", "scene_type": "cta", "role": "cta", "text_moment": true}
+      ],
+      "camera_style": "steady institutional, signal pulse", "color_style": "blue/white/teal",
+      "audio_style": "measured official bed", "model_routing_rules": "cards->nano_banana_pro; policy broll->veo3_1; sector->seedance1_5"
+    },
+    "retail_mistake": {
+      "template_id": "D_most_investors_miss_this",
+      "title": "Most Investors Miss This",
+      "scene_count": 6,
+      "beats": [
+        {"t": "0.0-1.5", "scene_type": "hero_text", "role": "hook", "text_moment": true},
+        {"t": "1.5-5.0", "scene_type": "realistic_broll", "role": "pov", "world": "investor_phone_pov"},
+        {"t": "5.0-8.0", "scene_type": "popup_card", "role": "mistake", "popup": "MISTAKE vs CORRECT"},
+        {"t": "8.0-13.0", "scene_type": "realistic_broll", "role": "correction", "world": "finance_newsroom"},
+        {"t": "13.0-18.0", "scene_type": "key_takeaway", "role": "lesson", "text_moment": true},
+        {"t": "18.0-22.0", "scene_type": "cta", "role": "cta", "text_moment": true}
+      ],
+      "camera_style": "intimate POV, calm correction", "color_style": "warm-to-cool",
+      "audio_style": "friendly protective bed", "model_routing_rules": "cards->nano_banana_pro; pov broll->veo3_1; correction->seedance1_5"
+    },
+    "market_myth": {
+      "template_id": "E_headline_wasnt_the_full_story",
+      "title": "The Headline Wasn't The Full Story",
+      "scene_count": 6,
+      "beats": [
+        {"t": "0.0-1.5", "scene_type": "hero_text", "role": "hook", "text_moment": true},
+        {"t": "1.5-5.0", "scene_type": "realistic_broll", "role": "headline", "world": "finance_newsroom"},
+        {"t": "5.0-8.0", "scene_type": "popup_card", "role": "reality", "popup": "HEADLINE vs REALITY"},
+        {"t": "8.0-13.0", "scene_type": "realistic_broll", "role": "breadth", "world": "market_stress"},
+        {"t": "13.0-18.0", "scene_type": "key_takeaway", "role": "lesson", "text_moment": true},
+        {"t": "18.0-22.0", "scene_type": "cta", "role": "cta", "text_moment": true}
+      ],
+      "camera_style": "reveal / dissolve motion", "color_style": "high-contrast navy",
+      "audio_style": "clarifying bed", "model_routing_rules": "cards->nano_banana_pro; headline broll->veo3_1; breadth->seedance1_5"
+    },
+    "risk_explainer": {
+      "template_id": "F_how_investors_get_trapped",
+      "title": "How Investors Get Trapped",
+      "scene_count": 6,
+      "beats": [
+        {"t": "0.0-1.5", "scene_type": "hero_text", "role": "hook", "text_moment": true},
+        {"t": "1.5-5.0", "scene_type": "realistic_broll", "role": "setup", "world": "market_stress"},
+        {"t": "5.0-8.0", "scene_type": "popup_card", "role": "mechanism", "popup": "HOW THE TRAP WORKS"},
+        {"t": "8.0-13.0", "scene_type": "realistic_broll", "role": "context", "world": "finance_newsroom"},
+        {"t": "13.0-18.0", "scene_type": "key_takeaway", "role": "lesson", "text_moment": true},
+        {"t": "18.0-22.0", "scene_type": "cta", "role": "cta", "text_moment": true}
+      ],
+      "camera_style": "dark cinematic, magnified reveal", "color_style": "low-key + amber warning",
+      "audio_style": "serious protective bed", "model_routing_rules": "cards->nano_banana_pro; setup broll->veo3_1; context->seedance1_5"
+    }
+  }
+}

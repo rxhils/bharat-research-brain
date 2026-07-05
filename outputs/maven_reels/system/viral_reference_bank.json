@@ -1,0 +1,105 @@
+{
+  "version": "1.0",
+  "authored_at": "2026-07-05",
+  "source_note": "Authored pattern library for Indian finance Reels. These are STRUCTURAL patterns extracted from short-form retention research and Indian finance-content conventions — NOT scraped clips and NOT copies of any creator. No per-Reel watch-time/scene-count is claimed as measured; fields are design guidance. do_not_copy is always true.",
+  "platform_signals": {
+    "primary": ["retention / watch-through", "shares / sends", "saves"],
+    "notes": [
+      "First ~3 seconds decide spread; a weak first frame caps reach.",
+      "~half of Instagram video is watched without sound — first frame must explain the topic with strong text.",
+      "Saveable = one clear reusable lesson; shareable = a surprising, sourced truth."
+    ]
+  },
+  "creator_categories": [
+    {"category": "market_news_pages", "pattern": "fast index/sector recap", "maven_edge": "explain the mechanism underneath, not just the number"},
+    {"category": "personal_finance_educators", "pattern": "one lesson per Reel", "maven_edge": "tie the lesson to today's real market event"},
+    {"category": "stock_market_explainers", "pattern": "cause -> effect visuals", "maven_edge": "premium realistic footage, no fake dashboards"},
+    {"category": "scam_risk_explainers", "pattern": "trap reveal", "maven_edge": "SEBI-aligned, factual, sourced"},
+    {"category": "ipo_explainers", "pattern": "what/why/should-you-care", "maven_edge": "educational framing, no 'apply/avoid' advice"},
+    {"category": "business_news_creators", "pattern": "story-first hook", "maven_edge": "one takeaway, calm brand close"}
+  ],
+  "format_patterns": {
+    "hidden_mechanism": {
+      "hook_pattern": "surface-vs-underneath contrast",
+      "first_frame": "dark finance screen splitting to reveal the sector layer beneath",
+      "text_style": "centered editorial title, one underlined key word",
+      "popup_style": "INDEX vs SECTOR clean cards",
+      "voice_style": "calm, revealing",
+      "broll_type": "finance newsroom + investor phone",
+      "why_it_works": "reframes a number everyone saw into a mechanism few understood",
+      "save_reason": "reusable way to read index moves",
+      "share_reason": "'most people only saw the index'",
+      "ai_slop_risk": "abstract dashboards every scene; fake tickers",
+      "do_not_copy": true
+    },
+    "one_sector": {
+      "hook_pattern": "one-sector-moved-the-market",
+      "first_frame": "that sector's real world (grid / servers / factory) with bold hook",
+      "text_style": "centered bold, sector name highlighted",
+      "popup_style": "SECTOR -> INDEX flow card",
+      "voice_style": "confident, concrete",
+      "broll_type": "sector b-roll + market reaction",
+      "why_it_works": "single surprising cause is easy to grasp and retell",
+      "save_reason": "sector weight matters",
+      "share_reason": "simple cause-effect worth sending",
+      "ai_slop_risk": "generic bull/bear, unrelated footage",
+      "do_not_copy": true
+    },
+    "policy_signal": {
+      "hook_pattern": "one-signal-many-effects",
+      "first_frame": "institutional / policy visual, signal pulse",
+      "text_style": "centered, official-but-clean",
+      "popup_style": "POLICY -> SECTOR card",
+      "voice_style": "measured, authoritative",
+      "broll_type": "institutional office + affected sector",
+      "why_it_works": "explains widely-seen news few understood",
+      "save_reason": "connects policy to sectors",
+      "share_reason": "clarifies the day's big headline",
+      "ai_slop_risk": "fake logos, fake document text",
+      "do_not_copy": true
+    },
+    "retail_mistake": {
+      "hook_pattern": "most-investors-read-this-wrong",
+      "first_frame": "investor phone POV, the misread on screen (blurred)",
+      "text_style": "centered, mistake highlighted in warning tone",
+      "popup_style": "MISTAKE vs CORRECT card",
+      "voice_style": "friendly, protective",
+      "broll_type": "investor POV + calm correction visual",
+      "why_it_works": "protective lessons get saved",
+      "save_reason": "avoid a costly misread",
+      "share_reason": "'don't make this mistake'",
+      "ai_slop_risk": "preachy tone, advice framing",
+      "do_not_copy": true
+    },
+    "market_myth": {
+      "hook_pattern": "what-looked-true-wasnt",
+      "first_frame": "green day headline that dissolves to reveal weak breadth",
+      "text_style": "centered contrarian title",
+      "popup_style": "HEADLINE vs REALITY card",
+      "voice_style": "clarifying, a little contrarian",
+      "broll_type": "newsroom + breadth visual",
+      "why_it_works": "corrects a belief; myth-busts get saved",
+      "save_reason": "remember the corrected truth",
+      "share_reason": "'wait, really?'",
+      "ai_slop_risk": "clickbait doom, fake crash imagery",
+      "do_not_copy": true
+    },
+    "risk_explainer": {
+      "hook_pattern": "heres-the-trap",
+      "first_frame": "dark cinematic reveal of the trap mechanism",
+      "text_style": "centered, calm-serious, key risk underlined",
+      "popup_style": "HOW THE TRAP WORKS card",
+      "voice_style": "serious, protective, factual",
+      "broll_type": "cinematic investigation + real risk context",
+      "why_it_works": "risk warnings are highly saved and shared",
+      "save_reason": "spot the trap next time",
+      "share_reason": "protect friends and family",
+      "ai_slop_risk": "sensationalism, naming without a source",
+      "do_not_copy": true
+    }
+  },
+  "reject_hooks": [
+    "Big update for investors", "Watch before tomorrow", "This stock will explode",
+    "Market crash coming", "Here's what investors missed today"
+  ]
+}
