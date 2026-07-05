@@ -51,7 +51,10 @@ export function buildEvidence(pack: ContextPack, sources: MavenSource[]): MavenE
     }
   }
 
-  return { sourceCount, verifiedSourceCount, retrievedSourceCount, officialSourceCount, analysisOnlySourceCount, unavailableSourceCount, evidenceDepth, sourceBudget, coverageStatus, latestPeriodFound: latest ? formatFiscalPeriod(latest) : undefined, latestAnnualPeriodFound: pack.latestAnnualPeriodFound };
+  const metricEvidenceCount = pack.metricEvidence?.filter((m) => m.allowedVisible).length;
+  const blockedMetricCount = pack.metricEvidence?.filter((m) => !m.allowedVisible).length;
+
+  return { sourceCount, verifiedSourceCount, retrievedSourceCount, officialSourceCount, analysisOnlySourceCount, unavailableSourceCount, evidenceDepth, sourceBudget, coverageStatus, latestPeriodFound: latest ? formatFiscalPeriod(latest) : undefined, latestAnnualPeriodFound: pack.latestAnnualPeriodFound, metricEvidenceCount, blockedMetricCount };
 }
 
 function keyDataFrom(pack: ContextPack): MavenKeyData[] {

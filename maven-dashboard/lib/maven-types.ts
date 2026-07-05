@@ -39,6 +39,8 @@ export type MavenEvidenceSummary = {
   coverageStatus?: MavenCoverageStatus;
   latestPeriodFound?: string;
   latestAnnualPeriodFound?: string;
+  metricEvidenceCount?: number;
+  blockedMetricCount?: number;
 };
 
 export type MavenChecklistStatus = "found" | "missing" | "not_required";

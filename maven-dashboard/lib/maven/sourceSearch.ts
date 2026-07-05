@@ -1,12 +1,17 @@
 import type { SourceResult, Confidence, ExtractedPage, DocumentType, SourceTier } from "./types";
 import { searchSearxngMany, searxngConfigured } from "./freeSourceSearch";
+import { searchGoogleNewsMany } from "./googleNewsSearch";
 import { extractPage } from "./pageExtractor";
 import { scoreSource } from "./sourceQualityScorer";
 
 // Source retrieval pipeline (India-first):
-//   official-domain queries -> SearXNG (free) -> paid provider fallback -> rank -> extract -> dedupe.
-// Paid providers (Tavily/Serper/Exa/Brave) are only used when the free layer didn't find enough,
-// and are kept intact so nothing regresses. No provider/scraper error is ever surfaced to the user.
+//   official-domain queries -> SearXNG + Google News RSS (both free, run unconditionally) ->
+//   paid provider fallback -> rank -> extract -> dedupe.
+// SearXNG needs a reachable instance (env-configured); Google News RSS needs neither a key nor a
+// configured host, so it is the one free layer that reliably returns real sources even in an
+// environment with no search provider set up at all. Paid providers (Tavily/Serper/Exa/Brave)
+// are only used when the free layers didn't find enough, and are kept intact so nothing
+// regresses. No provider/scraper error is ever surfaced to the user.
 
 type Provider = "tavily" | "serper" | "exa" | "brave" | null;
 
@@ -103,6 +108,13 @@ function classify(url: string): { rank: number; confidence: Confidence; sourceQu
   return { rank, confidence, ...q };
 }
 
+// A source's own `url` is sometimes a redirector (e.g. Google News' news.google.com links) rather
+// than the true publisher domain. When the provider supplied `domainHint` (the real domain, read
+// from feed metadata - never guessed), classification and the displayed domain use that instead,
+// so a Reuters/Economic Times article surfaced via Google News still ranks as reputable media
+// instead of falling through to "generic". The clickable `url` itself is never altered.
+function classifyKeyFor(s: SourceResult): string { return s.domainHint || s.url; }
+
 function normUrl(u: string): string {
   try { const x = new URL(u); return (x.hostname.replace(/^www\./, "") + x.pathname.replace(/\/$/, "")).toLowerCase(); } catch { return u.toLowerCase(); }
 }
@@ -118,13 +130,14 @@ function rankAndDedupe(list: SourceResult[]): SourceResult[] {
     const dt = hostOf(s.url) + "|" + normTitle(s.title);
     if (byUrl.has(nu) || byDomTitle.has(dt)) continue;
     byUrl.add(nu); byDomTitle.add(dt);
-    const c = classify(s.url);
+    const key = classifyKeyFor(s);
+    const c = classify(key);
     out.push({
-      ...s, domain: hostOf(s.url), sourceRank: c.rank,
+      ...s, domain: hostOf(key), sourceRank: c.rank,
       confidence: c.confidence, freshness: s.freshness ?? "latest_available",
       date: s.date ?? s.published,
       sourceQualityScore: c.sourceQualityScore, sourceTier: c.sourceTier, official: c.official,
-      docType: docTypeOf(s.url, s.title),
+      docType: docTypeOf(key, s.title),
     });
   }
   out.sort((a, b) => (a.sourceRank ?? 9) - (b.sourceRank ?? 9));
@@ -155,16 +168,27 @@ export async function searchSources(queries: string[], opts?: { budget?: number 
   const qCap = budget >= 18 ? 8 : budget >= 10 ? 6 : 4;
   const qs = queries.slice(0, qCap);
 
-  // 1 + 2: official-domain queries and plain queries through the free SearXNG layer.
-  const free = searxngConfigured() ? await searchSearxngMany([...officialQueries(qs), ...qs].slice(0, qCap * 2)) : [];
-  let ranked = rankAndDedupe(free);
+  // 1 + 2: official-domain queries and plain queries through the free SearXNG layer, plus the
+  // free Google News RSS layer (news-style queries only - "site:" filters aren't meaningful to
+  // Google News search). Both run unconditionally and concurrently; Google News needs no config,
+  // so it is what keeps source counts real when SearXNG has no reachable instance.
+  // newsQueries draws from the FULL incoming list (not `qs`) and is capped independently: since
+  // official-domain queries are ordered first, slicing the combined list down to qCap before
+  // filtering left the news layer with only 1-2 plain queries once official queries ate most of
+  // the cap - starving exactly the deep-research tier this layer most needs to fill.
+  const newsQueries = queries.filter((q) => !/^site:/i.test(q)).slice(0, qCap);
+  const [free, news] = await Promise.all([
+    searxngConfigured() ? searchSearxngMany([...officialQueries(qs), ...qs].slice(0, qCap * 2)) : Promise.resolve<SourceResult[]>([]),
+    searchGoogleNewsMany(newsQueries, qCap),
+  ]);
+  let ranked = rankAndDedupe([...free, ...news]);
 
   // 3: only reach for a paid provider when the free layer didn't find enough official/quality sources.
   const enoughCount = budget >= 18 ? 6 : budget >= 10 ? 4 : 3;
   const enough = ranked.filter((r) => (r.sourceRank ?? 9) <= 3).length >= 2 || ranked.length >= enoughCount;
   if (!enough && pickProvider()) {
     const paid = await runPaid(qs);
-    ranked = rankAndDedupe([...free, ...paid]);
+    ranked = rankAndDedupe([...free, ...news, ...paid]);
   }
 
   // 7: keep up to the budget, enrich the top slots with extracted page text (bounded, silent on failure).

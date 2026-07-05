@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "eval:maven": "node scripts/run-maven-evals.mjs",
-    "eval:maven:prod": "MAVEN_EVAL_URL=https://www.trymaven.in/api/ask node scripts/run-maven-evals.mjs"
+    "eval:maven:prod": "MAVEN_EVAL_URL=https://www.trymaven.in/api/ask node scripts/run-maven-evals.mjs",
+    "eval:sources": "node scripts/test-source-depth.mjs",
+    "eval:sources:prod": "MAVEN_EVAL_URL=https://trymaven.in/api/ask node scripts/test-source-depth.mjs"
   },
   "dependencies": {
     "@types/pg": "^8.20.0",

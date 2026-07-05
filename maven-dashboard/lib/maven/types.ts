@@ -68,10 +68,11 @@ export type SourceTier = "exchange" | "investor_relations" | "filing" | "regulat
 
 export type SourceResult = {
   title: string; url: string; snippet: string; source: string; published?: string;
-  provider?: string;                 // "searxng" | "tavily" | "serper" | ...
+  provider?: string;                 // "searxng" | "tavily" | "serper" | ... | "google_news_rss"
   confidence?: Confidence;           // verified (official) | retrieved (search/news) | analysis_only
   freshness?: Freshness;
   domain?: string;
+  domainHint?: string;                // true publisher domain when `url` is a redirector (e.g. Google News), used for tier classification
   date?: string;
   sourceRank?: number;               // 1 = NSE/BSE/RBI/SEBI, higher = less official
   sourceQualityScore?: number;       // 0-100
@@ -130,6 +131,8 @@ export type MavenEvidenceSummary = {
   coverageStatus?: CoverageStatus;
   latestPeriodFound?: string; // e.g. "Q4FY26" - latest fiscal period seen in retrieved sources
   latestAnnualPeriodFound?: string; // e.g. "FY26" - latest annual (no-quarter) period seen
+  metricEvidenceCount?: number; // metricEvidence entries that passed the freshness lock (allowedVisible)
+  blockedMetricCount?: number;  // metricEvidence entries blocked (stale/unsourced/unverified)
 };
 
 // Freshness lock: every company financial metric must be evidence-backed, period-labeled and
