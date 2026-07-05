@@ -52,17 +52,42 @@ def run(date: str) -> dict:
     trend = _opt(date, "trendscout") or {}
     direction = (_opt(date, "creative_direction") or {}).get("selected_direction", {})
 
-    world = scout.get("selected_footage_world", "finance_newsroom")
+    # FORMAT BRAIN (chunks 1-4): when present, the winning variant + format hooks
+    # + saveable script + popup plan DRIVE the blueprint. Fall back to the legacy
+    # hook/script path when the format brain hasn't run.
+    hooks_fmt = _opt(date, "hooks_format") or {}
+    script_sv = _opt(date, "script_saveable") or {}
+    popup_plan = _opt(date, "popup_plan") or {}
+    vpack = _opt(date, "visual_pack") or {}
+    variants = _opt(date, "reel_variants") or {}
+    winner = next((v for v in variants.get("variants", [])
+                   if v.get("variant") == variants.get("chosen_variant")), {})
+    driver = "format_brain" if (hooks_fmt or script_sv) else "legacy"
+
+    world = (vpack.get("footage_world") or scout.get("selected_footage_world")
+             or "finance_newsroom")
     segs = {s.get("label"): s.get("narration", "") for s in script.get("segments", [])}
-    hook_text = _short(hooks.get("on_screen_hook") or hooks.get("selected_hook")
+    sv_lines = script_sv.get("lines", {}) if script_sv else {}
+
+    hook_text = _short(hooks_fmt.get("on_screen_hook") or hooks_fmt.get("selected_hook")
+                       or hooks.get("on_screen_hook") or hooks.get("selected_hook")
                        or segs.get("hook", "MARKET MOVED TODAY"))
-    takeaway = _short(segs.get("understand") or segs.get("why")
-                      or "UNDERSTAND WHY IT MOVED")
-    popup = _short(segs.get("what") or story.get("headline", "WHAT HAPPENED"), 6)
-    vo_for = {"hook": segs.get("hook", ""), "context": segs.get("what", ""),
-              "data": segs.get("what", ""), "reason": segs.get("why", ""),
-              "impact": segs.get("understand", ""), "cta": segs.get("cta", "")}
-    text_for = {"hook": hook_text, "data": popup, "impact": takeaway,
+    takeaway = _short(script_sv.get("saveable_lesson") or segs.get("understand")
+                      or segs.get("why") or "UNDERSTAND WHY IT MOVED")
+    popup = _short(sv_lines.get("fact") or segs.get("what")
+                   or story.get("headline", "WHAT HAPPENED"), 6)
+    # prefer the popup planner's designed cause->effect label for the popup card
+    popup_card = next((c for c in popup_plan.get("cards", [])
+                       if c.get("scene_role") == "mechanism"), {})
+    popup_text = popup_card.get("text") or popup
+
+    vo_for = {"hook": sv_lines.get("hook") or segs.get("hook", ""),
+              "context": sv_lines.get("fact") or segs.get("what", ""),
+              "data": sv_lines.get("fact") or segs.get("what", ""),
+              "reason": sv_lines.get("mechanism") or segs.get("why", ""),
+              "impact": sv_lines.get("lesson") or segs.get("understand", ""),
+              "cta": sv_lines.get("cta") or segs.get("cta", "")}
+    text_for = {"hook": hook_text, "data": popup_text, "impact": takeaway,
                 "cta": "UNDERSTAND THE MARKET WITH MAVEN"}
 
     scenes = []
@@ -74,7 +99,7 @@ def run(date: str) -> dict:
             "purpose": purpose,
             "voiceover_line": vo_for.get(purpose, ""),
             "exact_text": text_for.get(purpose, "") if needs_text else "",
-            "popup_text": popup if stype == "popup_card" else "",
+            "popup_text": popup_text if stype == "popup_card" else "",
             "visual_concept": (f"designed {stype} card, centered premium typography"
                                if needs_text else
                                f"realistic {world} footage — {purpose}"),
@@ -94,10 +119,15 @@ def run(date: str) -> dict:
         "target_duration": round(sum(s["duration"] for s in scenes), 1),
         "aspect_ratio": "9:16", "resolution": "1080x1920",
         "production_mode": "higgsfield_full_stack",
+        "text_driver": driver,
+        "selected_format": (_opt(date, "story_format") or {}).get("selected_format"),
+        "chosen_variant": variants.get("chosen_variant"),
+        "visual_pack": vpack.get("selected_pack"),
+        "saveable_lesson": script_sv.get("saveable_lesson"),
         "story": {"headline": story.get("headline"), "sources": story.get("sources")
                   or story.get("source_urls")},
-        "script": script.get("narration", ""),
-        "creative_style_package": direction.get("name", ""),
+        "script": script_sv.get("narration") or script.get("narration", ""),
+        "creative_style_package": vpack.get("selected_pack") or direction.get("name", ""),
         "trend_structure": trend.get("recommended_reel_structure", ""),
         "scenes": scenes,
         "caption_plan": {"engine": "nano_banana_pro cards (no plain running subtitles)",
