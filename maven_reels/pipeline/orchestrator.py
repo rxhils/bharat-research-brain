@@ -20,7 +20,13 @@ from . import (config, state, step01_research, step02_viral_fit, step03_angle,
                step_higgsfield_shot_planner, step_higgsfield_prompt_builder,
                step_higgsfield_scene_generator, step_higgsfield_model_router,
                step_reel_creative_brief, step_trendscout, step_location_scout,
-               step_prompt_bible)
+               step_prompt_bible,
+               # Format brain (Newsroom rework chunks 1-4)
+               step_story_format_selector, step_format_director,
+               step_variant_blueprint_lab, step_hook_lab_format,
+               step_scriptroom_saveable, step_visual_pack_scout,
+               step_popup_planner, step_watch_through_editor,
+               step_visual_taste_reviewer)
 
 
 def prepare(date: str, renderer: str | None = None) -> dict:
@@ -46,6 +52,19 @@ def prepare(date: str, renderer: str | None = None) -> dict:
     # Newsroom: Location Scout picks the realistic FOOTAGE WORLD (real newsroom /
     # investor POV / banking hall / sector b-roll …) — drives realistic prompts.
     location_scout = step_location_scout.run(date, story=story)
+
+    # === FORMAT BRAIN (Newsroom rework chunks 1-4) — free, deterministic ===
+    # Ask "can this become a saveable/shareable Reel?" BEFORE production:
+    # story+format -> format director -> 3-variant lab -> format hooks ->
+    # saveable script -> visual pack -> popups -> watch-through review.
+    story_format = step_story_format_selector.run(date, story=story)
+    format_director = step_format_director.run(date)
+    reel_variants = step_variant_blueprint_lab.run(date)
+    hooks_format = step_hook_lab_format.run(date)
+    script_saveable = step_scriptroom_saveable.run(date)
+    visual_pack = step_visual_pack_scout.run(date)
+    step_popup_planner.run(date)
+    watch_through = step_watch_through_editor.run(date)
 
     renderer_sel = step_renderer_selector.run(date, requested=renderer)
 
@@ -117,6 +136,10 @@ def prepare(date: str, renderer: str | None = None) -> dict:
         from . import step_scene_quality_inspector
         scene_quality = step_scene_quality_inspector.run(date, scene_generation=scene_gen)
 
+    # Visual Taste Reviewer: honest frame gate (review_required until a vision
+    # review exists — never fakes a verdict).
+    visual_taste = step_visual_taste_reviewer.run(date)
+
     subtitles = step11_subtitles.run(date, edited)
     caption = step14_caption.run(date, story, hooks, angle)
     compliance = step15_compliance.run(date, hooks=hooks, angle=angle,
@@ -137,10 +160,26 @@ def prepare(date: str, renderer: str | None = None) -> dict:
               "creative_direction", "shot_plan", "model_routing_plan", "shot_prompts",
               "prompt_bible", "scene_generation", "template", "motion_variation",
               "storyboard", "asset_picker", "higgsfield_request", "subtitles",
-              "caption", "compliance", "quality"):
+              "caption", "compliance", "quality",
+              # format brain
+              "story_format", "format_director", "reel_variants", "hooks_format",
+              "script_saveable", "visual_pack", "popup_plan", "watch_through",
+              "visual_taste"):
         rs.mark(k)
     return {"date": date, "chosen_story": story.get("headline"),
             "footage_world": location_scout["selected_footage_world"],
+            # format brain surface
+            "selected_format": story_format["selected_format"],
+            "format_hook": hooks_format["selected_hook"],
+            "format_hook_score": hooks_format["hook_score"],
+            "hook_lab_blocked": hooks_format["hook_lab_blocked"],
+            "saveable_lesson": script_saveable.get("saveable_lesson"),
+            "script_blocked": script_saveable["script_blocked"],
+            "chosen_variant": reel_variants["chosen_variant"],
+            "visual_pack": visual_pack["selected_pack"],
+            "watch_through_passed": watch_through["passed"],
+            "visual_taste_status": ("review_required" if visual_taste.get("review_required")
+                                    else "passed" if visual_taste.get("passed") else "failed"),
             "trendscout_structure": trendscout.get("recommended_reel_structure"),
             "prompt_bible_shots": len(prompt_bible.get("shots", [])),
             "viral_fit": viral_fit["chosen"]["viral_fit"],
