@@ -90,6 +90,7 @@ export type ExtractedPage = {
 export type ResearchPlan = {
   intent: Intent; topic: string; requiresLiveData: boolean;
   requiredData: string[]; searchQueries: string[]; requiredCharts: string[];
+  marketDate?: import("./marketDateResolver").MarketDateResolution;
 };
 
 export type MarketData = {
@@ -190,6 +191,7 @@ export type ContextPack = {
   latestDataChecklist?: ChecklistItem[];
   latestAnnualPeriodFound?: string;
   sourceQualitySummary?: SourceQualitySummary;
+  marketDate?: import("./marketDateResolver").MarketDateResolution;
 };
 
 export type MavenBlock = { type: "DATA" | "POINT" | "MACRO" | "CONTEXT" | "RISK" | "TAKEAWAY"; title: string; body: string };

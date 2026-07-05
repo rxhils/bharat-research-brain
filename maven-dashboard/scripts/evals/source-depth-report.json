@@ -1,6 +1,6 @@
 {
-  "generatedAtMs": 1783249205038,
-  "base": "http://localhost:3000/api/ask",
+  "generatedAtMs": 1783258531746,
+  "base": "http://localhost:6505/api/ask",
   "total": 20,
   "passed": 15,
   "failed": 5,
@@ -54,7 +54,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 6,
-      "latencyMs": 406,
+      "latencyMs": 130,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -93,7 +93,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 6,
-      "latencyMs": 946,
+      "latencyMs": 92,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -132,7 +132,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 7,
-      "latencyMs": 609,
+      "latencyMs": 50,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -171,7 +171,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 4,
-      "latencyMs": 387,
+      "latencyMs": 40,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -210,7 +210,7 @@
         "Current financial metrics were not verified from available sources; Maven limits this answer to price action, sector context, and source-backed catalysts."
       ],
       "chartCount": 6,
-      "latencyMs": 94,
+      "latencyMs": 38,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -248,7 +248,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 871,
+      "latencyMs": 30,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -286,7 +286,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 205,
+      "latencyMs": 44,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -324,7 +324,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 45,
+      "latencyMs": 37,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -362,7 +362,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 157,
+      "latencyMs": 37,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -399,7 +399,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 43,
+      "latencyMs": 36,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -438,7 +438,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 170,
+      "latencyMs": 67,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -479,7 +479,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 404,
+      "latencyMs": 43,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -520,7 +520,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 307,
+      "latencyMs": 39,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -561,7 +561,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 730,
+      "latencyMs": 44,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -602,7 +602,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 3,
-      "latencyMs": 855,
+      "latencyMs": 761,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -645,7 +645,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 6,
-      "latencyMs": 130,
+      "latencyMs": 33,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -684,7 +684,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 6,
-      "latencyMs": 109,
+      "latencyMs": 50,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -723,7 +723,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 6,
-      "latencyMs": 31,
+      "latencyMs": 29,
       "leak": [],
       "advice": [],
       "freshness": [],
@@ -802,7 +802,7 @@
         "Financial metrics shown are the latest available from official/retrieved sources."
       ],
       "chartCount": 5,
-      "latencyMs": 514,
+      "latencyMs": 34,
       "leak": [],
       "advice": [],
       "freshness": [],

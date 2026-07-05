@@ -1,17 +1,21 @@
 {
-  "generatedAtMs": 1783249192487,
-  "base": "http://localhost:3000/api/ask",
-  "total": 107,
-  "passed": 107,
+  "generatedAtMs": 1783258515834,
+  "base": "http://localhost:6505/api/ask",
+  "total": 115,
+  "passed": 115,
   "failed": 0,
   "avgScore": 100,
-  "avgLatencyMs": 464,
+  "avgLatencyMs": 354,
   "byCategory": {
     "greeting": {
       "p": 10,
       "n": 10
     },
     "market_summary": {
+      "p": 13,
+      "n": 13
+    },
+    "out_of_scope": {
       "p": 7,
       "n": 7
     },
@@ -32,10 +36,6 @@
       "n": 4
     },
     "unsafe": {
-      "p": 5,
-      "n": 5
-    },
-    "out_of_scope": {
       "p": 5,
       "n": 5
     },
@@ -89,7 +89,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 58
+      "latencyMs": 61
     },
     {
       "id": "A2",
@@ -149,7 +149,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 8
     },
     {
       "id": "A5",
@@ -198,7 +198,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 1011
+      "latencyMs": 988
     },
     {
       "id": "B2",
@@ -227,7 +227,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 782
+      "latencyMs": 733
     },
     {
       "id": "B3",
@@ -256,7 +256,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 575
+      "latencyMs": 839
     },
     {
       "id": "B4",
@@ -286,7 +286,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 617
+      "latencyMs": 521
     },
     {
       "id": "B5",
@@ -315,7 +315,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 640
+      "latencyMs": 750
     },
     {
       "id": "B6",
@@ -347,6 +347,220 @@
       "latencyMs": 23
     },
     {
+      "id": "BD1",
+      "category": "market_summary",
+      "query": "summarise fridays markets",
+      "headline": "Indian market: friday (2026-07-03) recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 4,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 499
+    },
+    {
+      "id": "BD2",
+      "category": "market_summary",
+      "query": "summarize friday market",
+      "headline": "Indian market: friday (2026-07-03) recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 4,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 55
+    },
+    {
+      "id": "BD3",
+      "category": "market_summary",
+      "query": "market wrap for yesterday",
+      "headline": "Indian market: yesterday (2026-07-03) recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 4,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 47
+    },
+    {
+      "id": "BD4",
+      "category": "market_summary",
+      "query": "what happened in Indian markets last Friday",
+      "headline": "Indian market: last friday (2026-06-26) recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 1,
+      "sources": 10,
+      "limitations": 5,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 890
+    },
+    {
+      "id": "BD5",
+      "category": "market_summary",
+      "query": "summarise the week gone by",
+      "headline": "Indian market: summarise the week gone by recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 1,
+      "sources": 10,
+      "limitations": 5,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 447
+    },
+    {
+      "id": "BD6",
+      "category": "market_summary",
+      "query": "what happened on Dalal Street today",
+      "headline": "Indian market today: the India read",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 4,
+      "sources": 10,
+      "limitations": 2,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 67
+    },
+    {
+      "id": "BD7",
+      "category": "out_of_scope",
+      "query": "US market summary Friday",
+      "headline": "Maven focuses on Indian markets",
+      "score": 100,
+      "pass": true,
+      "threshold": 85,
+      "reasons": [],
+      "type": "out_of_scope",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 1,
+      "limitations": 0,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 9
+    },
+    {
+      "id": "BD8",
+      "category": "out_of_scope",
+      "query": "Bitcoin market recap Friday",
+      "headline": "Maven focuses on Indian markets",
+      "score": 100,
+      "pass": true,
+      "threshold": 85,
+      "reasons": [],
+      "type": "out_of_scope",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 1,
+      "limitations": 0,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 17
+    },
+    {
       "id": "C1",
       "category": "macro",
       "query": "How does crude oil affect Indian markets?",
@@ -373,7 +587,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 593
+      "latencyMs": 681
     },
     {
       "id": "C2",
@@ -402,7 +616,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 48
+      "latencyMs": 45
     },
     {
       "id": "C3",
@@ -431,7 +645,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 23
+      "latencyMs": 21
     },
     {
       "id": "C4",
@@ -460,7 +674,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 672
+      "latencyMs": 512
     },
     {
       "id": "C5",
@@ -489,7 +703,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 514
+      "latencyMs": 520
     },
     {
       "id": "C6",
@@ -518,7 +732,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 732
+      "latencyMs": 669
     },
     {
       "id": "C7",
@@ -547,7 +761,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 606
+      "latencyMs": 604
     },
     {
       "id": "C8",
@@ -576,7 +790,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 664
+      "latencyMs": 578
     },
     {
       "id": "C9",
@@ -605,7 +819,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 837
+      "latencyMs": 1043
     },
     {
       "id": "C10",
@@ -634,7 +848,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 717
+      "latencyMs": 616
     },
     {
       "id": "D1",
@@ -736,7 +950,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 983
+      "latencyMs": 929
     },
     {
       "id": "D2",
@@ -840,7 +1054,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 610
+      "latencyMs": 542
     },
     {
       "id": "D3",
@@ -943,7 +1157,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 692
+      "latencyMs": 646
     },
     {
       "id": "D4",
@@ -1044,7 +1258,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 1107
+      "latencyMs": 721
     },
     {
       "id": "D5",
@@ -1145,7 +1359,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 874
+      "latencyMs": 620
     },
     {
       "id": "D6",
@@ -1247,7 +1461,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 577
+      "latencyMs": 510
     },
     {
       "id": "D7",
@@ -1349,7 +1563,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 664
+      "latencyMs": 538
     },
     {
       "id": "D8",
@@ -1453,7 +1667,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 988
+      "latencyMs": 544
     },
     {
       "id": "D9",
@@ -1492,8 +1706,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQb3NiMjJhU0VVMl9yRGQzN2dkLWVTNXZuSmt5VDJ5R0N2R1ZueDBYTGtQLXBuSW5CWkhGTnlham43X1Jibm5ER1l6aXNjQjJNWWVaRHhRcTR3SVVrSzJWc1Y4QktEZnE0ZXNKWmdBMXV5Q3RwRU9HQjdmNGhoUHgxd3VqTWJ0SmloWkxHa0JNODVvR2JjdjJJYTN3VzR1bEJqNWFuVWFNR2lVM0lRYVgwM2hhLUJUMUZNbGI5T3pmNDR4YW50ZkFaZi1lMDFQeTRaRHJzN2xsZ19hX0dGaUFYaEdJUnhaYzM2NUI4dFJzQdIB9AFBVV95cUxOVjdfY1ZhRVJvc3lHZTdIWGNpeFBqQVJmaXEyZFBVU0lOMUZpRkx3UGlNUEV1a2d1WDQzYTFYVWFDelRGb01MWmt1a0tKQkNRSFYwNEZSMXNTV3AtOXBrSWE1ZUJEbktJVkRNejJNdzkxOFFYamdCWkd4NnN6V2tNSTkzekwtUjI0NmRsaUZTbm9IZ1YwMUh1U0JYbmx6R0dZWHZMZzZkcHNaOUJFd2ppX0F5VGJnUUY2YjBhUXNmbTRBNHV0clI1cjM5RGVPU0FycUpSWUFPTUctUnotQW5UNFMxSTh5a0tVNTgwc2p4dEU5S01y?oc=5",
-          "sourceDate": "Thu, 23 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMidEFVX3lxTFB2V1U1ZktaS0l6MzBNR3g0aFBIYXh5SnVaN2w0Mnptdi1yWlB1bFZnU01sZFpEaFJudnJ1LVZfWUxfZFctR0VqMHcxU0ZhNktNNHhTVnRhQ0R6YWFzV1VLNkZQaUx2aElMQ1dUbUhDNDk3Rnoz?oc=5",
+          "sourceDate": "Fri, 03 Jul 2026 10:28:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -1557,7 +1771,7 @@
         "target price"
       ],
       "freshness": [],
-      "latencyMs": 618
+      "latencyMs": 531
     },
     {
       "id": "D10",
@@ -1661,7 +1875,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 789
+      "latencyMs": 533
     },
     {
       "id": "D11",
@@ -1764,7 +1978,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 586
+      "latencyMs": 572
     },
     {
       "id": "D12",
@@ -1867,7 +2081,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 649
+      "latencyMs": 568
     },
     {
       "id": "E1",
@@ -1969,7 +2183,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 479
+      "latencyMs": 41
     },
     {
       "id": "E2",
@@ -2071,7 +2285,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 522
+      "latencyMs": 468
     },
     {
       "id": "E3",
@@ -2110,8 +2324,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQb3NiMjJhU0VVMl9yRGQzN2dkLWVTNXZuSmt5VDJ5R0N2R1ZueDBYTGtQLXBuSW5CWkhGTnlham43X1Jibm5ER1l6aXNjQjJNWWVaRHhRcTR3SVVrSzJWc1Y4QktEZnE0ZXNKWmdBMXV5Q3RwRU9HQjdmNGhoUHgxd3VqTWJ0SmloWkxHa0JNODVvR2JjdjJJYTN3VzR1bEJqNWFuVWFNR2lVM0lRYVgwM2hhLUJUMUZNbGI5T3pmNDR4YW50ZkFaZi1lMDFQeTRaRHJzN2xsZ19hX0dGaUFYaEdJUnhaYzM2NUI4dFJzQdIB9AFBVV95cUxOVjdfY1ZhRVJvc3lHZTdIWGNpeFBqQVJmaXEyZFBVU0lOMUZpRkx3UGlNUEV1a2d1WDQzYTFYVWFDelRGb01MWmt1a0tKQkNRSFYwNEZSMXNTV3AtOXBrSWE1ZUJEbktJVkRNejJNdzkxOFFYamdCWkd4NnN6V2tNSTkzekwtUjI0NmRsaUZTbm9IZ1YwMUh1U0JYbmx6R0dZWHZMZzZkcHNaOUJFd2ppX0F5VGJnUUY2YjBhUXNmbTRBNHV0clI1cjM5RGVPU0FycUpSWUFPTUctUnotQW5UNFMxSTh5a0tVNTgwc2p4dEU5S01y?oc=5",
-          "sourceDate": "Thu, 23 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMidEFVX3lxTFB2V1U1ZktaS0l6MzBNR3g0aFBIYXh5SnVaN2w0Mnptdi1yWlB1bFZnU01sZFpEaFJudnJ1LVZfWUxfZFctR0VqMHcxU0ZhNktNNHhTVnRhQ0R6YWFzV1VLNkZQaUx2aElMQ1dUbUhDNDk3Rnoz?oc=5",
+          "sourceDate": "Fri, 03 Jul 2026 10:28:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -2175,7 +2389,7 @@
         "target price"
       ],
       "freshness": [],
-      "latencyMs": 589
+      "latencyMs": 403
     },
     {
       "id": "E4",
@@ -2278,7 +2492,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 562
+      "latencyMs": 376
     },
     {
       "id": "E5",
@@ -2379,7 +2593,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 503
+      "latencyMs": 403
     },
     {
       "id": "F1",
@@ -2483,7 +2697,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 42
+      "latencyMs": 40
     },
     {
       "id": "F2",
@@ -2585,7 +2799,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 87
+      "latencyMs": 37
     },
     {
       "id": "F3",
@@ -2687,7 +2901,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 43
+      "latencyMs": 38
     },
     {
       "id": "F4",
@@ -2791,7 +3005,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 50
+      "latencyMs": 41
     },
     {
       "id": "G1",
@@ -2831,7 +3045,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 6
     },
     {
       "id": "G3",
@@ -2851,7 +3065,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 6
     },
     {
       "id": "G4",
@@ -2871,7 +3085,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 6
+      "latencyMs": 5
     },
     {
       "id": "G5",
@@ -2891,7 +3105,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 6
     },
     {
       "id": "H1",
@@ -2911,7 +3125,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 6
+      "latencyMs": 5
     },
     {
       "id": "H2",
@@ -2951,7 +3165,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 5
     },
     {
       "id": "H4",
@@ -2971,7 +3185,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 6
     },
     {
       "id": "H5",
@@ -2991,7 +3205,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 8
     },
     {
       "id": "T1",
@@ -3020,7 +3234,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 496
+      "latencyMs": 535
     },
     {
       "id": "T2",
@@ -3049,7 +3263,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 869
+      "latencyMs": 779
     },
     {
       "id": "T3",
@@ -3079,7 +3293,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 481
+      "latencyMs": 356
     },
     {
       "id": "T4",
@@ -3179,7 +3393,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 717
+      "latencyMs": 569
     },
     {
       "id": "T5",
@@ -3208,7 +3422,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 675
+      "latencyMs": 648
     },
     {
       "id": "D13",
@@ -3310,7 +3524,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 705
+      "latencyMs": 586
     },
     {
       "id": "D14",
@@ -3415,7 +3629,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 575
+      "latencyMs": 547
     },
     {
       "id": "C11",
@@ -3444,7 +3658,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 680
+      "latencyMs": 544
     },
     {
       "id": "B7",
@@ -3473,7 +3687,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 829
+      "latencyMs": 38
     },
     {
       "id": "I1",
@@ -3577,7 +3791,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 517
+      "latencyMs": 31
     },
     {
       "id": "I2",
@@ -3606,7 +3820,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 883
+      "latencyMs": 597
     },
     {
       "id": "I3",
@@ -3635,7 +3849,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 555
+      "latencyMs": 551
     },
     {
       "id": "J1",
@@ -3655,7 +3869,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 8
+      "latencyMs": 7
     },
     {
       "id": "J2",
@@ -3675,7 +3889,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 6
     },
     {
       "id": "J3",
@@ -3695,7 +3909,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 5
     },
     {
       "id": "J4",
@@ -3735,7 +3949,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 5
     },
     {
       "id": "K1",
@@ -3838,7 +4052,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 751
+      "latencyMs": 657
     },
     {
       "id": "K2",
@@ -3939,7 +4153,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 688
+      "latencyMs": 502
     },
     {
       "id": "K3",
@@ -4041,7 +4255,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 494
+      "latencyMs": 435
     },
     {
       "id": "K4",
@@ -4143,7 +4357,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 562
+      "latencyMs": 565
     },
     {
       "id": "K5",
@@ -4246,7 +4460,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 572
+      "latencyMs": 481
     },
     {
       "id": "K6",
@@ -4347,7 +4561,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 716
+      "latencyMs": 501
     },
     {
       "id": "K7",
@@ -4450,7 +4664,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 676
+      "latencyMs": 511
     },
     {
       "id": "K8",
@@ -4552,7 +4766,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 551
+      "latencyMs": 462
     },
     {
       "id": "K9",
@@ -4655,7 +4869,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 585
+      "latencyMs": 839
     },
     {
       "id": "K10",
@@ -4672,7 +4886,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
+        "latestPeriodFound": "FY26",
         "latestAnnualPeriodFound": "FY26",
         "metricEvidenceCount": 4,
         "blockedMetricCount": 0
@@ -4757,7 +4971,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 586
+      "latencyMs": 446
     },
     {
       "id": "K11",
@@ -4861,7 +5075,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 1096
+      "latencyMs": 537
     },
     {
       "id": "K12",
@@ -4963,7 +5177,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 556
+      "latencyMs": 557
     },
     {
       "id": "K13",
@@ -5064,7 +5278,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 667
+      "latencyMs": 513
     },
     {
       "id": "K14",
@@ -5167,7 +5381,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 555
+      "latencyMs": 471
     },
     {
       "id": "K15",
@@ -5269,7 +5483,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 557
+      "latencyMs": 544
     },
     {
       "id": "K16",
@@ -5370,7 +5584,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 517
+      "latencyMs": 445
     },
     {
       "id": "K17",
@@ -5471,7 +5685,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 629
+      "latencyMs": 583
     },
     {
       "id": "K18",
@@ -5573,7 +5787,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 547
+      "latencyMs": 33
     },
     {
       "id": "K19",
@@ -5591,6 +5805,7 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
+        "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
@@ -5675,7 +5890,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 781
+      "latencyMs": 554
     },
     {
       "id": "K20",
@@ -5777,7 +5992,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 582
+      "latencyMs": 414
     },
     {
       "id": "M1",
@@ -5879,7 +6094,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 568
+      "latencyMs": 535
     },
     {
       "id": "M2",
@@ -5981,7 +6196,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 695
+      "latencyMs": 34
     },
     {
       "id": "M3",
@@ -6083,7 +6298,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 825
+      "latencyMs": 549
     },
     {
       "id": "M4",
@@ -6185,7 +6400,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 42
+      "latencyMs": 30
     },
     {
       "id": "M5",
@@ -6287,7 +6502,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 48
+      "latencyMs": 45
     },
     {
       "id": "M6",
@@ -6389,7 +6604,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 683
+      "latencyMs": 450
     },
     {
       "id": "M7",
@@ -6492,7 +6707,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 310
+      "latencyMs": 29
     },
     {
       "id": "M8",
@@ -6594,7 +6809,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 38
+      "latencyMs": 28
     },
     {
       "id": "N1",
@@ -6696,7 +6911,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 42
+      "latencyMs": 33
     },
     {
       "id": "N2",
@@ -6798,7 +7013,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 614
+      "latencyMs": 38
     },
     {
       "id": "N3",
@@ -6899,7 +7114,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 562
+      "latencyMs": 30
     },
     {
       "id": "N4",
@@ -7001,7 +7216,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 275
+      "latencyMs": 28
     },
     {
       "id": "N5",
@@ -7104,7 +7319,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 32
+      "latencyMs": 28
     },
     {
       "id": "O1",
@@ -7206,7 +7421,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 565
+      "latencyMs": 473
     },
     {
       "id": "O2",
@@ -7309,7 +7524,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 557
+      "latencyMs": 376
     },
     {
       "id": "O3",
@@ -7411,7 +7626,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 819
+      "latencyMs": 652
     },
     {
       "id": "O4",
@@ -7513,7 +7728,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 452
+      "latencyMs": 497
     },
     {
       "id": "O5",
@@ -7615,7 +7830,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 648
+      "latencyMs": 587
     }
   ]
 }

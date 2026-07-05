@@ -21,6 +21,18 @@ export const CASES = [
   { id: "B5", query: "Why is Sensex up today?", category: "market_summary", expectedAnswerType: "current_market_research", ...R },
   { id: "B6", query: "How are midcaps doing today?", category: "market_summary", expectedAnswerType: "current_market_research", ...R },
 
+  // B (date-aware routing): British spelling, relative dates and casual phrasing must resolve to an
+  // Indian market recap, never the out_of_scope card. mustNotContain enforces the Task-10 regression
+  // guard: a market recap must not render the "Maven focuses on Indian markets" redirect.
+  { id: "BD1", query: "summarise fridays markets", category: "market_summary", expectedAnswerType: "current_market_research", ...R, mustNotContain: ["focuses on Indian markets"] },
+  { id: "BD2", query: "summarize friday market", category: "market_summary", expectedAnswerType: "current_market_research", ...R, mustNotContain: ["focuses on Indian markets"] },
+  { id: "BD3", query: "market wrap for yesterday", category: "market_summary", expectedAnswerType: "current_market_research", ...R, mustNotContain: ["focuses on Indian markets"] },
+  { id: "BD4", query: "what happened in Indian markets last Friday", category: "market_summary", expectedAnswerType: "current_market_research", ...R, mustNotContain: ["focuses on Indian markets"] },
+  { id: "BD5", query: "summarise the week gone by", category: "market_summary", expectedAnswerType: "current_market_research", ...R, mustNotContain: ["focuses on Indian markets"] },
+  { id: "BD6", query: "what happened on Dalal Street today", category: "market_summary", expectedAnswerType: "current_market_research", ...R, mustNotContain: ["focuses on Indian markets"] },
+  { id: "BD7", query: "US market summary Friday", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "explicit US market -> out of scope" },
+  { id: "BD8", query: "Bitcoin market recap Friday", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "crypto -> out of scope" },
+
   // C. Macro / sector mechanism
   { id: "C1", query: "How does crude oil affect Indian markets?", category: "macro", expectedAnswerType: "macro_sector_impact", ...R },
   { id: "C2", query: "What sectors benefit from softer crude?", category: "macro", expectedAnswerType: "macro_sector_impact", ...R },

@@ -16,6 +16,10 @@ async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Prom
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 const num = (x: unknown): number | null => (typeof x === "number" && isFinite(x) ? x : null);
+// A tradeable price is strictly positive. Yahoo historical daily series sometimes carry a 0 (or
+// null) close on a data-gap day; treat those as missing, never as a real price of zero - otherwise
+// a 0 close yields a fake -100% move and can propagate NaN into charts.
+const posNum = (x: unknown): number | null => { const n = num(x); return n != null && n > 0 ? n : null; };
 const r2 = (x: unknown): number | null => { const n = num(x); return n == null ? null : round2(n); };
 const mulPct = (x: unknown): number | null => { const n = num(x); return n == null ? null : round2(n * 100); };
 
@@ -47,18 +51,43 @@ async function yq(symbol: string, label: string): Promise<Quote> {
   } catch { return { label, symbol, price: null, changePct: null }; }
 }
 
+// Historical single-day quote: daily candles over a 3mo lookback (covers "last month"/"last Friday"
+// asks), matched to `date` (YYYY-MM-DD, UTC candle date). Never fabricates - if `date` isn't in the
+// returned candles (holiday/no data/future), returns a null quote so the caller emits a limitation.
+async function yqHistorical(symbol: string, label: string, date: string): Promise<Quote> {
+  try {
+    const r = await fetch(YF + encodeURIComponent(symbol) + "?interval=1d&range=3mo", { headers: { "User-Agent": UA }, next: { revalidate: 1800 } });
+    if (!r.ok) throw new Error(String(r.status));
+    const j: any = await r.json(); const res = j?.chart?.result?.[0];
+    const timestamps: number[] = res?.timestamp ?? [];
+    const closes: (number | null)[] = res?.indicators?.quote?.[0]?.close ?? [];
+    const idx = timestamps.findIndex((ts) => new Date(ts * 1000).toISOString().slice(0, 10) === date);
+    if (idx === -1) return { label, symbol, price: null, changePct: null };
+    // posNum rejects 0/negative/NaN closes so a Yahoo data-gap day reads as "unavailable" (null),
+    // not a fake price. changePct compares against the nearest strictly-valid prior close, so it is
+    // never NaN/Infinity even when intermediate candles are missing.
+    const price = posNum(closes[idx]);
+    let prior: number | null = null;
+    for (let i = idx - 1; i >= 0; i--) { const v = posNum(closes[i]); if (v != null) { prior = v; break; } }
+    return { label, symbol, price, changePct: price != null && prior != null ? ((price - prior) / prior) * 100 : null };
+  } catch { return { label, symbol, price: null, changePct: null }; }
+}
+
 const INDICES: [string, string][] = [["^NSEI", "Nifty 50"], ["^BSESN", "Sensex"], ["^NSEBANK", "Bank Nifty"], ["^CNXMIDCAP", "Nifty Midcap"], ["^CNXSC", "Nifty Smallcap"]];
 const SECTORS: [string, string][] = [["^NSEBANK", "Banks"], ["^CNXIT", "IT"], ["^CNXAUTO", "Auto"], ["^CNXPHARMA", "Pharma"], ["^CNXFMCG", "FMCG"], ["^CNXENERGY", "Energy"], ["^CNXMETAL", "Metal"], ["^CNXREALTY", "Realty"]];
 
-export async function getIndexPerformance(index?: string): Promise<Quote[]> {
-  return cached("indices:" + (index ?? "all"), 120_000, async () => {
+export async function getIndexPerformance(index?: string, opts?: { date?: string }): Promise<Quote[]> {
+  const date = opts?.date;
+  return cached("indices:" + (index ?? "all") + (date ? ":" + date : ""), 120_000, async () => {
     const set = index ? INDICES.filter(([, l]) => l.toLowerCase().includes(index.toLowerCase())) : INDICES;
-    return Promise.all((set.length ? set : INDICES).map(([s, l]) => yq(s, l)));
+    const use = set.length ? set : INDICES;
+    return Promise.all(use.map(([s, l]) => (date ? yqHistorical(s, l, date) : yq(s, l))));
   });
 }
-export async function getSectorPerformance(): Promise<SectorPerf[]> {
-  return cached("sectors", 240_000, async () => {
-    const qs = await Promise.all(SECTORS.map(([s, l]) => yq(s, l)));
+export async function getSectorPerformance(opts?: { date?: string }): Promise<SectorPerf[]> {
+  const date = opts?.date;
+  return cached("sectors" + (date ? ":" + date : ""), 240_000, async () => {
+    const qs = await Promise.all(SECTORS.map(([s, l]) => (date ? yqHistorical(s, l, date) : yq(s, l))));
     return qs.filter((q) => q.changePct != null).map((q) => ({ name: q.label, changePct: q.changePct as number })).sort((a, b) => b.changePct - a.changePct);
   });
 }
@@ -66,23 +95,37 @@ export async function getStockPrice(symbol: string): Promise<Quote> {
   const sym = symbol.includes(".") ? symbol : symbol.toUpperCase() + ".NS";
   return cached("price:" + sym, 120_000, () => yq(sym, symbol.toUpperCase()));
 }
-export async function getCrudePrice(): Promise<Quote> { return cached("crude", 180_000, () => yq("BZ=F", "Brent crude")); }
-export async function getUSDINR(): Promise<Quote> { return cached("usdinr", 120_000, () => yq("INR=X", "USD / INR")); }
+export async function getCrudePrice(opts?: { date?: string }): Promise<Quote> {
+  const date = opts?.date;
+  return cached("crude" + (date ? ":" + date : ""), 180_000, () => (date ? yqHistorical("BZ=F", "Brent crude", date) : yq("BZ=F", "Brent crude")));
+}
+export async function getUSDINR(opts?: { date?: string }): Promise<Quote> {
+  const date = opts?.date;
+  return cached("usdinr" + (date ? ":" + date : ""), 120_000, () => (date ? yqHistorical("INR=X", "USD / INR", date) : yq("INR=X", "USD / INR")));
+}
 
-export async function getGSecYield(): Promise<GSecYield> {
-  return cached("gsec", 20 * 60_000, async () => {
-    const res = await searchSources(["India 10 year G-Sec government bond yield today", "India 10Y benchmark bond yield latest"]);
+export async function getGSecYield(opts?: { date?: string }): Promise<GSecYield> {
+  const date = opts?.date;
+  return cached("gsec" + (date ? ":" + date : ""), 20 * 60_000, async () => {
+    const queries = date
+      ? [`India 10 year G-Sec government bond yield ${date}`, `India 10Y benchmark bond yield ${date}`]
+      : ["India 10 year G-Sec government bond yield today", "India 10Y benchmark bond yield latest"];
+    const res = await searchSources(queries);
     let y: number | null = null; let src = res[0];
     for (const r of res.slice(0, 4)) { const v = pctIn(r.snippet || "", 5, 9); if (v != null) { y = v; src = r; break; } }
-    if (y != null && src) return { yield10Y: y, changeBps: null, date: src.published, source: src.source, sourceUrl: src.url, freshness: "latest_available", confidence: "retrieved", limitation: "10Y G-Sec change (bps) unavailable; level from latest retrieved source." };
+    if (y != null && src) return { yield10Y: y, changeBps: null, date: src.published, source: src.source, sourceUrl: src.url, freshness: "latest_available", confidence: "retrieved", limitation: date ? "10Y G-Sec figure is the closest retrievable for that date and may be approximate." : "10Y G-Sec change (bps) unavailable; level from latest retrieved source." };
     return { yield10Y: null, source: "Maven analysis", freshness: "unavailable", confidence: "unavailable", limitation: "10Y G-Sec yield unavailable from current sources." };
   });
 }
-export async function getFIIDIIFlows(): Promise<FiiDiiFlows> {
-  return cached("fiidii", 45 * 60_000, async () => {
-    const res = await searchSources(["FII DII activity today India cash market net buy sell crore", "FPI DII provisional cash data NSE today"]);
+export async function getFIIDIIFlows(opts?: { date?: string }): Promise<FiiDiiFlows> {
+  const date = opts?.date;
+  return cached("fiidii" + (date ? ":" + date : ""), 45 * 60_000, async () => {
+    const queries = date
+      ? [`FII DII activity ${date} India cash market net buy sell crore`, `FPI DII provisional cash data NSE ${date}`]
+      : ["FII DII activity today India cash market net buy sell crore", "FPI DII provisional cash data NSE today"];
+    const res = await searchSources(queries);
     const top = res[0];
-    if (top) return { fiiCashNet: null, diiCashNet: null, context: top.snippet, date: top.published, source: top.source, sourceUrl: top.url, freshness: "latest_available", confidence: "retrieved", limitation: "Live FII/DII feed unavailable; using latest retrieved institutional-flow context." };
+    if (top) return { fiiCashNet: null, diiCashNet: null, context: top.snippet, date: top.published, source: top.source, sourceUrl: top.url, freshness: "latest_available", confidence: "retrieved", limitation: date ? "FII/DII figure is the closest retrievable for that date and may be approximate." : "Live FII/DII feed unavailable; using latest retrieved institutional-flow context." };
     return { fiiCashNet: null, diiCashNet: null, source: "Maven analysis", freshness: "unavailable", confidence: "unavailable", limitation: "FII/DII flow data unavailable from current sources." };
   });
 }

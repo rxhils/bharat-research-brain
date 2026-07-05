@@ -127,7 +127,12 @@ function synthesize(pack: ContextPack): MavenAnswer {
   blocks.push({ type: "TAKEAWAY", title: "India context", body: "Read this through India-specific drivers - flows, rates and sector rotation." + (disc ? " " + disc : "") });
 
   const limitNote = pack.limitations.length ? " " + pack.limitations.join(" ") : "";
-  const head = kb ? capitalize(kb.topic) + ": the India read" : pack.topic + ": the India read";
+  // Templated-fallback path: frame the headline for a past session when one was resolved (gated so
+  // the today/undated path is unchanged). The LLM path in generateAnswer handles the richer framing.
+  const histS = pack.marketDate && pack.marketDate.dateMode !== "today" ? pack.marketDate : null;
+  const head = histS
+    ? `Indian market: ${histS.requestedLabel}${histS.resolvedDate ? ` (${histS.resolvedDate})` : ""} recap`
+    : kb ? capitalize(kb.topic) + ": the India read" : pack.topic + ": the India read";
   const marketSources = realSources(pack);
   return {
     headline: head,
@@ -146,6 +151,10 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
   const single = pack.answerType === "single_stock_research";
   const isStock = single || pack.answerType === "stock_comparison";
   const curFY = getCurrentIndianFiscalYear();
+  // Date-aware recap: only when the resolved session is NOT today. Gated so the "today"/undated
+  // path (which the 107-case eval suite exercises) sends byte-identical prompt input as before.
+  const hist = pack.marketDate && pack.marketDate.dateMode !== "today" ? pack.marketDate : null;
+  const histWindow = hist ? (hist.resolvedDate ? ` (${hist.resolvedDate})` : hist.dateRange ? ` (${hist.dateRange.start} to ${hist.dateRange.end})` : "") : "";
   const system =
     SYSTEM_PROMPT + "\n\n" + RETRIEVAL_PACK +
     "\n\nRESEARCH MODE: Answer ONLY from the provided research context (live facts, knowledge grounding, sources). " +
@@ -155,7 +164,8 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
     "Output JSON {headline, summary, keyData:[{label,value,change}], blocks:[{type,title,body}], followUps:[]}. " +
     "Block types DATA/POINT/MACRO/CONTEXT/RISK/TAKEAWAY; include >=1 RISK and end with TAKEAWAY. Do NOT output charts/sources/disclaimer." +
     (single ? " SINGLE-STOCK MODE: One company. Block order: DATA (Price and relative move vs Nifty/sector) -> POINT (Company-specific catalyst: cite the news/filing in facts/sources; if none, say the move is more likely sector/flow/market-linked and DO NOT invent one) -> POINT (Fundamental context: ONLY if P/E, P/B, ROE, mkt cap or results appear in facts - otherwise omit this block, do not force it) -> POINT (Sector and macro context via the mechanism chain) -> RISK (what is not confirmed) -> TAKEAWAY. Headline = one line on the likely driver." : "") +
-    (strict ? " STRICTER PASS: increase specificity, make the mechanism chain explicit with arrows, remove every generic sentence, and ensure each claim ties to a provided fact/source." : "");
+    (strict ? " STRICTER PASS: increase specificity, make the mechanism chain explicit with arrows, remove every generic sentence, and ensure each claim ties to a provided fact/source." : "") +
+    (hist ? ` RECAP MODE: This is a market recap for the ${hist.requestedLabel} session${histWindow}. Frame the ENTIRE answer as that session's recap - do NOT say "today"; refer to the session by its date/label. Cover index moves, sector leadership, and flows/macro strictly from the provided marketData (already scoped to that session) plus any sources, then a RISK and a TAKEAWAY. Every number must come from the provided marketData/sources for that session; if a figure is unavailable, state it is unavailable per the limitations - NEVER fabricate or substitute a different day's number.` : "");
   const user = JSON.stringify({
     question: pack.question, intent: pack.intent, answerType: pack.answerType, topic: pack.topic,
     mechanismChain: pack.mechanism?.chain,
@@ -164,6 +174,7 @@ export async function generateAnswer(pack: ContextPack, strict = false): Promise
     sources: pack.sourceSnippets.map((s) => ({ title: s.title, snippet: s.snippet, source: s.source, date: s.date ?? s.published })),
     allowedMetrics: pack.metricEvidence?.filter((m) => m.allowedVisible).map((m) => ({ label: m.label, value: m.value, unit: m.unit, period: m.period, source: m.sourceName, freshness: m.freshness })),
     marketData: pack.marketData, limitations: pack.limitations,
+    marketDate: hist || undefined, // omitted from JSON on the today path (JSON.stringify drops undefined) - keeps today input byte-identical
   });
 
   const out = await deepseekJSON(system, user, 1500);

@@ -6,6 +6,7 @@ import { getFreshCompanyFacts, saveCompanyFacts } from "./companyFactStore";
 import { buildLatestDataChecklist } from "./latestDataChecklist";
 import { getIndexPerformance, getSectorPerformance, getStockPrice, getCrudePrice, getUSDINR, getGSecYield, getFIIDIIFlows, getIndiaMacroSnapshot, getCompanySnapshot, getCompanyAnnouncements, getLatestResultContext, getShareholdingContext } from "./dataTools";
 import { searchSources } from "./sourceSearch";
+import { CALENDAR_LIMITATION } from "./marketCalendar";
 import { lookupKnowledge } from "./indiaMarketKnowledge";
 import { buildMechanism } from "./mechanismBuilder";
 import { extractSymbols, nameForSymbol } from "./stockResolver";
@@ -23,17 +24,30 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   const charts: ChartSpec[] = [];
   const extraSources: SourceResult[] = [];
   const need = new Set(plan.requiredData);
+  // v1 historical scope: only route Yahoo-based calls through a specific date when the resolver
+  // says so. For weekly/monthly, dateRange.end stands in as the representative session (no
+  // multi-day aggregation in v1 - see the limitation pushed below).
+  const histDate = plan.marketDate && plan.marketDate.needsHistoricalData && plan.marketDate.resolvedDate
+    ? plan.marketDate.resolvedDate
+    : plan.marketDate && plan.marketDate.needsHistoricalData && (plan.marketDate.dateMode === "weekly_summary" || plan.marketDate.dateMode === "monthly_summary")
+      ? plan.marketDate.dateRange?.end
+      : undefined;
+  // When a past session is being recapped, the market-data facts describe THAT session, not "today".
+  // Drop the "today" word so a yesterday/Friday recap never asserts the move happened today; the
+  // "Showing the <label> session (<date>)" limitation carries the timeframe. Today path: unchanged.
+  const dated = !!(plan.marketDate && plan.marketDate.dateMode !== "today");
+  const dayWord = dated ? "" : " today";
   const syms = extractSymbols(query);
   const nameOf = (s: string) => nameForSymbol(s) || s;
   const singleStock = answerType === "single_stock_research";
 
   const jobs: Promise<void>[] = [];
-  if (need.has("indices")) jobs.push(getIndexPerformance().then((d) => { md.indices = d; }));
-  if (need.has("sectors")) jobs.push(getSectorPerformance().then((d) => { md.sectors = d; }));
-  if (need.has("crude")) jobs.push(getCrudePrice().then((d) => { md.crude = d; }));
-  if (need.has("usdinr")) jobs.push(getUSDINR().then((d) => { md.usdinr = d; }));
-  if (need.has("gsec")) jobs.push(getGSecYield().then((d) => { md.gsecYield = d; }));
-  if (need.has("fiidii")) jobs.push(getFIIDIIFlows().then((d) => { md.fiiDiiFlows = d; }));
+  if (need.has("indices")) jobs.push(getIndexPerformance(undefined, histDate ? { date: histDate } : undefined).then((d) => { md.indices = d; }));
+  if (need.has("sectors")) jobs.push(getSectorPerformance(histDate ? { date: histDate } : undefined).then((d) => { md.sectors = d; }));
+  if (need.has("crude")) jobs.push(getCrudePrice(histDate ? { date: histDate } : undefined).then((d) => { md.crude = d; }));
+  if (need.has("usdinr")) jobs.push(getUSDINR(histDate ? { date: histDate } : undefined).then((d) => { md.usdinr = d; }));
+  if (need.has("gsec")) jobs.push(getGSecYield(histDate ? { date: histDate } : undefined).then((d) => { md.gsecYield = d; }));
+  if (need.has("fiidii")) jobs.push(getFIIDIIFlows(histDate ? { date: histDate } : undefined).then((d) => { md.fiiDiiFlows = d; }));
   if (need.has("macro")) jobs.push(getIndiaMacroSnapshot().then((d) => { md.macroSnapshot = d; }));
   if ((need.has("stock") || need.has("stocks")) && syms.length) jobs.push(Promise.all(syms.map((s) => getStockPrice(s))).then((d) => { md.stocks = d; }));
   if (need.has("snapshots") && syms.length) jobs.push(Promise.all(syms.map((s) => getCompanySnapshot(s, nameOf(s)))).then((d) => { md.stockSnapshots = d; }));
@@ -52,7 +66,7 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   const sourceSnippets = await sourcesP;
 
   // ---- facts (attributed) ----
-  for (const q of md.indices ?? []) if (q.price != null) facts.push(`${q.label} at ${q.price.toFixed(2)} (${pct(q.changePct)} today). [source: NSE/BSE via Yahoo Finance]`);
+  for (const q of md.indices ?? []) if (q.price != null) facts.push(`${q.label} at ${q.price.toFixed(2)} (${pct(q.changePct)}${dayWord}). [source: NSE/BSE via Yahoo Finance]`);
   if (md.sectors?.length) { const t = md.sectors[0], b = md.sectors[md.sectors.length - 1]; facts.push(`Top sector ${t.name} (${pct(t.changePct)}); weakest ${b.name} (${pct(b.changePct)}). [source: NSE via Yahoo Finance]`); }
   for (const q of md.stocks ?? []) if (q.price != null) facts.push(`${q.label} at ${q.price.toFixed(2)} (${pct(q.changePct)} today). [source: Yahoo Finance]`);
   if (md.crude?.price != null) facts.push(`Brent crude at ${md.crude.price.toFixed(2)} (${pct(md.crude.changePct)}). [source: Yahoo Finance]`);
@@ -108,6 +122,16 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   }
 
   // ---- limitations ----
+  if (plan.marketDate && plan.marketDate.dateMode !== "today") {
+    const label = plan.marketDate.resolvedDate ?? (plan.marketDate.dateRange ? `${plan.marketDate.dateRange.start} to ${plan.marketDate.dateRange.end}` : plan.marketDate.requestedLabel);
+    limitations.push(`Showing the ${plan.marketDate.requestedLabel} session (${label}); exact session-level FII/DII may be approximate.`);
+    if (plan.marketDate.dateMode === "weekly_summary" || plan.marketDate.dateMode === "monthly_summary") {
+      limitations.push("Per-session detail across the full range isn't fully assembled yet; Maven shows range context plus the representative session (the most recent day in range).");
+    }
+    if (plan.marketDate.dateMode === "previous_trading_day" || plan.marketDate.dateMode === "specific_trading_day") {
+      limitations.push(CALENDAR_LIMITATION);
+    }
+  }
   if (md.gsecYield?.limitation) limitations.push(md.gsecYield.limitation);
   if (md.fiiDiiFlows?.limitation) limitations.push(md.fiiDiiFlows.limitation);
   if (md.macroSnapshot?.limitation) limitations.push(md.macroSnapshot.limitation);
@@ -129,7 +153,7 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
     limitations.push("Some source pages were unavailable; Maven used available official and retrieved context.");
 
   // ---- market charts ----
-  if (md.indices?.some((q) => q.price != null)) charts.push({ type: "bar", title: "Index moves today", dataSource: "indices", xKey: "name", yKeys: ["changePct"], data: md.indices.filter((q) => q.changePct != null).map((q) => ({ name: q.label, changePct: round(q.changePct) })) });
+  if (md.indices?.some((q) => q.price != null)) charts.push({ type: "bar", title: dated ? "Index moves" : "Index moves today", dataSource: "indices", xKey: "name", yKeys: ["changePct"], data: md.indices.filter((q) => q.changePct != null).map((q) => ({ name: q.label, changePct: round(q.changePct) })) });
   if (md.sectors?.length) charts.push({ type: "bar", title: "Sector performance", dataSource: "sectors", xKey: "name", yKeys: ["changePct"], data: md.sectors.map((s) => ({ name: s.name, changePct: round(s.changePct) })) });
   if (md.crude?.spark?.length) charts.push({ type: "line", title: "Brent crude (intraday)", dataSource: "crude", xKey: "i", yKeys: ["price"], data: md.crude.spark.map((p, i) => ({ i, price: round(p) })) });
   if (md.usdinr?.spark?.length) charts.push({ type: "line", title: "USD/INR (intraday)", dataSource: "usdinr", xKey: "i", yKeys: ["price"], data: md.usdinr.spark.map((p, i) => ({ i, price: round(p) })) });
@@ -206,6 +230,7 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
     extractedFacts: facts, sourceSnippets: allSources, chartData: charts, limitations, knowledge, mechanism,
     evidenceHint: stockPlan ? { evidenceDepth: stockPlan.depth, sourceBudget: stockPlan.sourceBudget } : undefined,
     metricEvidence, latestDataChecklist, latestAnnualPeriodFound, sourceQualitySummary,
+    marketDate: plan.marketDate,
   };
 }
 

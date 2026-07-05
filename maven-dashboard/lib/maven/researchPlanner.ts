@@ -1,5 +1,6 @@
 import type { Intent, ResearchPlan } from "./types";
 import { resolveStock, sectorGroup } from "./stockResolver";
+import { resolveMarketDate } from "./marketDateResolver";
 
 const ENTITIES: Record<string, string> = {
   banks: "Banks", bank: "Banks", financials: "Banks", it: "IT", pharma: "Pharma", auto: "Auto",
@@ -39,9 +40,23 @@ export function planResearch(query: string, intent: Intent): ResearchPlan {
         ],
       };
     }
-    case "market_summary":
-      return mk(["indices", "sectors", "fiidii", "crude", "usdinr", "gsec", "macro"], ["index_bar", "sector_bar", "fiidii_bar"],
-        [`Indian stock market today ${topic}`, "Nifty Sensex close today reasons", "FII DII activity today India"]);
+    case "market_summary": {
+      // Raw `query` (not the normalized topic) - the normalizer rewrites "session" -> "market day",
+      // which would break "previous session" detection in resolveMarketDate.
+      const marketDate = resolveMarketDate(query, new Date());
+      const baseQueries = [`Indian stock market today ${topic}`, "Nifty Sensex close today reasons", "FII DII activity today India"];
+      const dateQueries = marketDate.dateMode !== "today"
+        ? [
+            `Indian market ${marketDate.requestedLabel} recap Nifty Sensex Bank Nifty`,
+            `Nifty Sensex ${marketDate.requestedLabel} sector performance`,
+            `FII DII ${marketDate.requestedLabel} India`,
+          ]
+        : [];
+      const plan = mk(["indices", "sectors", "fiidii", "crude", "usdinr", "gsec", "macro"], ["index_bar", "sector_bar", "fiidii_bar"],
+        [...baseQueries, ...dateQueries]);
+      plan.marketDate = marketDate;
+      return plan;
+    }
     case "index_movement":
       return mk(["indices", "sectors", "gsec", "fiidii"], ["index_bar", "sector_bar"],
         [`why is ${topic} moving today`, `${topic} today India news`]);
