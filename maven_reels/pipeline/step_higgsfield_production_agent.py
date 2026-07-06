@@ -28,12 +28,12 @@ def _ffmpeg() -> str:
 
 
 def _card_to_clip(ff: str, img: Path, dest: Path, seconds: float) -> None:
-    """Higgsfield-designed card still -> clip with a subtle push-in (local motion
-    only; zoompan never alters the design)."""
+    """Higgsfield-designed card still -> clip. STATIC hold (no zoom/push-in) —
+    the designed card is shown exactly as generated, no local motion."""
     subprocess.run(
         [ff, "-y", "-loop", "1", "-i", str(img),
-         "-vf", (f"scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,"
-                 f"zoompan=z='min(zoom+0.0009,1.06)':d={int(seconds*30)}:s=1080x1920:fps=30"),
+         "-vf", ("scale=1080:1920:force_original_aspect_ratio=increase,"
+                 "crop=1080:1920,setsar=1,fps=30"),
          "-t", f"{seconds:.2f}", "-c:v", "libx264", "-preset", "veryfast",
          "-pix_fmt", "yuv420p", str(dest)], check=True, capture_output=True, timeout=180)
 
