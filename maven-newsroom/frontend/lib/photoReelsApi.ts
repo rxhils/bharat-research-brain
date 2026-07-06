@@ -35,7 +35,23 @@ export type SlideImage = {
   background_source: string;
   width: number;
   height: number;
+  layout?: string;
+  motif?: string;
+  visual_elements?: string[];
 };
+
+export type DesignJudge = {
+  passed?: boolean;
+  overall_score?: number;
+  scores?: Record<string, number>;
+  issues?: string[];
+  required_fixes?: string[];
+  too_plain?: boolean;
+};
+
+export type DesignAction =
+  | "make_more_visual" | "add_finance_graphic" | "change_motif"
+  | "regenerate_background" | "redesign_layout" | "make_cover_stronger";
 
 export type PackageDetail = {
   job_id: string;
@@ -53,6 +69,8 @@ export type PackageDetail = {
   slide_prompts: { slide_number: number; model: string; prompt: string }[];
   generated_images: SlideImage[];
   style?: string;
+  design_options?: Record<string, unknown>;
+  design_judge?: DesignJudge;
   qa: {
     passed?: boolean; overall_score?: number;
     scores?: Record<string, number>; issues?: string[];
@@ -120,6 +138,9 @@ export const photoReelsApi = {
     .then((r) => j<Record<string, unknown>>(r)),
   decision: (id: string, decision: "approve" | "reject" | "revise", reason?: string) =>
     post(`/packages/${id}/decision`, { decision, reason })
+      .then((r) => j<Record<string, unknown>>(r)),
+  designAction: (id: string, action: DesignAction, slide?: number) =>
+    post(`/packages/${id}/design-action`, { action, slide })
       .then((r) => j<Record<string, unknown>>(r)),
   exportImages: (id: string) =>
     post(`/packages/${id}/export`).then((r) => j<Record<string, unknown>>(r)),

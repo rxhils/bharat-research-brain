@@ -32,6 +32,8 @@ export default function PhotoReelsReview() {
   }
 
   const qa = pkg?.qa;
+  const judge = pkg?.design_judge;
+  const canApprove = !!qa?.passed && (judge ? !!judge.passed : true);
   return (
     <div className="px-6 py-6 max-w-[1400px] mx-auto space-y-5">
       <div className="glass card-pad flex flex-wrap items-center justify-between gap-3">
@@ -45,8 +47,8 @@ export default function PhotoReelsReview() {
         </div>
         {pkg && (
           <div className="flex flex-wrap gap-2">
-            <button className="btn btn-primary text-xs" disabled={busy || !qa?.passed}
-              title={qa?.passed ? "" : "QA must pass before approval"}
+            <button className="btn btn-primary text-xs" disabled={busy || !canApprove}
+              title={canApprove ? "" : "QA + design judge must pass before approval"}
               onClick={() => decide("approve")}><Check size={14} /> Approve</button>
             <button className="btn btn-ghost text-xs" disabled={busy} onClick={() => decide("revise")}>Revise</button>
             <button className="btn btn-ghost text-xs" disabled={busy} onClick={() => decide("reject")}><X size={14} /> Reject</button>
@@ -57,6 +59,18 @@ export default function PhotoReelsReview() {
       </div>
 
       {error && <div className="glass card-pad text-sm text-danger">{error}</div>}
+
+      {judge && !judge.passed && (
+        <div className="glass card-pad border border-warn/40 text-sm">
+          <b className="text-warn">Slides are readable but too plain.</b>{" "}
+          <span className="text-ink-muted">
+            Design judge: {judge.overall_score}/100.{" "}
+            {(judge.issues ?? []).slice(0, 3).join(" · ")}
+            {" — "}use the Slide Studio design actions (Make More Visual,
+            Add Finance Graphic, Make Cover Stronger).
+          </span>
+        </div>
+      )}
 
       {!pkg ? (
         <EmptyState title="Nothing to review" hint="Run the pipeline from the Dashboard first." />
@@ -112,6 +126,24 @@ export default function PhotoReelsReview() {
               {(qa?.issues?.length ?? 0) > 0 && (
                 <div className="mt-3 text-[11px] text-warn space-y-1">
                   {qa?.issues?.map((i) => <div key={i}>· {i}</div>)}
+                </div>
+              )}
+              {judge && (
+                <div className="mt-4 pt-3 border-t border-line">
+                  <div className="eyebrow mb-1.5">Design judge</div>
+                  <div className={`text-sm font-semibold ${judge.passed ? "text-ok" : "text-warn"}`}>
+                    {judge.passed ? "PREMIUM" : "TOO PLAIN"} · {judge.overall_score ?? "—"}/100
+                  </div>
+                  <div className="mt-1.5 space-y-1">
+                    {["slide_1_cover", "visual_richness", "layout_variety", "premium_feel"].map((k) => (
+                      <div key={k} className="flex justify-between text-[12px]">
+                        <span className="text-ink-muted">{k.replace(/_/g, " ")}</span>
+                        <span className={(judge.scores?.[k] ?? 0) >= 90 ? "text-ok" : "text-warn"}>
+                          {judge.scores?.[k] ?? "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

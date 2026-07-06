@@ -22,6 +22,8 @@ from . import (
     step06b_video_renderer,
     step07_music_scout,
     step08_qa_gate,
+    step09_slide_design_judge,
+    visual_motifs,
 )
 
 PIPELINE_STAGES = [
@@ -30,6 +32,7 @@ PIPELINE_STAGES = [
     ("story_selector", "Story Selector"),
     ("slide_script", "5-Slide Scriptwriter"),
     ("slide_design", "Higgsfield Image Designer"),
+    ("design_judge", "Design Judge"),
     ("export", "Native Photo Reel Exporter"),
     ("music_scout", "Music Scout"),
     ("qa_gate", "QA Gate"),
@@ -67,30 +70,96 @@ def run_full(job_id: str | None = None, *, allow_simulation: bool = False,
     step05_slide_design.run(job_id, use_higgsfield=use_higgsfield,
                             credit_confirmed=credit_confirmed,
                             style_name=style_name)
+    judge = step09_slide_design_judge.run(job_id)
     step07_music_scout.run(job_id)
     step06_exporter.run(job_id)
     qa = step08_qa_gate.run(job_id)
     state.update_package(job_id, status="needs_review",
-                         qa_passed=qa["passed"], qa_score=qa["overall_score"])
+                         qa_passed=qa["passed"], qa_score=qa["overall_score"],
+                         design_passed=judge["passed"],
+                         design_score=judge["overall_score"])
     return {**r, "qa": {"passed": qa["passed"], "overall": qa["overall_score"]},
+            "design_judge": {"passed": judge["passed"],
+                             "overall": judge["overall_score"]},
             "status": "needs_review"}
+
+
+def _post_design(job_id: str) -> tuple[dict, dict]:
+    """Judge + export + QA after any design change; updates the package."""
+    judge = step09_slide_design_judge.run(job_id)
+    step06_exporter.run(job_id)
+    qa = step08_qa_gate.run(job_id)
+    state.update_package(job_id, qa_passed=qa["passed"],
+                         qa_score=qa["overall_score"],
+                         design_passed=judge["passed"],
+                         design_score=judge["overall_score"])
+    return qa, judge
 
 
 def generate_images(job_id: str, *, use_higgsfield: bool = False,
                     credit_confirmed: bool = False,
-                    style_name: str | None = None) -> dict:
+                    style_name: str | None = None,
+                    options: dict | None = None) -> dict:
     prev = state.load_artifact(job_id, "slide_design") or {}
     design = step05_slide_design.run(
         job_id, use_higgsfield=use_higgsfield, credit_confirmed=credit_confirmed,
-        style_name=style_name or prev.get("style", config.DEFAULT_STYLE))
-    step06_exporter.run(job_id)
-    qa = step08_qa_gate.run(job_id)
-    state.update_package(job_id, qa_passed=qa["passed"],
-                         qa_score=qa["overall_score"])
+        style_name=style_name or prev.get("style", config.DEFAULT_STYLE),
+        options=options)
+    qa, judge = _post_design(job_id)
     return {"job_id": job_id, "images": design.get("generated_images", []),
             "higgsfield_note": design.get("higgsfield_note"),
             "credits_spent": design.get("credits_spent", False),
-            "qa": {"passed": qa["passed"], "overall": qa["overall_score"]}}
+            "qa": {"passed": qa["passed"], "overall": qa["overall_score"]},
+            "design_judge": {"passed": judge["passed"],
+                             "overall": judge["overall_score"]}}
+
+
+# UI design actions — all local compositor re-renders, zero credits.
+DESIGN_ACTIONS = ("make_more_visual", "add_finance_graphic", "change_motif",
+                  "regenerate_background", "redesign_layout",
+                  "make_cover_stronger")
+
+
+def design_action(job_id: str, action: str,
+                  slide_number: int | None = None) -> dict:
+    if action not in DESIGN_ACTIONS:
+        raise ValueError(f"unknown design action; use one of {DESIGN_ACTIONS}")
+    prev = state.load_artifact(job_id, "slide_design") or {}
+    if not prev.get("generated_images"):
+        raise FileNotFoundError("no rendered slides yet — run the pipeline first")
+    opts = dict(prev.get("options", {}))
+    only: list[int] | None = None
+
+    if action == "make_more_visual":
+        opts["density"] = "rich"
+    elif action == "add_finance_graphic":
+        opts["force_motif_graphic"] = True
+    elif action == "regenerate_background":
+        opts["bg_seed"] = int(opts.get("bg_seed", 0)) + 1
+    elif action == "redesign_layout":
+        opts["layout_variant"] = int(opts.get("layout_variant", 0)) + 1
+    elif action == "make_cover_stronger":
+        opts["cover_boost"] = True
+        only = [1]
+    elif action == "change_motif":
+        n = slide_number or 1
+        overrides = dict(opts.get("motif_overrides", {}))
+        current = next((i.get("motif") for i in prev.get("generated_images", [])
+                        if i.get("slide_number") == n), "")
+        overrides[str(n)] = visual_motifs.next_motif(current)
+        opts["motif_overrides"] = overrides
+        only = [n]
+
+    design = step05_slide_design.run(
+        job_id, style_name=prev.get("style", config.DEFAULT_STYLE),
+        only_slides=only, options=opts)
+    qa, judge = _post_design(job_id)
+    return {"job_id": job_id, "action": action, "options": opts,
+            "images": design.get("generated_images", []),
+            "qa": {"passed": qa["passed"], "overall": qa["overall_score"]},
+            "design_judge": {"passed": judge["passed"],
+                             "overall": judge["overall_score"],
+                             "required_fixes": judge.get("required_fixes", [])}}
 
 
 def regenerate_slide(job_id: str, slide_number: int, *,
@@ -114,12 +183,11 @@ def regenerate_slide(job_id: str, slide_number: int, *,
     step05_slide_design.run(
         job_id, style_name=style_name or prev.get("style", config.DEFAULT_STYLE),
         only_slides=[slide_number])
-    step06_exporter.run(job_id)
-    qa = step08_qa_gate.run(job_id)
-    state.update_package(job_id, qa_passed=qa["passed"],
-                         qa_score=qa["overall_score"])
+    qa, judge = _post_design(job_id)
     return {"job_id": job_id, "slide_number": slide_number,
-            "qa": {"passed": qa["passed"], "overall": qa["overall_score"]}}
+            "qa": {"passed": qa["passed"], "overall": qa["overall_score"]},
+            "design_judge": {"passed": judge["passed"],
+                             "overall": judge["overall_score"]}}
 
 
 def decision(job_id: str, verdict: str, reason: str | None = None) -> dict:
@@ -128,6 +196,10 @@ def decision(job_id: str, verdict: str, reason: str | None = None) -> dict:
     qa = state.load_artifact(job_id, "qa_gate") or {}
     if verdict == "approve" and not qa.get("passed"):
         raise PermissionError("cannot approve a package that has not passed QA")
+    judge = state.load_artifact(job_id, "design_judge") or {}
+    if verdict == "approve" and judge and not judge.get("passed"):
+        raise PermissionError("cannot approve: design judge marked the slides "
+                              "too plain — use the Slide Studio design actions")
     status = {"approve": "approved", "reject": "rejected",
               "revise": "revise_requested"}[verdict]
     pkg = state.update_package(job_id, status=status, decision=verdict,
@@ -183,6 +255,7 @@ def package(job_id: str) -> dict:
     script = state.load_artifact(job_id, "slide_script") or {}
     design = state.load_artifact(job_id, "slide_design") or {}
     qa = state.load_artifact(job_id, "qa_gate") or {}
+    judge = state.load_artifact(job_id, "design_judge") or {}
     exp = state.load_artifact(job_id, "export") or {}
     radar = state.load_artifact(job_id, "market_radar") or {}
     stages = {}
@@ -204,7 +277,9 @@ def package(job_id: str) -> dict:
         "slide_prompts": design.get("slide_prompts", []),
         "generated_images": design.get("generated_images", []),
         "style": design.get("style"),
+        "design_options": design.get("options", {}),
         "qa": qa,
+        "design_judge": judge,
         "export": {k: exp.get(k) for k in ("status", "zip_path", "image_paths",
                                            "cover_image", "recommended_order")},
         "music": state.load_artifact(job_id, "music_scout") or {},

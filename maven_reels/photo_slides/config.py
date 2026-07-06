@@ -86,6 +86,7 @@ ARTIFACTS = {
     "story_selector": "03_story_selector.json",
     "slide_script": "04_slide_script.json",
     "slide_design": "05_slide_design.json",
+    "design_judge": "09_slide_design_judge.json",
     "export": "06_native_photo_reel_export.json",
     "video_render": "06b_reel_video_render.json",
     "music_scout": "07_music_scout.json",

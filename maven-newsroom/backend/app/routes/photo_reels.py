@@ -142,6 +142,20 @@ def regenerate_slide(job_id: str, n: int, body: dict[str, Any] = _BODY) -> dict[
         raise HTTPException(409, str(exc)) from exc
 
 
+@router.post("/packages/{job_id}/design-action")
+def design_action(job_id: str, body: dict[str, Any] = _BODY_REQUIRED) -> dict[str, Any]:
+    """Slide Studio design controls (Make More Visual, Change Motif, ...).
+    All local compositor re-renders — zero Higgsfield credits."""
+    _require(job_id)
+    try:
+        return ps.design_action(job_id, body.get("action", ""),
+                                slide_number=body.get("slide"))
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(409, str(exc)) from exc
+
+
 @router.post("/packages/{job_id}/decision")
 def decision(job_id: str, body: dict[str, Any] = _BODY_REQUIRED) -> dict[str, Any]:
     _require(job_id)
