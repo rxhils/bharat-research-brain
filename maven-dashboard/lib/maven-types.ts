@@ -63,14 +63,22 @@ export type MavenReportSection = {
   summary: string; blocks?: MavenBlock[]; charts?: MavenChart[]; metrics?: MavenReportMetric[]; sources?: MavenSource[]; limitations?: string[];
 };
 
+// How the answer asks to be presented (bullet summary, table, source list, ...). Set by the
+// conversation-intelligence layer; absent means the standard card.
+export type MavenAnswerMode =
+  | "standard_card" | "bullet_summary" | "short_answer" | "deep_explanation"
+  | "table" | "chart_first" | "source_list" | "eli5" | "research_report" | "clarification_answer";
+
 export type MavenAskResponse = {
   type?: MavenAnswerType;
   answerType?: MavenAnswerType;
+  answerMode?: MavenAnswerMode;
   headline: string;
   summary: string;
   keyData?: MavenKeyData[];
   charts?: MavenChart[];
   blocks: MavenBlock[];
+  bullets?: string[];
   sources: MavenSource[];
   followUps: string[];
   disclaimer?: string;

@@ -211,13 +211,21 @@ export type MavenReportSection = {
   summary: string; blocks?: MavenBlock[]; charts?: ChartSpec[]; metrics?: MetricEvidence[]; sources?: MavenSource[]; limitations?: string[];
 };
 
+// Universal Answer Mode: how the answer should be presented. Presentation only - it never
+// changes evidence rules, refusal behavior, or the freshness lock.
+export type MavenAnswerMode =
+  | "standard_card" | "bullet_summary" | "short_answer" | "deep_explanation"
+  | "table" | "chart_first" | "source_list" | "eli5" | "research_report" | "clarification_answer";
+
 export type MavenAnswer = {
   type?: AnswerType;
   disclaimerLevel?: DisclaimerLevel;
+  answerMode?: MavenAnswerMode;
   headline: string; summary: string;
   keyData: MavenKeyData[]; charts: ChartSpec[]; blocks: MavenBlock[];
   sources: MavenSource[]; followUps: string[]; disclaimer: string;
   limitations?: string[];
+  bullets?: string[]; // bullet_summary / short_answer modes render these as a clean list
   introSections?: MavenIntroSection[];
   evidence?: MavenEvidenceSummary;
   latestDataChecklist?: ChecklistItem[];

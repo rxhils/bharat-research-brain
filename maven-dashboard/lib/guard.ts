@@ -9,6 +9,17 @@ export function isAdviceRequest(q: string): boolean {
   return ADVICE.test(q || "");
 }
 
+// Output-side net: detects advice ASSERTIONS in text Maven is about to present as its own
+// (vs. ADVICE above, which detects advice REQUESTS in user queries). Used to fail-closed when
+// client-supplied conversation context tries to smuggle a buy/sell call through a
+// transformation ("summarize in bullets" over an injected fake previous answer).
+const ADVICE_ASSERTION =
+  /\b(strong (buy|sell)|buy now|sell now|must[- ]?buy|(is|are|remains?) a (strong )?(buy|sell|hold)\b|rating[:\s]+(buy|sell|accumulate)|(price )?target( price)? of|target price|price target|upside of \d|\d+%\s*upside|multibagger|multi-bagger|sure[-\s]?shot|guaranteed returns?|book profits?|stop[-\s]?loss at|entry (point|price)|(accumulate|add) on dips|double your money)\b/i;
+
+export function containsAdviceAssertion(text: string): boolean {
+  return ADVICE_ASSERTION.test(text || "");
+}
+
 export function refusalAnswer(_q: string): ChatAnswer {
   return {
     headline: "I can explain the setup, but I cannot tell you to buy or sell",

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useReducedMotionSafe } from "./motion";
+import { EASE, PRESS, pressTap, useReducedMotionSafe } from "./motion";
 import { MavenChartRenderer, MechanismStepper } from "./maven-charts";
 import { MavenEvidenceSummaryCard, MavenLatestDataChecklist } from "./maven-evidence";
 import { MavenSourcePanel } from "./maven-source-panel";
@@ -18,10 +18,58 @@ const MODELS = [
   { id: "maven-v1", name: "Maven V1", tag: "Beta", desc: "Fast India-market context", live: true },
   { id: "maven-pro", name: "Maven Pro", tag: "Deep Research", desc: "Deeper source pack and document extraction", live: false },
 ] as const;
-const EASE = [0.22, 1, 0.36, 1] as const;
 const FLOW = ["flow", "flow_chart"];
 
 export type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean; looksLikeReport?: boolean };
+
+// ---- conversation context for /api/ask (Maven follow-up intelligence) ----
+// The last few exchanges travel with each request so "give me a bullet point summary" can refer
+// to the previous answer. Trimmed hard client-side: chart rows, source snippets and block bodies
+// are capped so the payload stays a few KB - never the full report/chart datasets.
+const CTX_TURNS = 3;
+
+function trimAnswerForContext(a: MavenAskResponse) {
+  const cap = (s: string | undefined, n: number) => (typeof s === "string" ? s.slice(0, n) : undefined);
+  // Deep-research reports carry content in reportSections, not blocks - map each section to a
+  // pseudo-block so transformations (bullet summary etc.) can still read the report content.
+  const blocks = (a.blocks?.length ? a.blocks : (a.reportSections ?? []).map((s) => ({ type: "POINT" as const, title: s.title, body: s.summary })))
+    .slice(0, 8)
+    .map((b) => ({ type: b.type, title: cap(b.title, 200) ?? "", body: cap(b.body, 500) ?? "" }));
+  return {
+    type: a.type ?? a.answerType,
+    headline: cap(a.headline, 300),
+    summary: cap(a.summary ?? a.reportSummary, 800),
+    keyData: (a.keyData ?? []).slice(0, 8),
+    blocks,
+    charts: (a.charts ?? [])
+      .filter((c) => c.data?.length)
+      .slice(0, 4)
+      .map((c) => ({ type: c.type, title: cap(c.title, 200), dataSource: c.dataSource, xKey: c.xKey, yKeys: c.yKeys, data: (c.data ?? []).slice(0, 40) })),
+    sources: (a.sources ?? []).slice(0, 8).map((s) => ({
+      name: cap(s.name, 150), title: cap(s.title, 250), url: cap(s.url, 500), date: cap(s.date, 40),
+      snippet: cap(s.snippet, 200), type: s.type, confidence: s.confidence, domain: cap(s.domain, 100),
+    })),
+    bullets: (a.bullets ?? []).slice(0, 10),
+    limitations: (a.limitations ?? []).slice(0, 6),
+    disclaimer: cap(a.disclaimer, 300),
+  };
+}
+
+function buildConversationContext(msgs: Msg[]) {
+  const turns: { id: string; userQuery: string; answer?: ReturnType<typeof trimAnswerForContext> }[] = [];
+  for (let i = 0; i < msgs.length; i++) {
+    const m = msgs[i];
+    // An answer still in its 600ms visual reveal is a valid context turn - only skip
+    // messages whose response hasn't arrived at all.
+    if (m.role !== "assistant" || !m.answer) continue;
+    // pair with the closest preceding user message
+    let userText = "";
+    for (let j = i - 1; j >= 0; j--) { if (msgs[j].role === "user") { userText = msgs[j].text ?? ""; break; } }
+    if (!userText) continue;
+    turns.push({ id: String(m.id), userQuery: userText.slice(0, 400), answer: trimAnswerForContext(m.answer) });
+  }
+  return turns.length ? { turns: turns.slice(-CTX_TURNS) } : undefined;
+}
 // Client-only heuristic mirroring reportModeDetector.ts's trigger words - used ONLY to pick which
 // loading copy to show optimistically while waiting; the server is the sole source of truth for
 // whether a response actually is report mode.
@@ -48,19 +96,16 @@ function Core({ size = 96 }: { size?: number }) {
   const ringMask2 = "radial-gradient(circle, transparent 72%, #000 74%, #000 82%, transparent 84%)";
   return (
     <div className="relative grid place-items-center" style={{ width: size, height: size }}>
+      {/* One calm opacity-only breathe on the glow — the two counter-rotating rings carry the life;
+          the old scale pulse + orbiting dot made four simultaneous loops (audit: reduce simultaneity). */}
       <motion.span className="absolute inset-0 rounded-full bg-emerald/20 blur-2xl" aria-hidden
-        animate={reduce ? undefined : { scale: [1, 1.3, 1], opacity: [0.4, 0.85, 0.4] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }} />
+        animate={reduce ? undefined : { opacity: [0.45, 0.7, 0.45] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
       <motion.span className="absolute rounded-full" aria-hidden
         style={{ width: size, height: size, background: "conic-gradient(from 0deg, rgba(52,211,153,0), rgba(52,211,153,0.85), rgba(201,169,97,0.45), rgba(52,211,153,0))", maskImage: ringMask, WebkitMaskImage: ringMask }}
         animate={reduce ? undefined : { rotate: 360 }} transition={{ duration: 16, repeat: Infinity, ease: "linear" }} />
       <motion.span className="absolute rounded-full" aria-hidden
         style={{ width: size, height: size, background: "conic-gradient(from 180deg, rgba(201,169,97,0), rgba(52,211,153,0.4), rgba(201,169,97,0))", maskImage: ringMask2, WebkitMaskImage: ringMask2 }}
         animate={reduce ? undefined : { rotate: -360 }} transition={{ duration: 24, repeat: Infinity, ease: "linear" }} />
-      {!reduce && (
-        <motion.div className="absolute inset-0" aria-hidden animate={{ rotate: 360 }} transition={{ duration: 9, repeat: Infinity, ease: "linear" }}>
-          <span className="absolute left-1/2 top-0.5 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-emerald shadow-[0_0_12px_rgba(52,211,153,0.9)]" />
-        </motion.div>
-      )}
       <span className="relative grid place-items-center rounded-full border border-emerald/25" style={{ width: size * 0.56, height: size * 0.56, background: "radial-gradient(circle at 50% 32%, #15191d, #0a0b0e)" }}>
         <MavenMark size={Math.round(size * 0.32)} draw />
       </span>
@@ -69,13 +114,11 @@ function Core({ size = 96 }: { size?: number }) {
 }
 
 function Avatar({ thinking = false }: { thinking?: boolean }) {
-  const reduce = useReducedMotionSafe();
   return (
     <div className="relative mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-xl border border-emerald/25 sm:h-9 sm:w-9" style={{ background: "radial-gradient(circle at 50% 30%, #15191d, #0b0c0f)" }}>
       <span className="absolute inset-0 rounded-xl bg-emerald/10 blur-md" aria-hidden />
-      {thinking && !reduce && (
-        <motion.span className="absolute inset-0 rounded-xl ring-1 ring-emerald/50" aria-hidden animate={{ opacity: [0.2, 0.8, 0.2], scale: [1, 1.1, 1] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }} />
-      )}
+      {/* static ring while working - the loader's equalizer next to it already animates; two loops read as pulse-spam */}
+      {thinking && <span className="absolute inset-0 rounded-xl ring-1 ring-emerald/40" aria-hidden />}
       <span className="relative"><MavenMark size={17} /></span>
     </div>
   );
@@ -83,6 +126,15 @@ function Avatar({ thinking = false }: { thinking?: boolean }) {
 
 function AuroraBg() {
   const reduce = useReducedMotionSafe();
+  // Two blobs on phones (battery/thermal - each is a large blurred GPU layer); three on desktop.
+  const [small, setSmall] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const sync = () => setSmall(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
   const grid = "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.055) 1px, transparent 0)";
   const fade = "radial-gradient(ellipse 75% 60% at 50% 35%, #000 25%, transparent 78%)";
   return (
@@ -91,8 +143,11 @@ function AuroraBg() {
         animate={reduce ? undefined : { x: [0, 60, -20, 0], y: [0, 40, 80, 0], scale: [1, 1.15, 1] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} />
       <motion.div className="absolute right-[2%] top-[20%] h-[22rem] w-[22rem] rounded-full bg-emerald-deep/[0.10] blur-[120px] sm:h-[28rem] sm:w-[28rem]"
         animate={reduce ? undefined : { x: [0, -50, 20, 0], y: [0, 60, -30, 0], scale: [1, 1.22, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
-      <motion.div className="absolute bottom-[2%] left-[28%] h-[20rem] w-[20rem] rounded-full bg-gold/[0.06] blur-[120px] sm:h-[24rem] sm:w-[24rem]"
-        animate={reduce ? undefined : { x: [0, 40, -40, 0], y: [0, -30, 30, 0], scale: [1, 1.12, 1] }} transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 2 }} />
+      {!small && (
+        /* Static gold tint: keeps the composition's warmth without a third drifting loop
+           (compliance pass: thin the empty-state loop density). */
+        <div className="absolute bottom-[2%] left-[28%] h-[20rem] w-[20rem] rounded-full bg-gold/[0.06] blur-[120px] sm:h-[24rem] sm:w-[24rem]" />
+      )}
       <div className="absolute inset-0" style={{ backgroundImage: grid, backgroundSize: "34px 34px", maskImage: fade, WebkitMaskImage: fade }} />
     </div>
   );
@@ -107,6 +162,7 @@ function GlassPanel({ children, className = "", tlSharp = false }: { children: R
 }
 
 export function ChatView({ initialMessages, onMessagesChange }: { initialMessages?: Msg[]; onMessagesChange?: (msgs: Msg[]) => void } = {}) {
+  const reduce = useReducedMotionSafe();
   const [msgs, setMsgs] = useState<Msg[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [model, setModel] = useState<string>(MODELS[0].id);
@@ -115,7 +171,8 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
   const turnRef = useRef<HTMLDivElement>(null);
 
   // On a new question, bring the latest exchange to the top so the answer reads top-down.
-  useEffect(() => { turnRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, [msgs.length]);
+  // Instant (not smooth) under reduced motion — programmatic smooth scroll is still motion.
+  useEffect(() => { turnRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }); }, [msgs.length]); // eslint-disable-line react-hooks/exhaustive-deps
   // Let the parent (ChatShell) persist this conversation as it grows.
   useEffect(() => { onMessagesChange?.(msgs); }, [msgs]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -128,9 +185,13 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
     lastUserId.current = uid;
     setMsgs((m) => [...m, { id: uid, role: "user", text }, { id: aid, role: "assistant", loading: true, looksLikeReport: REPORT_HINT.test(text) }]);
     try {
-      const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text, model }) });
+      const conversationContext = buildConversationContext(msgs);
+      const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text, model, ...(conversationContext ? { conversationContext } : {}) }) });
       const answer: MavenAskResponse = await r.json();
-      setTimeout(() => setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, answer } : x))), 600);
+      // Store the answer immediately (so a fast follow-up's conversationContext includes it);
+      // the 600ms delay is purely the visual reveal of the card.
+      setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, answer } : x)));
+      setTimeout(() => setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false } : x))), 600);
     } catch {
       setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, text: "Could not reach Maven." } : x)));
     }
@@ -138,16 +199,17 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
 
   const empty = msgs.length === 0;
   return (
-    <div className={"relative mx-auto flex max-w-[960px] flex-col" + (empty ? "" : " min-h-[58vh]")}>
+    <div className={"relative mx-auto flex max-w-[960px] flex-col" + (empty ? "" : " min-h-[58dvh]")}>
       <AuroraBg />
       {empty ? <Hero onPick={send} /> : (
-        <div className="flex-1 space-y-7 pb-6">
+        <div className="scroll-touch flex-1 space-y-7 pb-6">
           {msgs.map((m) => (m.role === "user" ? (
             <div key={m.id} ref={m.id === lastUserId.current ? turnRef : undefined} className="scroll-mt-24">
               <UserBubble text={m.text ?? ""} />
             </div>
           ) : (
-            <motion.div key={m.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, ease: EASE }} className="flex gap-3">
+            // opacity-only row entrance: the AnswerCard inside owns the y-rise, so the row must not double-move (audit)
+            <motion.div key={m.id} initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: EASE }} className="flex gap-3">
               <Avatar thinking={!!m.loading} />
               <div className="min-w-0 flex-1">
                 {m.loading ? <ReasoningLoader reportMode={m.looksLikeReport} /> : m.answer ? <AnswerCard a={m.answer} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
@@ -155,7 +217,7 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
             </motion.div>
           )))}
           {/* reserve room so the latest question can scroll to the top of the view */}
-          <div style={{ minHeight: "42vh" }} aria-hidden />
+          <div style={{ minHeight: "42dvh" }} aria-hidden />
         </div>
       )}
       <Composer input={input} setInput={setInput} send={send} empty={empty} model={model} setModel={setModel} />
@@ -172,7 +234,7 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
       <motion.div variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1, transition: { duration: 0.8, ease: EASE } } }}>
         <Core />
       </motion.div>
-      <motion.h2 variants={up} className="mt-6 font-serif text-[2rem] leading-[1.1] text-ink sm:text-5xl">
+      <motion.h2 variants={up} className="mt-6 text-balance font-serif text-[2rem] leading-[1.1] text-ink sm:text-5xl">
         Understand the <span className="italic text-emerald">Indian market</span>.
       </motion.h2>
       <motion.p variants={up} className="mt-3 max-w-lg px-2 text-sm leading-relaxed text-ink/60">
@@ -189,9 +251,9 @@ function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q
   const reduce = useReducedMotionSafe();
   // Calm, editorial hover: border warms to emerald and the surface lightens - no tilt, no scale.
   return (
-    <motion.button onClick={() => onPick(s.t)}
+    <motion.button onClick={() => onPick(s.t)} {...pressTap(reduce)}
       variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}
-      className="group relative overflow-hidden rounded-2xl border border-hairline bg-panel/45 p-4 text-left backdrop-blur-md transition-colors duration-300 hover:border-emerald/35 hover:bg-panel/65 focus-visible:border-emerald/50 focus-visible:outline-none">
+      className="group relative overflow-hidden rounded-2xl border border-hairline bg-panel/45 p-4 text-left backdrop-blur-md transition-colors duration-300 hover:border-emerald/35 hover:bg-panel/65 focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
       <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald/0 via-emerald to-emerald/0 transition-transform duration-500 group-hover:scale-x-100" aria-hidden />
       <span className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald/0 blur-2xl transition-colors duration-500 group-hover:bg-emerald/10" aria-hidden />
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-dim">
@@ -199,15 +261,16 @@ function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q
       </div>
       <div className="mt-2 flex items-start justify-between gap-3">
         <span className="text-[0.95rem] leading-snug text-ink">{s.t}</span>
-        <span className="mt-0.5 shrink-0 text-emerald opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
+        <span className="mt-0.5 shrink-0 text-emerald opacity-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
       </div>
     </motion.button>
   );
 }
 
 function UserBubble({ text }: { text: string }) {
+  const reduce = useReducedMotionSafe();
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE }} className="flex justify-end">
+    <motion.div initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: EASE }} className="flex justify-end">
       <div className="max-w-[80%] rounded-2xl rounded-br-md border border-emerald/25 bg-gradient-to-br from-emerald/20 to-emerald/[0.06] px-4 py-2.5 text-sm leading-relaxed text-ink shadow-[0_12px_36px_-20px_rgba(52,211,153,0.7)]">
         {text}
       </div>
@@ -228,14 +291,17 @@ function ReasoningLoader({ reportMode }: { reportMode?: boolean } = {}) {
   }, [reduce]);
   return (
     <GlassPanel tlSharp className="inline-block">
-      <div className="flex items-center gap-3 px-4 py-3">
+      {/* role=status = polite live region: screen readers hear the working state, not just silence */}
+      <div className="flex items-center gap-3 px-4 py-3" role="status">
         <div className="flex h-5 items-end gap-1" aria-hidden>
           {[0, 1, 2, 3].map((d) => (
-            <motion.span key={d} className="w-1 rounded-full bg-emerald" animate={reduce ? { height: 8 } : { height: [5, 18, 5] }} transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut", delay: d * 0.13 }} />
+            // scaleY, not height: transform loops stay off the layout path (compositor-only)
+            <motion.span key={d} className="w-1 origin-bottom rounded-full bg-emerald" style={{ height: 18 }}
+              animate={reduce ? { scaleY: 0.44 } : { scaleY: [0.28, 1, 0.28] }} transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut", delay: d * 0.13 }} />
           ))}
         </div>
         <AnimatePresence mode="wait">
-          <motion.span key={i} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.25 }} className="text-sm text-ink/70">
+          <motion.span key={i} initial={reduce ? { opacity: 0 } : { opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={reduce ? { opacity: 0 } : { opacity: 0, y: -4 }} transition={{ duration: 0.22, ease: EASE }} className="text-sm text-ink/70">
             {steps[i]}&hellip;
           </motion.span>
         </AnimatePresence>
@@ -255,10 +321,10 @@ function blockGlyph(type: string): { dot: string; label: string } {
 }
 
 function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string) => void }) {
+  const reduce = useReducedMotionSafe(); // hooks before any early return (rules of hooks)
   // Deep Research Report Mode renders as its own premium report card - normal chat-card flow
   // below is completely unaffected for every other answer type.
   if (a.reportMode) return <MavenReportCard a={a} onFollow={onFollow} />;
-  const reduce = useReducedMotionSafe();
   const answerType = a.answerType ?? a.type ?? "market_mechanism";
   const minimal = answerType === "greeting" || answerType === "out_of_scope";
   const blocks = a.blocks ?? [];
@@ -286,22 +352,34 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
             <span className="shrink-0 rounded-md bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-dim">India markets</span>
           </div>
 
-          <h3 className="mt-3 font-serif text-[1.6rem] leading-snug text-ink sm:text-[1.85rem]">{a.headline}</h3>
+          <h3 className="mt-3 text-balance font-serif text-[1.6rem] leading-snug text-ink sm:text-[1.85rem]">{a.headline}</h3>
           {a.summary && <p className="mt-2.5 text-[0.95rem] leading-relaxed text-ink/75">{a.summary}</p>}
 
+          {/* bullet_summary / short_answer / source_list follow-up modes: clean list, no card blocks */}
+          {!!a.bullets?.length && (
+            <ul className="mt-5 space-y-2.5">
+              {a.bullets.map((b, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-[0.92rem] leading-relaxed text-ink/80">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.8)]" aria-hidden />
+                  <span>{b}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {/* static grid: the card keeps ONE stagger (the blocks below) — two staggers in one card read as slop (audit) */}
           {!!a.introSections?.length && (
-            <motion.div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2" initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.05 } } }}>
+            <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {a.introSections.map((sec, i) => (
-                <motion.div key={i} variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 10 }, show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } } }}
-                  className="rounded-xl border border-hairline bg-white/[0.02] p-4">
+                <div key={i} className="rounded-xl border border-hairline bg-white/[0.02] p-4">
                   <div className="flex items-center gap-2">
                     <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
                     <span className="text-[0.85rem] font-medium text-ink">{sec.title}</span>
                   </div>
                   <p className="mt-1.5 pl-3.5 text-[0.85rem] leading-relaxed text-ink/65">{sec.body}</p>
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           )}
 
           {!minimal && keyData.length > 0 && (
@@ -322,21 +400,23 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
           {!minimal && <MavenLatestDataChecklist items={a.latestDataChecklist} />}
 
           {blocks.length > 0 && (
-            <motion.div className="mt-6 space-y-3" initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.1, delayChildren: 0.05 } } }}>
+            /* Static blocks: answers are the most frequent interaction (frequency gate) and the
+               AnswerCard already animates its own entrance — a per-block stagger double-charges it. */
+            <div className="mt-6 space-y-3">
               {blocks.map((b, i) => {
                 const g = blockGlyph(b.type);
                 return (
-                  <motion.div key={i} variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 12, filter: "blur(6px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: EASE } } }} className="rounded-xl border border-hairline bg-white/[0.02] p-4">
+                  <div key={i} className="rounded-xl border border-hairline bg-white/[0.02] p-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + g.dot} />
                       <span className={"text-[10px] font-semibold uppercase tracking-[0.16em] " + g.label}>{b.type}</span>
                       <span className="text-[0.95rem] font-medium text-ink">{b.title}</span>
                     </div>
                     <p className="mt-2 pl-3.5 text-[0.9rem] leading-relaxed text-ink/70">{b.body}</p>
-                  </motion.div>
+                  </div>
                 );
               })}
-            </motion.div>
+            </div>
           )}
 
           {!minimal && <MavenSourcePanel sources={sources} />}
@@ -348,8 +428,8 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
           {followUps.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2 border-t border-hairline pt-5">
               {followUps.map((f) => (
-                <button key={f} onClick={() => onFollow(f)} className="group inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white/[0.02] px-3.5 py-1.5 text-xs text-muted transition-colors hover:border-emerald/45 hover:text-ink">
-                  {f}<span className="text-emerald opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
+                <button key={f} type="button" onClick={() => onFollow(f)} className="group inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white/[0.02] px-3.5 py-1.5 text-xs text-muted motion-safe:transition-[color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-emerald/45 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+                  {f}<span className="text-emerald opacity-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
                 </button>
               ))}
             </div>
@@ -381,7 +461,7 @@ function ModelSelector({ model, setModel, direction = "up" }: { model: string; s
   return (
     <div ref={ref} className="relative">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-haspopup="listbox" aria-expanded={open}
-        className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-white/[0.03] py-1.5 pl-2 pr-3 text-xs text-ink transition-colors hover:border-emerald/40">
+        className="group inline-flex items-center gap-2 rounded-full border border-hairline bg-white/[0.03] py-1.5 pl-2 pr-3 text-xs text-ink motion-safe:transition-[border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-emerald/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
         <span className="grid h-5 w-5 place-items-center rounded-full border border-emerald/25 bg-panel"><MavenMark size={12} /></span>
         <span className="font-medium">{current.name}</span>
         <span className="hidden text-[10px] text-dim sm:inline">{current.tag}</span>
@@ -396,17 +476,20 @@ function ModelSelector({ model, setModel, direction = "up" }: { model: string; s
             exit={reduce ? { opacity: 0 } : { opacity: 0, y: down ? -6 : 6 }}
             transition={{ duration: 0.18, ease: EASE }}
             className={"absolute left-0 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-2xl bg-gradient-to-b from-emerald/25 via-white/[0.06] to-transparent p-px shadow-[0_20px_60px_-20px_rgba(0,0,0,0.85)] " + (down
-              // empty state: downward into blank space; on wide (>=1536px) screens open up-and-left into the roomy left margin, clear of the prompt cards and never below the fold
-              ? "top-full mt-2 origin-top-left 2xl:left-auto 2xl:right-full 2xl:top-auto 2xl:bottom-0 2xl:mt-0 2xl:mr-2 2xl:w-64 2xl:origin-bottom-right"
+              // empty state: opens downward into the blank space below the composer, clear of the prompt cards.
+              // (The old >=1536px "open into the left margin" variant is gone - the chat history sidebar now
+              // permanently occupies that margin, so it isn't blank space to open into anymore.)
+              ? "top-full mt-2 origin-top-left"
               : "bottom-full mb-2 origin-bottom-left")}>
             <div className="rounded-2xl bg-panel/95 p-1.5 backdrop-blur-xl">
               <div className="px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-dim">Model</div>
-              <motion.div initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.05 } } }}>
+              {/* no per-item stagger: a utility menu should open as one unit, not perform (Emil) */}
+              <div>
                 {MODELS.map((m) => {
                   const selected = m.id === model;
                   return (
                     <motion.button key={m.id} type="button" role="option" aria-selected={selected} disabled={!m.live}
-                      variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, x: -6 }, show: { opacity: 1, x: 0, transition: { duration: 0.3, ease: EASE } } }}
+                      {...(m.live ? pressTap(reduce) : {})}
                       onClick={() => { if (m.live) { setModel(m.id); setOpen(false); } }}
                       className={"flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition-colors " + (m.live ? "hover:bg-white/[0.05]" : "cursor-not-allowed opacity-60")}>
                       <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg border border-emerald/25 bg-panel"><MavenMark size={15} /></span>
@@ -422,7 +505,7 @@ function ModelSelector({ model, setModel, direction = "up" }: { model: string; s
                     </motion.button>
                   );
                 })}
-              </motion.div>
+              </div>
             </div>
           </motion.div>
         )}
@@ -434,6 +517,7 @@ function ModelSelector({ model, setModel, direction = "up" }: { model: string; s
 function Composer({ input, setInput, send, empty, model, setModel }: {
   input: string; setInput: (s: string) => void; send: (q: string) => void; empty: boolean; model: string; setModel: (id: string) => void;
 }) {
+  const reduce = useReducedMotionSafe();
   // Row is placed ABOVE the input on the conversation view (opens up over messages) and BELOW the
   // input on the empty state (opens down into the blank space, clear of the prompt cards).
   const selectorRow = (
@@ -447,16 +531,17 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
   return (
     <div className={(empty ? "mt-8 sm:mt-10 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
       {!empty && <div className="mb-2.5">{selectorRow}</div>}
-      <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-all duration-300 focus-within:from-emerald/60 focus-within:shadow-[0_0_34px_-10px_rgba(52,211,153,0.55)]">
+      <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-shadow duration-300 focus-within:from-emerald/60 focus-within:shadow-[0_0_34px_-10px_rgba(52,211,153,0.55)]">
         <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2 rounded-2xl bg-panel/80 p-2 backdrop-blur-md">
           <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={1} placeholder="Ask Maven about Nifty, sectors, flows, macro, or Indian stocks&hellip;"
+            aria-label="Ask Maven a question"
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
             className="max-h-36 flex-1 resize-none bg-transparent px-2.5 py-2 text-base leading-relaxed text-ink outline-none placeholder:text-dim sm:text-sm" />
-          <motion.button type="submit" whileTap={input.trim() ? { scale: 0.92 } : undefined} aria-label="Ask Maven" disabled={!input.trim()}
-            className={"grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-all duration-200 " + (input.trim()
+          <motion.button type="submit" whileTap={!reduce && input.trim() ? { scale: 0.92 } : undefined} aria-label="Ask Maven" disabled={!input.trim()}
+            className={"grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-[background-color,color,box-shadow,opacity] duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/70 " + (input.trim()
               ? "bg-gradient-to-br from-emerald to-emerald-deep text-bg shadow-[0_8px_24px_-8px_rgba(52,211,153,0.85)] hover:opacity-90"
               : "cursor-not-allowed bg-white/[0.06] text-dim")}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
           </motion.button>
         </form>
       </div>

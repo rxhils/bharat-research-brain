@@ -114,12 +114,55 @@ const TODAY_RESULT = (): MarketDateResolution => ({
   confidence: "high",
 });
 
+/**
+ * Parse an explicit numeric date in the query. Supports ISO (2026-07-03) and Indian
+ * day-first forms (03-07-26, 03/07/2026). Returns an IST-shifted Date or null.
+ */
+function parseNumericDate(q: string): { date: Date; label: string; confidence: "high" | "medium" } | null {
+  const iso = q.match(/\b(20\d{2})-(\d{1,2})-(\d{1,2})\b/);
+  if (iso) {
+    const [y, m, d] = [Number(iso[1]), Number(iso[2]), Number(iso[3])];
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31) return { date: new Date(Date.UTC(y, m - 1, d)), label: iso[0], confidence: "high" };
+  }
+  const dmy = q.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{2}|\d{4})\b/);
+  if (dmy) {
+    const d = Number(dmy[1]);
+    const m = Number(dmy[2]);
+    const y = Number(dmy[3]) < 100 ? 2000 + Number(dmy[3]) : Number(dmy[3]);
+    // Day-first (Indian convention). Day > 12 disambiguates fully; otherwise still day-first
+    // but flagged medium confidence.
+    if (m >= 1 && m <= 12 && d >= 1 && d <= 31 && y >= 2000 && y <= 2100) {
+      return { date: new Date(Date.UTC(y, m - 1, d)), label: dmy[0], confidence: d > 12 ? "high" : "medium" };
+    }
+  }
+  return null;
+}
+
 export function resolveMarketDate(
   query: string,
   now: Date,
 ): MarketDateResolution {
   const q = query.toLowerCase();
   const istToday = toIstShifted(now);
+
+  // An explicit numeric date wins over relative words ("what happened in market today 06-07-26"
+  // carries both - the written date is the user's real anchor).
+  const numeric = parseNumericDate(q);
+  if (numeric) {
+    if (numeric.date.getTime() > istToday.getTime()) {
+      // Future session: nothing to recap - fall back to today, flagged low confidence.
+      return { ...TODAY_RESULT(), requestedLabel: numeric.label, confidence: "low" };
+    }
+    const resolved = isWeekend(numeric.date) ? latestTradingDayOnOrBefore(numeric.date) : numeric.date;
+    if (formatDate(resolved) === formatDate(istToday)) return TODAY_RESULT();
+    return {
+      dateMode: "specific_trading_day",
+      requestedLabel: numeric.label,
+      resolvedDate: formatDate(resolved),
+      needsHistoricalData: true,
+      confidence: numeric.confidence,
+    };
+  }
 
   // "today" or no date phrase at all: default to today, high confidence,
   // no historical fetch needed (live session).
@@ -200,8 +243,10 @@ export function resolveMarketDate(
 
     if (q.includes(`last ${name}`)) {
       // Previous week's occurrence: 7 days before the latest on-or-before one.
+      // Weekend names roll back to the latest trading day, same as the plain-weekday branch.
       const onOrBefore = latestWeekdayOnOrBefore(istToday, targetDow);
-      const resolved = addDays(onOrBefore, -7);
+      const target = addDays(onOrBefore, -7);
+      const resolved = isWeekend(target) ? latestTradingDayOnOrBefore(target) : target;
       return {
         dateMode: "specific_trading_day",
         requestedLabel: `last ${name}`,

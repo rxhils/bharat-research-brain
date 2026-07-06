@@ -16,6 +16,13 @@ const CURRENT = /(today|now|this week|currently|latest|right now|moving|movement
 const MACRO = /(crude|oil|rupee|usd ?\/? ?inr|yield|g-?sec|\brbi\b|repo|\bfii\b|\bdii\b|monsoon|metal|inflation|\bcpi\b|sector|bank|\bit\b|pharma|auto|fmcg|realty|energy)/i;
 const INDIA = /\b(india|indian|nifty|sensex|nse|bse|sebi|stocks?|shares?|equit\w*|market)\b/i;
 
+// Explicitly non-Indian subject (US/crypto/global...) with no India anchor. Exported so the
+// follow-up detector can refuse to claim these even mid-conversation.
+export function isExplicitlyOutOfScope(query: string): boolean {
+  const ln = normalizeForClassification((query || "").trim());
+  return OUT.test(ln) && !/\b(india|indian|nifty|sensex|nse|bse|sebi)\b/i.test(ln);
+}
+
 export function routeAnswerType(query: string): { answerType: AnswerType; disclaimerLevel: DisclaimerLevel } {
   const s = (query || "").trim();
   const l = s.toLowerCase();
@@ -23,7 +30,7 @@ export function routeAnswerType(query: string): { answerType: AnswerType; discla
   if (GREETING.test(s) || INTRO_REQUEST.test(l)) return { answerType: "greeting", disclaimerLevel: "light" };
   if (isAdviceRequest(s) || FNO.test(l) || /\b(price target|target price|stock to buy|stocks? to buy|which stock|multibagger|guaranteed return)\b/i.test(l)) return { answerType: "unsafe_advice", disclaimerLevel: "strong" };
   const ln = normalizeForClassification(s);
-  if (OUT.test(ln) && !/\b(india|indian|nifty|sensex|nse|bse|sebi)\b/i.test(ln)) return { answerType: "out_of_scope", disclaimerLevel: "light" };
+  if (isExplicitlyOutOfScope(s)) return { answerType: "out_of_scope", disclaimerLevel: "light" };
   if (COMPARE.test(ln)) return { answerType: "stock_comparison", disclaimerLevel: "standard" };
   if (resolveStock(s)) return { answerType: "single_stock_research", disclaimerLevel: "standard" };
   if (CONCEPT.test(ln)) return { answerType: "basic_concept", disclaimerLevel: "light" };

@@ -13,6 +13,7 @@ function visibleProse(obj) {
   for (const b of obj.blocks || []) parts.push(b.title, b.body);
   for (const f of obj.followUps || []) parts.push(f);
   for (const l of obj.limitations || []) parts.push(l);
+  for (const bl of obj.bullets || []) parts.push(bl);
   for (const s of obj.introSections || []) parts.push(s.title, s.body);
   for (const rs of obj.reportSections || []) {
     parts.push(rs.title, rs.summary);

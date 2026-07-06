@@ -1,19 +1,35 @@
 import { writeFileSync } from "fs";
 import { CASES } from "./evals/maven-eval-cases.mjs";
-import { scoreCase } from "./evals/eval-scorer.mjs";
+import { scoreCase, scoreFollowUpCase } from "./evals/eval-scorer.mjs";
 
 const BASE = process.env.MAVEN_EVAL_URL || "http://localhost:3000/api/ask";
 
-async function ask(query) {
+async function ask(query, conversationContext) {
   const t0 = Date.now();
-  const r = await fetch(BASE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
+  const body = conversationContext ? { query, conversationContext } : { query };
+  const r = await fetch(BASE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
   return { j: await r.json(), ms: Date.now() - t0 };
 }
 
 console.log(`Maven evals -> ${BASE}  (${CASES.length} cases)\n`);
 const results = [];
 for (const c of CASES) {
-  try { const { j, ms } = await ask(c.query); results.push({ id: c.id, category: c.category, query: c.query, headline: j.headline, evidence: j.evidence, latestDataChecklist: j.latestDataChecklist, ...scoreCase(c, j, ms) }); }
+  try {
+    // Multi-turn case: run the setup query first, then send the follow-up with a
+    // conversationContext built from the setup answer (same shape the frontend sends).
+    // injectContext cases send a RAW crafted context instead (adversarial-injection guard).
+    let setupResp = null, ctx;
+    if (c.injectContext) {
+      ctx = c.injectContext;
+      setupResp = c.injectContext.turns?.[0]?.answer ?? null;
+    } else if (c.setup) {
+      setupResp = (await ask(c.setup)).j;
+      ctx = { turns: [{ id: "t1", userQuery: c.setup, answer: setupResp }] };
+    }
+    const { j, ms } = await ask(c.query, ctx);
+    const scored = c.category === "conversation_followup" ? scoreFollowUpCase(c, setupResp ?? {}, j, ms) : scoreCase(c, j, ms);
+    results.push({ id: c.id, category: c.category, query: c.query, headline: j.headline, evidence: j.evidence, latestDataChecklist: j.latestDataChecklist, ...scored });
+  }
   catch (e) { results.push({ id: c.id, category: c.category, query: c.query, pass: false, score: 0, reasons: ["ERROR " + e.message], leak: [], refused: false, latencyMs: 0 }); }
 }
 
