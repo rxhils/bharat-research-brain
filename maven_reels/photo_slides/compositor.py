@@ -427,10 +427,13 @@ def _layout_matters(d, ov, slide, story, motif, accent, seed, opts) -> tuple[lis
 
 def _layout_takeaway(d, ov, slide, story, motif, accent, seed, opts) -> tuple[list[str], int, int]:
     cx = W // 2
-    ov.ellipse([cx - 96, 330, cx + 96, 522], outline=(*accent, 220), width=6)
-    mf = _font("condensed", 120)
-    mw = d.textlength("M", font=mf)
-    d.text((cx - mw / 2, 356), "M", font=mf, fill=INK)
+    brand_el = "brand_logo"
+    if not config.BRAND_LOGO.exists():                # fallback: monogram ring
+        brand_el = "brand_monogram"
+        ov.ellipse([cx - 96, 330, cx + 96, 522], outline=(*accent, 220), width=6)
+        mf = _font("condensed", 120)
+        mw = d.textlength("M", font=mf)
+        d.text((cx - mw / 2, 356), "M", font=mf, fill=INK)
     card = (MARGIN + 30, 620, W - MARGIN - 30, 1105)
     _glass(ov, card)
     tf = _font("display", 74)
@@ -450,7 +453,7 @@ def _layout_takeaway(d, ov, slide, story, motif, accent, seed, opts) -> tuple[li
     cf = _font("body", 32)
     cw = d.textlength(cta, font=cf) + 44
     _chip(ov, int(cx - cw / 2), 1190, cta, cf, accent, solid=True)
-    return ["brand_monogram", "takeaway_glass_card", "cta_chip"], 74, 44
+    return [brand_el, "takeaway_glass_card", "cta_chip"], 74, 44
 
 
 _LAYOUTS = {
@@ -515,6 +518,16 @@ def render_slide(slide: dict, dest: Path, *, style_name: str = config.DEFAULT_ST
 
     img.alpha_composite(overlay)
     d = ImageDraw.Draw(img)
+
+    if is_close and config.BRAND_LOGO.exists():
+        try:
+            lg = Image.open(config.BRAND_LOGO).convert("RGBA")
+            lg = lg.crop(lg.getbbox() or (0, 0, lg.width, lg.height))
+            lw = 380
+            lg = lg.resize((lw, round(lg.height * lw / lg.width)))
+            img.paste(lg, (W // 2 - lw // 2, 560 - lg.height // 2), lg)
+        except OSError:
+            pass                                      # fallback already handled
 
     if is_close:
         disc_font = _font("body", 29)

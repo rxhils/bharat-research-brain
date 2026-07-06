@@ -22,7 +22,7 @@ _GRAPHIC_ELEMENTS = {  # elements that count as real visual storytelling
     "node_grid", "links", "focus_node", "wave_line", "meter_track",
     "meter_marker", "phone", "market_layers", "focus_ring", "flow_cards",
     "arrows", "outcome_accent", "card_stack", "body_glass_card",
-    "takeaway_glass_card", "brand_monogram", "cta_chip", "theme_chip",
+    "takeaway_glass_card", "brand_monogram", "brand_logo", "cta_chip", "theme_chip",
     "cause_chips", "disclaimer_strip",
 }
 MAX_ELEMENTS = 9   # beyond this a slide reads as cluttered

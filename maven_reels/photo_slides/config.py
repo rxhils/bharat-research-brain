@@ -23,6 +23,8 @@ IST = ZoneInfo("Asia/Kolkata")
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_ROOT = REPO_ROOT / "outputs" / "maven_photo_reels"
 FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+# Official Maven mark — ALWAYS placed on the takeaway (last) slide.
+BRAND_LOGO = Path(__file__).resolve().parent.parent / "assets" / "brand" / "maven_logo.png"
 
 
 def _envbool(name: str, default: bool) -> bool:
