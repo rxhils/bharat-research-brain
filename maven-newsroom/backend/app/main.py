@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import FRONTEND_ORIGINS
 from .database import init_db
-from .routes import actions, jobs, reels, settings, stream
+from .routes import actions, jobs, newsroom_reels, photo_reels, reels, settings, stream
 from .services.ingest import ingest_all
 from .services.ingest_reels import ingest_all as ingest_reels_all
 
@@ -33,11 +33,15 @@ app.include_router(jobs.router)
 app.include_router(stream.router)
 app.include_router(actions.router)
 app.include_router(reels.router)
+app.include_router(newsroom_reels.router)
+app.include_router(photo_reels.router)  # Native Photo Reel Slides (new Reels)
 
 
 @app.on_event("startup")
 def _startup() -> None:
     init_db()
+    from .newsroom_reels_db import init_db as init_reels_db
+    init_reels_db()
     ingested = ingest_all()
     reels = ingest_reels_all()
     print(f"[Newsroom] DB ready. Carousel: {ingested or 'none'} | Reels: {reels or 'none'}")

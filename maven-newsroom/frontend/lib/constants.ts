@@ -3,19 +3,29 @@ import type { ComponentClass, NodeStatus } from "./types";
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
-export const NAV_GROUPS = [
-  {
-    label: "Carousel",
-    items: [
-      { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
-      { href: "/run", label: "Live Run", icon: "Activity" },
-      { href: "/research", label: "Research Room", icon: "Newspaper" },
-      { href: "/creative", label: "Creative Studio", icon: "Palette" },
-      { href: "/review", label: "Review Room", icon: "ClipboardCheck" },
-      { href: "/publish", label: "Publish Console", icon: "Send" },
-      { href: "/archive", label: "Run Archive", icon: "Archive" },
-    ],
-  },
+/** Legacy Reels frameworks are HIDDEN (not deleted) — rebuilt as Native
+ *  Photo Reel Slides. Flip to true only to debug the old pages. */
+export const LEGACY_REELS_UI_ENABLED = false;
+
+type NavGroup = {
+  label: string;
+  items: readonly { href: string; label: string; icon: string }[];
+};
+
+const CAROUSEL_GROUP: NavGroup = {
+  label: "Carousel",
+  items: [
+    { href: "/dashboard", label: "Dashboard", icon: "LayoutDashboard" },
+    { href: "/run", label: "Live Run", icon: "Activity" },
+    { href: "/research", label: "Research Room", icon: "Newspaper" },
+    { href: "/creative", label: "Creative Studio", icon: "Palette" },
+    { href: "/review", label: "Review Room", icon: "ClipboardCheck" },
+    { href: "/publish", label: "Publish Console", icon: "Send" },
+    { href: "/archive", label: "Run Archive", icon: "Archive" },
+  ],
+};
+
+const LEGACY_REELS_GROUPS: NavGroup[] = [
   {
     label: "Reels",
     items: [
@@ -31,10 +41,36 @@ export const NAV_GROUPS = [
     ],
   },
   {
-    label: "System",
-    items: [{ href: "/settings", label: "Settings", icon: "Settings" }],
+    label: "Newsroom Reels",
+    items: [
+      { href: "/newsroom/reels", label: "Newsroom Reels", icon: "Clapperboard" },
+    ],
   },
-] as const;
+];
+
+const PHOTO_REELS_GROUP: NavGroup = {
+  label: "Photo Reels",
+  items: [
+    { href: "/newsroom/reels/slides", label: "Dashboard", icon: "LayoutDashboard" },
+    { href: "/newsroom/reels/slides/run", label: "Daily Run", icon: "Activity" },
+    { href: "/newsroom/reels/slides/studio", label: "Slide Studio", icon: "Palette" },
+    { href: "/newsroom/reels/slides/review", label: "Review", icon: "ClipboardCheck" },
+    { href: "/newsroom/reels/slides/export", label: "Export", icon: "Download" },
+    { href: "/newsroom/reels/slides/archive", label: "Archive", icon: "Archive" },
+  ],
+};
+
+const SYSTEM_GROUP: NavGroup = {
+  label: "System",
+  items: [{ href: "/settings", label: "Settings", icon: "Settings" }],
+};
+
+export const NAV_GROUPS: readonly NavGroup[] = [
+  CAROUSEL_GROUP,
+  ...(LEGACY_REELS_UI_ENABLED ? LEGACY_REELS_GROUPS : []),
+  PHOTO_REELS_GROUP,
+  SYSTEM_GROUP,
+];
 
 /** status -> {label, dot color, text color, ring} */
 export const STATUS: Record<string, { label: string; color: string; text: string; ring: string }> = {

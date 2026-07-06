@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Activity, Archive, ClipboardCheck, Clapperboard, Film, FileText,
+  Activity, Archive, ClipboardCheck, Clapperboard, Download, Film, FileText,
   LayoutDashboard, Newspaper, Palette, Radio, Send, Settings, Zap,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -10,12 +10,13 @@ import { NAV_GROUPS } from "@/lib/constants";
 
 const ICONS: Record<string, LucideIcon> = {
   LayoutDashboard, Activity, Newspaper, Palette, ClipboardCheck, Send, Archive,
-  Settings, Clapperboard, Zap, FileText, Film,
+  Settings, Clapperboard, Zap, FileText, Film, Download,
 };
 
 function active(pathname: string, href: string): boolean {
   if (href === "/reels") return pathname === "/reels";
   if (href === "/dashboard") return pathname === "/dashboard";
+  if (href === "/newsroom/reels/slides") return pathname === "/newsroom/reels/slides";
   return pathname === href || pathname.startsWith(href + "/");
 }
 
