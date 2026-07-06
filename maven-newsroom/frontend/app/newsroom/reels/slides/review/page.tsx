@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, ClipboardCheck, Copy, Download, RefreshCw, X } from "lucide-react";
 import { EmptyState } from "@/components/ui/Card";
 import { photoReelsApi as api } from "@/lib/photoReelsApi";
-import { ManualSteps, SlideThumb, StatusPill, usePhotoReelsLatest } from "@/components/photoReels/shared";
+import { ManualSteps, SlideThumb, StatusPill, ViralAudioCard, usePhotoReelsLatest } from "@/components/photoReels/shared";
 
 export default function PhotoReelsReview() {
   const { pkg, error, reload, setError } = usePhotoReelsLatest();
@@ -148,14 +148,13 @@ export default function PhotoReelsReview() {
               )}
             </div>
 
-            <div className="glass card-pad">
-              <div className="eyebrow mb-2">Instagram music (add during upload)</div>
-              <div className="text-[13px] font-medium">{pkg.music?.mood ?? "—"} · {pkg.music?.tempo ?? ""}</div>
-              <div className="text-[12px] text-ink-muted mt-1">
-                Search: {(pkg.music?.search_terms ?? []).join(" · ")}
-              </div>
-              <div className="text-[11px] text-ink-faint mt-1.5">{pkg.music?.note}</div>
-            </div>
+            <ViralAudioCard pkg={pkg} busy={busy}
+              onRefresh={async () => {
+                setBusy(true);
+                try { await api.refreshViralAudio(pkg.job_id); reload(); }
+                catch (e) { setError(String((e as Error).message)); }
+                setBusy(false);
+              }} />
 
             <div className="glass card-pad">
               <div className="eyebrow mb-2">Manual upload steps</div>

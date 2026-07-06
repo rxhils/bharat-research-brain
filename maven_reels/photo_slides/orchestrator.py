@@ -23,6 +23,7 @@ from . import (
     step07_music_scout,
     step08_qa_gate,
     step09_slide_design_judge,
+    step10_viral_audio_scout,
     visual_motifs,
 )
 
@@ -35,6 +36,7 @@ PIPELINE_STAGES = [
     ("design_judge", "Design Judge"),
     ("export", "Native Photo Reel Exporter"),
     ("music_scout", "Music Scout"),
+    ("viral_audio", "Viral Audio Scout"),
     ("qa_gate", "QA Gate"),
     ("package", "Review + Export Queue"),
 ]
@@ -72,6 +74,7 @@ def run_full(job_id: str | None = None, *, allow_simulation: bool = False,
                             style_name=style_name)
     judge = step09_slide_design_judge.run(job_id)
     step07_music_scout.run(job_id)
+    step10_viral_audio_scout.run(job_id)
     step06_exporter.run(job_id)
     qa = step08_qa_gate.run(job_id)
     state.update_package(job_id, status="needs_review",
@@ -283,6 +286,7 @@ def package(job_id: str) -> dict:
         "export": {k: exp.get(k) for k in ("status", "zip_path", "image_paths",
                                            "cover_image", "recommended_order")},
         "music": state.load_artifact(job_id, "music_scout") or {},
+        "viral_audio": state.load_artifact(job_id, "viral_audio") or {},
         "instagram_manual_steps": config.INSTAGRAM_MANUAL_STEPS,
         "stages": stages,
         "video_render": state.load_artifact(job_id, "video_render"),

@@ -15,6 +15,7 @@ const STAGE_HINTS: Record<string, string> = {
   design_judge: "Visual gate: cover ≥94 · richness ≥90 · variety ≥90 · premium ≥90",
   export: "5 PNGs + ZIP + cover + manual Instagram upload steps",
   music_scout: "Instagram music-library mood + search terms (no downloads)",
+  viral_audio: "Finds songs trending NOW on IG/TikTok in the finance niche",
   qa_gate: "Facts ≥95 · design ≥90 · readability ≥92 · format · compliance",
   package: "Review queue: approve / reject / revise / export",
 };

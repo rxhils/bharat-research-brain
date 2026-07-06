@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Clapperboard, Copy, Download, Link2, RefreshCw } from "lucide-react";
 import { EmptyState } from "@/components/ui/Card";
 import { photoReelsApi as api, type PhotoReelsConfig } from "@/lib/photoReelsApi";
-import { ManualSteps, SlideThumb, StatusPill, usePhotoReelsLatest } from "@/components/photoReels/shared";
+import { ManualSteps, SlideThumb, StatusPill, ViralAudioCard, usePhotoReelsLatest } from "@/components/photoReels/shared";
 
 export default function PhotoReelsExport() {
   const { pkg, error, reload, setError } = usePhotoReelsLatest();
@@ -100,11 +100,8 @@ export default function PhotoReelsExport() {
               <ManualSteps steps={pkg.instagram_manual_steps} />
             </div>
             <div className="space-y-5">
-              <div className="glass card-pad">
-                <div className="eyebrow mb-2">Music search terms (Instagram library)</div>
-                <div className="text-[13px]">{pkg.music?.mood} · {pkg.music?.tempo}</div>
-                <div className="text-[12px] text-ink-muted mt-1">{(pkg.music?.search_terms ?? []).join(" · ")}</div>
-              </div>
+              <ViralAudioCard pkg={pkg} busy={busy !== null}
+                onRefresh={() => act("audio", () => api.refreshViralAudio(pkg.job_id))} />
               <div className="glass card-pad">
                 <div className="eyebrow mb-2 flex items-center gap-1.5">
                   <Clapperboard size={12} /> Optional: automated video Reel

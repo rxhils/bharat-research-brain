@@ -142,6 +142,17 @@ def regenerate_slide(job_id: str, n: int, body: dict[str, Any] = _BODY) -> dict[
         raise HTTPException(409, str(exc)) from exc
 
 
+@router.post("/packages/{job_id}/viral-audio/refresh")
+def viral_audio_refresh(job_id: str) -> dict[str, Any]:
+    """Re-run the Viral Audio Scout (registry + live TikTok chart) and refresh
+    the export upload steps with the new primary pick."""
+    _require(job_id)
+    from maven_reels.photo_slides import step06_exporter, step10_viral_audio_scout
+    out = step10_viral_audio_scout.run(job_id)
+    step06_exporter.run(job_id)
+    return out
+
+
 @router.post("/packages/{job_id}/design-action")
 def design_action(job_id: str, body: dict[str, Any] = _BODY_REQUIRED) -> dict[str, Any]:
     """Slide Studio design controls (Make More Visual, Change Motif, ...).

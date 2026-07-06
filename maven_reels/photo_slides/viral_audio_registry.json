@@ -1,0 +1,78 @@
+{
+  "_about": "Curated viral-audio registry for the Viral Audio Scout. Refresh by checking: Instagram app > create Reel > add audio > 'Trending' tab (top 50, updates every few days), tokchart.com (daily TikTok chart), heyorca.com/blog/trending-audio-for-reels-tiktok and scottsocialmarketing.com weekly lists. Trends live ~7-10 days — refresh at least weekly. NEVER bake these copyrighted tracks into API-published MP4s; they are tapped inside Instagram during manual native upload.",
+  "last_refreshed": "2026-07-06",
+  "refresh_sources": [
+    "https://tokchart.com/",
+    "https://www.heyorca.com/blog/trending-audio-for-reels-tiktok",
+    "https://www.scottsocialmarketing.com/blog/trending-reels-audio-this-week-on-instagram",
+    "https://buffer.com/resources/trending-audio-instagram/"
+  ],
+  "tracks": [
+    {
+      "title": "Respect",
+      "artist": "Aretha Franklin",
+      "platform": "instagram",
+      "trend_use": "Businesses lip-sync 'What you want, baby, I got it' to showcase products/services — empowerment anthem",
+      "moods": ["confident", "upbeat"],
+      "niche_fit": ["business", "brand", "growth-story"],
+      "business_safe": true,
+      "energy": "mid-high",
+      "last_verified": "2026-07-06"
+    },
+    {
+      "title": "Game Time",
+      "artist": "Future & Tyla",
+      "platform": "instagram",
+      "trend_use": "World Cup 2026 hype — sports edits, gym, momentum content; great for rally/record-high market days",
+      "moods": ["hype", "upbeat"],
+      "niche_fit": ["market-rally", "momentum", "big-move"],
+      "business_safe": false,
+      "energy": "high",
+      "last_verified": "2026-07-06"
+    },
+    {
+      "title": "original audio — southswellicecream",
+      "artist": "southswellicecream (IG original audio)",
+      "platform": "instagram",
+      "trend_use": "'Deliberately confusing instructions' + text-overlay explainers — creators already use it for TAX and finance-jargon explainers; perfect fit for 5-slide market explainers",
+      "moods": ["playful", "explainer"],
+      "niche_fit": ["finance-explainer", "education", "jargon"],
+      "business_safe": true,
+      "energy": "mid",
+      "last_verified": "2026-07-06"
+    },
+    {
+      "title": "Janice STFU",
+      "artist": "Drake",
+      "platform": "tiktok",
+      "trend_use": "Default hype cue for epic moments; brands report ~20x usual performance; one of few chart tracks usable on business accounts",
+      "moods": ["intense", "hype"],
+      "niche_fit": ["market-crash", "big-move", "breaking"],
+      "business_safe": true,
+      "energy": "high",
+      "last_verified": "2026-07-06"
+    },
+    {
+      "title": "Young Hearts Run Free (45 Version)",
+      "artist": "Candi Staton",
+      "platform": "instagram",
+      "trend_use": "'Grip' trend — balancing essentials that sum up a personality/routine; light lifestyle crossover",
+      "moods": ["upbeat", "light"],
+      "niche_fit": ["investor-habits", "lifestyle"],
+      "business_safe": false,
+      "energy": "mid",
+      "last_verified": "2026-07-06"
+    },
+    {
+      "title": "Bangladesh",
+      "artist": "Ian McConnell",
+      "platform": "tiktok",
+      "trend_use": "Sincere-opening-to-absurd-escalation storytelling — fits 'market expectation vs reality' angles",
+      "moods": ["playful", "storytelling"],
+      "niche_fit": ["expectation-vs-reality", "myth-busting"],
+      "business_safe": false,
+      "energy": "mid",
+      "last_verified": "2026-07-06"
+    }
+  ]
+}

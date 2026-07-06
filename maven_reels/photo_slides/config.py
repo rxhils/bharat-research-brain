@@ -92,6 +92,7 @@ ARTIFACTS = {
     "export": "06_native_photo_reel_export.json",
     "video_render": "06b_reel_video_render.json",
     "music_scout": "07_music_scout.json",
+    "viral_audio": "10_viral_audio.json",
     "qa_gate": "08_qa_gate.json",
     "package": "_package.json",
 }

@@ -29,6 +29,15 @@ def run(job_id: str) -> dict:
         state.save_artifact(job_id, "export", payload)
         return payload
 
+    # inject the Viral Audio Scout's primary pick into the music step
+    steps = list(config.INSTAGRAM_MANUAL_STEPS)
+    va = state.load_artifact(job_id, "viral_audio") or {}
+    pick = va.get("primary_pick")
+    if pick:
+        steps[6] = (f"Add Instagram music — trending pick: search "
+                    f"\"{pick['title']}\" ({pick['artist']}) or use the "
+                    "Trending tab.")
+
     edir = state.export_dir(job_id)
     out_paths: list[str] = []
     for img in images:
@@ -50,15 +59,15 @@ def run(job_id: str) -> dict:
                     (script.get("caption", "") + "\n\n"
                      + " ".join(script.get("hashtags", []))))
         zf.writestr("upload_steps.txt",
-                    "\n".join(f"{i}. {s}" for i, s in
-                              enumerate(config.INSTAGRAM_MANUAL_STEPS, 1)))
+                    "\n".join(f"{i}. {s}" for i, s in enumerate(steps, 1)))
 
     payload = {
         "mode": "native_photo_reel_manual",
         "image_paths": out_paths,
         "zip_path": str(zip_path),
         "cover_image": str(cover),
-        "instagram_manual_steps": config.INSTAGRAM_MANUAL_STEPS,
+        "instagram_manual_steps": steps,
+        "viral_audio_pick": pick,
         "recommended_order": [1, 2, 3, 4, 5],
         "status": "exported",
         "generated_at": config.now_ist().isoformat(timespec="seconds"),

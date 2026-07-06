@@ -49,6 +49,12 @@ export type DesignJudge = {
   too_plain?: boolean;
 };
 
+export type ViralAudioPick = {
+  title: string; artist: string; platform: string; why: string;
+  match_score: number; business_safe: boolean; freshness: string;
+  how_to_use: string;
+};
+
 export type DesignAction =
   | "make_more_visual" | "add_finance_graphic" | "change_motif"
   | "regenerate_background" | "redesign_layout" | "make_cover_stronger";
@@ -83,6 +89,14 @@ export type PackageDetail = {
   music: {
     music_source?: string; mood?: string; search_terms?: string[];
     tempo?: string; note?: string;
+  };
+  viral_audio?: {
+    picks?: ViralAudioPick[];
+    primary_pick?: ViralAudioPick | null;
+    live_status?: string;
+    registry_last_refreshed?: string | null;
+    registry_stale?: boolean;
+    compliance_note?: string;
   };
   instagram_manual_steps: string[];
   stages: Record<string, { name: string; done: boolean; status?: string | null }>;
@@ -138,6 +152,9 @@ export const photoReelsApi = {
     .then((r) => j<Record<string, unknown>>(r)),
   decision: (id: string, decision: "approve" | "reject" | "revise", reason?: string) =>
     post(`/packages/${id}/decision`, { decision, reason })
+      .then((r) => j<Record<string, unknown>>(r)),
+  refreshViralAudio: (id: string) =>
+    post(`/packages/${id}/viral-audio/refresh`)
       .then((r) => j<Record<string, unknown>>(r)),
   designAction: (id: string, action: DesignAction, slide?: number) =>
     post(`/packages/${id}/design-action`, { action, slide })
