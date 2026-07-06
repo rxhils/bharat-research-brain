@@ -1,13 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
-import { useReducedMotionSafe } from "./motion";
+import { ChartReveal, EASE, PRESS, useReducedMotionSafe } from "./motion";
 import type {
   ABReadout, AgentBoard as TBoard, AgentRun, EquityPoint, ExposureState,
   Holding, ScoreRow,
@@ -38,6 +38,11 @@ function Logo({ size = 30 }: { size?: number }) {
   );
 }
 
+// Footer-style press composition (see app/layout.tsx): keeps the color fade
+// alongside the press scale — plain PRESS would override transition-colors.
+const NAV_PRESS =
+  "motion-safe:transition-[color,background-color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97]";
+
 export function Nav() {
   const path = usePathname();
   const tab = (href: string, label: string) => {
@@ -45,7 +50,7 @@ export function Nav() {
     return (
       <Link
         href={href}
-        className={`whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
+        className={`whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
           active ? "bg-emerald/10 text-emerald" : "text-muted hover:text-ink"
         }`}
       >
@@ -54,23 +59,22 @@ export function Nav() {
     );
   };
   return (
-    <nav className="sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between gap-2 border-b border-hairline bg-bg/85 px-5 py-4 backdrop-blur-md sm:-mx-8 sm:px-8">
-      <Link href="/" className="flex shrink-0 items-center gap-2.5">
+    /* pt clears the iPhone notch / Dynamic Island (safe-area var from globals.css) */
+    <nav className="sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between gap-2 border-b border-hairline bg-bg/85 px-5 pb-4 pt-[calc(1rem+var(--sat))] backdrop-blur-md sm:-mx-8 sm:px-8">
+      <Link href="/" className={`flex shrink-0 items-center gap-2.5 ${PRESS}`}>
         <Logo size={28} />
         <span className="hidden text-sm tracking-[0.2em] text-muted sm:inline">MAVEN</span>
       </Link>
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-        <div className="flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-hairline bg-panel/50 p-1 [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
+        <div className="scroll-touch flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-hairline bg-panel/50 p-1 [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
           <Link
             href="/chat"
-            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
+            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
               path === "/chat" ? "bg-emerald/10 text-emerald" : "text-muted hover:text-ink"
             }`}
           >
-            <span className="relative flex h-1.5 w-1.5" aria-hidden>
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald/70" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald" />
-            </span>
+            {/* static dot — a looping ping in the highest-frequency surface is slop */}
+            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald" aria-hidden />
             Chat
           </Link>
           {tab("/", "How it works")}
@@ -80,7 +84,7 @@ export function Nav() {
         </div>
         <Link
           href="/backtest"
-          className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1 text-[11px] transition-colors sm:px-3.5 sm:py-1.5 sm:text-sm ${
+          className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
             path === "/backtest"
               ? "border-emerald/50 bg-emerald/15 text-emerald"
               : "border-emerald/30 text-emerald hover:bg-emerald/10"
@@ -101,11 +105,11 @@ export function Card({
   const reduce = useReducedMotionSafe();
   return (
     <motion.section
-      className={`rounded-xl2 border border-border bg-panel/60 p-5 transition-[border-color,box-shadow,transform] duration-300 hover:-translate-y-0.5 hover:border-emerald/25 hover:shadow-[0_18px_50px_-28px_rgba(52,211,153,0.45)] ${className}`}
+      className={`rounded-xl2 border border-border bg-panel/60 p-5 transition-[border-color,box-shadow,transform] duration-300 hover:border-emerald/25 hover:shadow-[0_18px_50px_-28px_rgba(52,211,153,0.45)] motion-safe:hover:-translate-y-0.5 ${className}`}
       initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-6% 0px" }}
-      transition={{ duration: 0.55, delay: delay / 1000, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.55, delay: delay / 1000, ease: EASE }}
     >
       {title && (
         <div className="mb-4 flex items-baseline justify-between gap-3">
@@ -147,22 +151,39 @@ function ChartTip({ active, payload, label }: any) {
   );
 }
 
+// Recharts replays its draw animation on every data change. Allow one pass on
+// mount (600ms), then hard-disable so refreshes/re-renders never redraw lines.
+// Reduced motion skips the draw entirely.
+function useChartDrawOnce() {
+  const reduce = useReducedMotionSafe();
+  const [firstPass, setFirstPass] = useState(true);
+  useEffect(() => {
+    const id = window.setTimeout(() => setFirstPass(false), 800); // outlives the 600ms draw
+    return () => window.clearTimeout(id);
+  }, []);
+  return firstPass && !reduce;
+}
+
 export function EquityChart({ data }: { data: EquityPoint[] }) {
+  const draw = useChartDrawOnce();
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-        <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-        <XAxis dataKey="date" tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(d) => fmtDate(d).slice(0, 6)} minTickGap={40} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(v) => inrCompact(v)} width={56} axisLine={false} tickLine={false} domain={["dataMin", "dataMax"]} />
-        <Tooltip content={<ChartTip />} />
-        <Line type="monotone" dataKey="nifty500" name="Nifty 500 TRI" stroke="#5a616a" strokeWidth={1.5} dot={false} />
-        <Line type="monotone" dataKey="fplus" name="Enhanced F+" stroke="#34d399" strokeWidth={2} dot={false} />
-      </LineChart>
-    </ResponsiveContainer>
+    <ChartReveal delay={0.1}>
+      <ResponsiveContainer width="100%" height={240}>
+        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+          <XAxis dataKey="date" tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(d) => fmtDate(d).slice(0, 6)} minTickGap={40} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(v) => inrCompact(v)} width={56} axisLine={false} tickLine={false} domain={["dataMin", "dataMax"]} />
+          <Tooltip content={<ChartTip />} />
+          <Line type="monotone" dataKey="nifty500" name="Nifty 500 TRI" stroke="#5a616a" strokeWidth={1.5} dot={false} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
+          <Line type="monotone" dataKey="fplus" name="Enhanced F+" stroke="#34d399" strokeWidth={2} dot={false} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
+        </LineChart>
+      </ResponsiveContainer>
+    </ChartReveal>
   );
 }
 
 export function ABChart({ data, readout }: { data: EquityPoint[]; readout: ABReadout }) {
+  const draw = useChartDrawOnce(); // one draw on mount, never on data refresh
   return (
     <div>
       <div className="mb-3 flex items-center gap-2 text-sm">
@@ -174,18 +195,20 @@ export function ABChart({ data, readout }: { data: EquityPoint[]; readout: ABRea
           <span className="text-muted">No agentic edge yet — agents not live</span>
         )}
       </div>
-      <ResponsiveContainer width="100%" height={210}>
-        <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-          <XAxis dataKey="date" tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(d) => fmtDate(d).slice(0, 6)} minTickGap={40} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(v) => inrCompact(v)} width={56} axisLine={false} tickLine={false} domain={["dataMin", "dataMax"]} />
-          <Tooltip content={<ChartTip />} />
-          <Line type="monotone" dataKey="fplus" name="Enhanced F+" stroke="#34d399" strokeWidth={2} dot={false} />
-          {readout.hasAgentic && (
-            <Line type="monotone" dataKey="fplusAgentic" name="F+ · agentic" stroke="#fbbf24" strokeWidth={2} dot={false} />
-          )}
-        </LineChart>
-      </ResponsiveContainer>
+      <ChartReveal delay={0.1}>
+        <ResponsiveContainer width="100%" height={210}>
+          <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+            <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <XAxis dataKey="date" tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(d) => fmtDate(d).slice(0, 6)} minTickGap={40} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(v) => inrCompact(v)} width={56} axisLine={false} tickLine={false} domain={["dataMin", "dataMax"]} />
+            <Tooltip content={<ChartTip />} />
+            <Line type="monotone" dataKey="fplus" name="Enhanced F+" stroke="#34d399" strokeWidth={2} dot={false} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
+            {readout.hasAgentic && (
+              <Line type="monotone" dataKey="fplusAgentic" name="F+ · agentic" stroke="#fbbf24" strokeWidth={2} dot={false} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
+            )}
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartReveal>
       <p className="mt-3 text-xs leading-relaxed text-dim">{readout.note}</p>
     </div>
   );
@@ -197,6 +220,7 @@ export function ABChart({ data, readout }: { data: EquityPoint[]; readout: ABRea
 export function ExposureGauge({ state }: { state: ExposureState }) {
   const invested = 100 - state.cashPct;
   const riskOff = state.regime === "risk_off";
+  const reduce = useReducedMotionSafe();
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
@@ -205,8 +229,17 @@ export function ExposureGauge({ state }: { state: ExposureState }) {
           {riskOff ? "Risk-off" : "Risk-on"}
         </span>
       </div>
+      {/* Invested sleeve fills from 0 once on view — a single purposeful gauge
+          entrance (not a nested fade); origin-aware, GPU-cheap via width tween. */}
       <div className="flex h-3 overflow-hidden rounded-full bg-white/5">
-        <div className="bg-emerald" style={{ width: `${invested}%` }} />
+        <motion.div
+          className="bg-emerald"
+          initial={reduce ? false : { width: 0 }}
+          whileInView={{ width: `${invested}%` }}
+          viewport={{ once: true, margin: "-8% 0px" }}
+          transition={{ duration: 0.7, ease: EASE }}
+          style={{ width: `${invested}%` }}
+        />
         <div className="bg-white/10" style={{ width: `${state.cashPct}%` }} />
       </div>
       <div className="mt-2 flex justify-between text-xs text-muted">
@@ -242,16 +275,32 @@ export function HoldingsTable({ rows }: { rows: Holding[] }) {
     });
     return [...stocks, ...cash];
   }, [rows, key, dir]);
-  const head = (k: SortKey, label: string, extra = "") => (
-    <th
-      className={`cursor-pointer select-none py-2 text-xs font-medium text-dim hover:text-ink ${extra}`}
-      onClick={() => { if (key === k) { setDir((d) => (d === 1 ? -1 : 1)); } else { setKey(k); setDir(-1); } }}
-    >
-      {label}{key === k ? (dir === 1 ? " up" : " dn") : ""}
-    </th>
-  );
+  // Sort direction shown as a caret that only renders on the active column —
+  // keeps inactive headers quiet (Emil: no ambient affordance noise).
+  // Real <button> inside the th → keyboard-sortable (Enter/Space) with a visible
+  // focus ring; aria-sort stays on the columnheader where AT expects it.
+  const head = (k: SortKey, label: string, extra = "") => {
+    const on = key === k;
+    return (
+      <th
+        aria-sort={on ? (dir === 1 ? "ascending" : "descending") : "none"}
+        className={`py-2 text-xs font-medium ${extra}`}
+      >
+        <button
+          type="button"
+          className={`select-none rounded font-medium motion-safe:transition-[color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60 ${on ? "text-muted" : "text-dim hover:text-muted"}`}
+          onClick={() => { if (key === k) { setDir((d) => (d === 1 ? -1 : 1)); } else { setKey(k); setDir(-1); } }}
+        >
+          {label}
+          <span className={`ml-1 inline-block font-mono transition-opacity ${on ? "opacity-100" : "opacity-0"}`} aria-hidden>
+            {dir === 1 ? "↑" : "↓"}
+          </span>
+        </button>
+      </th>
+    );
+  };
   return (
-    <div className="overflow-x-auto">
+    <div className="scroll-touch overflow-x-auto">
       <table className="w-full min-w-[640px] border-collapse">
         <thead>
           <tr className="border-b border-hairline text-left">
@@ -264,9 +313,13 @@ export function HoldingsTable({ rows }: { rows: Holding[] }) {
             {head("pnlPct", "P&L", "text-right")}
           </tr>
         </thead>
+        {/* tnum = tabular figures so columns of prices/percentages stay aligned */}
         <tbody className="tnum">
           {sorted.map((r) => (
-            <tr key={r.isin} className={`border-b border-hairline/60 ${r.isCash ? "text-muted" : "text-ink"}`}>
+            <tr
+              key={r.isin}
+              className={`border-b border-hairline/60 transition-colors hover:bg-white/[.02] ${r.isCash ? "text-muted" : "text-ink"}`}
+            >
               <td className="py-2.5 font-mono text-sm">{r.ticker}</td>
               <td className="py-2.5 text-sm text-muted">{r.name}</td>
               <td className="py-2.5 text-xs text-dim">{r.sector}</td>
@@ -309,7 +362,8 @@ export function ScoreBreakdown({ rows }: { rows: ScoreRow[] }) {
         <select
           value={isin}
           onChange={(e) => setIsin(e.target.value)}
-          className="rounded-lg border border-border bg-panel2 px-3 py-1.5 text-sm text-ink outline-none"
+          aria-label="Choose stock for score breakdown"
+          className="rounded-lg border border-border bg-panel2 px-3 py-1.5 text-sm text-ink outline-none transition-colors focus:border-emerald/40 focus-visible:ring-1 focus-visible:ring-emerald/60"
         >
           {rows.map((r) => <option key={r.isin} value={r.isin}>{r.ticker} — {r.name}</option>)}
         </select>
@@ -346,14 +400,16 @@ export function TopScores({ rows }: { rows: ScoreRow[] }) {
         {sectors.map((sec) => (
           <button
             key={sec}
+            type="button"
             onClick={() => setSector(sec)}
-            className={`rounded-md px-2.5 py-1 text-xs transition-colors ${sector === sec ? "bg-emerald/12 text-emerald" : "bg-white/4 text-dim hover:text-muted"}`}
+            aria-pressed={sector === sec}
+            className={`rounded-md px-2.5 py-1 text-xs motion-safe:transition-[color,background-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60 ${sector === sec ? "bg-emerald/12 text-emerald" : "bg-white/4 text-dim hover:text-muted"}`}
           >
             {sec}
           </button>
         ))}
       </div>
-      <div className="overflow-x-auto">
+      <div className="scroll-touch overflow-x-auto">
         <table className="w-full min-w-[560px] border-collapse">
           <thead>
             <tr className="border-b border-hairline text-left text-xs font-medium text-dim">
@@ -386,10 +442,32 @@ export function TopScores({ rows }: { rows: ScoreRow[] }) {
 // ---------------------------------------------------------------------------
 // Agent activity board (live polling)
 // ---------------------------------------------------------------------------
+// Static dot + glow per status (mirrors agents.tsx — an infinite pulse on a
+// status dot is AI-slop noise; the glow alone reads as "active"). On a status
+// TRANSITION the dot re-mounts (keyed by class) and plays ONE settle-flash.
 const DOT: Record<AgentRun["status"], string> = {
-  done: "bg-emerald", running: "bg-amber animate-pulseDot",
-  waiting: "bg-white/30", offline: "bg-rose/60", error: "bg-rose",
+  done: "bg-emerald shadow-[0_0_6px_rgba(52,211,153,0.55)]",
+  running: "bg-amber shadow-[0_0_6px_rgba(251,191,36,0.55)]",
+  waiting: "bg-white/30",
+  offline: "bg-rose/60",
+  error: "bg-rose shadow-[0_0_6px_rgba(251,113,133,0.45)]",
 };
+
+function FlashDot({ cls }: { cls: string }) {
+  const reduce = useReducedMotionSafe();
+  const first = useRef(true);
+  useEffect(() => { first.current = false; }, []);
+  return (
+    <motion.span
+      key={cls} // remount on state change → one-shot flash; static otherwise
+      aria-hidden
+      className={`h-2 w-2 shrink-0 rounded-full ${cls}`}
+      initial={reduce || first.current ? false : { scale: 1.8, opacity: 0.5 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ duration: 0.45, ease: EASE }}
+    />
+  );
+}
 const GROUPS: { key: AgentRun["group"]; label: string }[] = [
   { key: "selection", label: "Selection" },
   { key: "market", label: "Market" },
@@ -402,7 +480,7 @@ function AgentCard({ a }: { a: AgentRun }) {
   return (
     <div className="rounded-lg border border-hairline bg-panel2/60 p-3">
       <div className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${DOT[a.status]}`} />
+        <FlashDot cls={DOT[a.status]} />
         <span className="text-sm text-ink">{a.agentName}</span>
         <span className="ml-auto font-mono text-[11px] text-dim">
           {a.status === "offline" ? "offline" : a.durationMs ? `${(a.durationMs / 1000).toFixed(1)}s` : running ? "running" : ""}
@@ -412,7 +490,7 @@ function AgentCard({ a }: { a: AgentRun }) {
       {running && (
         <div className="mt-2">
           <div className="h-1.5 overflow-hidden rounded-full bg-white/5">
-            <div className="h-full bg-amber transition-all" style={{ width: `${pctDone}%` }} />
+            <div className="h-full bg-amber transition-[width]" style={{ width: `${pctDone}%` }} />
           </div>
           <div className="mt-1 text-right font-mono text-[10px] text-dim">{a.progressCurrent}/{a.progressTotal}</div>
         </div>
@@ -444,7 +522,7 @@ export function AgentActivity() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2 text-xs text-muted">
-        <span className={`h-2 w-2 rounded-full ${board.inProgress ? "bg-amber animate-pulseDot" : "bg-emerald"}`} />
+        <FlashDot cls={board.inProgress ? DOT.running : DOT.done} />
         {board.inProgress ? "Run in progress" : "Idle"} · last update {ago(board.lastRun)}
         <span className="ml-auto font-mono text-dim">{board.runId}</span>
       </div>

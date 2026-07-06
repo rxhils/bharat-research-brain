@@ -1,6 +1,8 @@
 import type { SourceResult, Confidence, ExtractedPage, DocumentType, SourceTier } from "./types";
 import { searchSearxngMany, searxngConfigured } from "./freeSourceSearch";
 import { searchGoogleNewsMany } from "./googleNewsSearch";
+import { searchGoogleCustomMany, googleCustomSearchConfigured } from "./googleCustomSearch";
+import { searchSerplifyMany, serplifyConfigured } from "./serplifySearch";
 import { extractPage } from "./pageExtractor";
 import { scoreSource } from "./sourceQualityScorer";
 
@@ -177,18 +179,24 @@ export async function searchSources(queries: string[], opts?: { budget?: number 
   // filtering left the news layer with only 1-2 plain queries once official queries ate most of
   // the cap - starving exactly the deep-research tier this layer most needs to fill.
   const newsQueries = queries.filter((q) => !/^site:/i.test(q)).slice(0, qCap);
-  const [free, news] = await Promise.all([
+  // Google Custom Search (real general-web results: official sites, filings, reputable media, data
+  // pages) runs when configured. Capped tighter than the news layer to respect its 100/day free
+  // quota; Google News RSS stays the always-on, unlimited layer so coverage never degrades on quota.
+  const cseCap = Math.min(qCap, 4);
+  const [free, news, cse, serp] = await Promise.all([
     searxngConfigured() ? searchSearxngMany([...officialQueries(qs), ...qs].slice(0, qCap * 2)) : Promise.resolve<SourceResult[]>([]),
     searchGoogleNewsMany(newsQueries, qCap),
+    googleCustomSearchConfigured() ? searchGoogleCustomMany(newsQueries, cseCap) : Promise.resolve<SourceResult[]>([]),
+    serplifyConfigured() ? searchSerplifyMany(newsQueries, cseCap) : Promise.resolve<SourceResult[]>([]),
   ]);
-  let ranked = rankAndDedupe([...free, ...news]);
+  let ranked = rankAndDedupe([...free, ...news, ...cse, ...serp]);
 
   // 3: only reach for a paid provider when the free layer didn't find enough official/quality sources.
   const enoughCount = budget >= 18 ? 6 : budget >= 10 ? 4 : 3;
   const enough = ranked.filter((r) => (r.sourceRank ?? 9) <= 3).length >= 2 || ranked.length >= enoughCount;
   if (!enough && pickProvider()) {
     const paid = await runPaid(qs);
-    ranked = rankAndDedupe([...free, ...news, ...paid]);
+    ranked = rankAndDedupe([...free, ...news, ...cse, ...serp, ...paid]);
   }
 
   // 7: keep up to the budget, enrich the top slots with extracted page text (bounded, silent on failure).

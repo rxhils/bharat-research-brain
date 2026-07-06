@@ -6,13 +6,16 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { EASE, pressTap, useReducedMotionSafe } from "./motion";
 
 const SEEN_KEY = "maven_intro_seen_v1";
 
 export function IntroOverlay() {
+  const reduce = useReducedMotionSafe();
   const [show, setShow] = useState(false);
   const [ready, setReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const skipRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setReady(true);
@@ -28,6 +31,16 @@ export function IntroOverlay() {
     setShow(false);
   };
 
+  // Modal focus + escape hatch: the overlay's only control (Skip) takes focus on
+  // open so keyboard users aren't stranded behind the dialog, and Escape dismisses.
+  useEffect(() => {
+    if (!show) return;
+    skipRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") dismiss(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [show]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Avoid a hydration flash: render nothing until mounted (the gate is client-only).
   if (!ready) return null;
 
@@ -35,11 +48,22 @@ export function IntroOverlay() {
     <AnimatePresence>
       {show && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-5"
+          // full dynamic-viewport cover; safe-area-aware inset so the card never
+          // hides under the notch or home indicator on phones
+          role="dialog"
+          aria-modal="true"
+          aria-label="Maven intro video"
+          className="fixed inset-0 z-[100] flex h-dvh items-center justify-center"
+          style={{
+            paddingTop: "max(1.25rem, var(--sat))",
+            paddingRight: "max(1.25rem, var(--sar))",
+            paddingBottom: "max(1.25rem, var(--sab))",
+            paddingLeft: "max(1.25rem, var(--sal))",
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.6, ease: EASE }}
         >
           {/* dim + blur the page (How it works) behind */}
           <div className="absolute inset-0 bg-bg/90 backdrop-blur-md" />
@@ -48,10 +72,10 @@ export function IntroOverlay() {
               on phones (portrait = full width strip; landscape = capped height). */}
           <motion.div
             className="relative flex w-full max-w-5xl items-center justify-center"
-            initial={{ opacity: 0, scale: 0.96, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.985 }}
-            transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.96, y: 10 }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.985 }}
+            transition={{ duration: 0.7, delay: 0.08, ease: EASE }}
           >
             <div
               className="pointer-events-none absolute -inset-4 -z-10 rounded-[2rem] opacity-70 blur-3xl sm:-inset-6"
@@ -70,21 +94,24 @@ export function IntroOverlay() {
             />
           </motion.div>
 
-          {/* skip — positioned clear of the iOS home indicator (safe-area), large tap target */}
+          {/* skip — clear of the iOS home indicator / notch (safe-area vars),
+              >=44px tap target; press feedback gated via pressTap */}
           <motion.button
+            ref={skipRef}
             type="button"
             onClick={dismiss}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9, duration: 0.5 }}
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 6 }}
+            animate={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.5, ease: EASE }}
+            {...pressTap(reduce)}
             style={{
-              bottom: "calc(env(safe-area-inset-bottom, 0px) + 1.25rem)",
-              right: "calc(env(safe-area-inset-right, 0px) + 1.25rem)",
+              bottom: "max(1.25rem, var(--sab))",
+              right: "max(1.25rem, var(--sar))",
             }}
-            className="group absolute inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm text-muted backdrop-blur-md transition-colors hover:border-emerald/40 hover:text-ink active:scale-95 sm:px-5"
+            className="group absolute inline-flex min-h-[44px] items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm text-muted backdrop-blur-md transition-[color,border-color] hover:border-emerald/40 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60 sm:px-5"
           >
             Skip intro
-            <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-0.5">→</span>
+            <span aria-hidden className="motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:translate-x-0.5">→</span>
           </motion.button>
         </motion.div>
       )}

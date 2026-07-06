@@ -55,15 +55,15 @@ export function MavenLatestDataChecklist({ items }: { items?: MavenChecklistItem
 
   return (
     <div className="mt-2 rounded-xl border border-hairline bg-white/[0.015] px-3.5 py-2.5">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="flex w-full items-center gap-2 text-left">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="flex w-full items-center gap-2 rounded-md text-left motion-safe:transition-transform motion-safe:duration-150 motion-safe:active:scale-[0.99] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
         <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-dim">Latest data checked</span>
-        <span className="text-[10px] text-dim">{foundCount}/{list.length} found</span>
+        <span className="tnum text-[10px] text-muted"><span className="text-emerald">{foundCount}</span>/{list.length} found</span>
         <span className="ml-auto text-[10px] text-emerald">{open ? "Hide" : "Show"}</span>
       </button>
       {!open && (
         <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
           {preview.map((i) => (
-            <span key={i.item} className="inline-flex items-center gap-1 text-[10px] text-dim">
+            <span key={i.item} className={"inline-flex items-center gap-1 text-[10px] " + (i.status === "found" ? "text-ink/70" : "text-dim")}>
               <span className={"h-1 w-1 rounded-full " + (i.status === "found" ? "bg-emerald" : "bg-white/25")} />
               {i.label}
             </span>
@@ -72,14 +72,18 @@ export function MavenLatestDataChecklist({ items }: { items?: MavenChecklistItem
         </div>
       )}
       {open && (
-        <div className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2">
-          {list.map((i) => (
-            <div key={i.item} className="flex items-center gap-1.5 text-[10px] text-ink/70">
-              <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (i.status === "found" ? "bg-emerald" : "bg-white/25")} />
-              <span className="text-ink/85">{i.label}:</span>
-              <span className={i.status === "found" ? "text-emerald" : "text-dim"}>{i.status === "found" ? (i.latestPeriod ? `found (${i.latestPeriod})` : "found") : "unavailable"}</span>
-            </div>
-          ))}
+        <div className="mt-2 grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
+          {list.map((i) => {
+            const found = i.status === "found";
+            return (
+              <div key={i.item} className="flex items-baseline gap-1.5 text-[10px]">
+                {/* check vs dash — status is legible without relying on color alone */}
+                <span className={"mt-px shrink-0 font-mono text-[9px] " + (found ? "text-emerald" : "text-dim")} aria-hidden>{found ? "✓" : "–"}</span>
+                <span className="text-ink/85">{i.label}</span>
+                <span className={"ml-auto tnum whitespace-nowrap " + (found ? "text-emerald" : "text-dim")}>{found ? (i.latestPeriod ? i.latestPeriod : "found") : "unavailable"}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -7,8 +7,10 @@
 // /api/agents when a nightly run has recorded heartbeats; until then the documented
 // status is shown. Honest by design — no fake "busy" agents.
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import type { AgentBoard, AgentRun } from "@/lib/types";
+import { EASE, useReducedMotionSafe } from "./motion";
 
 type Doc = {
   name: string;
@@ -106,20 +108,27 @@ const OFFLINE: Doc[] = [
   },
 ];
 
+// Static dot + subtle glow — no infinite pulse (5 dots pulsing at once is noise,
+// the glow alone reads as "on").
 function StatusDot({ live, run }: { live: boolean; run?: AgentRun }) {
-  let color = live ? "bg-emerald" : "bg-dim";
-  let pulse = "";
+  let cls = live ? "bg-emerald shadow-[0_0_6px_rgba(52,211,153,0.55)]" : "bg-dim";
   if (run) {
-    if (run.status === "running") { color = "bg-amber"; pulse = "animate-pulseDot"; }
-    else if (run.status === "done") color = "bg-emerald";
-    else if (run.status === "error") color = "bg-rose";
-    else if (run.status === "offline") color = "bg-dim";
+    if (run.status === "running") cls = "bg-amber shadow-[0_0_6px_rgba(251,191,36,0.55)]";
+    else if (run.status === "done") cls = "bg-emerald shadow-[0_0_6px_rgba(52,211,153,0.55)]";
+    else if (run.status === "error") cls = "bg-rose shadow-[0_0_6px_rgba(251,113,133,0.45)]";
+    else if (run.status === "offline") cls = "bg-dim";
   }
-  return <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${color} ${pulse}`} />;
+  return <span aria-hidden className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${cls}`} />;
 }
+
+// Composed press: this button fades border+bg on hover, so plain PRESS (which
+// sets transition-property:transform) would kill the color fade — keep both.
+const CARD_PRESS =
+  "motion-safe:transition-[color,background-color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.99]";
 
 function AgentCard({ doc, live, run }: { doc: Doc; live: boolean; run?: AgentRun }) {
   const [open, setOpen] = useState(false);
+  const reduce = useReducedMotionSafe();
   const badge = live
     ? { text: run?.status ?? "live", cls: "bg-emerald/15 text-emerald" }
     : { text: "offline", cls: "bg-white/5 text-dim" };
@@ -127,7 +136,8 @@ function AgentCard({ doc, live, run }: { doc: Doc; live: boolean; run?: AgentRun
     <button
       type="button"
       onClick={() => setOpen((v) => !v)}
-      className="w-full rounded-xl border border-hairline bg-bg/40 p-3 text-left transition-colors hover:border-white/10 hover:bg-panel/60"
+      aria-expanded={open}
+      className={`w-full rounded-xl border border-hairline bg-bg/40 p-3 text-left hover:border-white/10 hover:bg-panel/60 ${CARD_PRESS}`}
     >
       <div className="flex items-start gap-2.5">
         <StatusDot live={live} run={run} />
@@ -139,20 +149,33 @@ function AgentCard({ doc, live, run }: { doc: Doc; live: boolean; run?: AgentRun
             </span>
           </div>
           <p className="mt-0.5 text-xs text-muted">{doc.one}</p>
-          {open && (
-            <div className="mt-2 border-t border-hairline pt-2">
-              <p className="text-xs leading-relaxed text-muted">{doc.long}</p>
-              {live && doc.cadence && (
-                <p className="mt-1.5 text-[11px] text-dim">Runs: {doc.cadence}</p>
-              )}
-              {!live && doc.offlineReason && (
-                <p className="mt-1.5 text-[11px] text-dim">Offline: {doc.offlineReason}</p>
-              )}
-              {run?.headlineOutput && (
-                <p className="mt-1.5 font-mono text-[11px] text-emerald">{run.headlineOutput}</p>
-              )}
-            </div>
-          )}
+          {/* Smooth height+opacity reveal instead of a snap; collapsed height is
+              clipped so the expansion reads as the panel growing, not a jump. */}
+          <AnimatePresence initial={false}>
+            {open && (
+              <motion.div
+                key="detail"
+                initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                animate={reduce ? { opacity: 1 } : { height: "auto", opacity: 1 }}
+                exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                transition={{ duration: 0.28, ease: EASE }}
+                className="overflow-hidden"
+              >
+                <div className="mt-2 border-t border-hairline pt-2">
+                  <p className="text-xs leading-relaxed text-muted">{doc.long}</p>
+                  {live && doc.cadence && (
+                    <p className="mt-1.5 text-[11px] text-dim">Runs: {doc.cadence}</p>
+                  )}
+                  {!live && doc.offlineReason && (
+                    <p className="mt-1.5 text-[11px] text-dim">Offline: {doc.offlineReason}</p>
+                  )}
+                  {run?.headlineOutput && (
+                    <p className="mt-1.5 font-mono text-[11px] text-emerald">{run.headlineOutput}</p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           {!open && <p className="mt-1 text-[10px] text-dim">click to explain</p>}
         </div>
       </div>

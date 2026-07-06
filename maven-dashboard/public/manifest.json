@@ -1,0 +1,12 @@
+{
+  "name": "Maven",
+  "short_name": "Maven",
+  "description": "Forward paper-trading dashboard for the Enhanced F+ risk engine.",
+  "start_url": "/chat",
+  "display": "standalone",
+  "background_color": "#0a0b0d",
+  "theme_color": "#0a0b0d",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

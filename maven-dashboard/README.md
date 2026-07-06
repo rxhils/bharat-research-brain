@@ -49,6 +49,23 @@ accent, Indian formatting (₹ lakh/crore, NSE tickers). Vercel-deployable as-is
 4. The Agent Activity board goes live automatically once the backend writes
    `agent_run_log` (migration `0031` in the repo) — `getAgentBoard()` just reads it.
 
+## Web search sources (optional — richer research citations)
+
+Maven's research answers cite real web sources. **Google News RSS is always on** (free, no
+setup). To also pull **general-web Google results** — official sites, filings, reputable media,
+Perplexity-style breadth — set Google's official **Custom Search JSON API** (free 100 queries/day)
+in `.env.local` (local) and in Vercel → Project → Settings → Environment Variables (prod):
+
+```bash
+# maven-dashboard/.env.local
+GOOGLE_CSE_KEY=...   # Google Cloud Console -> enable "Custom Search API" -> create an API key
+GOOGLE_CSE_CX=...    # programmablesearchengine.google.com -> "Search the entire web" -> engine ID
+```
+
+Leaving them unset is fine — Maven falls back to Google News RSS and never surfaces a
+provider/quota error. Paid providers (`TAVILY_API_KEY` / `SERPER_API_KEY` / `EXA_API_KEY` /
+`BRAVE_API_KEY`) are also supported as a fallback via their own keys.
+
 ## Expected backend tables (from the paper engine)
 | Table | Used for |
 |---|---|

@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
-import { ChatView } from "@/components/chat-view";
+import { ChatShell } from "@/components/chat-shell";
+import { MarketTicker } from "@/components/market-ticker";
 
 export const metadata: Metadata = { title: "Chat - Maven" };
 
 export default function ChatPage() {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 sm:space-y-5">
+      <MarketTicker />
       <div>
-        <div className="text-[11px] uppercase tracking-wider text-dim">AI copilot &middot; India markets</div>
+        <div className="text-[10px] uppercase tracking-[0.18em] text-dim sm:text-[11px]">AI copilot &middot; India markets</div>
         <div className="mt-1.5 flex items-center gap-2.5">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[28%]" style={{ background: "#0d0e11" }}>
             <svg width="22" height="22" viewBox="0 0 100 100" fill="none" role="img" aria-label="Maven">
@@ -22,7 +24,7 @@ export default function ChatPage() {
           Educational market context for NSE/BSE &mdash; what moved and why it matters. Not investment advice.
         </p>
       </div>
-      <ChatView />
+      <ChatShell />
     </div>
   );
 }

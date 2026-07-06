@@ -14,6 +14,8 @@
     "eval:followups": "node scripts/test-conversation-followups.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.0",
+    "@supabase/supabase-js": "^2.110.0",
     "@types/pg": "^8.20.0",
     "framer-motion": "^11.18.2",
     "next": "^14.2.35",

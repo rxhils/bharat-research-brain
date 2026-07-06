@@ -19,24 +19,12 @@
 import {
   motion,
   useInView,
-  useReducedMotion,
   useScroll,
   animate,
   type Variants,
 } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-
-/** Hydration-safe reduced-motion: returns false on the server AND the first client
- *  render (so the element tree is identical and hydration matches), then the real
- *  prefers-reduced-motion value after mount. Without this, reduced-motion users hit
- *  a hydration error wherever `reduce` changes which elements render (e.g. the
- *  ScrollProgress bar, which returns null when reduced). */
-function useReducedMotionSafe(): boolean {
-  const reduce = useReducedMotion();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted ? !!reduce : false;
-}
+import { EASE, EASE_SOFT, pressTap, useReducedMotionSafe } from "./motion";
 
 // ───────────────────────────── content ─────────────────────────────
 
@@ -153,15 +141,21 @@ function Reveal({ children, delay = 0, y = 22, className = "" }: { children: Rea
       initial={reduce ? { opacity: 0 } : { opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-12% 0px -12% 0px" }}
-      transition={{ duration: 0.75, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.75, delay, ease: EASE }}
     >
       {children}
     </motion.div>
   );
 }
 
-const stagger: Variants = { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.04 } } };
 function RevealGroup({ children, className = "" }: { children: ReactNode; className?: string }) {
+  // Reduced-motion branch mirrors Reveal/Item: children still fade in, but with
+  // no sequential delay — a stagger reads as motion even on opacity-only items.
+  const reduce = useReducedMotionSafe();
+  const stagger: Variants = {
+    hidden: {},
+    show: { transition: { staggerChildren: reduce ? 0 : 0.1, delayChildren: reduce ? 0 : 0.04 } },
+  };
   return (
     <motion.div className={className} variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: "-10% 0px" }}>
       {children}
@@ -172,7 +166,7 @@ function Item({ children, className = "" }: { children: ReactNode; className?: s
   const reduce = useReducedMotionSafe();
   const v: Variants = {
     hidden: reduce ? { opacity: 0 } : { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } },
+    show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE } },
   };
   return <motion.div className={className} variants={v}>{children}</motion.div>;
 }
@@ -185,7 +179,7 @@ function CountUp({ to, suffix = "", duration = 1.5 }: { to: number; suffix?: str
   useEffect(() => {
     if (!inView) return;
     if (reduce) { setV(to); return; }
-    const c = animate(0, to, { duration, ease: [0.16, 1, 0.3, 1], onUpdate: setV });
+    const c = animate(0, to, { duration, ease: EASE_SOFT, onUpdate: setV });
     return () => c.stop();
   }, [inView, to, duration, reduce]);
   const sign = to < 0 ? "−" : to > 0 ? "+" : "";
@@ -207,7 +201,9 @@ function Eyebrow({ index, children }: { index: string; children: string }) {
 function LivePill({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-2 rounded-full border border-emerald/30 bg-emerald/10 px-3 py-1 text-xs font-medium text-emerald">
-      <span className="h-1.5 w-1.5 animate-pulseDot rounded-full bg-emerald motion-reduce:animate-none" />
+      {/* static dot + glow — three LivePills share this page, so a looping pulse
+          on each reads as slop; the glow alone carries "live" (see agents.tsx) */}
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald shadow-[0_0_6px_rgba(52,211,153,0.55)]" />
       {children}
     </span>
   );
@@ -872,8 +868,8 @@ function DrawdownChart() {
           <p className="mt-1 font-serif text-lg text-ink">The covid crash</p>
         </div>
         <div className="flex items-center gap-4 text-xs text-muted">
-          <span className="flex items-center gap-2"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#5a616a" strokeWidth="2.4" strokeDasharray="4 3" /></svg>Market</span>
-          <span className="flex items-center gap-2"><svg width="18" height="6"><line x1="0" y1="3" x2="18" y2="3" stroke="#34d399" strokeWidth="2.8" /></svg>Enhanced F+</span>
+          <span className="flex items-center gap-2"><svg width="18" height="6" aria-hidden><line x1="0" y1="3" x2="18" y2="3" stroke="#5a616a" strokeWidth="2.4" strokeDasharray="4 3" /></svg>Market</span>
+          <span className="flex items-center gap-2"><svg width="18" height="6" aria-hidden><line x1="0" y1="3" x2="18" y2="3" stroke="#34d399" strokeWidth="2.8" /></svg>Enhanced F+</span>
         </div>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Drawdown comparison: market troughs at -38%, Enhanced F+ at -13.88%.">
@@ -889,13 +885,23 @@ function DrawdownChart() {
             <text x={padL - 8} y={ys(g) + 4} textAnchor="end" fill="#5a616a" fontSize="11">{g}%</text>
           </g>
         ))}
-        <motion.path d={band} fill="url(#xdband)" initial={{ opacity: 0 }} animate={{ opacity: drawn ? 1 : 0 }} transition={{ duration: 1, delay: 1.3 }} />
-        <motion.path d={smooth(mPts)} fill="none" stroke="#5a616a" strokeWidth={2} strokeDasharray="5 5" strokeLinecap="round" initial={{ pathLength: 0 }} animate={{ pathLength: drawn ? 1 : 0 }} transition={{ duration: 1.6, ease: "easeInOut" }} />
-        <motion.path d={smooth(fPts)} fill="none" stroke="#34d399" strokeWidth={3} strokeLinecap="round" initial={{ pathLength: 0 }} animate={{ pathLength: drawn ? 1 : 0 }} transition={{ duration: 1.6, ease: "easeInOut", delay: 0.35 }} />
-        <motion.g initial={{ opacity: 0 }} animate={{ opacity: drawn ? 1 : 0 }} transition={{ duration: 0.6, delay: 1.8 }}>
-          <circle cx={xs(MONTHS[5])} cy={ys(MARKET[5])} r={4} fill="#0a0b0d" stroke="#5a616a" strokeWidth={2} />
-          <circle cx={xs(MONTHS[5])} cy={ys(FPLUS[5])} r={4.5} fill="#0a0b0d" stroke="#34d399" strokeWidth={2.5} />
-        </motion.g>
+        <motion.path d={band} fill="url(#xdband)" initial={reduce ? false : { opacity: 0 }} animate={{ opacity: drawn ? 1 : 0 }} transition={reduce ? { duration: 0 } : { duration: 1, delay: 1.3 }} />
+        {/* Market first (the deeper fall), then F+ traces its shallower path over it —
+            same custom draw easing so the two lines read as one paced gesture.
+            Reduced motion: no path draw — both lines render fully, instantly. */}
+        <motion.path d={smooth(mPts)} fill="none" stroke="#5a616a" strokeWidth={2} strokeDasharray="5 5" strokeLinecap="round" initial={reduce ? false : { pathLength: 0 }} animate={{ pathLength: drawn ? 1 : 0 }} transition={reduce ? { duration: 0 } : { duration: 1.6, ease: EASE }} />
+        <motion.path d={smooth(fPts)} fill="none" stroke="#34d399" strokeWidth={3} strokeLinecap="round" initial={reduce ? false : { pathLength: 0 }} animate={{ pathLength: drawn ? 1 : 0 }} transition={reduce ? { duration: 0 } : { duration: 1.55, ease: EASE, delay: 0.35 }} />
+        {/* The payoff beat: the market trough marker fades in quietly; the emerald
+            F+ trough marker LANDS with a small spring once its line finishes —
+            one deliberate moment (Jhey), the "it fell less" full-stop. */}
+        <motion.circle cx={xs(MONTHS[5])} cy={ys(MARKET[5])} r={4} fill="#0a0b0d" stroke="#5a616a" strokeWidth={2} initial={reduce ? false : { opacity: 0 }} animate={{ opacity: drawn ? 1 : 0 }} transition={reduce ? { duration: 0 } : { duration: 0.6, delay: 1.5 }} />
+        <motion.circle
+          cx={xs(MONTHS[5])} cy={ys(FPLUS[5])} r={4.5} fill="#0a0b0d" stroke="#34d399" strokeWidth={2.5}
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+          initial={reduce ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.3 }}
+          animate={{ opacity: drawn ? 1 : 0, scale: drawn ? 1 : 0.3 }}
+          transition={reduce ? { duration: 0 } : { opacity: { duration: 0.2, delay: 1.9 }, scale: { type: "spring", stiffness: 520, damping: 13, delay: 1.9 } }}
+        />
         <text x={padL} y={H - 14} fill="#5a616a" fontSize="11">Jan 2020</text>
         <text x={W - padR} y={H - 14} textAnchor="end" fill="#5a616a" fontSize="11">Dec 2020</text>
       </svg>
@@ -1028,7 +1034,7 @@ export function Explainer() {
       <ScrollProgress />
       <SnakeScrollLine />
       {/* ── Hero ── */}
-      <section className="relative grid min-h-[78vh] items-center gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="relative grid min-h-[78svh] items-center gap-10 py-16 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: "radial-gradient(55% 50% at 30% 40%,rgba(52,211,153,0.10),transparent 70%)" }} />
         {!reduce && (
           <motion.div
@@ -1044,15 +1050,15 @@ export function Explainer() {
           />
         )}
         <div>
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mb-6 flex items-center gap-3">
+          <motion.div initial={reduce ? { opacity: 0 } : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }} className="mb-6 flex items-center gap-3">
             <LivePill>Indian markets · live</LivePill>
             <span className="text-[0.7rem] font-semibold uppercase tracking-label text-gold">How it works</span>
           </motion.div>
-          <h1 className="font-serif text-[clamp(2.5rem,6.5vw,4.6rem)] font-light leading-[0.98] tracking-[-0.02em] text-ink">
-            <motion.span className="block" initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}>Beats the market.</motion.span>
-            <motion.span className="block italic" style={GRAD_EMERALD} initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32, ease: [0.22, 1, 0.36, 1] }}>Half the fall.</motion.span>
+          <h1 className="font-serif text-[clamp(2.15rem,8.5vw,4.6rem)] font-light leading-[0.98] tracking-[-0.02em] text-ink">
+            <motion.span className="block" initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.15, ease: EASE }}>Beats the market.</motion.span>
+            <motion.span className="block italic" style={GRAD_EMERALD} initial={reduce ? { opacity: 1 } : { opacity: 0, y: "0.4em" }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.32, ease: EASE }}>Half the fall.</motion.span>
           </h1>
-          <motion.p initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }} className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
+          <motion.p initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }} className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
             An AI research engine for Indian equities — built on a strategy validated across two market eras, including covid.
           </motion.p>
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.95 }} className="mt-10">
@@ -1064,20 +1070,23 @@ export function Explainer() {
             <p className="mt-3 text-xs text-dim">Full-period total return, 2021–2026 — at lower drawdown 14.05% vs 18.59% · Backtested, not a live track record</p>
             <motion.button
               type="button"
-              onClick={() => document.getElementById("strategies")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              initial={{ opacity: 0, y: 10 }}
+              onClick={() => document.getElementById("strategies")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })}
+              initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.9, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-              className="group mt-8 inline-flex items-center gap-3 rounded-full border border-border bg-panel/50 py-2.5 pl-5 pr-2.5 text-sm text-muted transition-all duration-300 hover:border-emerald/40 hover:bg-panel/70 hover:text-ink"
+              transition={{ duration: 0.9, delay: 1.2, ease: EASE }}
+              {...pressTap(reduce)}
+              className="group mt-8 inline-flex items-center gap-3 rounded-full border border-border bg-panel/50 py-2.5 pl-5 pr-2.5 text-sm text-muted transition-[border-color,background-color,color] duration-300 hover:border-emerald/40 hover:bg-panel/70 hover:text-ink"
             >
               <span>See how every model works</span>
               <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald/10 text-emerald transition-colors duration-300 group-hover:bg-emerald/20">
-                <motion.svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden animate={{ y: [0, 3, 0] }} transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}><path d="M6 9l6 6 6-6" /></motion.svg>
+                {/* Chevron bobs to invite the scroll, but only settles into a hover
+                    nudge otherwise — no infinite loop under reduced motion. */}
+                <motion.svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden animate={reduce ? { y: 0 } : { y: [0, 3, 0] }} transition={reduce ? { duration: 0 } : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}><path d="M6 9l6 6 6-6" /></motion.svg>
               </span>
             </motion.button>
           </motion.div>
         </div>
-        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, delay: 0.3 }} className="flex justify-center">
+        <motion.div initial={reduce ? { opacity: 0 } : { opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 1.2, delay: 0.3 }} className="flex justify-center">
           <EngineCore />
         </motion.div>
       </section>
@@ -1088,7 +1097,7 @@ export function Explainer() {
         <div className="mt-8 grid gap-12 lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-14">
           <div>
             <Reveal>
-              <h2 className="max-w-xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">
+              <h2 className="max-w-xl text-balance font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">
                 The edge isn&apos;t picking winners. <span className="italic" style={GRAD_GOLD}>It&apos;s not losing.</span>
               </h2>
             </Reveal>
@@ -1102,7 +1111,7 @@ export function Explainer() {
         <RevealGroup className="mt-16 grid gap-4 md:grid-cols-3">
           {PRINCIPLES.map((p, i) => (
             <Item key={p.k}>
-              <div className="group h-full rounded-xl2 border border-border bg-panel/60 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-emerald/30 hover:shadow-[0_22px_50px_-24px_rgba(52,211,153,0.45)]">
+              <div className="group h-full rounded-xl2 border border-border bg-panel/60 p-6 transition-[transform,border-color,box-shadow] duration-300 hover:border-emerald/30 hover:shadow-[0_22px_50px_-24px_rgba(52,211,153,0.45)] motion-safe:hover:-translate-y-1">
                 <div className="flex items-center justify-between">
                   <span className="grid h-11 w-11 place-items-center rounded-xl border border-border bg-panel2"><PrincipleIcon k={p.k} /></span>
                   <span className="font-serif text-2xl text-border">0{i + 1}</span>
@@ -1119,7 +1128,7 @@ export function Explainer() {
       {/* ── Four layers ── */}
       <section className="border-t border-hairline py-20 sm:py-28">
         <Eyebrow index="02">The four layers</Eyebrow>
-        <Reveal><h2 className="mt-8 max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">One engine, four ways in.</h2></Reveal>
+        <Reveal><h2 className="mt-8 max-w-2xl text-balance font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">One engine, four ways in.</h2></Reveal>
         <Reveal delay={0.05}><p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">From reading the market to connecting your account — each layer does one job, and hands off cleanly to the next.</p></Reveal>
         <div className="mt-16 flex flex-col gap-24 sm:gap-28">
           {LAYERS.map((l, i) => <Reveal key={l.name} y={28}><Layer layer={l} flip={i % 2 === 1} /></Reveal>)}
@@ -1142,7 +1151,7 @@ export function Explainer() {
       {/* ── Portfolio strategies ── */}
       <section id="strategies" className="scroll-mt-24 border-t border-hairline py-20 sm:py-28">
         <p className="text-[0.6rem] font-semibold uppercase tracking-label text-gold">Portfolio strategies</p>
-        <Reveal><h2 className="mt-6 max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Every model has a different engine.</h2></Reveal>
+        <Reveal><h2 className="mt-6 max-w-2xl text-balance font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Every model has a different engine.</h2></Reveal>
         <Reveal delay={0.05}><p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">MAVEN portfolios aren&apos;t just different baskets of stocks. Each one follows a distinct strategy, risk profile, and selection logic — some built for steadier performance, some for stronger upside, some for tighter model discipline.</p></Reveal>
         <Reveal delay={0.1}>
           <p className="mt-6 max-w-3xl rounded-xl2 border border-border bg-panel/40 p-5 text-sm leading-relaxed text-muted">
@@ -1162,7 +1171,7 @@ export function Explainer() {
               <div className="mt-5 grid gap-5 lg:grid-cols-3">
                 {grp.items.map((s, i) => (
                   <Reveal key={s.name} y={16} delay={i * 0.05}>
-                    <div className={`group relative flex h-full flex-col overflow-hidden rounded-xl2 border p-6 transition-all duration-300 hover:-translate-y-1 ${s.signature ? "border-emerald/40 bg-panel/60" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}>
+                    <div className={`group relative flex h-full flex-col overflow-hidden rounded-xl2 border p-6 transition-[transform,border-color,background-color] duration-300 motion-safe:hover:-translate-y-1 ${s.signature ? "border-emerald/40 bg-panel/60" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}>
                       {s.signature && <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.22),transparent 70%)" }} />}
                       <div className="relative flex items-start justify-between gap-3">
                         <div className="flex items-center gap-2">
@@ -1224,7 +1233,7 @@ export function Explainer() {
       {/* ── Validation ── */}
       <section className="border-t border-hairline py-20 sm:py-28">
         <Eyebrow index="03">Why trust it</Eyebrow>
-        <Reveal><h2 className="mt-8 max-w-2xl font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Validated honestly. <span className="italic" style={GRAD_GOLD}>Negatives documented.</span></h2></Reveal>
+        <Reveal><h2 className="mt-8 max-w-2xl text-balance font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Validated honestly. <span className="italic" style={GRAD_GOLD}>Negatives documented.</span></h2></Reveal>
         <RevealGroup className="mt-14 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {TIMELINE.map((t, i) => (
             <Item key={t.t}>
@@ -1264,7 +1273,7 @@ export function Explainer() {
       <section className="border-t border-hairline py-20 text-center sm:py-28">
         <div className="flex justify-center"><Eyebrow index="04">Live &amp; forward</Eyebrow></div>
         <Reveal><div className="mt-8 flex justify-center"><LivePill>Forward paper-trade · running now</LivePill></div></Reveal>
-        <Reveal><h2 className="mx-auto mt-7 max-w-3xl font-serif text-[clamp(1.9rem,4.4vw,3.2rem)] font-light leading-[1.04] tracking-[-0.015em] text-ink">Now running forward, live, on <span className="italic" style={GRAD_EMERALD}>real NSE prices.</span></h2></Reveal>
+        <Reveal><h2 className="mx-auto mt-7 max-w-3xl text-balance font-serif text-[clamp(1.9rem,4.4vw,3.2rem)] font-light leading-[1.04] tracking-[-0.015em] text-ink">Now running forward, live, on <span className="italic" style={GRAD_EMERALD}>real NSE prices.</span></h2></Reveal>
         <Reveal delay={0.05}><p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">Real prices daily, decisions recorded at those prices, marked to market, and tracked against the Nifty 500 — an honest, ongoing, public test. No hindsight, no edits.</p></Reveal>
         <RevealGroup className="mx-auto mt-12 grid max-w-2xl gap-3 sm:grid-cols-2">
           {["Real NSE prices, every trading day", "Decisions stamped at the price they were made", "Marked to market, tracked vs Nifty 500", "Paper-traded — no real money at risk"].map((t) => (

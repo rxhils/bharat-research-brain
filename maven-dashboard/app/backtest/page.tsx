@@ -14,6 +14,7 @@
  * is frozen, it does not swap to a DB query.
  */
 
+import { useEffect, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -26,6 +27,20 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { ChartReveal, useReducedMotionSafe } from "@/components/motion";
+
+// Recharts replays its draw on every re-render; allow one bar-grow pass on mount
+// (600ms) then hard-disable, and skip it entirely under reduced motion. Mirrors
+// the client.tsx line-chart convention so the two proof surfaces feel identical.
+function useBarDrawOnce() {
+  const reduce = useReducedMotionSafe();
+  const [firstPass, setFirstPass] = useState(true);
+  useEffect(() => {
+    const id = window.setTimeout(() => setFirstPass(false), 800); // outlives the 600ms draw
+    return () => window.clearTimeout(id);
+  }, []);
+  return firstPass && !reduce;
+}
 
 /* ---------- palette ---------- */
 const EMERALD = "#34d399";
@@ -126,46 +141,52 @@ const tipStyle = {
 
 /* grouped Enhanced F+ vs index return per walk-forward window */
 function WindowReturns({ rows }: { rows: typeof E1_WF }) {
+  const draw = useBarDrawOnce();
   const data = rows.map((r) => ({ w: r.w, "Enhanced F+": r.ret, "Nifty 500": r.idx }));
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-        <XAxis dataKey="w" tick={{ fill: SLATE, fontSize: 12 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: SLATE, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
-        <Tooltip contentStyle={tipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-        <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
-        <Bar dataKey="Enhanced F+" fill={EMERALD} radius={[3, 3, 0, 0]} maxBarSize={26} />
-        <Bar dataKey="Nifty 500" fill={SLATE} radius={[3, 3, 0, 0]} maxBarSize={26} />
-      </BarChart>
-    </ResponsiveContainer>
+    <ChartReveal delay={0.1}>
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+          <XAxis dataKey="w" tick={{ fill: SLATE, fontSize: 12 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: SLATE, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
+          <Tooltip contentStyle={tipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+          <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" />
+          <Legend wrapperStyle={{ fontSize: 12 }} />
+          <Bar dataKey="Enhanced F+" fill={EMERALD} radius={[3, 3, 0, 0]} maxBarSize={26} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
+          <Bar dataKey="Nifty 500" fill={SLATE} radius={[3, 3, 0, 0]} maxBarSize={26} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartReveal>
   );
 }
 
 /* max-drawdown comparison (lower = better) */
 function DrawdownBars() {
+  const draw = useBarDrawOnce();
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={STRESS_DD} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-        <XAxis dataKey="name" tick={{ fill: SLATE, fontSize: 11 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: SLATE, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
-        <Tooltip contentStyle={tipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} formatter={(v: number) => [`${v}%`, "max drawdown"]} />
-        <Bar dataKey="dd" radius={[3, 3, 0, 0]} maxBarSize={64}>
-          {STRESS_DD.map((d, i) => (
-            <Cell key={i} fill={d.accent} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <ChartReveal delay={0.1}>
+      <ResponsiveContainer width="100%" height={220}>
+        <BarChart data={STRESS_DD} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+          <XAxis dataKey="name" tick={{ fill: SLATE, fontSize: 11 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: SLATE, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
+          <Tooltip contentStyle={tipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} formatter={(v: number) => [`${v}%`, "max drawdown"]} />
+          <Bar dataKey="dd" radius={[3, 3, 0, 0]} maxBarSize={64} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out">
+            {STRESS_DD.map((d, i) => (
+              <Cell key={i} fill={d.accent} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </ChartReveal>
   );
 }
 
 /* walk-forward table */
 function WFTable({ rows }: { rows: typeof E1_WF }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="scroll-touch overflow-x-auto">
       <table className="w-full min-w-[600px] text-left text-sm">
         <thead className="text-[11px] uppercase tracking-wide text-muted">
           <tr className="border-b border-hairline">
@@ -210,7 +231,7 @@ function WFTable({ rows }: { rows: typeof E1_WF }) {
 /* ₹10,00,000 capital outcome table */
 function CapTable({ rows }: { rows: typeof E1_CAP }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="scroll-touch overflow-x-auto">
       <table className="w-full min-w-[560px] text-left text-sm">
         <thead className="text-[11px] uppercase tracking-wide text-muted">
           <tr className="border-b border-hairline">
@@ -257,7 +278,8 @@ export default function BacktestPage() {
             frozen Enhanced F+ · commit 6ced078
           </span>
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+        {/* serif h1 matches the house headline voice (portfolio/strategies pages) */}
+        <h1 className="text-balance font-serif text-2xl text-ink sm:text-3xl">
           Enhanced F+ Backtest — the proof
         </h1>
         <p className="max-w-2xl text-sm leading-relaxed text-muted">

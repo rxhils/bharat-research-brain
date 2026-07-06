@@ -4,6 +4,11 @@
 
 :root {
   color-scheme: dark;
+  /* iOS safe-area insets (viewport-fit=cover) — use as pad: var(--sab) etc. */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
 
 html, body {
@@ -11,6 +16,19 @@ html, body {
   color: #e9ebed;
   /* never allow sideways document scroll (mobile); clip keeps sticky nav working */
   overflow-x: clip;
+  /* kill document-edge rubber-banding (PWA feel); inner panels use .scroll-touch */
+  overscroll-behavior-y: none;
+}
+
+html {
+  /* press feedback comes from active:scale, not the grey iOS tap flash */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* inner scrollable panels: contain chained scroll + momentum on iOS */
+.scroll-touch {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 body {

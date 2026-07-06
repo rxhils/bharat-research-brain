@@ -1,12 +1,10 @@
 "use client";
 import { motion } from "framer-motion";
-import { useReducedMotionSafe } from "./motion";
+import { EASE, useReducedMotionSafe } from "./motion";
 import { MavenChartRenderer } from "./maven-charts";
 import { MavenEvidenceSummaryCard, MavenLatestDataChecklist } from "./maven-evidence";
 import { MavenSourcePanel } from "./maven-source-panel";
 import type { MavenAskResponse, MavenReportSection, MavenBlock, MavenReportMetric } from "@/lib/maven-types";
-
-const EASE = [0.22, 1, 0.36, 1] as const;
 
 function blockGlyph(type: string): { dot: string; label: string } {
   const t = (type || "").toLowerCase();
@@ -27,10 +25,10 @@ function MetricPill({ m }: { m: MavenReportMetric }) {
   const badge = m.confidence === "verified" || m.confidence === "cross_verified" ? "border-emerald/30 bg-emerald/10 text-emerald" : "border-hairline text-muted";
   return (
     <div className="rounded-lg border border-hairline bg-white/[0.02] px-2.5 py-2">
-      <div className="text-[10px] uppercase tracking-wider text-dim">{m.label}{m.period ? ` · ${m.period}` : ""}</div>
-      <div className="mt-1 flex items-center gap-1.5">
-        <span className="tnum text-sm text-ink">{m.value}{m.unit ?? ""}</span>
-        <span className={"rounded-full border px-1.5 py-px text-[8px] uppercase tracking-wider " + badge}>{m.confidence === "cross_verified" ? "cross-verified" : m.confidence}</span>
+      <div className="truncate text-[10px] uppercase tracking-wider text-dim">{m.label}{m.period ? ` · ${m.period}` : ""}</div>
+      <div className="mt-1.5 flex items-center justify-between gap-1.5">
+        <span className="tnum text-[0.95rem] font-medium leading-none text-ink">{m.value}{m.unit ?? ""}</span>
+        <span className={"shrink-0 rounded-full border px-1.5 py-px text-[8px] uppercase tracking-wider " + badge}>{m.confidence === "cross_verified" ? "cross-verified" : m.confidence}</span>
       </div>
     </div>
   );
@@ -45,7 +43,7 @@ function ReportBlock({ b }: { b: MavenBlock }) {
         <span className={"text-[9px] font-semibold uppercase tracking-[0.14em] " + g.label}>{b.type}</span>
         {b.title && <span className="text-[0.85rem] font-medium text-ink">{b.title}</span>}
       </div>
-      <p className="mt-1.5 pl-3.5 text-[0.85rem] leading-relaxed text-ink/70">{b.body}</p>
+      <p className="mt-2 pl-3.5 text-[0.85rem] leading-[1.65] text-ink/70">{b.body}</p>
     </div>
   );
 }
@@ -54,8 +52,8 @@ function ReportSectionView({ section, reduce }: { section: MavenReportSection; r
   return (
     <motion.section id={`report-${section.id}`} className="scroll-mt-24 rounded-2xl border border-hairline bg-white/[0.015] p-4 sm:p-5"
       initial={reduce ? { opacity: 1 } : { opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-40px" }} transition={{ duration: 0.45, ease: EASE }}>
-      <h4 className="font-serif text-[1.15rem] leading-snug text-ink">{section.title}</h4>
-      {section.summary && <p className="mt-1.5 text-[0.88rem] leading-relaxed text-ink/75">{section.summary}</p>}
+      <h4 className="text-balance font-serif text-[1.2rem] leading-snug tracking-[-0.01em] text-ink">{section.title}</h4>
+      {section.summary && <p className="mt-2 text-[0.88rem] leading-[1.7] text-ink/75">{section.summary}</p>}
 
       {!!section.metrics?.length && (
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -102,8 +100,8 @@ export function MavenReportCard({ a, onFollow }: { a: MavenAskResponse; onFollow
             <span className="shrink-0 rounded-md bg-gold/10 px-2 py-0.5 text-[10px] uppercase tracking-wider text-gold-soft">Deep Research</span>
           </div>
 
-          <h3 className="mt-3 font-serif text-[1.5rem] leading-snug text-ink sm:text-[1.75rem]">{a.reportTitle ?? a.headline}</h3>
-          {(a.reportSummary ?? a.summary) && <p className="mt-2.5 text-[0.95rem] leading-relaxed text-ink/75">{a.reportSummary ?? a.summary}</p>}
+          <h3 className="mt-3.5 text-balance font-serif text-[1.5rem] leading-[1.2] tracking-[-0.01em] text-ink sm:text-[1.75rem]">{a.reportTitle ?? a.headline}</h3>
+          {(a.reportSummary ?? a.summary) && <p className="mt-3 text-[0.95rem] leading-[1.7] text-ink/75">{a.reportSummary ?? a.summary}</p>}
 
           <MavenEvidenceSummaryCard evidence={a.evidence} />
           <MavenLatestDataChecklist items={a.latestDataChecklist} />
@@ -113,7 +111,7 @@ export function MavenReportCard({ a, onFollow }: { a: MavenAskResponse; onFollow
               <span className="mr-1 text-[10px] uppercase tracking-wider text-dim">Sections</span>
               {sections.map((s) => (
                 <button key={s.id} type="button" onClick={() => scrollTo(s.id)}
-                  className="rounded-full border border-hairline px-2.5 py-1 text-[11px] text-muted transition-colors hover:border-emerald/40 hover:text-ink">
+                  className="rounded-full border border-hairline px-2.5 py-1 text-[11px] text-muted motion-safe:transition-[color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-emerald/40 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
                   {OUTLINE_LABEL[s.kind] ?? s.title}
                 </button>
               ))}
@@ -127,8 +125,8 @@ export function MavenReportCard({ a, onFollow }: { a: MavenAskResponse; onFollow
           {followUps.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-2 border-t border-hairline pt-5">
               {followUps.map((f) => (
-                <button key={f} onClick={() => onFollow(f)} className="group inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white/[0.02] px-3.5 py-1.5 text-xs text-muted transition-colors hover:border-emerald/45 hover:text-ink">
-                  {f}<span className="text-emerald opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
+                <button key={f} type="button" onClick={() => onFollow(f)} className="group inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white/[0.02] px-3.5 py-1.5 text-xs text-muted motion-safe:transition-[color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-emerald/45 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+                  {f}<span className="text-emerald opacity-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
                 </button>
               ))}
             </div>

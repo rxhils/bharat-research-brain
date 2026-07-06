@@ -52,6 +52,10 @@ const config: Config = {
           "0%,100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         fadeUp: "fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both",
@@ -59,6 +63,8 @@ const config: Config = {
         spinSlow: "spinSlow 34s linear infinite",
         spinReverse: "spinReverse 48s linear infinite",
         floatY: "floatY 7s ease-in-out infinite",
+        // ticker: content is duplicated once so -50% loops seamlessly
+        marquee: "marquee 38s linear infinite",
       },
     },
   },

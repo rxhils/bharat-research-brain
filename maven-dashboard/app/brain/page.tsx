@@ -9,6 +9,12 @@ export default async function Brain() {
 
   return (
     <div className="space-y-4 pt-2">
+      {/* page header — same eyebrow + serif h1 rhythm as /portfolio */}
+      <div>
+        <div className="text-[11px] uppercase tracking-wider text-dim">The brain</div>
+        <h1 className="mt-1 font-serif text-2xl text-ink">The agents behind the engine.</h1>
+      </div>
+
       {/* Agents on top — the main thing: what each one does, in plain English */}
       <Card title="Agents" sub="the system, in plain English — tap any agent">
         <AgentExplainer />

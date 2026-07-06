@@ -2,10 +2,14 @@
 import { Fragment } from "react";
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts";
 import type { CSSProperties, ReactNode } from "react";
+import { useReducedMotionSafe } from "./motion";
 import type { MavenChart } from "@/lib/maven-types";
 
 const EM = "#34d399", ROSE = "#fb7185", AX = "#8b9298", GRID = "rgba(255,255,255,0.06)";
-const TIP: CSSProperties = { background: "#0E1621", border: "1px solid rgba(255,255,255,0.10)", borderRadius: 10, fontSize: 12, color: "#e9ebed", padding: "6px 10px" };
+// Tooltip in the house glass language: darkened bg + blur, radius matching rounded-xl.
+const TIP: CSSProperties = { background: "rgba(10,11,13,0.85)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12, color: "#e9ebed", padding: "7px 11px", boxShadow: "0 12px 32px rgba(0,0,0,0.4)" };
+const TIP_LABEL: CSSProperties = { color: "#8b9298", fontSize: 11, marginBottom: 2 };
+const TIP_ITEM: CSSProperties = { color: "#e9ebed", padding: "1px 0" };
 
 function ChartCard({ title, subtitle, footer, wide = false, children }: { title: string; subtitle?: string; footer?: string; wide?: boolean; children: ReactNode }) {
   return (
@@ -24,6 +28,7 @@ function NoData({ title, wide = false }: { title: string; wide?: boolean }) {
 }
 
 function BarCard({ c }: { c: MavenChart }) {
+  const reduce = useReducedMotionSafe();
   const data = c.data ?? []; if (!data.length) return <NoData title={c.title} />;
   const xKey = c.xKey ?? "name"; const yKey = (c.yKeys && c.yKeys[0]) ?? "changePct";
   return (
@@ -33,8 +38,9 @@ function BarCard({ c }: { c: MavenChart }) {
           <CartesianGrid stroke={GRID} vertical={false} />
           <XAxis dataKey={xKey} tick={{ fill: AX, fontSize: 11 }} axisLine={false} tickLine={false} interval={0} angle={-18} textAnchor="end" height={52} />
           <YAxis tick={{ fill: AX, fontSize: 11 }} axisLine={false} tickLine={false} width={40} />
-          <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} contentStyle={TIP} />
-          <Bar dataKey={yKey} radius={[4, 4, 0, 0]} maxBarSize={46}>
+          <Tooltip cursor={{ fill: "rgba(255,255,255,0.04)" }} contentStyle={TIP} labelStyle={TIP_LABEL} itemStyle={TIP_ITEM} />
+          {/* bars grow from the baseline once — data materializing, not an entrance */}
+          <Bar dataKey={yKey} radius={[4, 4, 0, 0]} maxBarSize={46} isAnimationActive={!reduce} animationDuration={550} animationEasing="ease-out">
             {data.map((d, i) => <Cell key={i} fill={Number((d as any)[yKey]) >= 0 ? EM : ROSE} />)}
           </Bar>
         </BarChart>
@@ -44,6 +50,7 @@ function BarCard({ c }: { c: MavenChart }) {
 }
 
 function LineCard({ c }: { c: MavenChart }) {
+  const reduce = useReducedMotionSafe();
   const data = c.data ?? []; if (data.length < 2) return <NoData title={c.title} />;
   const xKey = c.xKey ?? "i"; const yKey = (c.yKeys && c.yKeys[0]) ?? "price";
   return (
@@ -53,8 +60,9 @@ function LineCard({ c }: { c: MavenChart }) {
           <CartesianGrid stroke={GRID} vertical={false} />
           <XAxis dataKey={xKey} tick={{ fill: AX, fontSize: 11 }} axisLine={false} tickLine={false} hide />
           <YAxis tick={{ fill: AX, fontSize: 11 }} axisLine={false} tickLine={false} width={48} domain={["dataMin", "dataMax"]} tickFormatter={(v) => Number(v).toFixed(0)} />
-          <Tooltip contentStyle={TIP} />
-          <Line type="monotone" dataKey={yKey} stroke={EM} strokeWidth={2.2} dot={false} />
+          <Tooltip cursor={{ stroke: "rgba(255,255,255,0.14)", strokeWidth: 1 }} contentStyle={TIP} labelStyle={TIP_LABEL} itemStyle={TIP_ITEM} />
+          {/* single left-to-right path draw — reads as the series plotting itself */}
+          <Line type="monotone" dataKey={yKey} stroke={EM} strokeWidth={2.2} dot={false} isAnimationActive={!reduce} animationDuration={650} animationEasing="ease-out" />
         </LineChart>
       </ResponsiveContainer>
     </ChartCard>
@@ -64,18 +72,28 @@ function LineCard({ c }: { c: MavenChart }) {
 function TableCard({ c }: { c: MavenChart }) {
   const data = c.data ?? []; if (!data.length) return <NoData title={c.title} wide />;
   const cols = Object.keys(data[0]);
+  // numeric columns right-align (header + cells) so digits line up down the column
+  const numCols = new Set(cols.filter((k) => typeof (data[0] as any)[k] === "number"));
   return (
     <ChartCard title={c.title} subtitle={c.description} wide>
-      <div className="overflow-x-auto">
+      <div className="scroll-touch overflow-x-auto">
         <table className="w-full text-left text-[13px]">
-          <thead><tr className="border-b border-hairline text-[11px] uppercase tracking-wider text-dim">{cols.map((k) => <th key={k} className="py-2 pr-4 font-medium">{k}</th>)}</tr></thead>
+          <thead>
+            <tr className="border-b border-white/15 text-[10px] uppercase tracking-[0.14em] text-ink/55">
+              {cols.map((k) => <th key={k} className={"py-2 pr-4 font-semibold last:pr-0 " + (numCols.has(k) ? "text-right" : "")}>{k}</th>)}
+            </tr>
+          </thead>
           <tbody>
             {data.map((row, i) => (
-              <tr key={i} className="border-b border-hairline/50">
+              <tr key={i} className="border-b border-hairline/60 transition-colors last:border-0 hover:bg-white/[0.02]">
                 {cols.map((k) => {
                   const v = (row as any)[k]; const num = typeof v === "number"; const isPct = k.toLowerCase().includes("change");
-                  const cls = isPct && num ? (v >= 0 ? "text-emerald" : "text-rose") : "text-ink";
-                  return <td key={k} className={"py-2.5 pr-4 tnum " + cls}>{num ? (isPct ? (v >= 0 ? "+" : "") + v + "%" : v) : String(v ?? "-")}</td>;
+                  // first (label) column carries the row identity — slightly brighter than numeric cells
+                  const isFirst = k === cols[0];
+                  const cls = isPct && num ? (v >= 0 ? "text-emerald" : "text-rose") : isFirst ? "text-ink" : "text-ink/80";
+                  const align = numCols.has(k) ? "tnum whitespace-nowrap text-right " : "";
+                  const weight = isFirst && !num ? "font-medium " : "";
+                  return <td key={k} className={"py-2.5 pr-4 last:pr-0 " + weight + align + cls}>{num ? (isPct ? (v >= 0 ? "+" : "") + v + "%" : v) : String(v ?? "-")}</td>;
                 })}
               </tr>
             ))}
@@ -96,8 +114,8 @@ function HeatmapCard({ c }: { c: MavenChart }) {
           const v = Number((d as any)[yKey]); const up = v >= 0;
           return (
             <div key={i} className={"rounded-xl border p-3 " + (up ? "border-emerald/25 bg-emerald/10" : "border-rose/25 bg-rose/10")}>
-              <div className="text-[12px] text-ink">{String((d as any)[xKey])}</div>
-              <div className={"mt-0.5 tnum text-base " + (up ? "text-emerald" : "text-rose")}>{(up ? "+" : "") + v + "%"}</div>
+              <div className="truncate text-[12px] text-ink/85">{String((d as any)[xKey])}</div>
+              <div className={"mt-0.5 tnum text-base font-medium " + (up ? "text-emerald" : "text-rose")}>{(up ? "+" : "") + v + "%"}</div>
             </div>
           );
         })}
