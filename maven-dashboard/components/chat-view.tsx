@@ -70,6 +70,15 @@ function buildConversationContext(msgs: Msg[]) {
   }
   return turns.length ? { turns: turns.slice(-CTX_TURNS) } : undefined;
 }
+
+// The user question that produced a given assistant answer - the closest preceding user message.
+// Threaded into AnswerCard so a feedback POST can pair the failure with the exact ask.
+function findQueryForAnswer(msgs: Msg[], answerIndex: number): string {
+  for (let j = answerIndex - 1; j >= 0; j--) {
+    if (msgs[j].role === "user") return msgs[j].text ?? "";
+  }
+  return "";
+}
 // Client-only heuristic mirroring reportModeDetector.ts's trigger words - used ONLY to pick which
 // loading copy to show optimistically while waiting; the server is the sole source of truth for
 // whether a response actually is report mode.
@@ -203,7 +212,7 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
       <AuroraBg />
       {empty ? <Hero onPick={send} /> : (
         <div className="scroll-touch flex-1 space-y-7 pb-6">
-          {msgs.map((m) => (m.role === "user" ? (
+          {msgs.map((m, mi) => (m.role === "user" ? (
             <div key={m.id} ref={m.id === lastUserId.current ? turnRef : undefined} className="scroll-mt-24">
               <UserBubble text={m.text ?? ""} />
             </div>
@@ -212,7 +221,7 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
             <motion.div key={m.id} initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: EASE }} className="flex gap-3">
               <Avatar thinking={!!m.loading} />
               <div className="min-w-0 flex-1">
-                {m.loading ? <ReasoningLoader reportMode={m.looksLikeReport} /> : m.answer ? <AnswerCard a={m.answer} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
+                {m.loading ? <ReasoningLoader reportMode={m.looksLikeReport} /> : m.answer ? <AnswerCard a={m.answer} query={findQueryForAnswer(msgs, mi)} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
               </div>
             </motion.div>
           )))}
@@ -320,8 +329,40 @@ function blockGlyph(type: string): { dot: string; label: string } {
   return { dot: "bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.8)]", label: "text-emerald" };
 }
 
-function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string) => void }) {
+function ThumbIcon({ up = false }: { up?: boolean }) {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden
+      style={up ? undefined : { transform: "rotate(180deg)" }}>
+      <path d="M7 10v11" />
+      <path d="M7 10l4-8a2 2 0 0 1 3 1.7V9h5a2 2 0 0 1 2 2.3l-1.4 7a2 2 0 0 1-2 1.7H7" />
+    </svg>
+  );
+}
+
+// Feedback controls map each subtle control to a /api/feedback `feedback` value (Maven learning loop).
+const FEEDBACK_CHIPS: { label: string; feedback: string }[] = [
+  { label: "Outdated", feedback: "outdated" },
+  { label: "Not enough sources", feedback: "not_enough_sources" },
+  { label: "Wrong stock/data", feedback: "wrong" },
+];
+
+function AnswerCard({ a, query, onFollow }: { a: MavenAskResponse; query?: string; onFollow: (q: string) => void }) {
   const reduce = useReducedMotionSafe(); // hooks before any early return (rules of hooks)
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  // Fire-and-forget: log the operator's signal for Maven's evaluation loop, never throw into render.
+  async function sendFeedback(feedback: string) {
+    if (feedbackSent) return;
+    setFeedbackSent(true);
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: query ?? "", response: a, feedback }),
+      });
+    } catch {
+      // swallow - a feedback logging failure must never surface in the answer card
+    }
+  }
   // Deep Research Report Mode renders as its own premium report card - normal chat-card flow
   // below is completely unaffected for every other answer type.
   if (a.reportMode) return <MavenReportCard a={a} onFollow={onFollow} />;
@@ -438,6 +479,31 @@ function AnswerCard({ a, onFollow }: { a: MavenAskResponse; onFollow: (q: string
           {a.disclaimer && a.disclaimerLevel !== "none" && (
             <div className="mt-4 border-t border-hairline pt-4 text-[10px] leading-relaxed text-dim">{a.disclaimer}</div>
           )}
+
+          {/* Subtle feedback row - one signal per card feeds Maven's self-learning loop, then locks. */}
+          <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-hairline pt-4">
+            {feedbackSent ? (
+              <span className="text-[11px] text-dim">Feedback logged for Maven evaluation.</span>
+            ) : (
+              <>
+                <span className="mr-1 text-[10px] uppercase tracking-[0.16em] text-dim">Feedback</span>
+                <button type="button" aria-label="Helpful" onClick={() => sendFeedback("good")}
+                  className="inline-flex items-center rounded-full border border-hairline bg-white/[0.02] px-2.5 py-1.5 text-muted motion-safe:transition-[color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-emerald/45 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+                  <ThumbIcon up />
+                </button>
+                <button type="button" aria-label="Not helpful" onClick={() => sendFeedback("bad")}
+                  className="inline-flex items-center rounded-full border border-hairline bg-white/[0.02] px-2.5 py-1.5 text-muted motion-safe:transition-[color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-rose/45 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+                  <ThumbIcon />
+                </button>
+                {FEEDBACK_CHIPS.map((c) => (
+                  <button key={c.feedback} type="button" onClick={() => sendFeedback(c.feedback)}
+                    className="inline-flex items-center rounded-full border border-hairline bg-white/[0.02] px-3 py-1.5 text-xs text-muted motion-safe:transition-[color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-emerald/45 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+                    {c.label}
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
         </div>
       </GlassPanel>
     </motion.div>

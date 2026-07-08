@@ -5,3 +5,6 @@ next-env.d.ts
 .env*.local
 .DS_Store
 *.tsbuildinfo
+
+# Maven Self-Learning Improvement Loop - local event store (may contain user queries; never commit)
+/data/maven-learning/

@@ -11,7 +11,12 @@
     "eval:maven:prod": "MAVEN_EVAL_URL=https://www.trymaven.in/api/ask node scripts/run-maven-evals.mjs",
     "eval:sources": "node scripts/test-source-depth.mjs",
     "eval:sources:prod": "MAVEN_EVAL_URL=https://trymaven.in/api/ask node scripts/test-source-depth.mjs",
-    "eval:followups": "node scripts/test-conversation-followups.mjs"
+    "eval:followups": "node scripts/test-conversation-followups.mjs",
+    "learn:report": "node scripts/maven-learning-report.mjs",
+    "learn:evals": "node scripts/generate-evals-from-learning.mjs",
+    "learn:loop": "node scripts/maven-improvement-loop.mjs",
+    "train:maven": "node scripts/run-training-questions.mjs",
+    "train:maven:log": "node scripts/run-training-questions.mjs --log-failures"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",
