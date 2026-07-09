@@ -14,16 +14,23 @@ from datetime import datetime, timedelta, timezone
 from . import database as db
 from .config import EVENTS_JSONL_DIR
 from .registry import node as get_node
+from .registry_photo_slides import photo_node as get_photo_node
 from .registry_reels import reel_node as get_reel_node
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
 
 def _resolve_node(job_id: str, node_id: str | None) -> dict:
-    """Pick the right registry by job_id: reel jobs use the reel registry."""
+    """Pick the right registry by job_id: reel jobs -> reel registry,
+    photo-reel (preel-) jobs -> photo-slides registry, else carousel."""
     if not node_id:
         return {}
-    return get_reel_node(node_id) if str(job_id).startswith("reel-") else get_node(node_id)
+    jid = str(job_id)
+    if jid.startswith("reel-"):
+        return get_reel_node(node_id)
+    if jid.startswith("preel-"):
+        return get_photo_node(node_id)
+    return get_node(node_id)
 
 TELEGRAM_EVENTS = {
     "job.created", "job.started", "job.skipped_market_closed", "job.completed",

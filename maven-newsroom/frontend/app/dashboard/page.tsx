@@ -1,50 +1,48 @@
 "use client";
+/** Command Center — the two latest carousel runs + the two latest photo-reel
+ *  runs (real data), plus entry points to the live Agent Orchestrator (a
+ *  simulation you can watch each agent hand off to the next). */
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowUpRight, Play, Loader2, ExternalLink } from "lucide-react";
+import { ExternalLink, Film, LayoutGrid, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Job, Meta } from "@/lib/types";
-import { StatCard, EmptyState } from "@/components/ui/Card";
-import { ScoreCard } from "@/components/ui/ScoreCard";
+import { photoReelsApi, type PackageSummary } from "@/lib/photoReelsApi";
+import type { Job } from "@/lib/types";
+import { EmptyState } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { CLASS_ACCENT } from "@/lib/constants";
+import { StatusPill } from "@/components/photoReels/shared";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [meta, setMeta] = useState<Meta | null>(null);
-  const [job, setJob] = useState<Job | null>(null);
-  const [research, setResearch] = useState<any>(null);
-  const [imgCount, setImgCount] = useState<number | null>(null);
-  const [running, setRunning] = useState(false);
+  const [carousels, setCarousels] = useState<Job[]>([]);
+  const [reels, setReels] = useState<PackageSummary[]>([]);
+  const [running, setRunning] = useState<"carousel" | "reel" | null>(null);
 
   useEffect(() => {
-    api.meta().then(setMeta).catch(() => {});
-    api.jobs().then(async (r) => {
-      const latest = r.jobs[0] ?? null;
-      setJob(latest);
-      if (latest) {
-        api.artifacts(latest.job_id)
-          .then((a) => setImgCount(a.artifacts.filter((x) => x.name.endsWith(".jpg")).length))
-          .catch(() => {});
-        fetch(api.artifactUrl(latest.job_id, "01_research.json"))
-          .then((res) => (res.ok ? res.json() : null)).then(setResearch).catch(() => {});
-      }
-    }).catch(() => {});
+    api.jobs("carousel").then((r) => setCarousels(r.jobs.slice(0, 2))).catch(() => {});
+    photoReelsApi.packages().then((r) => setReels(r.packages.slice(0, 2))).catch(() => {});
   }, []);
 
-  async function runClosingBell() {
-    setRunning(true);
+  async function runCarousel() {
+    setRunning("carousel");
     try {
       const r = await api.run();
-      router.push(`/run/${r.job_id}`);
-    } catch { setRunning(false); }
+      router.push(`/orchestrator/${r.job_id}`);
+    } catch {
+      setRunning(null);
+    }
   }
 
-  const scores = job?.scores;
-  const storiesFound = research?._meta?.candidate_count ?? research?.top_3_stories?.length ?? null;
-  const storiesSelected = research?.top_3_stories?.length ?? null;
-  const activeNode = job?.current_node ? job.current_node.replace(/_/g, " ") : "—";
+  async function runPhotoReel() {
+    setRunning("reel");
+    try {
+      const r = await photoReelsApi.simulate();
+      router.push(`/orchestrator/${r.job_id}`);
+    } catch {
+      setRunning(null);
+    }
+  }
 
   return (
     <div className="px-6 py-6 max-w-[1400px] mx-auto">
@@ -53,73 +51,88 @@ export default function DashboardPage() {
         <div className="absolute -top-24 -right-16 h-64 w-64 rounded-full bg-teal/10 blur-3xl" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="eyebrow">{meta?.run_name ?? "Closing Bell Run"} · {meta?.next_run ?? "5:00 PM IST"}</div>
+            <div className="eyebrow">Maven Command Center</div>
             <h2 className="text-2xl font-semibold tracking-tight mt-1.5">
-              Post-market intelligence, generated and reviewed by your AI newsroom.
+              Your two AI newsrooms, one view.
             </h2>
             <p className="text-sm text-ink-muted mt-1.5 max-w-xl">
-              Watch the real Claude Code pipeline research the Indian market after close, build a
-              3-slide carousel, gate it for quality &amp; compliance, and publish — every node visible.
+              The two latest carousel and photo-reel runs — plus a live Agent Orchestrator where you
+              watch each agent hand off to the next. Orchestrator runs are simulations; real
+              publishing happens in the Claude Code conductor.
             </p>
           </div>
           <div className="flex items-center gap-2.5">
-            <button className="btn btn-primary" onClick={runClosingBell} disabled={running}>
-              {running ? <Loader2 size={15} className="animate-spin" /> : <Play size={15} />}
-              Run Closing Bell
+            <button className="btn btn-primary" onClick={runCarousel} disabled={!!running}>
+              {running === "carousel" ? <Loader2 size={15} className="animate-spin" /> : <LayoutGrid size={15} />}
+              Orchestrator · Carousel
             </button>
-            {job && (
-              <Link href={`/run/${job.job_id}`} className="btn btn-ghost">
-                Open Latest Run <ArrowUpRight size={15} />
-              </Link>
-            )}
+            <button className="btn btn-primary" onClick={runPhotoReel} disabled={!!running}>
+              {running === "reel" ? <Loader2 size={15} className="animate-spin" /> : <Film size={15} />}
+              Orchestrator · Photo Reels
+            </button>
           </div>
         </div>
       </div>
 
-      {!job ? (
-        <EmptyState title="No runs yet" hint="Trigger a Closing Bell run to watch the pipeline live, or wait for the 5:00 PM IST schedule." />
-      ) : (
-        <>
-          {/* top metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
-            <div className="glass card-pad col-span-2 md:col-span-1">
-              <div className="eyebrow">Current Run</div>
-              <div className="text-lg font-semibold tracking-tight mt-2">{job.job_id}</div>
-              <div className="mt-2"><StatusBadge status={job.status} glow /></div>
-            </div>
-            <StatCard label="Active Node" value={<span className="text-lg capitalize">{activeNode}</span>} hint={job.run_type} />
-            <StatCard label="Stories Found" value={storiesFound ?? "—"} accent={CLASS_ACCENT.A} />
-            <StatCard label="Stories Selected" value={storiesSelected ?? "—"} hint="importance≥7 · confidence≥8" />
-            <StatCard label="Images Generated" value={imgCount ?? "—"} accent={CLASS_ACCENT.C} hint="nano_banana_pro" />
-            <div className="glass card-pad">
-              <div className="eyebrow">IG Publish</div>
-              <div className="mt-2"><StatusBadge status={job.publish_status === "published" ? "published" : (job.publish_status || "waiting")} /></div>
-              {job.instagram_post_url ? (
-                <a href={job.instagram_post_url} target="_blank" rel="noreferrer"
-                   className="mt-2 inline-flex items-center gap-1 text-xs text-teal hover:underline">
-                  View post <ExternalLink size={12} />
-                </a>
-              ) : <div className="text-xs text-ink-faint mt-2">No permalink yet</div>}
-            </div>
-          </div>
+      {/* latest carousel runs */}
+      <div className="eyebrow mb-2 flex items-center gap-2"><LayoutGrid size={13} /> Latest carousel runs</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        {carousels.length === 0 ? (
+          <EmptyState title="No carousel runs yet" hint="Trigger a run or wait for the 5:00 PM IST schedule." />
+        ) : (
+          carousels.map((j) => (
+            <Link key={j.job_id} href={`/run/${j.job_id}`}
+              className="glass card-pad block hover:border-teal/40 transition-colors">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold truncate">{j.job_id}</div>
+                <StatusBadge status={j.status} />
+              </div>
+              <div className="text-[12px] text-ink-muted mt-1 line-clamp-2">{j.summary || "—"}</div>
+              <div className="flex items-center gap-3 mt-3 text-[11px] text-ink-faint">
+                <span>content {j.scores?.content_score ?? "—"}</span>
+                <span>design {j.scores?.design_score ?? "—"}</span>
+                <span>compliance {j.scores?.compliance_score ?? "—"}</span>
+                {j.instagram_post_url && (
+                  <a href={j.instagram_post_url} target="_blank" rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="ml-auto inline-flex items-center gap-1 text-teal hover:underline">
+                    IG <ExternalLink size={11} />
+                  </a>
+                )}
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
 
-          {/* scores */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <ScoreCard label="Content Quality" score={scores?.content_score} threshold={meta?.thresholds.content ?? 90} />
-            <ScoreCard label="Design Quality" score={scores?.design_score} threshold={meta?.thresholds.design ?? 90} />
-            <ScoreCard label="Compliance" score={scores?.compliance_score} threshold={meta?.thresholds.compliance ?? 95} />
-            <ScoreCard label="Aesthetic (visual QA)" score={scores?.aesthetic_score} sub="Reviewer score" />
-          </div>
-
-          {/* market summary */}
-          {job.summary && (
-            <div className="glass card-pad mt-4">
-              <div className="eyebrow mb-2">Market Summary · {job.date}</div>
-              <p className="text-sm text-ink-muted leading-relaxed">{job.summary}</p>
-            </div>
-          )}
-        </>
-      )}
+      {/* latest photo-reel runs */}
+      <div className="eyebrow mb-2 flex items-center gap-2"><Film size={13} /> Latest photo-reel runs</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {reels.length === 0 ? (
+          <EmptyState title="No photo-reel runs yet" hint="Run the pipeline from the Photo Reels dashboard." />
+        ) : (
+          reels.map((p) => (
+            <Link key={p.job_id} href="/newsroom/reels/slides"
+              className="glass card-pad block hover:border-teal/40 transition-colors">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-sm font-semibold truncate">{p.headline || p.job_id}</div>
+                <StatusPill status={p.status} />
+              </div>
+              <div className="text-[12px] text-ink-faint mt-1">{p.job_id}</div>
+              <div className="flex items-center gap-3 mt-3 text-[11px] text-ink-faint">
+                <span>QA {p.qa_score ?? "—"}/100</span>
+                {p.permalink && (
+                  <a href={p.permalink} target="_blank" rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="ml-auto inline-flex items-center gap-1 text-teal hover:underline">
+                    View reel <ExternalLink size={11} />
+                  </a>
+                )}
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
     </div>
   );
 }

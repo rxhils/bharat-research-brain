@@ -141,6 +141,10 @@ export const photoReelsApi = {
     research_only?: boolean; allow_simulation?: boolean; style?: string;
     use_higgsfield?: boolean; credit_confirmed?: boolean;
   }) => post("/run", opts).then((r) => j<Record<string, unknown>>(r)),
+  /** Launch a live SIMULATION of the photo-Reel agent pipeline (dashboard
+   *  orchestrator). Emits events on the shared bus; never publishes. */
+  simulate: () =>
+    post("/simulate").then((r) => j<{ job_id: string; status: string }>(r)),
   stopCron: () => post("/cron/stop").then((r) => j<Record<string, unknown>>(r)),
   generateImages: (id: string, opts?: {
     use_higgsfield?: boolean; credit_confirmed?: boolean; style?: string;

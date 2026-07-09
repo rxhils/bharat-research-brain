@@ -7,6 +7,7 @@ carousel routes and from the legacy video-reel routes.
 """
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from pathlib import Path
@@ -90,6 +91,19 @@ def run(body: dict[str, Any] = _BODY) -> dict[str, Any]:
         style_name=body.get("style", ps_config.DEFAULT_STYLE),
         use_higgsfield=bool(body.get("use_higgsfield", False)),
         credit_confirmed=bool(body.get("credit_confirmed", False)))
+
+
+@router.post("/simulate")
+async def simulate(body: dict[str, Any] = _BODY) -> dict[str, Any]:
+    """Launch a LIVE SIMULATION of the photo-Reel agent pipeline for the
+    dashboard orchestrator. Emits events over the shared bus (watch via
+    /api/jobs/{id}/stream). It never calls Higgsfield/Composio and never
+    publishes — a real run happens in the Claude Code conductor."""
+    from ..services import runner_photo_slides as rps
+    info = rps.create_simulation_job(body.get("date"))
+    if info.get("status") == "running":
+        asyncio.create_task(rps.run_simulation(info["job_id"]))
+    return info
 
 
 @router.get("/packages")
