@@ -11,7 +11,8 @@
     "eval:maven:prod": "MAVEN_EVAL_URL=https://www.trymaven.in/api/ask node scripts/run-maven-evals.mjs",
     "eval:sources": "node scripts/test-source-depth.mjs",
     "eval:sources:prod": "MAVEN_EVAL_URL=https://trymaven.in/api/ask node scripts/test-source-depth.mjs",
-    "eval:followups": "node scripts/test-conversation-followups.mjs"
+    "eval:followups": "node scripts/test-conversation-followups.mjs",
+    "eval:movers": "node scripts/test-stock-movers.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

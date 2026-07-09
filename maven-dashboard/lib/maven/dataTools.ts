@@ -1,6 +1,7 @@
 import type { Quote, SectorPerf, FiiDiiFlows, GSecYield, MacroSnapshot, MarketDataPoint, CompanyAnnouncements, Announcement, CompanySnapshot, ResultContext, ShareholdingContext, StockMover, StockMoverParams, StockMoversResult, StockMoverDirection, StockMoverUniverse } from "./types";
 import { searchSources } from "./sourceSearch";
 import { normalizeForClassification } from "./queryNormalizer";
+import { getActiveEquityUniverse } from "./activeEquityUniverse";
 
 // Live Yahoo + Tavily-retrieved fallbacks. Never fabricates: a value appears only when found in
 // a cited source, else null + a clean user-facing limitation.
@@ -308,6 +309,55 @@ async function yahooScreenerMovers(direction: StockMoverDirection, limit: number
   } catch { return []; }
 }
 
+// ---- keyless mover scan (curated liquid universe) ----
+// Per-symbol v8 quote: price + change% + volume from chart meta (the v7 batch endpoint 401s
+// without a crumb/cookie, which we do NOT bypass).
+async function yqMover(sym: string): Promise<{ price: number | null; changePct: number | null; volume: number | null }> {
+  try {
+    const r = await fetch(YF + encodeURIComponent(sym) + "?interval=1d&range=1d", { headers: { "User-Agent": UA }, next: { revalidate: 120 } });
+    if (!r.ok) return { price: null, changePct: null, volume: null };
+    const j: any = await r.json(); const m = j?.chart?.result?.[0]?.meta ?? {};
+    const price = posNum(m.regularMarketPrice);
+    const prev = posNum(m.chartPreviousClose) ?? posNum(m.previousClose);
+    const changePct = price != null && prev != null ? round2(((price - prev) / prev) * 100) : null;
+    return { price: price != null ? round2(price) : null, changePct, volume: num(m.regularMarketVolume) };
+  } catch { return { price: null, changePct: null, volume: null }; }
+}
+
+// Bounded-concurrency scan with a wall-clock deadline (never starts new work past the deadline, so
+// one slow request can't blow the response budget).
+async function runScan(symbols: { symbol: string; name: string }[], concurrency: number, deadlineMs: number): Promise<StockMover[]> {
+  const deadline = Date.now() + deadlineMs;
+  const rows: StockMover[] = []; let i = 0;
+  const worker = async () => {
+    while (i < symbols.length && Date.now() < deadline) {
+      const s = symbols[i++];
+      const q = await yqMover(s.symbol + ".NS");
+      // Data-quality rule: a row needs a real price AND change%, else it is excluded (never guessed).
+      if (q.price == null || q.changePct == null) continue;
+      rows.push({
+        symbol: s.symbol, companyName: s.name, price: q.price, change: null, changePct: q.changePct,
+        volume: q.volume ?? null, tradedValue: null, sector: null,
+        source: "Market data · latest available", sourceUrl: `https://finance.yahoo.com/quote/${encodeURIComponent(s.symbol)}.NS`,
+        freshness: "latest_available", confidence: "retrieved",
+      });
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, symbols.length) }, worker));
+  return rows;
+}
+
+async function scanMoversFromUniverse(direction: StockMoverDirection, limit: number): Promise<{ movers: StockMover[]; limitation?: string }> {
+  const uni = getActiveEquityUniverse();
+  const rows = await runScan(uni.symbols, 8, 9000);
+  if (!rows.length) return { movers: [] };
+  const sorted = direction === "losers" ? rows.sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0))
+    : direction === "most_active" ? rows.sort((a, b) => (b.volume ?? -1) - (a.volume ?? -1))
+    : rows.sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0));
+  const partial = rows.length < uni.symbols.length ? " Latest available active-equity scan; some symbols may be unavailable." : "";
+  return { movers: sorted.slice(0, limit), limitation: ((uni.limitation ?? "") + partial).trim() || undefined };
+}
+
 export async function getTopStockMovers(params: StockMoverParams): Promise<StockMoversResult> {
   const { direction, limit } = params;
   const universe: StockMoverUniverse = params.universe ?? "nse_equity";
@@ -318,13 +368,17 @@ export async function getTopStockMovers(params: StockMoverParams): Promise<Stock
     // Live leaderboard only for "today" - a historical single-day mover ranking isn't reconstructable
     // from the live screener, so those go straight to the honest-unavailable path.
     if (!date) {
-      const movers = await yahooScreenerMovers(direction, limit);
-      if (movers.length) {
-        return {
-          ...base, movers, source: "Yahoo Finance (NSE/BSE equity screener)", sourceUrl: "https://finance.yahoo.com/screener",
-          freshness: "live", confidence: "retrieved",
-          limitation: "Ranked from the available live equity-screener universe (NSE/BSE listings); this may not span every NSE stock.",
-        };
+      // 1) Yahoo predefined screener (returns US listings for India; filtered to NSE/BSE, usually empty).
+      const screened = await yahooScreenerMovers(direction, limit);
+      if (screened.length) {
+        return { ...base, movers: screened, source: "Market data · latest available", sourceUrl: "https://finance.yahoo.com/screener",
+          freshness: "live", confidence: "retrieved", limitation: "Ranked from the available equity screener; may not span every NSE stock." };
+      }
+      // 2) Primary keyless path: batch-scan a curated liquid NSE universe via per-symbol quotes.
+      const scanned = await scanMoversFromUniverse(direction, limit);
+      if (scanned.movers.length) {
+        return { ...base, universe: "nifty50", movers: scanned.movers, source: "Market data · latest available",
+          sourceUrl: "https://finance.yahoo.com", freshness: "latest_available", confidence: "retrieved", limitation: scanned.limitation };
       }
     }
     // Fallback: cite a retrieved market-mover source but NEVER fabricate a ranked table.
