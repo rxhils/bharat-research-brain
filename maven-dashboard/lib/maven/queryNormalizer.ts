@@ -34,6 +34,17 @@ export function normalizeForClassification(query: string): string {
   s = s.replace(/\bmarket wrap\b/g, "market summary");
   s = s.replace(/\bwhat happened\b/g, "summarize");
 
+  // Stock-mover phrasings -> canonical gainer/loser/most-active tokens so the leaderboard router
+  // (answerTypeRouter MOVERS / intentClassifier top_stock_movers) fires on natural language.
+  s = s.replace(/\b(increased|went up|gone up|rose|risen|gained|rising|climbed|advanced|surged|jumped|rallied)(\s+the)?\s+most\b/g, "gainers");
+  s = s.replace(/\b(fell|fallen|decreased|went down|gone down|dropped|declined|lost|losing|slid|sank|crashed|tanked|plunged)(\s+the)?\s+most\b/g, "losers");
+  s = s.replace(/\bup the most\b/g, "gainers");
+  s = s.replace(/\bdown the most\b/g, "losers");
+  s = s.replace(/\b(most active|highest volume|most traded|highest traded value|most heavily traded)\b/g, "most active");
+  s = s.replace(/\bindividual (stocks?|equit\w+|companies|shares?)\b/g, "stocks");
+  s = s.replace(/\blisted companies\b/g, "stocks");
+  s = s.replace(/\bshares\b/g, "stocks");
+
   for (const [re, repl] of WORD_RULES) s = s.replace(re, repl);
 
   // Collapse any whitespace introduced/left over into single spaces, trim ends.

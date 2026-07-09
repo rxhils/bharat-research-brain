@@ -79,3 +79,18 @@ export function rewriteContextualQuery(
       return asIs;
   }
 }
+
+/**
+ * Rewrite a "I mean individual stocks / not indices" correction into a standalone stock-leaderboard
+ * query. Direction and count are inferred from the previous query so "top 5 ... increased the most"
+ * -> gainers/5. The rewritten query re-enters routeAnswerType and lands on stock_leaderboard.
+ */
+export function rewriteMoversCorrection(query: string, state: MavenConversationState): string {
+  const ctx = `${state.lastUserQuery ?? ""} ${query}`.toLowerCase();
+  const verb = /\b(losers?|fell|fallen|declin|decreas|dropp?ed|worst|down)\b/.test(ctx) ? "fell the most"
+    : /\b(most active|active|volume|traded)\b/.test(ctx) ? "were the most active"
+    : "gained the most";
+  const m = (state.lastUserQuery ?? "").match(/\btop\s+(\d{1,3})\b/) || query.match(/\btop\s+(\d{1,3})\b/);
+  const n = m ? Math.max(1, Math.min(parseInt(m[1], 10), 25)) : 5;
+  return `Show the top ${n} individual NSE stocks that ${verb} today in a table.`;
+}

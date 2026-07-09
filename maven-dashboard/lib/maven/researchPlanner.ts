@@ -40,6 +40,9 @@ export function planResearch(query: string, intent: Intent): ResearchPlan {
         ],
       };
     }
+    case "top_stock_movers":
+      return mk(["stock_movers"], ["comparison_table"],
+        ["NSE top gainers losers today India", "most active stocks NSE BSE today India", "biggest stock movers NSE today Moneycontrol"]);
     case "market_summary": {
       // Raw `query` (not the normalized topic) - the normalizer rewrites "session" -> "market day",
       // which would break "previous session" detection in resolveMarketDate.

@@ -89,6 +89,19 @@ export function looksLikeBareFollowUp(query: string): boolean {
   return SOURCE_RE.test(n) || CHART_RE.test(n) || SUMMARIZE_RE.test(n) || FORMAT_RE.test(n) || EXPAND_RE.test(n) || CLARIFY_RE.test(n);
 }
 
+// User correcting a prior index/market answer to ask for INDIVIDUAL stocks instead of indices:
+// "im talking about individual stocks", "not indices", "I mean companies", "actual shares",
+// "not the market, the stocks". Tested against the RAW query (the normalizer collapses
+// "individual stocks" -> "stocks", which would lose the correction signal).
+const CORRECTION_RE = /\b(individual (stocks?|equit\w+|companies|shares?)|not (the )?indic\w*|not nifty|not sensex|not the market,?\s*(the )?stocks?|actual (stocks?|shares?|companies)|i(?:'m| am)?\s*(?:talking about|mean|meant|asked for|said|want)\s+(?:individual\s+)?(?:stocks?|companies|shares?|equit\w+)|give me (?:actual|individual|real)\s+(?:stocks?|shares?|companies)|listed companies|stocks?,? not (?:the )?(?:index|indices|nifty|sensex|market))\b/i;
+
+/** True when the message corrects a previous index/market answer toward individual stocks. */
+export function isMoversCorrection(query: string): boolean {
+  const original = (query || "").trim();
+  if (!original || isAdviceRequest(original) || isExplicitlyOutOfScope(original)) return false;
+  return CORRECTION_RE.test(original.toLowerCase());
+}
+
 /**
  * Classify whether `query` is a follow-up on the previous Maven answer.
  * Fires only when the conversation state carries a substantive previous answer.

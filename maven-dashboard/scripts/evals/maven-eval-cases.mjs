@@ -33,6 +33,21 @@ export const CASES = [
   { id: "BD7", query: "US market summary Friday", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "explicit US market -> out of scope" },
   { id: "BD8", query: "Bitcoin market recap Friday", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "crypto -> out of scope" },
 
+  // BM. Stock-mover leaderboard (Maven Stock Movers & Clarification Routing v1). Individual-stock
+  // gainer/loser/most-active queries must route to stock_leaderboard, NOT the index/market snapshot.
+  // charts:false because live mover rows are data-dependent (an honest "unavailable" card is still a
+  // valid stock_leaderboard answer) - the key guard is expectedAnswerType, which fails if the answer
+  // regresses back to the Nifty/Sensex index card.
+  { id: "BM1", query: "top 5 stocks that increased the most today in a table", category: "stock_leaderboard", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true, notes: "must not answer with Nifty/Sensex index data" },
+  { id: "BM2", query: "top gainers today", category: "stock_leaderboard", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true },
+  { id: "BM3", query: "top NSE gainers today", category: "stock_leaderboard", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true },
+  { id: "BM4", query: "top 10 stocks down today", category: "stock_leaderboard", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true, notes: "direction = losers" },
+  { id: "BM5", query: "most active stocks today", category: "stock_leaderboard", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true, notes: "direction = most_active" },
+  { id: "BM6", query: "which stocks moved the most today", category: "stock_leaderboard", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true },
+  { id: "BM7", query: "top crypto gainers today", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "crypto -> out of scope, not leaderboard" },
+  { id: "BM8", query: "top US stock gainers today", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "US -> out of scope, not leaderboard" },
+  { id: "BM9", query: "im talking about individual stocks", category: "stock_leaderboard", setup: "what happened in the Indian market today?", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true, notes: "correction after a market/index answer -> individual-stock leaderboard, not a generic explainer" },
+
   // C. Macro / sector mechanism
   { id: "C1", query: "How does crude oil affect Indian markets?", category: "macro", expectedAnswerType: "macro_sector_impact", ...R },
   { id: "C2", query: "What sectors benefit from softer crude?", category: "macro", expectedAnswerType: "macro_sector_impact", ...R },

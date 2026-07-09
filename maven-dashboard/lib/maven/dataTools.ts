@@ -1,5 +1,6 @@
-import type { Quote, SectorPerf, FiiDiiFlows, GSecYield, MacroSnapshot, MarketDataPoint, CompanyAnnouncements, Announcement, CompanySnapshot, ResultContext, ShareholdingContext } from "./types";
+import type { Quote, SectorPerf, FiiDiiFlows, GSecYield, MacroSnapshot, MarketDataPoint, CompanyAnnouncements, Announcement, CompanySnapshot, ResultContext, ShareholdingContext, StockMover, StockMoverParams, StockMoversResult, StockMoverDirection, StockMoverUniverse } from "./types";
 import { searchSources } from "./sourceSearch";
+import { normalizeForClassification } from "./queryNormalizer";
 
 // Live Yahoo + Tavily-retrieved fallbacks. Never fabricates: a value appears only when found in
 // a cited source, else null + a clean user-facing limitation.
@@ -253,5 +254,89 @@ export async function getShareholdingContext(symbol: string, companyName?: strin
     };
     if (!top || (sh.promoterHolding == null && sh.fiiHolding == null)) sh.limitation = "Latest shareholding pattern unavailable from current sources.";
     return sh;
+  });
+}
+
+// ---- Top stock movers (individual-stock leaderboard) ----
+// Ranks INDIVIDUAL NSE/BSE equities. Never uses index moves as a proxy and never fabricates rows:
+// if a real leaderboard cannot be built, it returns an empty list + a clean, non-technical
+// limitation so the answer layer says the data was unavailable rather than guessing.
+const SCR_ID: Record<StockMoverDirection, string> = { gainers: "day_gainers", losers: "day_losers", most_active: "most_actives" };
+
+export function parseMoverParams(query: string): StockMoverParams {
+  const n = normalizeForClassification(query || "");
+  const direction: StockMoverDirection =
+    /\b(losers?|fell|fallen|declin|decreas|dropp?ed|worst|down)\b/.test(n) ? "losers"
+    : /\b(most active|active|volume|traded)\b/.test(n) ? "most_active"
+    : "gainers";
+  const m = n.match(/\btop\s+(\d{1,3})\b/);
+  const limit = Math.max(1, Math.min(m ? parseInt(m[1], 10) : 5, 25));
+  return { direction, limit, universe: "nse_equity" };
+}
+
+async function yahooScreenerMovers(direction: StockMoverDirection, limit: number): Promise<StockMover[]> {
+  try {
+    const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?count=${Math.min(limit * 4, 50)}&scrIds=${SCR_ID[direction]}&region=IN&lang=en-IN`;
+    const r = await fetch(url, { headers: { "User-Agent": UA }, next: { revalidate: 120 } });
+    if (!r.ok) return [];
+    const j: any = await r.json();
+    const quotes: any[] = j?.finance?.result?.[0]?.quotes ?? [];
+    const raw = (v: any) => (v && typeof v === "object" && "raw" in v ? v.raw : v);
+    const movers: StockMover[] = [];
+    for (const q of quotes) {
+      const sym = String(q?.symbol ?? "");
+      // NSE/BSE equities only - never indices/ETFs/REITs, never non-Indian listings.
+      if (!/\.(NS|BO)$/i.test(sym)) continue;
+      if (q?.quoteType && String(q.quoteType).toUpperCase() !== "EQUITY") continue;
+      const price = num(raw(q?.regularMarketPrice));
+      const change = num(raw(q?.regularMarketChange));
+      const changePct = num(raw(q?.regularMarketChangePercent));
+      const bare = sym.replace(/\.(NS|BO)$/i, "");
+      movers.push({
+        symbol: bare, companyName: String(q?.longName ?? q?.shortName ?? bare),
+        price: price != null ? round2(price) : null,
+        change: change != null ? round2(change) : null,
+        changePct: changePct != null ? round2(changePct) : null,
+        volume: num(raw(q?.regularMarketVolume)), tradedValue: null,
+        sector: typeof q?.sector === "string" ? q.sector : null,
+        source: "Yahoo Finance screener", sourceUrl: `https://finance.yahoo.com/quote/${encodeURIComponent(sym)}`,
+        freshness: "live", confidence: "retrieved",
+      });
+      if (movers.length >= limit) break;
+    }
+    return movers;
+  } catch { return []; }
+}
+
+export async function getTopStockMovers(params: StockMoverParams): Promise<StockMoversResult> {
+  const { direction, limit } = params;
+  const universe: StockMoverUniverse = params.universe ?? "nse_equity";
+  const date = params.date;
+  const ttl = date ? 24 * 3600_000 : 3 * 60_000; // today refreshes every few minutes; history is fixed
+  return cached(`stock_movers:${direction}:${universe}:${date ?? "today"}`, ttl, async (): Promise<StockMoversResult> => {
+    const base = { direction, limit, universe, date };
+    // Live leaderboard only for "today" - a historical single-day mover ranking isn't reconstructable
+    // from the live screener, so those go straight to the honest-unavailable path.
+    if (!date) {
+      const movers = await yahooScreenerMovers(direction, limit);
+      if (movers.length) {
+        return {
+          ...base, movers, source: "Yahoo Finance (NSE/BSE equity screener)", sourceUrl: "https://finance.yahoo.com/screener",
+          freshness: "live", confidence: "retrieved",
+          limitation: "Ranked from the available live equity-screener universe (NSE/BSE listings); this may not span every NSE stock.",
+        };
+      }
+    }
+    // Fallback: cite a retrieved market-mover source but NEVER fabricate a ranked table.
+    const dirWord = direction === "losers" ? "top losers" : direction === "most_active" ? "most active stocks" : "top gainers";
+    const res = await searchSources([`NSE ${dirWord} today India`, `${dirWord} Indian stock market today Moneycontrol`]);
+    const top = res[0];
+    return {
+      ...base, movers: [], source: top?.source ?? "Maven analysis", sourceUrl: top?.url,
+      freshness: "unavailable", confidence: "unavailable",
+      limitation: date
+        ? "A verified historical top-mover table for that date was unavailable from current sources; Maven will not guess the individual stocks."
+        : "Exact top-mover data was unavailable from current sources; Maven will not guess the individual stocks. See the retrieved market source for context.",
+    };
   });
 }

@@ -15,6 +15,11 @@ const CONCEPT = /^(what is|what's|whats|define|meaning of|explain (what|the)\b|h
 const CURRENT = /(today|now|this week|currently|latest|right now|moving|movement|summari|market summary|wrap|leading|rally|fell|surg|why is|why are|why did|what should i watch)/i;
 const MACRO = /(crude|oil|rupee|usd ?\/? ?inr|yield|g-?sec|\brbi\b|repo|\bfii\b|\bdii\b|monsoon|metal|inflation|\bcpi\b|sector|bank|\bit\b|pharma|auto|fmcg|realty|energy)/i;
 const INDIA = /\b(india|indian|nifty|sensex|nse|bse|sebi|stocks?|shares?|equit\w*|market)\b/i;
+// Top gainers/losers/most-active INDIVIDUAL-stock leaderboard requests. Tested against the
+// NORMALIZED query, so "increased the most" is already "gainers", "highest volume" -> "most active".
+// Must be checked BEFORE the CURRENT catch-all so "top stocks that gained the most today" returns a
+// stock table, not the Nifty/Sensex/index snapshot.
+const MOVERS = /\b(top|biggest|best|highest)\b[^.?!]{0,40}\b(gainers?|losers?|movers?|active|volume|stocks?|shares?)\b|\b(gainers?|losers?)\b[^.?!]{0,20}\b(today|now|this week|currently)\b|\bmost active\b|\bhighest volume\b|\bwhich stocks?\b[^.?!]{0,30}\b(moved?|gain|los|up|down|most)\b/i;
 
 // Explicitly non-Indian subject (US/crypto/global...) with no India anchor. Exported so the
 // follow-up detector can refuse to claim these even mid-conversation.
@@ -31,6 +36,7 @@ export function routeAnswerType(query: string): { answerType: AnswerType; discla
   if (isAdviceRequest(s) || FNO.test(l) || /\b(price target|target price|stock to buy|stocks? to buy|which stock|multibagger|guaranteed return)\b/i.test(l)) return { answerType: "unsafe_advice", disclaimerLevel: "strong" };
   const ln = normalizeForClassification(s);
   if (isExplicitlyOutOfScope(s)) return { answerType: "out_of_scope", disclaimerLevel: "light" };
+  if (MOVERS.test(ln)) return { answerType: "stock_leaderboard", disclaimerLevel: "standard" };
   if (COMPARE.test(ln)) return { answerType: "stock_comparison", disclaimerLevel: "standard" };
   if (resolveStock(s)) return { answerType: "single_stock_research", disclaimerLevel: "standard" };
   if (CONCEPT.test(ln)) return { answerType: "basic_concept", disclaimerLevel: "light" };
