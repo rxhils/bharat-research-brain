@@ -18,7 +18,11 @@ _STOP = {"a", "an", "the", "of", "to", "in", "on", "as", "at", "by", "for",
 
 def _clip_words(text: str, limit: int) -> str:
     words = text.split()
-    return " ".join(words[:limit]).rstrip(",;:-")
+    clipped = words[:limit]
+    # never let a clipped line dangle on a stopword/preposition (e.g. "...Fund at a")
+    while clipped and clipped[-1].lower().strip(",;:.-") in _STOP:
+        clipped.pop()
+    return " ".join(clipped).rstrip(",;:-")
 
 
 def _title_from(headline: str, limit: int = config.TITLE_MAX_WORDS) -> str:
@@ -34,6 +38,27 @@ def _title_from(headline: str, limit: int = config.TITLE_MAX_WORDS) -> str:
 def _first_sentence(text: str) -> str:
     m = re.split(r"(?<=[.!?])\s+", text.strip())
     return (m[0] if m else text).strip()
+
+
+def _clip_sentence(text: str, limit: int) -> str:
+    """Clip to <= limit words on a CLAUSE boundary so a line never dangles
+    mid-phrase (e.g. '...lowest levels since 30'). Splits only on real clause
+    marks (comma+space, semicolon, colon, dash) so numbers like '23,882' and
+    '2.1%' stay intact; falls back to word-clip when there is no clause break.
+    """
+    sent = _first_sentence(text)
+    if len(sent.split()) <= limit:
+        return sent.rstrip(" ,;:-—–")
+    out = ""
+    for clause in re.split(r"\s*[—–]\s*|,\s+|;\s+|:\s+", sent):
+        clause = clause.strip()
+        if not clause:
+            continue
+        cand = f"{out}, {clause}" if out else clause
+        if len(cand.split()) > limit:
+            break
+        out = cand
+    return (out or _clip_words(sent, limit)).rstrip(" ,;:-—–")
 
 
 def _sanitize(text: str) -> str:
@@ -95,7 +120,7 @@ def run(job_id: str) -> dict:
          "source_note": f"Source: {src_name}"},
         {"slide_number": 2, "role": "what_happened",
          "title": "What happened",
-         "body": _clip_words(_first_sentence(summary), body),
+         "body": _clip_sentence(summary, body),
          "visual_direction": "Clean fact card: short statement, generous spacing, "
                              "subtle sector tag.",
          "source_note": f"Source: {src_name}"},

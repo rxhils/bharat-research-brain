@@ -26,8 +26,9 @@ _NUM = re.compile(
 
 _SECTOR_HINTS = {
     "Banking": ["bank", "hdfc", "icici", "sbi", "kotak", "axis", "nbfc", "psu bank"],
-    "IT & AI": ["it ", "tcs", "infosys", "wipro", "hcl", "tech", " ai ",
-                "artificial intelligence", "software"],
+    "IT & AI": ["tcs", "infosys", "wipro", "hcl", "tech", "software",
+                "artificial intelligence", "it services", "it stocks",
+                "it sector", "semiconductor"],
     "Auto": ["auto", "maruti", "tata motors", "mahindra", "ev ",
              "electric vehicle", "two-wheeler"],
     "Energy": ["oil", "gas", "reliance", "ongc", "power", "coal", "solar", "renewable"],
@@ -44,9 +45,21 @@ _SECTOR_HINTS = {
 }
 
 
+# Uppercase acronyms are matched on the ORIGINAL-case text so the English
+# pronoun "it" and the word "ai" can never trip the IT/AI sector.
+_ACRONYM_SECTORS = {"IT & AI": (r"\bIT\b", r"\bAI\b")}
+
+
 def _sectors_of(text: str) -> list[str]:
-    t = f" {text.lower()} "
-    hits = [s for s, kws in _SECTOR_HINTS.items() if any(k in t for k in kws)]
+    low = text.lower()
+    hits: list[str] = []
+    for sector, kws in _SECTOR_HINTS.items():
+        if any(re.search(rf"(?<![a-z0-9]){re.escape(k.strip())}(?![a-z])", low)
+               for k in kws):
+            hits.append(sector)
+    for sector, patterns in _ACRONYM_SECTORS.items():
+        if sector not in hits and any(re.search(p, text) for p in patterns):
+            hits.append(sector)
     return hits or ["Markets & Index"]
 
 
@@ -142,8 +155,8 @@ def run(job_id: str, *, allow_simulation: bool = False) -> dict:
             "summary": summary or headline,
             "sources": [{"name": s.get("source_name") or urlparse(url).netloc,
                          "url": url}],
-            "why_it_matters": (f"A {sectors[0]} development the kind of thing retail "
-                               "investors track daily; sourced, not speculation."),
+            "why_it_matters": (f"It shapes how investors read the {sectors[0]} space "
+                               "and where money looks to move next."),
             "visual_potential": _visual_potential(sectors, text),
             "published_at": s.get("published_at"),
             "key_numbers": _NUM.findall(text)[:4],
