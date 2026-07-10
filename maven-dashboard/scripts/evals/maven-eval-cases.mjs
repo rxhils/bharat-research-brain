@@ -47,6 +47,9 @@ export const CASES = [
   { id: "BM7", query: "top crypto gainers today", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "crypto -> out of scope, not leaderboard" },
   { id: "BM8", query: "top US stock gainers today", category: "out_of_scope", expectedAnswerType: "out_of_scope", blocks: false, charts: false, sources: true, notes: "US -> out of scope, not leaderboard" },
   { id: "BM9", query: "im talking about individual stocks", category: "stock_leaderboard", setup: "what happened in the Indian market today?", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true, notes: "correction after a market/index answer -> individual-stock leaderboard, not a generic explainer" },
+  // BM10/BM11 (Universe v2): broader-universe phrasing + correction after a SECTOR answer.
+  { id: "BM10", query: "top gainers among NSE stocks", category: "stock_leaderboard", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true },
+  { id: "BM11", query: "I mean individual stocks", category: "stock_leaderboard", setup: "top sectors today", expectedAnswerType: "stock_leaderboard", blocks: true, charts: false, sources: true, notes: "correction after a sector answer -> stock leaderboard" },
 
   // C. Macro / sector mechanism
   { id: "C1", query: "How does crude oil affect Indian markets?", category: "macro", expectedAnswerType: "macro_sector_impact", ...R },

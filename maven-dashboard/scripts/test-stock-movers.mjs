@@ -6,10 +6,11 @@
 const BASE = process.env.MAVEN_EVAL_URL || "http://localhost:3000/api/ask";
 const INDEX_NAMES = ["nifty 50", "sensex", "bank nifty", "nifty midcap", "nifty smallcap", "brent", "usd/inr", "usd / inr"];
 
-async function ask(query) {
+async function ask(query, conversationContext) {
   const t0 = Date.now();
+  const body = conversationContext ? { query, conversationContext } : { query };
   try {
-    const r = await fetch(BASE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query }) });
+    const r = await fetch(BASE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
     return { j, ms: Date.now() - t0 };
   } catch {
@@ -34,20 +35,30 @@ const QUERIES = [
   { q: "top gainers today", dir: "gainers", expect: "stock_leaderboard" },
   { q: "top 10 stocks down today", dir: "losers", expect: "stock_leaderboard" },
   { q: "most active stocks today", dir: "most_active", expect: "stock_leaderboard" },
+  { q: "top gainers among NSE stocks", dir: "gainers", expect: "stock_leaderboard" },
   { q: "top sectors today", dir: "-", expectNot: "stock_leaderboard" },
   { q: "top crypto gainers today", dir: "-", expect: "out_of_scope" },
   { q: "top US stock gainers today", dir: "-", expect: "out_of_scope" },
+  // Multi-turn correction: sector answer first, then "I mean individual stocks".
+  { q: "I mean individual stocks", setup: "top sectors today", dir: "gainers", expect: "stock_leaderboard" },
 ];
 
 let fails = 0;
 for (const c of QUERIES) {
-  const { j, ms } = await ask(c.q);
+  let ctx;
+  if (c.setup) {
+    const s = await ask(c.setup);
+    ctx = { turns: [{ id: "t1", userQuery: c.setup, answer: s.j }] };
+  }
+  const { j, ms } = await ask(c.q, ctx);
   const type = j.type ?? j.answerType ?? "-";
   const rows = tableRows(j);
   const syms = rows.map((r) => r.symbol ?? r.stock).filter(Boolean).slice(0, 10);
   const indexRows = rows.some((r) => INDEX_NAMES.some((n) => String(r.stock ?? r.symbol ?? "").toLowerCase().includes(n)));
   const src = rows[0]?.source ?? j.charts?.find((x) => x.type === "comparison_table")?.dataSource ?? "-";
   const lim = (j.limitations ?? []).join(" | ");
+  // Universe diagnostics (Task 7): coverage counts surface in the limitation text ("X of Y").
+  const cov = lim.match(/(\d+)\s+of\s+(\d+)/);
   const leak = hasLeakage(j), advice = hasAdvice(j);
 
   let fail = false;
@@ -57,8 +68,8 @@ for (const c of QUERIES) {
   if (leak || advice) fail = true;
   if (fail) fails++;
 
-  console.log(`${fail ? "XX" : "OK"}  ${c.q}`);
-  console.log(`     type=${type} dir=${c.dir} rows=${rows.length} syms=[${syms.join(",")}] src="${src}" ms=${ms} indexRows=${indexRows} leak=${leak} advice=${advice}`);
+  console.log(`${fail ? "XX" : "OK"}  ${c.setup ? `[${c.setup}] -> ` : ""}${c.q}`);
+  console.log(`     type=${type} dir=${c.dir} rows=${rows.length} syms=[${syms.join(",")}] src="${src}" ms=${ms} covered=${cov ? `${cov[1]}/${cov[2]}` : "-"} cacheHint=${ms < 1200 ? "warm" : "cold"} indexRows=${indexRows} leak=${leak} advice=${advice}`);
   if (lim) console.log(`     limitations: ${lim}`);
 }
 console.log(`\n${QUERIES.length - fails}/${QUERIES.length} passed`);

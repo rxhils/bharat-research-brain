@@ -324,38 +324,66 @@ async function yqMover(sym: string): Promise<{ price: number | null; changePct: 
   } catch { return { price: null, changePct: null, volume: null }; }
 }
 
-// Bounded-concurrency scan with a wall-clock deadline (never starts new work past the deadline, so
-// one slow request can't blow the response budget).
-async function runScan(symbols: { symbol: string; name: string }[], concurrency: number, deadlineMs: number): Promise<StockMover[]> {
+// Rolling per-symbol quote cache + rotating cursor. Each scan window (bounded by concurrency and
+// a wall-clock deadline) refreshes as many quotes as it can, starting where the previous window
+// stopped; the leaderboard then ranks over ALL quotes still fresh in the cache. Coverage of the
+// Nifty 500 therefore ACCUMULATES across scan windows instead of being capped by a single window,
+// while any single request stays inside the strict deadline.
+const QUOTE_TTL = 10 * 60_000;
+const MOVER_QUOTES = new Map<string, { price: number | null; changePct: number | null; volume: number | null; at: number }>();
+let scanCursor = 0;
+
+async function runScan(symbols: { symbol: string; name: string }[], concurrency: number, deadlineMs: number): Promise<void> {
+  const n = symbols.length;
+  if (!n) return;
   const deadline = Date.now() + deadlineMs;
-  const rows: StockMover[] = []; let i = 0;
+  const start = scanCursor % n;
+  let offset = 0;
   const worker = async () => {
-    while (i < symbols.length && Date.now() < deadline) {
-      const s = symbols[i++];
+    while (Date.now() < deadline) {
+      const my = offset++;
+      if (my >= n) break;
+      const s = symbols[(start + my) % n];
+      const c = MOVER_QUOTES.get(s.symbol);
+      if (c && Date.now() - c.at < QUOTE_TTL) continue; // still fresh - skip, spend budget on stale ones
       const q = await yqMover(s.symbol + ".NS");
-      // Data-quality rule: a row needs a real price AND change%, else it is excluded (never guessed).
-      if (q.price == null || q.changePct == null) continue;
-      rows.push({
-        symbol: s.symbol, companyName: s.name, price: q.price, change: null, changePct: q.changePct,
-        volume: q.volume ?? null, tradedValue: null, sector: null,
-        source: "Market data · latest available", sourceUrl: `https://finance.yahoo.com/quote/${encodeURIComponent(s.symbol)}.NS`,
-        freshness: "latest_available", confidence: "retrieved",
-      });
+      MOVER_QUOTES.set(s.symbol, { ...q, at: Date.now() });
     }
   };
-  await Promise.all(Array.from({ length: Math.min(concurrency, symbols.length) }, worker));
-  return rows;
+  await Promise.all(Array.from({ length: Math.min(concurrency, n) }, worker));
+  scanCursor = (start + Math.min(offset, n)) % n; // next window continues where this one stopped
 }
 
-async function scanMoversFromUniverse(direction: StockMoverDirection, limit: number): Promise<{ movers: StockMover[]; limitation?: string }> {
-  const uni = getActiveEquityUniverse();
-  const rows = await runScan(uni.symbols, 8, 9000);
-  if (!rows.length) return { movers: [] };
+async function scanMoversFromUniverse(direction: StockMoverDirection, limit: number): Promise<{
+  movers: StockMover[]; limitation?: string; universeLabel: string; universeSize: number; covered: number; coverage: string;
+}> {
+  const uni = await getActiveEquityUniverse();
+  // Spec guardrails: concurrency 5, strict ~10s wall-clock deadline. The rolling cache means a
+  // partial first window still yields a real (labeled) leaderboard, and coverage grows per window.
+  await runScan(uni.symbols, 5, 10_000);
+  const rows: StockMover[] = [];
+  for (const s of uni.symbols) {
+    const q = MOVER_QUOTES.get(s.symbol);
+    // Data-quality rule: a row needs symbol + real price + change%, else excluded (never guessed).
+    if (!q || Date.now() - q.at >= QUOTE_TTL || q.price == null || q.changePct == null) continue;
+    rows.push({
+      symbol: s.symbol, companyName: s.name, price: q.price, change: null, changePct: q.changePct,
+      volume: q.volume ?? null, tradedValue: null, sector: null,
+      source: "Market data · latest available", sourceUrl: `https://finance.yahoo.com/quote/${encodeURIComponent(s.symbol)}.NS`,
+      freshness: "latest_available", confidence: "retrieved",
+    });
+  }
+  const covered = rows.length;
+  const base = { universeLabel: uni.universeLabel, universeSize: uni.universeSize, covered, coverage: uni.coverage };
+  if (!covered) return { movers: [], ...base };
   const sorted = direction === "losers" ? rows.sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0))
     : direction === "most_active" ? rows.sort((a, b) => (b.volume ?? -1) - (a.volume ?? -1))
     : rows.sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0));
-  const partial = rows.length < uni.symbols.length ? " Latest available active-equity scan; some symbols may be unavailable." : "";
-  return { movers: sorted.slice(0, limit), limitation: ((uni.limitation ?? "") + partial).trim() || undefined };
+  // Honest coverage wording (never claims "all NSE"): exact counts for the scanned universe.
+  const limitation = uni.coverage === "nifty500"
+    ? `Latest available movers from the Nifty 500 universe (quotes covered ${covered} of ${uni.universeSize} constituents in the latest scan window).`
+    : `Latest available movers from a curated liquid NSE universe (${covered} of ${uni.universeSize} symbols quoted).`;
+  return { movers: sorted.slice(0, limit), limitation, ...base };
 }
 
 export async function getTopStockMovers(params: StockMoverParams): Promise<StockMoversResult> {
@@ -374,11 +402,15 @@ export async function getTopStockMovers(params: StockMoverParams): Promise<Stock
         return { ...base, movers: screened, source: "Market data · latest available", sourceUrl: "https://finance.yahoo.com/screener",
           freshness: "live", confidence: "retrieved", limitation: "Ranked from the available equity screener; may not span every NSE stock." };
       }
-      // 2) Primary keyless path: batch-scan a curated liquid NSE universe via per-symbol quotes.
+      // 2) Primary keyless path: rolling batch-scan of the active-equity universe (Nifty 500
+      //    primary, curated liquid fallback) via per-symbol quotes.
       const scanned = await scanMoversFromUniverse(direction, limit);
       if (scanned.movers.length) {
-        return { ...base, universe: "nifty50", movers: scanned.movers, source: "Market data · latest available",
-          sourceUrl: "https://finance.yahoo.com", freshness: "latest_available", confidence: "retrieved", limitation: scanned.limitation };
+        return { ...base, universe: scanned.coverage === "nifty500" ? "nifty500" : "nifty50",
+          movers: scanned.movers, source: "Market data · latest available",
+          sourceUrl: "https://finance.yahoo.com", freshness: "latest_available", confidence: "retrieved",
+          limitation: scanned.limitation,
+          universeLabel: scanned.universeLabel, universeSize: scanned.universeSize, coveredCount: scanned.covered };
       }
     }
     // Fallback: cite a retrieved market-mover source but NEVER fabricate a ranked table.

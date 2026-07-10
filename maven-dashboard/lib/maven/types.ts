@@ -115,6 +115,12 @@ export type StockMoversResult = {
   direction: StockMoverDirection; limit: number; universe: StockMoverUniverse; date?: string;
   movers: StockMover[];
   source: string; sourceUrl?: string; freshness: Freshness; confidence: Confidence; limitation?: string;
+  /** Human label of the scanned universe (e.g. "Nifty 500"), for honest summary wording. */
+  universeLabel?: string;
+  /** Total symbols in the scanned universe. */
+  universeSize?: number;
+  /** Symbols with a fresh quote in the latest scan window (coverage actually achieved). */
+  coveredCount?: number;
 };
 
 export type MarketData = {
