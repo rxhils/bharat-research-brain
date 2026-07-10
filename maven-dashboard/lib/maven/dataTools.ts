@@ -2,6 +2,7 @@ import type { Quote, SectorPerf, FiiDiiFlows, GSecYield, MacroSnapshot, MarketDa
 import { searchSources } from "./sourceSearch";
 import { normalizeForClassification } from "./queryNormalizer";
 import { getActiveEquityUniverse } from "./activeEquityUniverse";
+import { parseSectorScope, symbolInScope, industryOf, sectorLabelOf, sectorNoteOf, type SectorScope } from "./sectorClassifier";
 
 // Live Yahoo + Tavily-retrieved fallbacks. Never fabricates: a value appears only when found in
 // a cited source, else null + a clean user-facing limitation.
@@ -262,22 +263,29 @@ export async function getShareholdingContext(symbol: string, companyName?: strin
 // Ranks INDIVIDUAL NSE/BSE equities. Never uses index moves as a proxy and never fabricates rows:
 // if a real leaderboard cannot be built, it returns an empty list + a clean, non-technical
 // limitation so the answer layer says the data was unavailable rather than guessing.
-const SCR_ID: Record<StockMoverDirection, string> = { gainers: "day_gainers", losers: "day_losers", most_active: "most_actives" };
+// No predefined screener maps to "contributors" - that direction is scan-only (guarded below).
+const SCR_ID: Partial<Record<StockMoverDirection, string>> = { gainers: "day_gainers", losers: "day_losers", most_active: "most_actives" };
 
 export function parseMoverParams(query: string): StockMoverParams {
   const n = normalizeForClassification(query || "");
+  // Order matters: "which stocks pulled IT down?" is a losers ask (down), not a generic
+  // contributors ask; "which stocks drove realty today?" (no direction word) is contributors.
   const direction: StockMoverDirection =
     /\b(losers?|fell|fallen|declin|decreas|dropp?ed|worst|down)\b/.test(n) ? "losers"
     : /\b(most active|active|volume|traded)\b/.test(n) ? "most_active"
+    : /\b(drove|led|pulled|pushed|caused|contribut|behind the (move|rally|fall)|moved the most)\b/.test(n) ? "contributors"
     : "gainers";
   const m = n.match(/\btop\s+(\d{1,3})\b/);
   const limit = Math.max(1, Math.min(m ? parseInt(m[1], 10) : 5, 25));
-  return { direction, limit, universe: "nse_equity" };
+  const sector = parseSectorScope(query || "", n);
+  return { direction, limit, universe: "nifty500", sectorScope: sector?.scope };
 }
 
 async function yahooScreenerMovers(direction: StockMoverDirection, limit: number): Promise<StockMover[]> {
+  const scrId = SCR_ID[direction];
+  if (!scrId) return [];
   try {
-    const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?count=${Math.min(limit * 4, 50)}&scrIds=${SCR_ID[direction]}&region=IN&lang=en-IN`;
+    const url = `https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?count=${Math.min(limit * 4, 50)}&scrIds=${scrId}&region=IN&lang=en-IN`;
     const r = await fetch(url, { headers: { "User-Agent": UA }, next: { revalidate: 120 } });
     if (!r.ok) return [];
     const j: any = await r.json();
@@ -354,36 +362,66 @@ async function runScan(symbols: { symbol: string; name: string }[], concurrency:
   scanCursor = (start + Math.min(offset, n)) % n; // next window continues where this one stopped
 }
 
-async function scanMoversFromUniverse(direction: StockMoverDirection, limit: number): Promise<{
+async function scanMoversFromUniverse(direction: StockMoverDirection, limit: number, sectorScope?: string): Promise<{
   movers: StockMover[]; limitation?: string; universeLabel: string; universeSize: number; covered: number; coverage: string;
+  sectorScope?: string; sectorLabel?: string;
 }> {
   const uni = await getActiveEquityUniverse();
   // Spec guardrails: concurrency 5, strict ~10s wall-clock deadline. The rolling cache means a
   // partial first window still yields a real (labeled) leaderboard, and coverage grows per window.
   await runScan(uni.symbols, 5, 10_000);
-  const rows: StockMover[] = [];
+  let rows: StockMover[] = [];
   for (const s of uni.symbols) {
     const q = MOVER_QUOTES.get(s.symbol);
     // Data-quality rule: a row needs symbol + real price + change%, else excluded (never guessed).
     if (!q || Date.now() - q.at >= QUOTE_TTL || q.price == null || q.changePct == null) continue;
     rows.push({
       symbol: s.symbol, companyName: s.name, price: q.price, change: null, changePct: q.changePct,
-      volume: q.volume ?? null, tradedValue: null, sector: null,
+      volume: q.volume ?? null, tradedValue: null,
+      sector: industryOf(s.symbol) ?? null, // real NSE industry from the committed snapshot
       source: "Market data · latest available", sourceUrl: `https://finance.yahoo.com/quote/${encodeURIComponent(s.symbol)}.NS`,
       freshness: "latest_available", confidence: "retrieved",
     });
   }
   const covered = rows.length;
-  const base = { universeLabel: uni.universeLabel, universeSize: uni.universeSize, covered, coverage: uni.coverage };
-  if (!covered) return { movers: [], ...base };
+  const scope = sectorScope as SectorScope | undefined;
+  const scopeLabel = scope ? sectorLabelOf(scope) : undefined;
+  const base = {
+    universeLabel: uni.universeLabel, universeSize: uni.universeSize, covered, coverage: uni.coverage,
+    sectorScope: scope, sectorLabel: scopeLabel,
+  };
+  // Sector filter AFTER quotes: only symbols whose committed NSE industry matches the scope.
+  // Symbols without sector metadata are excluded from sector-scoped rankings, never guessed in.
+  if (scope) rows = rows.filter((r) => symbolInScope(r.symbol, r.companyName, scope));
+  if (!rows.length) {
+    return {
+      movers: [], ...base,
+      limitation: scope
+        ? `No fresh quotes for Nifty 500 ${scopeLabel} names in the latest scan window; Maven will not guess the stocks.`
+        : undefined,
+    };
+  }
+  // "contributors" ranks by size of move (either direction) with liquidity as tie-break - labeled
+  // as movers, NOT verified index contribution (no free-float weight data in the keyless path).
   const sorted = direction === "losers" ? rows.sort((a, b) => (a.changePct ?? 0) - (b.changePct ?? 0))
     : direction === "most_active" ? rows.sort((a, b) => (b.volume ?? -1) - (a.volume ?? -1))
+    : direction === "contributors" ? rows.sort((a, b) => Math.abs(b.changePct ?? 0) - Math.abs(a.changePct ?? 0) || (b.volume ?? -1) - (a.volume ?? -1))
     : rows.sort((a, b) => (b.changePct ?? 0) - (a.changePct ?? 0));
   // Honest coverage wording (never claims "all NSE"): exact counts for the scanned universe.
-  const limitation = uni.coverage === "nifty500"
-    ? `Latest available movers from the Nifty 500 universe (quotes covered ${covered} of ${uni.universeSize} constituents in the latest scan window).`
-    : `Latest available movers from a curated liquid NSE universe (${covered} of ${uni.universeSize} symbols quoted).`;
-  return { movers: sorted.slice(0, limit), limitation, ...base };
+  const parts: string[] = [];
+  if (scope) {
+    parts.push(`Latest available ${scopeLabel} movers from the Nifty 500 universe (${rows.length} ${scopeLabel} name${rows.length === 1 ? "" : "s"} with fresh quotes; ${covered} of ${uni.universeSize} constituents covered in the latest scan window).`);
+    const note = sectorNoteOf(scope);
+    if (note) parts.push(note);
+  } else {
+    parts.push(uni.coverage === "nifty500"
+      ? `Latest available movers from the Nifty 500 universe (quotes covered ${covered} of ${uni.universeSize} constituents in the latest scan window).`
+      : `Latest available movers from a curated liquid NSE universe (${covered} of ${uni.universeSize} symbols quoted).`);
+  }
+  if (direction === "contributors") {
+    parts.push("Free-float contribution data was unavailable, so Maven ranked individual movers by size of latest percentage move and liquidity - movers, not verified index contribution.");
+  }
+  return { movers: sorted.slice(0, limit), limitation: parts.join(" "), ...base };
 }
 
 export async function getTopStockMovers(params: StockMoverParams): Promise<StockMoversResult> {
@@ -391,26 +429,39 @@ export async function getTopStockMovers(params: StockMoverParams): Promise<Stock
   const universe: StockMoverUniverse = params.universe ?? "nse_equity";
   const date = params.date;
   const ttl = date ? 24 * 3600_000 : 3 * 60_000; // today refreshes every few minutes; history is fixed
-  return cached(`stock_movers:${direction}:${universe}:${date ?? "today"}`, ttl, async (): Promise<StockMoversResult> => {
+  return cached(`stock_movers:${direction}:${universe}:${params.sectorScope ?? "all"}:${date ?? "today"}`, ttl, async (): Promise<StockMoversResult> => {
     const base = { direction, limit, universe, date };
     // Live leaderboard only for "today" - a historical single-day mover ranking isn't reconstructable
     // from the live screener, so those go straight to the honest-unavailable path.
     if (!date) {
-      // 1) Yahoo predefined screener (returns US listings for India; filtered to NSE/BSE, usually empty).
-      const screened = await yahooScreenerMovers(direction, limit);
-      if (screened.length) {
-        return { ...base, movers: screened, source: "Market data · latest available", sourceUrl: "https://finance.yahoo.com/screener",
-          freshness: "live", confidence: "retrieved", limitation: "Ranked from the available equity screener; may not span every NSE stock." };
+      // 1) Yahoo predefined screener (returns US listings for India; filtered to NSE/BSE, usually
+      //    empty). Skipped for sector-scoped or contributor asks - it carries no sector metadata.
+      if (!params.sectorScope && direction !== "contributors") {
+        const screened = await yahooScreenerMovers(direction, limit);
+        if (screened.length) {
+          return { ...base, movers: screened, source: "Market data · latest available", sourceUrl: "https://finance.yahoo.com/screener",
+            freshness: "live", confidence: "retrieved", limitation: "Ranked from the available equity screener; may not span every NSE stock." };
+        }
       }
       // 2) Primary keyless path: rolling batch-scan of the active-equity universe (Nifty 500
-      //    primary, curated liquid fallback) via per-symbol quotes.
-      const scanned = await scanMoversFromUniverse(direction, limit);
+      //    primary, curated liquid fallback) via per-symbol quotes, sector-filtered if asked.
+      const scanned = await scanMoversFromUniverse(direction, limit, params.sectorScope);
       if (scanned.movers.length) {
         return { ...base, universe: scanned.coverage === "nifty500" ? "nifty500" : "nifty50",
           movers: scanned.movers, source: "Market data · latest available",
           sourceUrl: "https://finance.yahoo.com", freshness: "latest_available", confidence: "retrieved",
           limitation: scanned.limitation,
-          universeLabel: scanned.universeLabel, universeSize: scanned.universeSize, coveredCount: scanned.covered };
+          universeLabel: scanned.universeLabel, universeSize: scanned.universeSize, coveredCount: scanned.covered,
+          sectorScope: scanned.sectorScope, sectorLabel: scanned.sectorLabel };
+      }
+      // Sector asked but no fresh sector quotes: return the honest sector-specific unavailable
+      // (never index/sector prose, never a different sector's stocks).
+      if (params.sectorScope) {
+        return { ...base, movers: [], source: "Market data · latest available",
+          freshness: "unavailable", confidence: "unavailable",
+          limitation: scanned.limitation ?? "Sector mover data was unavailable from current sources; Maven will not guess the stocks.",
+          universeLabel: scanned.universeLabel, universeSize: scanned.universeSize, coveredCount: scanned.covered,
+          sectorScope: scanned.sectorScope, sectorLabel: scanned.sectorLabel };
       }
     }
     // Fallback: cite a retrieved market-mover source but NEVER fabricate a ranked table.

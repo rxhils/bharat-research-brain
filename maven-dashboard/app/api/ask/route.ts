@@ -12,6 +12,7 @@ import { generateDeepResearchReport } from "@/lib/maven/deepResearchReportGenera
 import { buildConversationState, findTurnWith } from "@/lib/maven/conversationState";
 import { detectFollowUpIntent, looksLikeBareFollowUp, isMoversCorrection } from "@/lib/maven/followUpIntentDetector";
 import { rewriteContextualQuery, rewriteMoversCorrection } from "@/lib/maven/contextualQueryRewriter";
+import { explainLeaderboard } from "@/lib/maven/leaderboardExplainer";
 import { routeAnswerMode, isTransformationMode } from "@/lib/maven/answerModeRouter";
 import {
   transformToBulletSummary, transformToShortAnswer, transformToTable,
@@ -214,6 +215,17 @@ export async function POST(req: Request) {
   // Conversation intelligence: is this a follow-up on the previous Maven answer?
   const followUp = detectFollowUpIntent(query, convo);
   if (followUp.isFollowUp && followUp.confidence !== "low" && convo.lastAnswer) {
+    // "Why did these move?" after a leaderboard: explain the PREVIOUS rows with retrieved
+    // context - never re-run a fresh leaderboard that could reshuffle the names being asked about.
+    if (followUp.followUpType === "explain_leaderboard") {
+      const anchor = findTurnWith(convo, "charts") ?? convo.lastAnswer;
+      const explained = await explainLeaderboard(anchor, "standard");
+      if (explained) {
+        if (transformedAnswerAssertsAdvice(explained)) return NextResponse.json(REFUSAL);
+        return NextResponse.json(enforceFollowUpChips(explained));
+      }
+      // previous turn carried no usable rows -> fall through to the normal paths below
+    }
     const mode = routeAnswerMode(query, followUp);
     if (isTransformationMode(mode)) {
       // Pure presentation change of the previous answer: no refetch, no new facts possible.

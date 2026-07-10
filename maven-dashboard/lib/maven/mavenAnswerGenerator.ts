@@ -153,8 +153,8 @@ function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); 
 function synthesizeLeaderboard(pack: ContextPack): MavenAnswer {
   const disc = disclaimerText(pack.disclaimerLevel);
   const sm = pack.marketData.stockMovers;
-  const dirLabel = !sm ? "movers" : sm.direction === "losers" ? "losers" : sm.direction === "most_active" ? "most active stocks" : "gainers";
-  const dirTitle = !sm ? "Top movers" : sm.direction === "losers" ? "Top losers" : sm.direction === "most_active" ? "Most active" : "Top gainers";
+  const dirLabel = !sm ? "movers" : sm.direction === "losers" ? "losers" : sm.direction === "most_active" ? "most active stocks" : sm.direction === "contributors" ? "biggest movers" : "gainers";
+  const dirTitle = !sm ? "Top movers" : sm.direction === "losers" ? "Top losers" : sm.direction === "most_active" ? "Most active" : sm.direction === "contributors" ? "Biggest movers" : "Top gainers";
   const limit = sm?.limit ?? 5;
   const sources = realSources(pack);
 
@@ -188,30 +188,38 @@ function synthesizeLeaderboard(pack: ContextPack): MavenAnswer {
     if (anySector) row.sector = m.sector ?? "-";
     return row;
   });
-  // Honest universe phrasing (Task 5): name the universe actually scanned; never claim "all NSE".
-  const universePhrase = sm.universeLabel === "Nifty 500"
-    ? "Latest available movers from the Nifty 500 universe."
-    : sm.universeLabel
-      ? `Latest available movers from a ${sm.universeLabel} universe.`
-      : `Latest available individual-stock mover data from ${sm.source}.`;
+  // Honest universe/sector phrasing (never claims "all NSE"): name what was actually scanned.
+  const scopeLabel = sm.sectorLabel;
+  const universeName = scopeLabel ? `Nifty 500 ${scopeLabel}` : `${sm.universeLabel ?? "NSE"} stocks`;
+  const universePhrase = scopeLabel
+    ? `Latest available ${scopeLabel} movers from the Nifty 500 universe.`
+    : sm.universeLabel === "Nifty 500"
+      ? "Latest available movers from the Nifty 500 universe."
+      : sm.universeLabel
+        ? `Latest available movers from a ${sm.universeLabel} universe.`
+        : `Latest available individual-stock mover data from ${sm.source}.`;
   const table: ChartSpec = {
     type: "comparison_table",
-    title: `${dirTitle} — ${sm.universeLabel ?? "NSE"} individual stocks (top ${Math.min(limit, sm.movers.length)})`,
-    description: `Individual listed stocks ranked by ${sm.direction === "most_active" ? "activity" : "change % today"}.`,
-    dataSource: sm.universeLabel ? `${sm.source} · ${sm.universeLabel}` : sm.source, data: rows,
+    title: `${dirTitle} — ${scopeLabel ? `Nifty 500 ${scopeLabel}` : `${sm.universeLabel ?? "NSE"} individual stocks`} (top ${Math.min(limit, sm.movers.length)})`,
+    description: `Individual listed stocks ranked by ${sm.direction === "most_active" ? "activity" : sm.direction === "contributors" ? "size of move (movers, not verified index contribution)" : "change % today"}.`,
+    dataSource: sm.universeLabel ? `${sm.source} · ${sm.universeLabel}${scopeLabel ? ` · ${scopeLabel}` : ""}` : sm.source, data: rows,
   };
   const top = sm.movers[0];
   const blocks: MavenBlock[] = [
-    { type: "DATA", title: "Top individual stocks", body: `${top.companyName} (${top.symbol}) leads the ${dirLabel}${top.changePct != null ? ` at ${(top.changePct >= 0 ? "+" : "") + top.changePct.toFixed(2)}%` : ""}. These are individual NSE-listed stocks, not indices.` },
+    { type: "DATA", title: "Top individual stocks", body: `${top.companyName} (${top.symbol}) leads the ${scopeLabel ? scopeLabel + " " : ""}${dirLabel}${top.changePct != null ? ` at ${(top.changePct >= 0 ? "+" : "") + top.changePct.toFixed(2)}%` : ""}. These are individual NSE-listed stocks, not indices.` },
     { type: "RISK", title: "Data freshness", body: sm.limitation || `Ranked from ${sm.source} (${sm.freshness === "live" ? "live" : "latest available"}).` },
     { type: "TAKEAWAY", title: "Context", body: "A single-day move reflects the day's news, flows or events - educational context, not a recommendation." + (disc ? " " + disc : "") },
   ];
+  // Context-aware follow-up chips: sector-scoped tables get sector chips; all-market gets market chips.
+  const followUps = scopeLabel
+    ? ["Why did these sector stocks move?", "Most active stocks today", `Top ${scopeLabel} losers today`, "Summarize this in bullets"]
+    : ["Why did these stocks move?", sm.direction === "gainers" ? "Top losers today" : "Top gainers today", "Most active stocks today", "Summarize this in bullets"];
   return {
-    headline: `${dirTitle} today — ${sm.universeLabel ?? "NSE"} stocks`,
+    headline: `${dirTitle} today — ${universeName}`,
     summary: `${universePhrase} This is a market-data table, not a recommendation.`,
     keyData: sm.movers.slice(0, 6).map((m) => ({ label: m.symbol, value: m.price != null ? m.price.toFixed(2) : "-", change: m.changePct != null ? (m.changePct >= 0 ? "+" : "") + m.changePct.toFixed(2) + "%" : undefined })),
     charts: [table, ...(pack.chartData ?? [])], blocks, sources,
-    followUps: [sm.direction === "gainers" ? "Top losers today" : "Top gainers today", "Most active stocks today", `Why is ${top.companyName} moving today?`],
+    followUps,
     disclaimer: disc,
     evidence: buildEvidence(pack, sources),
   };

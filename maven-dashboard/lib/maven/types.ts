@@ -93,13 +93,15 @@ export type ResearchPlan = {
   marketDate?: import("./marketDateResolver").MarketDateResolution;
 };
 
-export type StockMoverDirection = "gainers" | "losers" | "most_active";
+export type StockMoverDirection = "gainers" | "losers" | "most_active" | "contributors";
 export type StockMoverUniverse = "nse_equity" | "nifty50" | "nifty500" | "all_nse";
 
 export type StockMoverParams = {
   direction: StockMoverDirection;
   limit: number;
   universe?: StockMoverUniverse;
+  /** Canonical sector scope key (see sectorClassifier), e.g. "banks", "it", "realty". */
+  sectorScope?: string;
   date?: string;
 };
 
@@ -121,6 +123,10 @@ export type StockMoversResult = {
   universeSize?: number;
   /** Symbols with a fresh quote in the latest scan window (coverage actually achieved). */
   coveredCount?: number;
+  /** Canonical sector scope key when this leaderboard is sector-filtered (e.g. "banks"). */
+  sectorScope?: string;
+  /** Human sector label for headlines/summaries (e.g. "banks", "IT", "realty"). */
+  sectorLabel?: string;
 };
 
 export type MarketData = {

@@ -5,10 +5,17 @@
 import type { AnswerType, MavenAnswer } from "./types";
 
 const MARKET_CHIPS = [
-  "Give me a bullet-point recap",
+  "Which individual stocks drove this?",
   "Which sectors drove the move?",
-  "How did FII/DII flows affect it?",
+  "Give me a bullet-point recap",
   "What changed for Bank Nifty?",
+];
+
+const LEADERBOARD_CHIPS = [
+  "Why did these stocks move?",
+  "Show top losers too",
+  "Most active stocks today",
+  "Summarize this in bullets",
 ];
 
 const STOCK_CHIPS = [
@@ -56,6 +63,8 @@ export function chipsForAnswerType(answerType: AnswerType | undefined, sourceHea
     case "stock_comparison":
     case "comparison_research_report":
       return COMPARISON_CHIPS;
+    case "stock_leaderboard":
+      return LEADERBOARD_CHIPS;
     case "macro_sector_impact":
       return MACRO_CHIPS;
     case "basic_concept":
