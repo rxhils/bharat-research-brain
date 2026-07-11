@@ -16,6 +16,10 @@ import { getSupabaseBrowser, supabaseConfigured } from "@/lib/supabase/client";
 
 const AUTH_KEY = "maven.auth.mock.v1";
 const GUEST_KEY = "maven.auth.guest.v1";
+const GUEST_MSG_KEY = "maven.guest.chatcount.v1";
+/** Guests (not signed in) get this many messages per calendar day before the
+ *  chat asks them to sign in with Google — an intentional conversion nudge. */
+const GUEST_DAILY_LIMIT = 3;
 
 // Cross-instance sync for the localStorage-backed flags: several components
 // (gate, account chip) each call useMavenAuth, and Supabase's onAuthStateChange
@@ -38,6 +42,24 @@ function readFlag(key: string): boolean {
   }
 }
 
+function todayKey(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Guest messages sent so far today. Scoped by calendar day — a stored count
+ *  from a previous day reads as 0 (the limit resets automatically). */
+function readGuestCount(): number {
+  try {
+    const raw = window.localStorage.getItem(GUEST_MSG_KEY);
+    if (!raw) return 0;
+    const parsed = JSON.parse(raw) as { date?: string; count?: number };
+    return parsed.date === todayKey() && typeof parsed.count === "number" ? parsed.count : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export interface MavenAuth {
   /** false on server + first client render (hydration-safe); true after the
    *  session/flag has been resolved. */
@@ -49,6 +71,15 @@ export interface MavenAuth {
   /** Google account email of the live Supabase session; null in mock/guest mode. */
   userEmail: string | null;
   mode: "supabase" | "mock";
+  /** Guest messages sent today (resets at midnight, local time). */
+  guestMessagesUsed: number;
+  guestMessagesRemaining: number;
+  /** True once a signed-out guest has used today's free messages — the chat
+   *  should stop calling the API and prompt sign-in instead. Always false for
+   *  a signed-in user, regardless of message count. */
+  guestLimitReached: boolean;
+  /** Call once per guest message actually sent (not on signed-in sends). */
+  recordGuestMessage: () => void;
   /** Kicks off Google sign-in. Real mode redirects to Google; mock mode returns
    *  { mock: true } so the gate can animate a placeholder confirmation. */
   signInWithGoogle: () => Promise<SignInResult>;
@@ -66,15 +97,20 @@ export function useMavenAuth(): MavenAuth {
   const [isSignedIn, setSignedIn] = useState(false);
   const [isGuest, setGuest] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [guestUsed, setGuestUsed] = useState(0);
 
   useEffect(() => {
     let active = true;
     setGuest(readFlag(GUEST_KEY));
+    setGuestUsed(readGuestCount());
 
-    // Re-read the local flags whenever any other hook instance mutates them.
+    // Re-read the local flags whenever any other hook instance mutates them
+    // (e.g. ChatView records a guest message; ChatAuthGate's own instance
+    // needs to see the new count to know the limit was hit).
     const onPeerChange = () => {
       if (!active) return;
       setGuest(readFlag(GUEST_KEY));
+      setGuestUsed(readGuestCount());
       if (mode === "mock") setSignedIn(readFlag(AUTH_KEY));
     };
     authListeners.add(onPeerChange);
@@ -184,6 +220,17 @@ export function useMavenAuth(): MavenAuth {
     notifyAuthChange();
   }, []);
 
+  const recordGuestMessage = useCallback(() => {
+    const next = readGuestCount() + 1;
+    try {
+      window.localStorage.setItem(GUEST_MSG_KEY, JSON.stringify({ date: todayKey(), count: next }));
+    } catch {
+      /* storage unavailable — the limit just won't persist across reloads */
+    }
+    setGuestUsed(next);
+    notifyAuthChange();
+  }, []);
+
   const continueAsGuest = useCallback(() => {
     // Guest access is legitimate: the chat already supports a localStorage-only
     // mode when Supabase is unconfigured (see supabaseConfigured()).
@@ -219,6 +266,10 @@ export function useMavenAuth(): MavenAuth {
     hasAccess: isSignedIn || isGuest,
     userEmail,
     mode,
+    guestMessagesUsed: guestUsed,
+    guestMessagesRemaining: Math.max(0, GUEST_DAILY_LIMIT - guestUsed),
+    guestLimitReached: !isSignedIn && guestUsed >= GUEST_DAILY_LIMIT,
+    recordGuestMessage,
     signInWithGoogle,
     markSignedIn,
     continueAsGuest,

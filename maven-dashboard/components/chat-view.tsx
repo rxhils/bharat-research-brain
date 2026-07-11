@@ -7,6 +7,7 @@ import { MavenEvidenceSummaryCard, MavenLatestDataChecklist } from "./maven-evid
 import { MavenSourcePanel } from "./maven-source-panel";
 import { MavenReportCard } from "./maven-report";
 import type { MavenAskResponse } from "@/lib/maven-types";
+import { useMavenAuth } from "./auth/useMavenAuth";
 
 const SUGGESTIONS = [
   { t: "Summarize today's Indian market", k: "Market wrap" },
@@ -20,7 +21,7 @@ const MODELS = [
 ] as const;
 const FLOW = ["flow", "flow_chart"];
 
-export type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean; looksLikeReport?: boolean };
+export type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean; looksLikeReport?: boolean; limitReached?: boolean };
 
 // ---- conversation context for /api/ask (Maven follow-up intelligence) ----
 // The last few exchanges travel with each request so "give me a bullet point summary" can refer
@@ -172,6 +173,7 @@ function GlassPanel({ children, className = "", tlSharp = false }: { children: R
 
 export function ChatView({ initialMessages, onMessagesChange }: { initialMessages?: Msg[]; onMessagesChange?: (msgs: Msg[]) => void } = {}) {
   const reduce = useReducedMotionSafe();
+  const auth = useMavenAuth();
   const [msgs, setMsgs] = useState<Msg[]>(initialMessages ?? []);
   const [input, setInput] = useState("");
   const [model, setModel] = useState<string>(MODELS[0].id);
@@ -192,7 +194,18 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
     const uid = idRef.current++;
     const aid = idRef.current++;
     lastUserId.current = uid;
-    setMsgs((m) => [...m, { id: uid, role: "user", text }, { id: aid, role: "assistant", loading: true, looksLikeReport: REPORT_HINT.test(text) }]);
+    // Guests (not signed in) get a fixed number of messages per day — a
+    // conversion nudge toward Google sign-in. Signed-in users are never capped.
+    const blocked = !auth.isSignedIn && auth.guestLimitReached;
+    setMsgs((m) => [
+      ...m,
+      { id: uid, role: "user", text },
+      blocked
+        ? { id: aid, role: "assistant", limitReached: true }
+        : { id: aid, role: "assistant", loading: true, looksLikeReport: REPORT_HINT.test(text) },
+    ]);
+    if (blocked) return; // don't call the API — today's free guest messages are used up
+    if (!auth.isSignedIn) auth.recordGuestMessage();
     try {
       const conversationContext = buildConversationContext(msgs);
       const r = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ query: text, model, ...(conversationContext ? { conversationContext } : {}) }) });
@@ -204,6 +217,12 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
     } catch {
       setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, text: "Could not reach Maven." } : x)));
     }
+  }
+
+  async function handleGuestSignIn() {
+    const res = await auth.signInWithGoogle();
+    if (res?.mock) auth.markSignedIn(); // mock mode: simulate the session so chatting resumes immediately
+    // real mode: signInWithGoogle() already redirected the browser to Google
   }
 
   const empty = msgs.length === 0;
@@ -221,7 +240,7 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
             <motion.div key={m.id} initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: EASE }} className="flex gap-3">
               <Avatar thinking={!!m.loading} />
               <div className="min-w-0 flex-1">
-                {m.loading ? <ReasoningLoader reportMode={m.looksLikeReport} /> : m.answer ? <AnswerCard a={m.answer} query={findQueryForAnswer(msgs, mi)} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
+                {m.loading ? <ReasoningLoader reportMode={m.looksLikeReport} /> : m.limitReached ? <GuestLimitCard onSignIn={handleGuestSignIn} /> : m.answer ? <AnswerCard a={m.answer} query={findQueryForAnswer(msgs, mi)} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
               </div>
             </motion.div>
           )))}
@@ -231,6 +250,52 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
       )}
       <Composer input={input} setInput={setInput} send={send} empty={empty} model={model} setModel={setModel} />
     </div>
+  );
+}
+
+// Shown in place of the assistant's answer once a guest (not signed in) has
+// used today's free messages — a conversion nudge, not an error. Signed-in
+// users never see this (send() only sets limitReached for guests).
+function GuestLimitCard({ onSignIn }: { onSignIn: () => Promise<void> }) {
+  const [pending, setPending] = useState(false);
+  return (
+    <GlassPanel className="p-5 sm:p-6">
+      <div className="flex flex-col items-start gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-emerald/25 bg-emerald/[0.08]" aria-hidden>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 3l7 3v5.5c0 4.2-2.9 7.4-7 8.5-4.1-1.1-7-4.3-7-8.5V6l7-3z" />
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+        </span>
+        <div>
+          <p className="m-0 font-serif text-base text-ink">You've used today's 3 free messages</p>
+          <p className="mt-1 max-w-sm text-sm leading-relaxed text-muted">
+            Sign in with Google to keep chatting — no daily limit, and your research history is saved to your account.
+          </p>
+        </div>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={async () => {
+            setPending(true);
+            await onSignIn();
+            setPending(false);
+          }}
+          className={
+            "mt-1 inline-flex items-center gap-2 rounded-full border border-hairline bg-white/[0.04] px-4 py-2 text-sm font-medium text-ink transition-colors duration-150 hover:border-emerald/40 hover:text-emerald focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60 disabled:opacity-60 " +
+            PRESS
+          }
+        >
+          <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden className="shrink-0">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+          </svg>
+          {pending ? "Connecting…" : "Continue with Google"}
+        </button>
+      </div>
+    </GlassPanel>
   );
 }
 
