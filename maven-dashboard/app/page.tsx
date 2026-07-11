@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Explainer } from "@/components/explainer";
-import { IntroOverlay } from "@/components/intro";
+import { LandingAuthFlow } from "@/components/auth/landing-auth-flow";
 
 export const metadata: Metadata = {
   title: "Maven — How It Works",
@@ -12,7 +12,9 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      <IntroOverlay />
+      {/* Intro (unchanged) → Google gate for unauthenticated visitors. The
+          "How It Works" explainer stays behind, fully intact. */}
+      <LandingAuthFlow />
       <Explainer />
     </>
   );

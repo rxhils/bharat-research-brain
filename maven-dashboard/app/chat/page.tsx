@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { ChatShell } from "@/components/chat-shell";
 import { MarketTicker } from "@/components/market-ticker";
+import { ChatAuthGate } from "@/components/auth/chat-auth-gate";
+import { AccountChip } from "@/components/auth/account-chip";
 
 export const metadata: Metadata = { title: "Chat - Maven" };
 
@@ -9,7 +11,11 @@ export default function ChatPage() {
     <div className="space-y-4 sm:space-y-5">
       <MarketTicker />
       <div>
-        <div className="text-[10px] uppercase tracking-[0.18em] text-dim sm:text-[11px]">AI copilot &middot; India markets</div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-dim sm:text-[11px]">AI copilot &middot; India markets</div>
+          {/* signed-in account + Log out */}
+          <AccountChip />
+        </div>
         <div className="mt-1.5 flex items-center gap-2.5">
           <span className="grid h-8 w-8 shrink-0 place-items-center rounded-[28%]" style={{ background: "#0d0e11" }}>
             <svg width="22" height="22" viewBox="0 0 100 100" fill="none" role="img" aria-label="Maven">
@@ -25,6 +31,9 @@ export default function ChatPage() {
         </p>
       </div>
       <ChatShell />
+      {/* Unauthenticated visitors get the Google gate over the (untouched) chat;
+          signing in or continuing as guest reveals it. */}
+      <ChatAuthGate />
     </div>
   );
 }

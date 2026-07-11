@@ -1,6 +1,5 @@
 "use client";
 import { Fragment, useEffect, useState } from "react";
-import { useReducedMotionSafe } from "./motion";
 import type { Quote, SectorPerf } from "@/lib/maven/types";
 
 const POLL_MS = 120_000; // matches getIndexPerformance's tightest TTL
@@ -36,7 +35,6 @@ function Dot() {
 }
 
 export function MarketTicker() {
-  const reduce = useReducedMotionSafe();
   const [chips, setChips] = useState<Chip[] | null>(null);
 
   useEffect(() => {
@@ -83,14 +81,11 @@ export function MarketTicker() {
             ))}
           </div>
         </div>
-      ) : reduce ? (
-        // reduced motion: static wrapped chips, no mask (nothing scrolls, so no edge clipping)
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2">
-          {chips.map((c, i) => <Chip key={i} c={c} />)}
-        </div>
       ) : (
         <div className="py-2" style={edgeMask}>
-          <div className="flex w-max animate-marquee [will-change:transform] hover:[animation-play-state:paused]">
+          {/* brand-motion: the marquee is the point of a ticker — it keeps
+              scrolling even under the OS reduced-motion flag (hover pauses). */}
+          <div className="brand-motion flex w-max animate-marquee [will-change:transform] hover:[animation-play-state:paused]">
             {[chips, chips].map((group, gi) => (
               <div key={gi} className="flex shrink-0 items-center" aria-hidden={gi === 1}>
                 {group.map((c, i) => (

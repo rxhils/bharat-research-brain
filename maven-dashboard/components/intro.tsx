@@ -10,25 +10,43 @@ import { EASE, pressTap, useReducedMotionSafe } from "./motion";
 
 const SEEN_KEY = "maven_intro_seen_v1";
 
-export function IntroOverlay() {
+// onFinished (optional, non-visual): fires when the intro phase ends — the video
+// played/errored, the user pressed Skip, or the intro was already seen and won't
+// show. The landing flow uses it to reveal the Google gate afterwards. Adding it
+// changes nothing about the intro's appearance, timing, or layout.
+export function IntroOverlay({ onFinished }: { onFinished?: () => void } = {}) {
   const reduce = useReducedMotionSafe();
   const [show, setShow] = useState(false);
   const [ready, setReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
 
+  // onFinished must fire exactly once: Skip near the video's natural end would
+  // otherwise fire dismiss() twice (the exiting <video> stays mounted through
+  // the AnimatePresence exit and its onEnded still fires), and StrictMode
+  // double-invokes the mount effect in dev.
+  const finishedRef = useRef(false);
+  const finish = () => {
+    if (finishedRef.current) return;
+    finishedRef.current = true;
+    onFinished?.();
+  };
+
   useEffect(() => {
     setReady(true);
     try {
       if (!window.localStorage.getItem(SEEN_KEY)) setShow(true);
+      else finish(); // already seen → intro phase is already over
     } catch {
       /* localStorage unavailable — just don't show the intro */
+      finish();
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dismiss = () => {
     try { window.localStorage.setItem(SEEN_KEY, "1"); } catch { /* ignore */ }
     setShow(false);
+    finish(); // intro played / skipped → hand off to the gate
   };
 
   // Modal focus + escape hatch: the overlay's only control (Skip) takes focus on

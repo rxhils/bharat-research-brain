@@ -59,9 +59,14 @@ body {
   body { background-attachment: scroll; }
 }
 
-/* Honour reduced-motion globally: damp every animation/transition. */
+/* Honour reduced-motion globally: damp every animation/transition — except
+   .brand-motion subtrees: small, contained, operator-requested brand animations
+   (ticker marquee, the auth gate's product mockup). Everything else settles
+   instantly under the OS flag. */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *:not(.brand-motion):not(.brand-motion *),
+  *:not(.brand-motion):not(.brand-motion *)::before,
+  *:not(.brand-motion):not(.brand-motion *)::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
