@@ -16,7 +16,9 @@
     "learn:evals": "node scripts/generate-evals-from-learning.mjs",
     "learn:loop": "node scripts/maven-improvement-loop.mjs",
     "train:maven": "node scripts/run-training-questions.mjs",
-    "train:maven:log": "node scripts/run-training-questions.mjs --log-failures"
+    "train:maven:log": "node scripts/run-training-questions.mjs --log-failures",
+    "eval:movers": "node scripts/test-stock-movers.mjs",
+    "eval:conversation": "node scripts/test-conversation-intelligence.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

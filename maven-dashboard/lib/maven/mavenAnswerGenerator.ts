@@ -1,4 +1,4 @@
-import type { ContextPack, MavenAnswer, MavenBlock, MavenKeyData, MavenSource, MavenEvidenceSummary } from "./types";
+import type { ContextPack, MavenAnswer, MavenBlock, MavenKeyData, MavenSource, MavenEvidenceSummary, ChartSpec } from "./types";
 import { SYSTEM_PROMPT, RETRIEVAL_PACK } from "../india-context";
 import { deepseekJSON } from "../deepseek";
 import { disclaimerText } from "./answerTypeRouter";
@@ -147,7 +147,86 @@ function synthesize(pack: ContextPack): MavenAnswer {
 
 function capitalize(s: string) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
+// Individual-stock leaderboard (top gainers/losers/most active). Deterministic and TABLE-FIRST -
+// never calls the LLM, never substitutes index (Nifty/Sensex) data, and says so plainly when no
+// verified rows exist rather than guessing the stocks.
+function synthesizeLeaderboard(pack: ContextPack): MavenAnswer {
+  const disc = disclaimerText(pack.disclaimerLevel);
+  const sm = pack.marketData.stockMovers;
+  const dirLabel = !sm ? "movers" : sm.direction === "losers" ? "losers" : sm.direction === "most_active" ? "most active stocks" : sm.direction === "contributors" ? "biggest movers" : "gainers";
+  const dirTitle = !sm ? "Top movers" : sm.direction === "losers" ? "Top losers" : sm.direction === "most_active" ? "Most active" : sm.direction === "contributors" ? "Biggest movers" : "Top gainers";
+  const limit = sm?.limit ?? 5;
+  const sources = realSources(pack);
+
+  if (!sm || !sm.movers.length) {
+    const why = sm?.limitation || (pack.limitations.length ? pack.limitations.join(" ") : "Top-mover data was unavailable from current sources.");
+    return {
+      headline: `${dirTitle}: data unavailable`,
+      summary: "Maven could not verify a current top-mover table from available sources. It will not guess the top stocks.",
+      keyData: [], charts: [], blocks: [
+        { type: "DATA", title: "Individual stocks, not indices", body: "You asked for individual NSE-listed stocks. Maven has no verified live leaderboard right now, so it is NOT substituting Nifty/Sensex index data and NOT guessing stock names." },
+        { type: "RISK", title: "Why it's unavailable", body: why },
+        { type: "TAKEAWAY", title: "What you can do", body: "Try again shortly, or ask about a specific stock or sector and Maven will research it." + (disc ? " " + disc : "") },
+      ],
+      sources,
+      followUps: ["Top losers today", "Most active stocks today", "Why is the Nifty moving today?"],
+      disclaimer: disc,
+      evidence: buildEvidence(pack, sources),
+    };
+  }
+
+  const anyVol = sm.movers.some((x) => x.volume != null);
+  const anySector = sm.movers.some((x) => x.sector);
+  const rows: Record<string, unknown>[] = sm.movers.map((m, i) => {
+    const row: Record<string, unknown> = {
+      rank: i + 1, stock: m.companyName, symbol: m.symbol,
+      price: m.price != null ? m.price.toFixed(2) : "-",
+      "change%": m.changePct != null ? (m.changePct >= 0 ? "+" : "") + m.changePct.toFixed(2) + "%" : "-",
+      "change₹": m.change != null ? (m.change >= 0 ? "+" : "") + m.change.toFixed(2) : "-",
+    };
+    if (anyVol) row.volume = m.volume != null ? m.volume.toLocaleString("en-IN") : "-";
+    if (anySector) row.sector = m.sector ?? "-";
+    return row;
+  });
+  // Honest universe/sector phrasing (never claims "all NSE"): name what was actually scanned.
+  const scopeLabel = sm.sectorLabel;
+  const universeName = scopeLabel ? `Nifty 500 ${scopeLabel}` : `${sm.universeLabel ?? "NSE"} stocks`;
+  const universePhrase = scopeLabel
+    ? `Latest available ${scopeLabel} movers from the Nifty 500 universe.`
+    : sm.universeLabel === "Nifty 500"
+      ? "Latest available movers from the Nifty 500 universe."
+      : sm.universeLabel
+        ? `Latest available movers from a ${sm.universeLabel} universe.`
+        : `Latest available individual-stock mover data from ${sm.source}.`;
+  const table: ChartSpec = {
+    type: "comparison_table",
+    title: `${dirTitle} — ${scopeLabel ? `Nifty 500 ${scopeLabel}` : `${sm.universeLabel ?? "NSE"} individual stocks`} (top ${Math.min(limit, sm.movers.length)})`,
+    description: `Individual listed stocks ranked by ${sm.direction === "most_active" ? "activity" : sm.direction === "contributors" ? "size of move (movers, not verified index contribution)" : "change % today"}.`,
+    dataSource: sm.universeLabel ? `${sm.source} · ${sm.universeLabel}${scopeLabel ? ` · ${scopeLabel}` : ""}` : sm.source, data: rows,
+  };
+  const top = sm.movers[0];
+  const blocks: MavenBlock[] = [
+    { type: "DATA", title: "Top individual stocks", body: `${top.companyName} (${top.symbol}) leads the ${scopeLabel ? scopeLabel + " " : ""}${dirLabel}${top.changePct != null ? ` at ${(top.changePct >= 0 ? "+" : "") + top.changePct.toFixed(2)}%` : ""}. These are individual NSE-listed stocks, not indices.` },
+    { type: "RISK", title: "Data freshness", body: sm.limitation || `Ranked from ${sm.source} (${sm.freshness === "live" ? "live" : "latest available"}).` },
+    { type: "TAKEAWAY", title: "Context", body: "A single-day move reflects the day's news, flows or events - educational context, not a recommendation." + (disc ? " " + disc : "") },
+  ];
+  // Context-aware follow-up chips: sector-scoped tables get sector chips; all-market gets market chips.
+  const followUps = scopeLabel
+    ? ["Why did these sector stocks move?", "Most active stocks today", `Top ${scopeLabel} losers today`, "Summarize this in bullets"]
+    : ["Why did these stocks move?", sm.direction === "gainers" ? "Top losers today" : "Top gainers today", "Most active stocks today", "Summarize this in bullets"];
+  return {
+    headline: `${dirTitle} today — ${universeName}`,
+    summary: `${universePhrase} This is a market-data table, not a recommendation.`,
+    keyData: sm.movers.slice(0, 6).map((m) => ({ label: m.symbol, value: m.price != null ? m.price.toFixed(2) : "-", change: m.changePct != null ? (m.changePct >= 0 ? "+" : "") + m.changePct.toFixed(2) + "%" : undefined })),
+    charts: [table, ...(pack.chartData ?? [])], blocks, sources,
+    followUps,
+    disclaimer: disc,
+    evidence: buildEvidence(pack, sources),
+  };
+}
+
 export async function generateAnswer(pack: ContextPack, strict = false): Promise<MavenAnswer> {
+  if (pack.answerType === "stock_leaderboard") return synthesizeLeaderboard(pack);
   const single = pack.answerType === "single_stock_research";
   const isStock = single || pack.answerType === "stock_comparison";
   const curFY = getCurrentIndianFiscalYear();

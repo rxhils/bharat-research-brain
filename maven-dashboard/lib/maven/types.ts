@@ -1,11 +1,11 @@
 // Shared types for the Maven Research + Answer-Quality + Stock layers.
 export type Intent =
   | "market_summary" | "index_movement" | "sector_impact" | "stock_comparison"
-  | "macro_impact" | "single_stock" | "term_explanation" | "unsafe_advice" | "out_of_scope";
+  | "macro_impact" | "single_stock" | "top_stock_movers" | "term_explanation" | "unsafe_advice" | "out_of_scope";
 
 export type AnswerType =
   | "greeting" | "basic_concept" | "market_mechanism" | "current_market_research"
-  | "stock_comparison" | "single_stock_research" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data"
+  | "stock_comparison" | "single_stock_research" | "stock_leaderboard" | "macro_sector_impact" | "unsafe_advice" | "out_of_scope" | "unsupported_live_data"
   | "deep_research_report" | "comparison_research_report";
 
 export type DisclaimerLevel = "none" | "light" | "standard" | "strong";
@@ -93,8 +93,44 @@ export type ResearchPlan = {
   marketDate?: import("./marketDateResolver").MarketDateResolution;
 };
 
+export type StockMoverDirection = "gainers" | "losers" | "most_active" | "contributors";
+export type StockMoverUniverse = "nse_equity" | "nifty50" | "nifty500" | "all_nse";
+
+export type StockMoverParams = {
+  direction: StockMoverDirection;
+  limit: number;
+  universe?: StockMoverUniverse;
+  /** Canonical sector scope key (see sectorClassifier), e.g. "banks", "it", "realty". */
+  sectorScope?: string;
+  date?: string;
+};
+
+export type StockMover = {
+  symbol: string; companyName: string;
+  price: number | null; change: number | null; changePct: number | null;
+  volume?: number | null; tradedValue?: number | null; sector?: string | null;
+  source: string; sourceUrl?: string; timestamp?: string;
+  freshness: Freshness; confidence: Confidence;
+};
+
+export type StockMoversResult = {
+  direction: StockMoverDirection; limit: number; universe: StockMoverUniverse; date?: string;
+  movers: StockMover[];
+  source: string; sourceUrl?: string; freshness: Freshness; confidence: Confidence; limitation?: string;
+  /** Human label of the scanned universe (e.g. "Nifty 500"), for honest summary wording. */
+  universeLabel?: string;
+  /** Total symbols in the scanned universe. */
+  universeSize?: number;
+  /** Symbols with a fresh quote in the latest scan window (coverage actually achieved). */
+  coveredCount?: number;
+  /** Canonical sector scope key when this leaderboard is sector-filtered (e.g. "banks"). */
+  sectorScope?: string;
+  /** Human sector label for headlines/summaries (e.g. "banks", "IT", "realty"). */
+  sectorLabel?: string;
+};
+
 export type MarketData = {
-  indices?: Quote[]; sectors?: SectorPerf[]; stocks?: Quote[];
+  indices?: Quote[]; sectors?: SectorPerf[]; stocks?: Quote[]; stockMovers?: StockMoversResult;
   crude?: Quote | null; usdinr?: Quote | null;
   fiiDiiFlows?: FiiDiiFlows | null;
   gsecYield?: GSecYield | null;

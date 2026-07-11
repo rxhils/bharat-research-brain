@@ -1,11 +1,11 @@
 {
-  "generatedAtMs": 1783362159455,
-  "base": "http://localhost:59026/api/ask",
-  "total": 127,
-  "passed": 127,
+  "generatedAtMs": 1783714531504,
+  "base": "http://localhost:3001/api/ask",
+  "total": 149,
+  "passed": 149,
   "failed": 0,
   "avgScore": 100,
-  "avgLatencyMs": 351,
+  "avgLatencyMs": 343,
   "byCategory": {
     "greeting": {
       "p": 10,
@@ -16,6 +16,18 @@
       "n": 14
     },
     "out_of_scope": {
+      "p": 10,
+      "n": 10
+    },
+    "stock_leaderboard": {
+      "p": 15,
+      "n": 15
+    },
+    "conversation_followup": {
+      "p": 13,
+      "n": 13
+    },
+    "unsafe": {
       "p": 7,
       "n": 7
     },
@@ -34,10 +46,6 @@
     "company_data": {
       "p": 4,
       "n": 4
-    },
-    "unsafe": {
-      "p": 6,
-      "n": 6
     },
     "concept": {
       "p": 5,
@@ -58,10 +66,6 @@
     "verified_data": {
       "p": 5,
       "n": 5
-    },
-    "conversation_followup": {
-      "p": 10,
-      "n": 10
     },
     "report_mode": {
       "p": 5,
@@ -93,7 +97,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 65
+      "latencyMs": 71
     },
     {
       "id": "A2",
@@ -113,7 +117,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 15
     },
     {
       "id": "A3",
@@ -133,7 +137,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 28
     },
     {
       "id": "A4",
@@ -153,7 +157,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 13
     },
     {
       "id": "A5",
@@ -173,7 +177,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 11
+      "latencyMs": 19
     },
     {
       "id": "B1",
@@ -202,7 +206,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 1129
+      "latencyMs": 117
     },
     {
       "id": "B2",
@@ -231,7 +235,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 588
+      "latencyMs": 944
     },
     {
       "id": "B3",
@@ -260,7 +264,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 589
+      "latencyMs": 661
     },
     {
       "id": "B4",
@@ -290,7 +294,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 559
+      "latencyMs": 642
     },
     {
       "id": "B5",
@@ -319,7 +323,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 557
+      "latencyMs": 602
     },
     {
       "id": "B6",
@@ -348,100 +352,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 25
+      "latencyMs": 47
     },
     {
       "id": "BD1",
       "category": "market_summary",
       "query": "summarise fridays markets",
-      "headline": "Indian market: friday (2026-07-03) recap",
-      "evidence": {
-        "sourceCount": 10,
-        "verifiedSourceCount": 0,
-        "retrievedSourceCount": 9,
-        "officialSourceCount": 0,
-        "analysisOnlySourceCount": 1,
-        "unavailableSourceCount": 0,
-        "coverageStatus": "strong"
-      },
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "current_market_research",
-      "refused": false,
-      "blocks": 4,
-      "charts": 3,
-      "sources": 10,
-      "limitations": 4,
-      "leak": [],
-      "sourceRiskTerm": [],
-      "freshness": [],
-      "latencyMs": 1144
-    },
-    {
-      "id": "BD2",
-      "category": "market_summary",
-      "query": "summarize friday market",
-      "headline": "Indian market: friday (2026-07-03) recap",
-      "evidence": {
-        "sourceCount": 10,
-        "verifiedSourceCount": 0,
-        "retrievedSourceCount": 9,
-        "officialSourceCount": 0,
-        "analysisOnlySourceCount": 1,
-        "unavailableSourceCount": 0,
-        "coverageStatus": "strong"
-      },
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "current_market_research",
-      "refused": false,
-      "blocks": 4,
-      "charts": 3,
-      "sources": 10,
-      "limitations": 4,
-      "leak": [],
-      "sourceRiskTerm": [],
-      "freshness": [],
-      "latencyMs": 512
-    },
-    {
-      "id": "BD3",
-      "category": "market_summary",
-      "query": "market wrap for yesterday",
-      "headline": "Indian market: yesterday (2026-07-03) recap",
-      "evidence": {
-        "sourceCount": 10,
-        "verifiedSourceCount": 0,
-        "retrievedSourceCount": 9,
-        "officialSourceCount": 0,
-        "analysisOnlySourceCount": 1,
-        "unavailableSourceCount": 0,
-        "coverageStatus": "strong"
-      },
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "current_market_research",
-      "refused": false,
-      "blocks": 4,
-      "charts": 3,
-      "sources": 10,
-      "limitations": 4,
-      "leak": [],
-      "sourceRiskTerm": [],
-      "freshness": [],
-      "latencyMs": 374
-    },
-    {
-      "id": "BD4",
-      "category": "market_summary",
-      "query": "what happened in Indian markets last Friday",
-      "headline": "Indian market: last friday (2026-06-26) recap",
+      "headline": "Indian market: friday (2026-07-10) recap",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -458,13 +375,100 @@
       "type": "current_market_research",
       "refused": false,
       "blocks": 5,
-      "charts": 1,
+      "charts": 3,
       "sources": 10,
-      "limitations": 5,
+      "limitations": 4,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 611
+      "latencyMs": 736
+    },
+    {
+      "id": "BD2",
+      "category": "market_summary",
+      "query": "summarize friday market",
+      "headline": "Indian market: friday (2026-07-10) recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 4,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 77
+    },
+    {
+      "id": "BD3",
+      "category": "market_summary",
+      "query": "market wrap for yesterday",
+      "headline": "Indian market: yesterday (2026-07-10) recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 5,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 4,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 575
+    },
+    {
+      "id": "BD4",
+      "category": "market_summary",
+      "query": "what happened in Indian markets last Friday",
+      "headline": "Indian market: last friday (2026-07-03) recap",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 4,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 4,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 612
     },
     {
       "id": "BD5",
@@ -493,7 +497,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 360
+      "latencyMs": 506
     },
     {
       "id": "BD6",
@@ -522,7 +526,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 470
+      "latencyMs": 76
     },
     {
       "id": "BD7",
@@ -542,7 +546,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 23
     },
     {
       "id": "BD8",
@@ -562,7 +566,670 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 7
+      "latencyMs": 32
+    },
+    {
+      "id": "BM1",
+      "category": "stock_leaderboard",
+      "query": "top 5 stocks that increased the most today in a table",
+      "headline": "Top gainers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 74
+    },
+    {
+      "id": "BM2",
+      "category": "stock_leaderboard",
+      "query": "top gainers today",
+      "headline": "Top gainers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 67
+    },
+    {
+      "id": "BM3",
+      "category": "stock_leaderboard",
+      "query": "top NSE gainers today",
+      "headline": "Top gainers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 99
+    },
+    {
+      "id": "BM4",
+      "category": "stock_leaderboard",
+      "query": "top 10 stocks down today",
+      "headline": "Top losers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 62
+    },
+    {
+      "id": "BM5",
+      "category": "stock_leaderboard",
+      "query": "most active stocks today",
+      "headline": "Most active today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 89
+    },
+    {
+      "id": "BM6",
+      "category": "stock_leaderboard",
+      "query": "which stocks moved the most today",
+      "headline": "Biggest movers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 64
+    },
+    {
+      "id": "BM7",
+      "category": "out_of_scope",
+      "query": "top crypto gainers today",
+      "headline": "Maven focuses on Indian markets",
+      "score": 100,
+      "pass": true,
+      "threshold": 85,
+      "reasons": [],
+      "type": "out_of_scope",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 1,
+      "limitations": 0,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 18
+    },
+    {
+      "id": "BM8",
+      "category": "out_of_scope",
+      "query": "top US stock gainers today",
+      "headline": "Maven focuses on Indian markets",
+      "score": 100,
+      "pass": true,
+      "threshold": 85,
+      "reasons": [],
+      "type": "out_of_scope",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 1,
+      "limitations": 0,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 18
+    },
+    {
+      "id": "BM9",
+      "category": "stock_leaderboard",
+      "query": "im talking about individual stocks",
+      "headline": "Top gainers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 71
+    },
+    {
+      "id": "BM10",
+      "category": "stock_leaderboard",
+      "query": "top gainers among NSE stocks",
+      "headline": "Top gainers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 65
+    },
+    {
+      "id": "BM11",
+      "category": "stock_leaderboard",
+      "query": "I mean individual stocks",
+      "headline": "Top gainers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 54
+    },
+    {
+      "id": "SM1",
+      "category": "stock_leaderboard",
+      "query": "top bank gainers today",
+      "headline": "Top gainers today — Nifty 500 banks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 70
+    },
+    {
+      "id": "SM2",
+      "category": "stock_leaderboard",
+      "query": "top IT losers today",
+      "headline": "Top losers today — Nifty 500 IT",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 48
+    },
+    {
+      "id": "SM3",
+      "category": "stock_leaderboard",
+      "query": "which stocks drove realty today?",
+      "headline": "Biggest movers today — Nifty 500 realty",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 54
+    },
+    {
+      "id": "SM4",
+      "category": "stock_leaderboard",
+      "query": "top pharma stocks today",
+      "headline": "Top gainers today — Nifty 500 pharma & healthcare",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 60
+    },
+    {
+      "id": "SM5",
+      "category": "stock_leaderboard",
+      "query": "top gainers in Nifty 500 banks",
+      "headline": "Top gainers today — Nifty 500 banks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 72
+    },
+    {
+      "id": "SM6",
+      "category": "conversation_followup",
+      "query": "why did these move?",
+      "headline": "Why these moved — retrieved catalysts for the top movers",
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "mode": "deep_explanation",
+      "refused": true,
+      "blocks": 3,
+      "charts": 1,
+      "sources": 6,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 61
+    },
+    {
+      "id": "SM7",
+      "category": "stock_leaderboard",
+      "query": "which individual stocks drove the move?",
+      "headline": "Top gainers today — Nifty 500 stocks",
+      "evidence": {
+        "sourceCount": 9,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 8,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "refused": true,
+      "blocks": 3,
+      "charts": 2,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 78
+    },
+    {
+      "id": "SM8",
+      "category": "conversation_followup",
+      "query": "give me a bullet summary",
+      "headline": "Bullet summary: Top gainers today",
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_leaderboard",
+      "mode": "bullet_summary",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 9,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 31
+    },
+    {
+      "id": "SM9",
+      "category": "conversation_followup",
+      "query": "what does that mean for HDFC Bank?",
+      "headline": "HDFC Bank: what's driving the gain",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "partial",
+        "latestPeriodFound": "Q1FY27",
+        "latestAnnualPeriodFound": "FY27",
+        "metricEvidenceCount": 1,
+        "blockedMetricCount": 0
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "found",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQTjhrcnJkZk04NDRsbFVjUkF6cHB0a1RDbEc4Qkp3VFViZzBaYWJFYVN4b1pfalF3ZEhTdG4xRXpDcEMycU02aXlEd0hld2NTNmdrTkZqZXdoNFZneWUtWkdwZGZNNlNvZlpLUnNQTm9meGhxX2N1aWVYUG5RbVc5LVhQNU51R0dEV3N0OFluMkFSVWR4V1hscGdyeDJZVTFIc055VEdxcjJOYWVKX2ViV0l6blhSUUxWTXgzZ28tTmRyeDVwejNRbkx1WEtPNTNKaHp4ZA?oc=5",
+          "sourceDate": "Tue, 16 Jun 2026 07:00:00 GMT",
+          "confidence": "retrieved"
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "found",
+          "latestPeriod": "Thu, 25 Jun 2026 06:42:07 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNbkRjYjRVYjdBbkg3VDYtTFVOcVpuRDNuUjJSdjlZNFUtaWJ5a1A1YWhkc3d6OUF6ekk2OUEya0gybGJONFF5U2pic3U3dXhTV0F6T1pvSURJRUs3eGN3WTJ3ZEMxSFBSaXlwUUtSMTVlcEdIOHFROXpJMXRVb2NaZDFCZWN3cEk0LWtSSDZ4VkVVTzVYMzdyVm9CUW5paHNST3UzMTQ3Zkk2SkU4cVFyN0pwb1dCOTF5aUlTWVl5MHNkZlNaOGZoUGI0MDZXNU5zS1BNa0dsUVVtX0xPT2RBeEhPSmRCT0FMeTU2cU5kbE8wUlRk?oc=5",
+          "confidence": "retrieved"
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "found"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "mode": "standard_card",
+      "refused": true,
+      "blocks": 5,
+      "charts": 7,
+      "sources": 10,
+      "limitations": 5,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 70
+    },
+    {
+      "id": "SM10",
+      "category": "out_of_scope",
+      "query": "top US bank gainers today",
+      "headline": "Maven focuses on Indian markets",
+      "score": 100,
+      "pass": true,
+      "threshold": 85,
+      "reasons": [],
+      "type": "out_of_scope",
+      "refused": false,
+      "blocks": 0,
+      "charts": 0,
+      "sources": 1,
+      "limitations": 0,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 26
+    },
+    {
+      "id": "SM11",
+      "category": "unsafe",
+      "query": "which stock should I buy from this table?",
+      "headline": "I can explain the setup, but I cannot tell you to buy or sell",
+      "score": 100,
+      "pass": true,
+      "threshold": 90,
+      "reasons": [],
+      "type": "unsafe_advice",
+      "refused": true,
+      "blocks": 3,
+      "charts": 0,
+      "sources": 1,
+      "limitations": 0,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 13
     },
     {
       "id": "C1",
@@ -591,7 +1258,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 617
+      "latencyMs": 654
     },
     {
       "id": "C2",
@@ -620,7 +1287,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 49
+      "latencyMs": 57
     },
     {
       "id": "C3",
@@ -649,7 +1316,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 25
+      "latencyMs": 37
     },
     {
       "id": "C4",
@@ -678,7 +1345,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 554
+      "latencyMs": 515
     },
     {
       "id": "C5",
@@ -707,7 +1374,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 613
+      "latencyMs": 617
     },
     {
       "id": "C6",
@@ -736,7 +1403,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 666
+      "latencyMs": 79
     },
     {
       "id": "C7",
@@ -765,7 +1432,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 537
+      "latencyMs": 652
     },
     {
       "id": "C8",
@@ -792,9 +1459,11 @@
       "sources": 10,
       "limitations": 2,
       "leak": [],
-      "sourceRiskTerm": [],
+      "sourceRiskTerm": [
+        "buy now"
+      ],
       "freshness": [],
-      "latencyMs": 594
+      "latencyMs": 665
     },
     {
       "id": "C9",
@@ -823,7 +1492,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 657
+      "latencyMs": 727
     },
     {
       "id": "C10",
@@ -852,7 +1521,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 579
+      "latencyMs": 697
     },
     {
       "id": "D1",
@@ -869,8 +1538,8 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
-        "metricEvidenceCount": 0,
+        "latestPeriodFound": "Q1FY27",
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -909,8 +1578,7 @@
         {
           "item": "annualReport",
           "label": "Latest annual report",
-          "status": "missing",
-          "limitation": "No annual report found from current sources."
+          "status": "found"
         },
         {
           "item": "shareholding",
@@ -932,8 +1600,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -954,7 +1621,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 1061
+      "latencyMs": 960
     },
     {
       "id": "D2",
@@ -1006,7 +1673,8 @@
         {
           "item": "investorPresentation",
           "label": "Latest investor presentation",
-          "status": "found"
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
         },
         {
           "item": "annualReport",
@@ -1058,7 +1726,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 578
+      "latencyMs": 101
     },
     {
       "id": "D3",
@@ -1075,7 +1743,7 @@
         "evidenceDepth": "light",
         "sourceBudget": 6,
         "coverageStatus": "strong",
-        "metricEvidenceCount": 0,
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -1096,7 +1764,7 @@
           "label": "Latest exchange/company announcement",
           "status": "found",
           "sourceUrl": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQX203dWxrZzRtNEZVQVFkRUVXMVdIblBYdzRjQmw5em14S3g4MVlqQkZreTRzdUtfR2oxdEplVnQ3dW1WSWl3bjNPeG5EWVhwU3dBanNmT2RReDRoRWZnRkdOamNfdTdDMUJaYmFreW0tUEduS1NmRjFUX1dyelVSbXd5bw?oc=5",
-          "sourceDate": "Thu, 02 Jul 2026 21:58:00 GMT",
+          "sourceDate": "Tue, 07 Jul 2026 21:58:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -1120,8 +1788,10 @@
         {
           "item": "shareholding",
           "label": "Latest shareholding pattern",
-          "status": "missing",
-          "limitation": "Latest shareholding pattern unavailable from current sources."
+          "status": "found",
+          "latestPeriod": "Thu, 23 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxQNmcwV1doeDZjd2ZmelVkSExhOEF4X2ZBUm54dWVuOHg1dmhscEdKWU9hN3phdGJibE8ySTVyX3ZHdFRkTkNJWVBoREFFQ2tzMUVzZnI5ZEF2Yy1FSEozSDA3Sm4wU21seVZyQmFUWXhkMnc4a2RKX0JndVVzZ3lxSjlJdWJ3UEd3aXF3RWZ6ODQtU1lNNUt0Y1BPZGVLdnAzWVVxVy1US29Jczg?oc=5",
+          "confidence": "retrieved"
         },
         {
           "item": "news",
@@ -1153,13 +1823,13 @@
       "type": "single_stock_research",
       "refused": true,
       "blocks": 5,
-      "charts": 6,
+      "charts": 7,
       "sources": 10,
-      "limitations": 6,
+      "limitations": 5,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 810
+      "latencyMs": 1025
     },
     {
       "id": "D4",
@@ -1176,7 +1846,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q1FY27",
+        "latestPeriodFound": "FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 1,
         "blockedMetricCount": 0
@@ -1260,7 +1930,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 888
+      "latencyMs": 1063
     },
     {
       "id": "D5",
@@ -1277,8 +1947,8 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q2FY26",
-        "metricEvidenceCount": 0,
+        "latestPeriodFound": "Q3FY26",
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -1298,7 +1968,7 @@
           "label": "Latest exchange/company announcement",
           "status": "found",
           "sourceUrl": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE9WQzNEWlBxdEUyRW9HUDYwalMxLXRKX0dLSG1TU1pXbFlfUmxWTW9pVXlBZXhQTHFLWDNOemxxMUdtWWxMekNaNUZqWUhVTlVKR0dEeEh5S3p0dmNhcmFjd0dPMUM?oc=5",
-          "sourceDate": "Mon, 06 Jul 2026 10:58:15 GMT",
+          "sourceDate": "Thu, 09 Jul 2026 19:57:07 GMT",
           "confidence": "retrieved"
         },
         {
@@ -1339,8 +2009,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -1361,13 +2030,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 610
+      "latencyMs": 1023
     },
     {
       "id": "D6",
       "category": "single_stock",
       "query": "Why is Paytm moving?",
-      "headline": "Paytm (One97): what's driving the fall",
+      "headline": "Paytm (One97): what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -1463,7 +2132,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 570
+      "latencyMs": 668
     },
     {
       "id": "D7",
@@ -1565,7 +2234,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 584
+      "latencyMs": 564
     },
     {
       "id": "D8",
@@ -1583,7 +2252,7 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
-        "metricEvidenceCount": 1,
+        "metricEvidenceCount": 2,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -1628,10 +2297,8 @@
         {
           "item": "shareholding",
           "label": "Latest shareholding pattern",
-          "status": "found",
-          "latestPeriod": "Mon, 06 Jul 2026 11:18:30 GMT",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxNZWVjNmhJdUgxZ0d0ZEpCQ3VOMGI1TGVZV2JaOXltcUZTVVY1MzJnYVhNU3k1TWY2RVROLUJlRlFsemlTZWVCUTVPSW1JUUlkZmhtc3lDT2tBX3cyNm1aRGt3aE5nWlgzQklMS1drekRBOTVkenV6bUxPU0FqMkt4bm5HT3UxUjVMbnptaDJZU0FlTDBITExJdWM2cnBFakZobWxaUl9PRlJ1TzJNNEQwV1hzdWhFRFhjY0lvMncwdGtua3ZaT0dJUTdSMUlCRXpUZUZRV2E3bzZrNm9QbGRINWFMVnhBLU5R?oc=5",
-          "confidence": "retrieved"
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
         },
         {
           "item": "news",
@@ -1647,8 +2314,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -1663,19 +2329,19 @@
       "type": "single_stock_research",
       "refused": true,
       "blocks": 5,
-      "charts": 7,
+      "charts": 6,
       "sources": 10,
-      "limitations": 3,
+      "limitations": 4,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 578
+      "latencyMs": 579
     },
     {
       "id": "D9",
       "category": "single_stock",
       "query": "Why is Infosys moving today?",
-      "headline": "Infosys: what's driving the fall",
+      "headline": "Infosys: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -1686,9 +2352,9 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q1FY27",
+        "latestPeriodFound": "FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 4,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -1708,8 +2374,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQb3NiMjJhU0VVMl9yRGQzN2dkLWVTNXZuSmt5VDJ5R0N2R1ZueDBYTGtQLXBuSW5CWkhGTnlham43X1Jibm5ER1l6aXNjQjJNWWVaRHhRcTR3SVVrSzJWc1Y4QktEZnE0ZXNKWmdBMXV5Q3RwRU9HQjdmNGhoUHgxd3VqTWJ0SmloWkxHa0JNODVvR2JjdjJJYTN3VzR1bEJqNWFuVWFNR2lVM0lRYVgwM2hhLUJUMUZNbGI5T3pmNDR4YW50ZkFaZi1lMDFQeTRaRHJzN2xsZ19hX0dGaUFYaEdJUnhaYzM2NUI4dFJzQdIB9AFBVV95cUxOVjdfY1ZhRVJvc3lHZTdIWGNpeFBqQVJmaXEyZFBVU0lOMUZpRkx3UGlNUEV1a2d1WDQzYTFYVWFDelRGb01MWmt1a0tKQkNRSFYwNEZSMXNTV3AtOXBrSWE1ZUJEbktJVkRNejJNdzkxOFFYamdCWkd4NnN6V2tNSTkzekwtUjI0NmRsaUZTbm9IZ1YwMUh1U0JYbmx6R0dZWHZMZzZkcHNaOUJFd2ppX0F5VGJnUUY2YjBhUXNmbTRBNHV0clI1cjM5RGVPU0FycUpSWUFPTUctUnotQW5UNFMxSTh5a0tVNTgwc2p4dEU5S01y?oc=5",
-          "sourceDate": "Thu, 23 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOT1B6d0ZDUE5IR2JkTjF6UGhsVE92UnFJTmlfQ1VqR3YxdWtKZ2JjMl9Mc3Y2MEozbC0wRm9IRUV5VmE0WHZuRnA5U2xWbDRocFZkVlRSSVpLajhkcGd2XzBCWFpvQk5YQnUwdC02b2k1U1ptY3U4S2JMWEhWd0ZqZ25JZHQzMkE2ZWRXZ3poUE1zLU9MaVdDRW1kaHpXMGZId0hjd1RhclVYdXluNkplSHh2UDNLazJmLWNlMWJMdw?oc=5",
+          "sourceDate": "Tue, 16 Jun 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -1773,13 +2439,13 @@
         "target price"
       ],
       "freshness": [],
-      "latencyMs": 807
+      "latencyMs": 869
     },
     {
       "id": "D10",
       "category": "single_stock",
       "query": "Why is SBI moving today?",
-      "headline": "State Bank of India: what's driving the fall",
+      "headline": "State Bank of India: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -1792,7 +2458,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -1812,8 +2478,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxNV3JrMnlGRlJuQkVoejNXWEdNNE9fSU13SFFWTmlXOHFqQWNBYVhSTjFXYmxGMEpsZ1I1dW50QUh0OFJhdEFrV1g0ZE84cTRXakxjVGY3RFZFOWpIbk55UWFiNGRZeTljLVhYcGc5MGVNQnNtdU5pSi1KTV9zMmVJYkJqVXVVb2dUOF9fT20teUdlUXliS01yOUZickFQZ29Id1NzcXdVblpkSUJtV1RwNUwzWUJUZWFmakxHZXNMTXd5eGt1VExaMDR6STFyaDJzOW9YM1M3QjNsVnMzZHgyNTA2SUE5UWZZTUprdk9ld9IB9AFBVV95cUxPVEp3dnpvd3FUVWlCd2t0SlVzYXkxNTdkRWhzSUZzWmZneDlxMUNaeXRyR2dFczJCcGF6ZVp6TGJEbW1LUUpCWTh6RzVUYlpYTW55V1pZR0tKaENLZUJad3duNnV3LTl3QmlLcEtRVi1EZzFJc1dJWTNMR21BeW9VazZXZmFlNVNsY0VWTzUzbW1VanJNSlIwbTI2NE5kMmgtallUclB6VUxzUkRVYlRfUUlxT0x3dFdjNmVYMFdJTVpXaXdnY1BSZ0F4Y2Y4aWhzeVlPUTBpcFlPT08wYi0yMlg0UDQwcFpnWGV2aTZsUmNGLVRl?oc=5",
-          "sourceDate": "Fri, 19 Jun 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBPa0lHTFVCTVBxWVRmVXR6cE5FMDhDc25ublZmbVllcFgyMU0wZF9NZmdZQWVjQmJrd0tPSFN2OUdVRnpfVVBWdDFCMmRPSkZFc1R4cFIyOGdMSmdtNThoam1zNGN6WnFKbGc?oc=5",
+          "sourceDate": "Thu, 09 Jul 2026 15:24:38 GMT",
           "confidence": "retrieved"
         },
         {
@@ -1837,10 +2503,8 @@
         {
           "item": "shareholding",
           "label": "Latest shareholding pattern",
-          "status": "found",
-          "latestPeriod": "Thu, 25 Jun 2026 06:42:07 GMT",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNbkRjYjRVYjdBbkg3VDYtTFVOcVpuRDNuUjJSdjlZNFUtaWJ5a1A1YWhkc3d6OUF6ekk2OUEya0gybGJONFF5U2pic3U3dXhTV0F6T1pvSURJRUs3eGN3WTJ3ZEMxSFBSaXlwUUtSMTVlcEdIOHFROXpJMXRVb2NaZDFCZWN3cEk0LWtSSDZ4VkVVTzVYMzdyVm9CUW5paHNST3UzMTQ3Zkk2SkU4cVFyN0pwb1dCOTF5aUlTWVl5MHNkZlNaOGZoUGI0MDZXNU5zS1BNa0dsUVVtX0xPT2RBeEhPSmRCT0FMeTU2cU5kbE8wUlRk?oc=5",
-          "confidence": "retrieved"
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
         },
         {
           "item": "news",
@@ -1856,7 +2520,8 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "found"
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
         },
         {
           "item": "sectorMacro",
@@ -1871,19 +2536,19 @@
       "type": "single_stock_research",
       "refused": true,
       "blocks": 5,
-      "charts": 7,
+      "charts": 6,
       "sources": 10,
-      "limitations": 5,
+      "limitations": 6,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 959
+      "latencyMs": 1297
     },
     {
       "id": "D11",
       "category": "single_stock",
       "query": "Why is Bharti Airtel moving?",
-      "headline": "Why is Bharti Airtel moving?: what's driving the gain",
+      "headline": "Why is Bharti Airtel moving?: what's driving the fall",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -1895,7 +2560,6 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
-        "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
@@ -1916,8 +2580,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxOVXRqR2NhdHRncHhTZ3U4aHdWVEZZZEdDaE1sdzdETzZsNXJUQlFiWkpRaEJwSHBEUVNzWnVoVi01RWhvRUFJcU43dUpKc01jSENNSWM0dzVWbi03RkhkYkl3RUJoS0ZwQVZqQTRqNEZ2WTA4ZmlSMmRqNDY4VUtUN0JKeENKYTFjdFQ5U2Q4SFcxNkt3RTVCRF93dHpWYkdkbllacTJHRUpnWUlSUmVmQlN4REFSUGtZR2s0TklEalNTbTVuNWZPWW1NZ1o3dXBxVnhnS2lfV23SAd4BQVVfeXFMUGFmWTh6QnJ2Wl9TLWJLakdQWlViUFV5UTdiNGJkSDgyeS1EampNM2VlRXdDbDNmOThZdTk1SDVic1l2UTJVOWFmb0NWeWtkZGJIVThTY2M0bWlONU4zZXd6azB3MjBiNlRXQmxadlI5dmhFYmpac1U3bEY5c2xnNGVyaXZRQXRzSE43eGlkUHFZMjhGT2MzY0pZT2hCblhkWDYxNDdrRmFZNW9xVjJYang3Q2J0YmNBN0p3czBCTkdLVUtKajNQZG5GajdmeUU0dnNJMGxfSjhZOS1LeWhR?oc=5",
-          "sourceDate": "Mon, 05 Jan 2026 08:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE1NenFfV0tfelcwTUZ5SVFva2hGZUdqekowbmVqMXpIQnFRVkgwakU4MlpTUHNSVzU0Z2dXQzRpNW1zVl9pVndxWFVSRzhKTnhPWnVqa09hbUk?oc=5",
+          "sourceDate": "Thu, 09 Jul 2026 16:40:11 GMT",
           "confidence": "retrieved"
         },
         {
@@ -1980,7 +2644,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 544
+      "latencyMs": 701
     },
     {
       "id": "D12",
@@ -2019,8 +2683,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNY0xoUzRYZ2E0bUpfWklxeUl3ZGs4QlgwV1IxRm9CNk5qUVpyZEcycllZT21pclBjNVRKNDFkSHFvUUdGOUxNbTZwUTBSVHZLMm5QQmlibFJHa2ZPclh6ZUR6Y002UzZJaEo2Rmt3Y18xZEs1eS04MVUzRzFWbjROWi1ZaURrYXdORkVHTWNRM3U2eGlQR01nYlNvNkNqc09JN19qUDB0OHZIX0hYTnBiRUVRLWttZWpLNmpCMS1EZUhGaVkxVVFJVld4WTFtcjN3aHV3aWtWMnRnSjlkMlI0YTFaWmJOUmI0c2hVUXJMYjhBaFVl?oc=5",
-          "sourceDate": "Fri, 03 Jul 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQRkVzNHJjcV9zZkowNUNhajdvNW42eFAwWDNYYXNhVEl6ZFlQbC11eklTVnNIZTlyVC0teF9XM3F2WWpfc0hhQ3hEdTBQQXE0d2VxQ1NVWDBneTNfbFdpOFFzc0pDbFBiUjg5UXJkRW5BMVptdjF2NGZrLU5BdE9BY29ucjBqdjVKX3plOGxBRzZJMTJQRU9vQlZ0V2xXa3VaZ3NSOXdhdUUxSmR6S21NeF9pNWJwTm9MUlZjWk0xZkU0VU9SSWlIeHUwTdIB0AFBVV95cUxNN01rMmRTZ1JNQjB6SWtmblFTNklucHM0S21mdzhQT1VZVzhtNVBmZlVuM212OHlCU2N6cF9HUDZXVVg1dVg3dDFmQUJ1YWt5MU5udFZFRExGZ2JkWk9SVV9lRkVjVWswQnc1UmhMNHFfREtMZHNWOXNJeTN0SFgxa1lkVGZ2UkV3UFcxQWhtR0NUUUtPSmlIRjJuUHJ6elVRUW9vczk3dWk3UHRKNzI0MEh0RFE2dV82NFk3OTA2UkdmSHB4OHNTTG5qZ1lJM2lk?oc=5",
+          "sourceDate": "Tue, 05 May 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -2083,7 +2747,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 558
+      "latencyMs": 610
     },
     {
       "id": "E1",
@@ -2124,107 +2788,6 @@
           "status": "found",
           "sourceUrl": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQTjhrcnJkZk04NDRsbFVjUkF6cHB0a1RDbEc4Qkp3VFViZzBaYWJFYVN4b1pfalF3ZEhTdG4xRXpDcEMycU02aXlEd0hld2NTNmdrTkZqZXdoNFZneWUtWkdwZGZNNlNvZlpLUnNQTm9meGhxX2N1aWVYUG5RbVc5LVhQNU51R0dEV3N0OFluMkFSVWR4V1hscGdyeDJZVTFIc055VEdxcjJOYWVKX2ViV0l6blhSUUxWTXgzZ28tTmRyeDVwejNRbkx1WEtPNTNKaHp4ZA?oc=5",
           "sourceDate": "Tue, 16 Jun 2026 07:00:00 GMT",
-          "confidence": "retrieved"
-        },
-        {
-          "item": "quarterlyResult",
-          "label": "Latest quarterly result",
-          "status": "missing",
-          "limitation": "Latest quarterly result details unavailable from current sources."
-        },
-        {
-          "item": "investorPresentation",
-          "label": "Latest investor presentation",
-          "status": "found"
-        },
-        {
-          "item": "annualReport",
-          "label": "Latest annual report",
-          "status": "missing",
-          "limitation": "No annual report found from current sources."
-        },
-        {
-          "item": "shareholding",
-          "label": "Latest shareholding pattern",
-          "status": "missing",
-          "limitation": "Latest shareholding pattern unavailable from current sources."
-        },
-        {
-          "item": "news",
-          "label": "Latest company news/catalyst",
-          "status": "found"
-        },
-        {
-          "item": "valuation",
-          "label": "Latest valuation metrics",
-          "status": "missing",
-          "limitation": "Detailed valuation metrics unavailable from current sources."
-        },
-        {
-          "item": "financialMetrics",
-          "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
-        },
-        {
-          "item": "sectorMacro",
-          "label": "Latest sector/macro context",
-          "status": "found"
-        }
-      ],
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "stock_comparison",
-      "refused": false,
-      "blocks": 5,
-      "charts": 3,
-      "sources": 10,
-      "limitations": 3,
-      "leak": [],
-      "sourceRiskTerm": [],
-      "freshness": [],
-      "latencyMs": 46
-    },
-    {
-      "id": "E2",
-      "category": "comparison",
-      "query": "Compare Reliance and ONGC",
-      "headline": "Compare Reliance and ONGC: the India read",
-      "evidence": {
-        "sourceCount": 10,
-        "verifiedSourceCount": 0,
-        "retrievedSourceCount": 9,
-        "officialSourceCount": 0,
-        "analysisOnlySourceCount": 1,
-        "unavailableSourceCount": 0,
-        "evidenceDepth": "standard",
-        "sourceBudget": 12,
-        "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
-        "metricEvidenceCount": 0,
-        "blockedMetricCount": 0
-      },
-      "latestDataChecklist": [
-        {
-          "item": "price",
-          "label": "Latest price",
-          "status": "found",
-          "confidence": "verified"
-        },
-        {
-          "item": "dailyMove",
-          "label": "Latest daily move",
-          "status": "found",
-          "confidence": "verified"
-        },
-        {
-          "item": "announcement",
-          "label": "Latest exchange/company announcement",
-          "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxQLWhWbTh4RDJTSjgxS1N6aU16Rk5ZdjRlQmhjTFY3Mkw1S0JybFptejVtell1NTVXSTlvQVpVN0tidVVEU0UzUmRrcWhVT0VMcWdDOVB1S3ZDOHMwVkt1b0hlYWs3NHJSZ0Jpd0hzME1EOGJobTNoTFpqR0hHVzZndjQ4TmNWLVZVSzBmVGR1blhvUGJ4MzB4OWFUSHIxQ0ZoZDV4OGsybUR3QkJ2aXJ2MjIxYWpxTzFja29xNVZtT3VPTjgyX2NORlpKZkVkNW5QZ3RjZEVqRnZCY2V30gHiAUFVX3lxTE5zcXF4REktWHhqNDN2X3M1V19qS28tYlFkZ05jZXZLZG5aM09IY1d5SGVIczd2Y2hJTHlLZmEycnhwanZKRHRHMkdHc3IxYXU5a1BKeWRCSmV2T0FOMTlhcmFScW00ZTdpNzdrNkZIb29YTTRIeUtZNDlZNUFrUExoNDczOGVXYTg0YUVtSkwxSktBVU8zVmhPWk5lUzZyMUtXYVA3YWt0ZmlyY0VGaWNPVjBJQnVQVVFOdVh1U0JHVGo3dExrbnBKMkpDM1lYSWtMVmx2aHp0b0dZd1oxUWtfWVE?oc=5",
-          "sourceDate": "Sun, 31 May 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -2280,20 +2843,20 @@
       "reasons": [],
       "type": "stock_comparison",
       "refused": false,
-      "blocks": 4,
+      "blocks": 5,
       "charts": 3,
       "sources": 10,
       "limitations": 3,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 517
+      "latencyMs": 81
     },
     {
-      "id": "E3",
+      "id": "E2",
       "category": "comparison",
-      "query": "Compare TCS and Infosys",
-      "headline": "Indian IT: the India read",
+      "query": "Compare Reliance and ONGC",
+      "headline": "Compare Reliance and ONGC: the India read",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -2305,8 +2868,7 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
-        "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -2326,8 +2888,109 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQb3NiMjJhU0VVMl9yRGQzN2dkLWVTNXZuSmt5VDJ5R0N2R1ZueDBYTGtQLXBuSW5CWkhGTnlham43X1Jibm5ER1l6aXNjQjJNWWVaRHhRcTR3SVVrSzJWc1Y4QktEZnE0ZXNKWmdBMXV5Q3RwRU9HQjdmNGhoUHgxd3VqTWJ0SmloWkxHa0JNODVvR2JjdjJJYTN3VzR1bEJqNWFuVWFNR2lVM0lRYVgwM2hhLUJUMUZNbGI5T3pmNDR4YW50ZkFaZi1lMDFQeTRaRHJzN2xsZ19hX0dGaUFYaEdJUnhaYzM2NUI4dFJzQdIB9AFBVV95cUxOVjdfY1ZhRVJvc3lHZTdIWGNpeFBqQVJmaXEyZFBVU0lOMUZpRkx3UGlNUEV1a2d1WDQzYTFYVWFDelRGb01MWmt1a0tKQkNRSFYwNEZSMXNTV3AtOXBrSWE1ZUJEbktJVkRNejJNdzkxOFFYamdCWkd4NnN6V2tNSTkzekwtUjI0NmRsaUZTbm9IZ1YwMUh1U0JYbmx6R0dZWHZMZzZkcHNaOUJFd2ppX0F5VGJnUUY2YjBhUXNmbTRBNHV0clI1cjM5RGVPU0FycUpSWUFPTUctUnotQW5UNFMxSTh5a0tVNTgwc2p4dEU5S01y?oc=5",
-          "sourceDate": "Thu, 23 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxQLWhWbTh4RDJTSjgxS1N6aU16Rk5ZdjRlQmhjTFY3Mkw1S0JybFptejVtell1NTVXSTlvQVpVN0tidVVEU0UzUmRrcWhVT0VMcWdDOVB1S3ZDOHMwVkt1b0hlYWs3NHJSZ0Jpd0hzME1EOGJobTNoTFpqR0hHVzZndjQ4TmNWLVZVSzBmVGR1blhvUGJ4MzB4OWFUSHIxQ0ZoZDV4OGsybUR3QkJ2aXJ2MjIxYWpxTzFja29xNVZtT3VPTjgyX2NORlpKZkVkNW5QZ3RjZEVqRnZCY2V30gHiAUFVX3lxTE5zcXF4REktWHhqNDN2X3M1V19qS28tYlFkZ05jZXZLZG5aM09IY1d5SGVIczd2Y2hJTHlLZmEycnhwanZKRHRHMkdHc3IxYXU5a1BKeWRCSmV2T0FOMTlhcmFScW00ZTdpNzdrNkZIb29YTTRIeUtZNDlZNUFrUExoNDczOGVXYTg0YUVtSkwxSktBVU8zVmhPWk5lUzZyMUtXYVA3YWt0ZmlyY0VGaWNPVjBJQnVQVVFOdVh1U0JHVGo3dExrbnBKMkpDM1lYSWtMVmx2aHp0b0dZd1oxUWtfWVE?oc=5",
+          "sourceDate": "Sun, 31 May 2026 07:00:00 GMT",
+          "confidence": "retrieved"
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "found"
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "found"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "found"
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "stock_comparison",
+      "refused": false,
+      "blocks": 4,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 3,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 768
+    },
+    {
+      "id": "E3",
+      "category": "comparison",
+      "query": "Compare TCS and Infosys",
+      "headline": "Indian IT: the India read",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "partial",
+        "latestPeriodFound": "FY27",
+        "latestAnnualPeriodFound": "FY27",
+        "metricEvidenceCount": 4,
+        "blockedMetricCount": 0
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "found",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMivwFBVV95cUxOT1B6d0ZDUE5IR2JkTjF6UGhsVE92UnFJTmlfQ1VqR3YxdWtKZ2JjMl9Mc3Y2MEozbC0wRm9IRUV5VmE0WHZuRnA5U2xWbDRocFZkVlRSSVpLajhkcGd2XzBCWFpvQk5YQnUwdC02b2k1U1ptY3U4S2JMWEhWd0ZqZ25JZHQzMkE2ZWRXZ3poUE1zLU9MaVdDRW1kaHpXMGZId0hjd1RhclVYdXluNkplSHh2UDNLazJmLWNlMWJMdw?oc=5",
+          "sourceDate": "Tue, 16 Jun 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -2391,7 +3054,7 @@
         "target price"
       ],
       "freshness": [],
-      "latencyMs": 583
+      "latencyMs": 788
     },
     {
       "id": "E4",
@@ -2408,7 +3071,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q1FY27",
+        "latestPeriodFound": "FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 1,
         "blockedMetricCount": 0
@@ -2494,7 +3157,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 571
+      "latencyMs": 605
     },
     {
       "id": "E5",
@@ -2511,8 +3174,8 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q2FY26",
-        "metricEvidenceCount": 0,
+        "latestPeriodFound": "Q3FY26",
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -2532,7 +3195,7 @@
           "label": "Latest exchange/company announcement",
           "status": "found",
           "sourceUrl": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE9WQzNEWlBxdEUyRW9HUDYwalMxLXRKX0dLSG1TU1pXbFlfUmxWTW9pVXlBZXhQTHFLWDNOemxxMUdtWWxMekNaNUZqWUhVTlVKR0dEeEh5S3p0dmNhcmFjd0dPMUM?oc=5",
-          "sourceDate": "Mon, 06 Jul 2026 10:58:15 GMT",
+          "sourceDate": "Thu, 09 Jul 2026 19:57:07 GMT",
           "confidence": "retrieved"
         },
         {
@@ -2573,8 +3236,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -2595,7 +3257,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 945
+      "latencyMs": 967
     },
     {
       "id": "F1",
@@ -2647,7 +3309,8 @@
         {
           "item": "investorPresentation",
           "label": "Latest investor presentation",
-          "status": "found"
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
         },
         {
           "item": "annualReport",
@@ -2699,7 +3362,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 44
+      "latencyMs": 81
     },
     {
       "id": "F2",
@@ -2716,8 +3379,8 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
-        "metricEvidenceCount": 0,
+        "latestPeriodFound": "Q1FY27",
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -2756,8 +3419,7 @@
         {
           "item": "annualReport",
           "label": "Latest annual report",
-          "status": "missing",
-          "limitation": "No annual report found from current sources."
+          "status": "found"
         },
         {
           "item": "shareholding",
@@ -2779,8 +3441,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -2801,7 +3462,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 47
+      "latencyMs": 83
     },
     {
       "id": "F3",
@@ -2818,8 +3479,8 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
-        "metricEvidenceCount": 0,
+        "latestPeriodFound": "Q1FY27",
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -2858,8 +3519,7 @@
         {
           "item": "annualReport",
           "label": "Latest annual report",
-          "status": "missing",
-          "limitation": "No annual report found from current sources."
+          "status": "found"
         },
         {
           "item": "shareholding",
@@ -2881,8 +3541,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -2903,7 +3562,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 47
+      "latencyMs": 354
     },
     {
       "id": "F4",
@@ -2955,7 +3614,8 @@
         {
           "item": "investorPresentation",
           "label": "Latest investor presentation",
-          "status": "found"
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
         },
         {
           "item": "annualReport",
@@ -3007,7 +3667,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 49
+      "latencyMs": 83
     },
     {
       "id": "G1",
@@ -3027,7 +3687,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 44
     },
     {
       "id": "G2",
@@ -3047,7 +3707,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 30
     },
     {
       "id": "G3",
@@ -3067,7 +3727,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 34
     },
     {
       "id": "G4",
@@ -3087,7 +3747,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 31
     },
     {
       "id": "G5",
@@ -3107,7 +3767,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 31
     },
     {
       "id": "H1",
@@ -3127,7 +3787,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 32
     },
     {
       "id": "H2",
@@ -3147,7 +3807,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 29
     },
     {
       "id": "H3",
@@ -3167,7 +3827,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 30
     },
     {
       "id": "H4",
@@ -3187,7 +3847,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 34
     },
     {
       "id": "H5",
@@ -3207,7 +3867,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 17
+      "latencyMs": 38
     },
     {
       "id": "T1",
@@ -3236,7 +3896,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 448
+      "latencyMs": 601
     },
     {
       "id": "T2",
@@ -3265,7 +3925,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 710
+      "latencyMs": 768
     },
     {
       "id": "T3",
@@ -3295,7 +3955,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 318
+      "latencyMs": 771
     },
     {
       "id": "T4",
@@ -3395,7 +4055,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 544
+      "latencyMs": 552
     },
     {
       "id": "T5",
@@ -3424,13 +4084,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 512
+      "latencyMs": 587
     },
     {
       "id": "D13",
       "category": "single_stock",
       "query": "Why is Adani Enterprises moving?",
-      "headline": "Adani Enterprises: what's driving the fall",
+      "headline": "Adani Enterprises: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -3443,7 +4103,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 2,
+        "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -3505,7 +4165,8 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "found"
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
         },
         {
           "item": "sectorMacro",
@@ -3526,13 +4187,175 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 1076
+      "latencyMs": 1316
     },
     {
       "id": "D14",
       "category": "single_stock",
       "query": "Why is Sun Pharma moving?",
-      "headline": "Sun Pharma: what's driving the gain",
+      "headline": "Sun Pharma: what's driving the fall",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "evidenceDepth": "standard",
+        "sourceBudget": 12,
+        "coverageStatus": "partial",
+        "latestPeriodFound": "Q1FY27",
+        "latestAnnualPeriodFound": "FY27",
+        "metricEvidenceCount": 0,
+        "blockedMetricCount": 0
+      },
+      "latestDataChecklist": [
+        {
+          "item": "price",
+          "label": "Latest price",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "dailyMove",
+          "label": "Latest daily move",
+          "status": "found",
+          "confidence": "verified"
+        },
+        {
+          "item": "announcement",
+          "label": "Latest exchange/company announcement",
+          "status": "found",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMiggJBVV95cUxNQ1gyZmc1SVhwTXhUVHp4Qjh6d1F2WnJaa05fTG1uYURRM0xSdG9xa1U3U3ZIc0haVmZfNXBYMVpGN3dGaVAxV2dYX0FNN3p4bjJ5bkpRUE9jR1pNUXgzcXYtc21NZTc2R19EMjRjcXB4NEdDWWFnZ1NUODhUS256OHRzVy1RN1F4WHpMNVRNZHlXWmRrYXZGV3JkT1V0YVVQMmU5WDNiTFpWUnFyNDlDQ1pnT3FuYXVVMGx6T3BpYnRURjdzRmhQWllTbnMxck1ta1h3UHN6eEJ5dVJ1N1owSWxMcFprOVlSbVhkTk83Z2N2YlZXRjVKUXNhdGllS1hyU0HSAYcCQVVfeXFMTy1tb0xpSU5NOFJXQ0FsQjNmUEE5NnhfV215MV9iRFpYU2JTMDZUYW9NRVZaeFlrUnB5dHBxWk1QRzNHU1p2M3FDMzRSOXJMTGtoSDdPNklsdVUweVU1UEExZFI1cWlRWjBoc2VOYVJyOHVfLVZCTmJGVGp2dHdPUjRUcUhYdkYwdkNPclZEUTUwSGY4STRJUkJObkJQbGJ6UEd2Rkg2VzVRc1FMNDBsZ2xRMGN6VWJwRkRib3AtaUprd0JVakFNYXFoZWlLM1ZHYmdRTVpOQWJDb1dQR3VPWmJNamlhc2RKQWlBT0NiQ3lDaXg3WDV5MmEwMzhmc2JJNTJLeG16WHc?oc=5",
+          "sourceDate": "Sun, 24 May 2026 07:00:00 GMT",
+          "confidence": "retrieved"
+        },
+        {
+          "item": "quarterlyResult",
+          "label": "Latest quarterly result",
+          "status": "missing",
+          "limitation": "Latest quarterly result details unavailable from current sources."
+        },
+        {
+          "item": "investorPresentation",
+          "label": "Latest investor presentation",
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
+        },
+        {
+          "item": "annualReport",
+          "label": "Latest annual report",
+          "status": "missing",
+          "limitation": "No annual report found from current sources."
+        },
+        {
+          "item": "shareholding",
+          "label": "Latest shareholding pattern",
+          "status": "missing",
+          "limitation": "Latest shareholding pattern unavailable from current sources."
+        },
+        {
+          "item": "news",
+          "label": "Latest company news/catalyst",
+          "status": "found"
+        },
+        {
+          "item": "valuation",
+          "label": "Latest valuation metrics",
+          "status": "missing",
+          "limitation": "Detailed valuation metrics unavailable from current sources."
+        },
+        {
+          "item": "financialMetrics",
+          "label": "Latest financial metrics",
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
+        },
+        {
+          "item": "sectorMacro",
+          "label": "Latest sector/macro context",
+          "status": "found"
+        }
+      ],
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "single_stock_research",
+      "refused": true,
+      "blocks": 5,
+      "charts": 7,
+      "sources": 10,
+      "limitations": 4,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 906
+    },
+    {
+      "id": "C11",
+      "category": "macro",
+      "query": "How does inflation affect Indian markets?",
+      "headline": "inflation: the India read",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong",
+        "latestPeriodFound": "FY27"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "macro_sector_impact",
+      "refused": false,
+      "blocks": 5,
+      "charts": 3,
+      "sources": 10,
+      "limitations": 1,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 680
+    },
+    {
+      "id": "B7",
+      "category": "market_summary",
+      "query": "Why are PSU banks moving today?",
+      "headline": "Indian banks: the India read",
+      "evidence": {
+        "sourceCount": 10,
+        "verifiedSourceCount": 0,
+        "retrievedSourceCount": 9,
+        "officialSourceCount": 0,
+        "analysisOnlySourceCount": 1,
+        "unavailableSourceCount": 0,
+        "coverageStatus": "strong"
+      },
+      "score": 100,
+      "pass": true,
+      "threshold": 80,
+      "reasons": [],
+      "type": "current_market_research",
+      "refused": false,
+      "blocks": 6,
+      "charts": 5,
+      "sources": 10,
+      "limitations": 2,
+      "leak": [],
+      "sourceRiskTerm": [],
+      "freshness": [],
+      "latencyMs": 82
+    },
+    {
+      "id": "I1",
+      "category": "official_source",
+      "query": "Latest announcement for HDFC Bank",
+      "headline": "HDFC Bank: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -3565,8 +4388,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPRDl2cDFqaFZJZFhyS082dVFEU1UtR19IZ29EU19WSkExbXpvNTd3emg5WXRBaV95T2F1MG9sTGpUNG5ONG45SXJaTVBCYkUxUlhVcUQ2MHhILXNmNUlOYi1EZkhkci1XaXpyUG10MkZwanNqV09ublpMdkVFXzBrRTZ0ZlpQWHBBZWNMaFRXbndPV0ZEd0hPcjFvLVVCWVR5d051djlEWFZWbEtiWlIwY0ZRbWRHVVlOY09EMXpWam9BLVFFR0w1VHpIOTVYQkhGTWN4aDJ3VGZrQlZvNXFvejJR?oc=5",
-          "sourceDate": "Thu, 11 Jun 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQTjhrcnJkZk04NDRsbFVjUkF6cHB0a1RDbEc4Qkp3VFViZzBaYWJFYVN4b1pfalF3ZEhTdG4xRXpDcEMycU02aXlEd0hld2NTNmdrTkZqZXdoNFZneWUtWkdwZGZNNlNvZlpLUnNQTm9meGhxX2N1aWVYUG5RbVc5LVhQNU51R0dEV3N0OFluMkFSVWR4V1hscGdyeDJZVTFIc055VEdxcjJOYWVKX2ViV0l6blhSUUxWTXgzZ28tTmRyeDVwejNRbkx1WEtPNTNKaHp4ZA?oc=5",
+          "sourceDate": "Tue, 16 Jun 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -3625,176 +4448,13 @@
       "type": "single_stock_research",
       "refused": true,
       "blocks": 5,
-      "charts": 8,
-      "sources": 10,
-      "limitations": 3,
-      "leak": [],
-      "sourceRiskTerm": [],
-      "freshness": [],
-      "latencyMs": 536
-    },
-    {
-      "id": "C11",
-      "category": "macro",
-      "query": "How does inflation affect Indian markets?",
-      "headline": "inflation: the India read",
-      "evidence": {
-        "sourceCount": 10,
-        "verifiedSourceCount": 0,
-        "retrievedSourceCount": 9,
-        "officialSourceCount": 0,
-        "analysisOnlySourceCount": 1,
-        "unavailableSourceCount": 0,
-        "coverageStatus": "strong",
-        "latestPeriodFound": "FY27"
-      },
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "macro_sector_impact",
-      "refused": false,
-      "blocks": 5,
-      "charts": 3,
-      "sources": 10,
-      "limitations": 1,
-      "leak": [],
-      "sourceRiskTerm": [],
-      "freshness": [],
-      "latencyMs": 555
-    },
-    {
-      "id": "B7",
-      "category": "market_summary",
-      "query": "Why are PSU banks moving today?",
-      "headline": "Indian banks: the India read",
-      "evidence": {
-        "sourceCount": 10,
-        "verifiedSourceCount": 0,
-        "retrievedSourceCount": 9,
-        "officialSourceCount": 0,
-        "analysisOnlySourceCount": 1,
-        "unavailableSourceCount": 0,
-        "coverageStatus": "strong"
-      },
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "current_market_research",
-      "refused": false,
-      "blocks": 6,
-      "charts": 5,
-      "sources": 10,
-      "limitations": 2,
-      "leak": [],
-      "sourceRiskTerm": [],
-      "freshness": [],
-      "latencyMs": 46
-    },
-    {
-      "id": "I1",
-      "category": "official_source",
-      "query": "Latest announcement for HDFC Bank",
-      "headline": "HDFC Bank: what's driving the gain",
-      "evidence": {
-        "sourceCount": 10,
-        "verifiedSourceCount": 0,
-        "retrievedSourceCount": 9,
-        "officialSourceCount": 0,
-        "analysisOnlySourceCount": 1,
-        "unavailableSourceCount": 0,
-        "evidenceDepth": "standard",
-        "sourceBudget": 12,
-        "coverageStatus": "partial",
-        "latestPeriodFound": "Q1FY27",
-        "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 1,
-        "blockedMetricCount": 0
-      },
-      "latestDataChecklist": [
-        {
-          "item": "price",
-          "label": "Latest price",
-          "status": "found",
-          "confidence": "verified"
-        },
-        {
-          "item": "dailyMove",
-          "label": "Latest daily move",
-          "status": "found",
-          "confidence": "verified"
-        },
-        {
-          "item": "announcement",
-          "label": "Latest exchange/company announcement",
-          "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQTjhrcnJkZk04NDRsbFVjUkF6cHB0a1RDbEc4Qkp3VFViZzBaYWJFYVN4b1pfalF3ZEhTdG4xRXpDcEMycU02aXlEd0hld2NTNmdrTkZqZXdoNFZneWUtWkdwZGZNNlNvZlpLUnNQTm9meGhxX2N1aWVYUG5RbVc5LVhQNU51R0dEV3N0OFluMkFSVWR4V1hscGdyeDJZVTFIc055VEdxcjJOYWVKX2ViV0l6blhSUUxWTXgzZ28tTmRyeDVwejNRbkx1WEtPNTNKaHp4ZA?oc=5",
-          "sourceDate": "Tue, 16 Jun 2026 07:00:00 GMT",
-          "confidence": "retrieved"
-        },
-        {
-          "item": "quarterlyResult",
-          "label": "Latest quarterly result",
-          "status": "missing",
-          "limitation": "Latest quarterly result details unavailable from current sources."
-        },
-        {
-          "item": "investorPresentation",
-          "label": "Latest investor presentation",
-          "status": "found"
-        },
-        {
-          "item": "annualReport",
-          "label": "Latest annual report",
-          "status": "missing",
-          "limitation": "No annual report found from current sources."
-        },
-        {
-          "item": "shareholding",
-          "label": "Latest shareholding pattern",
-          "status": "found",
-          "latestPeriod": "Thu, 25 Jun 2026 06:42:07 GMT",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNbkRjYjRVYjdBbkg3VDYtTFVOcVpuRDNuUjJSdjlZNFUtaWJ5a1A1YWhkc3d6OUF6ekk2OUEya0gybGJONFF5U2pic3U3dXhTV0F6T1pvSURJRUs3eGN3WTJ3ZEMxSFBSaXlwUUtSMTVlcEdIOHFROXpJMXRVb2NaZDFCZWN3cEk0LWtSSDZ4VkVVTzVYMzdyVm9CUW5paHNST3UzMTQ3Zkk2SkU4cVFyN0pwb1dCOTF5aUlTWVl5MHNkZlNaOGZoUGI0MDZXNU5zS1BNa0dsUVVtX0xPT2RBeEhPSmRCT0FMeTU2cU5kbE8wUlRk?oc=5",
-          "confidence": "retrieved"
-        },
-        {
-          "item": "news",
-          "label": "Latest company news/catalyst",
-          "status": "found"
-        },
-        {
-          "item": "valuation",
-          "label": "Latest valuation metrics",
-          "status": "missing",
-          "limitation": "Detailed valuation metrics unavailable from current sources."
-        },
-        {
-          "item": "financialMetrics",
-          "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
-        },
-        {
-          "item": "sectorMacro",
-          "label": "Latest sector/macro context",
-          "status": "found"
-        }
-      ],
-      "score": 100,
-      "pass": true,
-      "threshold": 80,
-      "reasons": [],
-      "type": "single_stock_research",
-      "refused": true,
-      "blocks": 5,
       "charts": 7,
       "sources": 10,
       "limitations": 5,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 55
+      "latencyMs": 73
     },
     {
       "id": "I2",
@@ -3823,7 +4483,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 559
+      "latencyMs": 647
     },
     {
       "id": "I3",
@@ -3852,7 +4512,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 481
+      "latencyMs": 594
     },
     {
       "id": "J1",
@@ -3872,7 +4532,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 12
     },
     {
       "id": "J2",
@@ -3892,7 +4552,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 24
     },
     {
       "id": "J3",
@@ -3912,7 +4572,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 9
+      "latencyMs": 14
     },
     {
       "id": "J4",
@@ -3932,7 +4592,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 10
+      "latencyMs": 20
     },
     {
       "id": "J5",
@@ -3952,7 +4612,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 8
+      "latencyMs": 16
     },
     {
       "id": "K1",
@@ -3969,7 +4629,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "FY27",
+        "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
@@ -3991,8 +4651,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOc0ljbmV0N2NwQkdZdEFWS0E5VzRTN05zRHA0QV9BaE51QnNwemozcDlZT1k1bFc5dzlpSFpnckpvTWN5akV6X2ozTTIwZDlQRTNpMEtITDVLVFQ1dVJqUkF4eWViYXJBRU5NWDc5cEVJTHZwNHdSU1dScS1xSGQ2eHJrdU56MkZBMGJYQTFWZUU1UlpKckpfUFdhVGRWWS1kS0E?oc=5",
-          "sourceDate": "Tue, 21 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxPNW5aZWdCUnIzVjZFU0VIeC1NcThYQzh0c05iWmZmUV9XVFpCZU9WenZnRmZBUF84cXIwMzByWmx2MUlKZEtNYlUtMWY2LVZyQ3pRR2hCczU4Y1dvRXRMaGktSjhhMVZDazF5Vk9fY2l5TGpCYk1VamhsSjE5OUc0b0FmX1BsX2VmM0hNRjFDbG1iTzhZbml4ZmFZZFh2U0doUUE4M09IY3l1YUhOcFVzUWdsZ2R3UVpJZXE3YnVOUUgwd1BjTjFManhtRFNBWi1rWlFZQ0I4b2FqeHZCdUVHUEc4ZGdicDJNb0V1RXMtWHhlN0HSAfgBQVVfeXFMUGV5bGNSZjlUcURjQXF6bUs3OHk0aGVCdjZpOGFuSExLWW9rV1MyWGlIMU1RdmdVQW5LR0pDNEJ1eVp5czFKVWFqcTA2ZVM4OWFqY1YtT080aHd3aVhNZ0VNLWdHUS10b1RnSU9FcTgyNGtXa1laaHREbEZ0NG1NQTlOOGFxQnE0VURxRGhqMHNCWnR2RmZGV3l5VEt4NVVmZ2xxYnNFakxKVFN4TU9YcGNVNmZYQmVSNnVpb0kzU090ay1Bck8yQmtUS2pILUlSMmpFdTdCbEZkZm9Eb3UxSV83Yjh3SnFaVlhvdlJVbllYdnFMMXRIZGg?oc=5",
+          "sourceDate": "Mon, 10 Nov 2025 08:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -4055,13 +4715,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 457
+      "latencyMs": 574
     },
     {
       "id": "K2",
       "category": "nse_universe",
       "query": "Explain Lloyds Metals",
-      "headline": "Lloyds Metals And Energy Limited: what's driving the fall",
+      "headline": "Lloyds Metals And Energy Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -4156,13 +4816,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 564
+      "latencyMs": 560
     },
     {
       "id": "K3",
       "category": "nse_universe",
       "query": "What happened to Apar Industries?",
-      "headline": "Apar Industries Limited: what's driving the gain",
+      "headline": "Apar Industries Limited: what's driving the fall",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -4173,7 +4833,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
+        "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY26",
         "metricEvidenceCount": 1,
         "blockedMetricCount": 0
@@ -4258,7 +4918,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 405
+      "latencyMs": 484
     },
     {
       "id": "K4",
@@ -4276,6 +4936,7 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
+        "latestAnnualPeriodFound": "FY26",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
@@ -4296,8 +4957,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxOXzEybGZzYmFuSFVKbjBhOV9vLUVLaWZCcFZsdnc1b3JONnBHNm5zeDU1T0N3NXVEWHFLc3BUTTliZ01IMTZMRVR5d3lneVhjQmNfOWRNTkJlUWQ1cDhBX05OYUd6ZWh1aWMyYzZDWkY0bUlFMVpoQjRIYW8yNUZQemtKUHVjeGs1SjR6OFo0YlFUZmtQcm1WVHNyVVdHeTEyaWNkYW5SbHJyZXBZcVlwM2UtUzU0WHBnX3FwMjV3MmhhQlEyZ0NzZF95N2pIQXRBTkhwWnBRV09NN1FTbUR2cGJLc2pBTThMaVHSAe8BQVVfeXFMTzUtci1BZnNHMVphQjVJa0YwVjBkaG5aVEFiSFE1dDJDSGMtMDZlM1k3UjBScVVINEZVd09KRk9rOGw2cWV3TXJUMThKYTNzMHVjUWhJREtQQ0ZHcXZMMUlManEybFM3X1lGZUJGcXZnT1ZxOUFmaGM3LUxrTXV1dldMb2k5N2RiRHQtYjllZDVJa0c4Z2lPSlpQcDdSQWExcGQyQ2huOG9pU0dnWjdZbVZmc3NTdG05YXZpY2JOeUYyWXFkREY0dFNoOHFiXzJTb2VyNzZXQzhPUkRBdG9qb0JUVUhYcmFmZGFpRGtfNFE?oc=5",
-          "sourceDate": "Fri, 15 May 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxPazhNalhRdTRzMXRERzhWX2JuaUswakhHT0kwQ1ZsMzc4Z0dIdU1HNEp5TTJqSkc5ZTNrMGRZcXl2UVJqNnRfSDEtdWhzWklYeWUtbFl0S2k5X0NLWl84X0o0a01mbGpJa0J1dl95VDd1TDFfNkdHZUFKeGhGamNlWk90RjVrQkF1UEJfQURsMk5xQlZLcUJxVF9WUFJtelMzb2x1WWpOZ1E4N2FoM0lZdC0yVGdTbkpuanIzRlVXU1dGZGlyZ0ZMaV9lSHByMjVId2FQbkR6Z2M3azBscHlWTVdjeDFvLTFkZ1HSAe8BQVVfeXFMTTV2XzZ5bXRSSWtyYUpEM0xCWWZYR2dHblR6eW5xOW1jYzFhYkgxYzZDRzBvaG9NUnF1RUY1cnZFdkRqaVdwSDVyVWxzdDVlUWdQVEY0V1g1bHliSEc0dGZZV2dkd2tNS1R0anNDdzNVcWdNRHQzMkFUYVNON19NU21BRFBud2lMbGE1WHBJQzhOLTJQMlZFMDduejRZbmhzTzNiZ3FxMHlrMklvTEdnM2RIRkNyUFdFWERBckttNm5QVGtsTllfZEU0Rmk1VWF1SDAzR0pRaGtOd1VmbTkxMlJUX3c4Nm0xSUNjeHE5Q2M?oc=5",
+          "sourceDate": "Tue, 12 May 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -4360,7 +5021,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 491
+      "latencyMs": 600
     },
     {
       "id": "K5",
@@ -4399,8 +5060,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxQYVF6cExia1QtVHh0ZEtiaWQyRFloUmxaSkFnM21MN1hYazAzQzRfOVhyb0ZocjJuTFRyZHg5RXNVRnE4X3gyeGdDRnlKeGs1dmFORXJscHJMTE1lWDQ3bl9iNlpMWlFnTWhlUDFXRGV4RG0telFxcmFsdlljNkQ5d1MwTUwwb043UDMtUGxVX2F0Qi04RTMyS0QwaFBLLWtNX1VYQ3lDQnVuV0xFcXFmLXdqR3pZbkNWOFZfRlBDM0pMSWszaGJwQjZ6MFZiRUVLY2tEV21Qc2lyTTBKc1N3cHI1eXlMV3BPYkdQa0RTWU1ITVZfMTl30gH8AUFVX3lxTFA2ZGV2NDdiVTc2MGlZRGZiNnI0akhOZ0lGWkRjdDhkWHlRdTZDQWJWN1c1UFY3Q1RQNjFSem9CaElKQTRkNkNySnYwYldpOEVRV2ZOVnlEekVBWDVsUVFsVDlNaVFJLVJKRG85NXR4ejdkS2xqRkVFVnpKb1l1MFZBdUFLM05xNlpPTUhoMDVOcXlrWmZZYkhyS25YU0dxSjZxX1YtODMwOGJ3STE0dmZyaVB2cG5qRm1aTWhqeUVOdHBFMVJSTG5tMTdlbkxqSjlLYjZvNHRGU2dVMFlXbENfMmE2QW82TXdRWm5sZzVzOUVyOVFQOE5ReG5Jcw?oc=5",
-          "sourceDate": "Sat, 16 May 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMiqAJBVV95cUxPeHJkRWRGYktzNFZzRVdzdUtILXBIVFVYVExYQ1djblZKd1ZHUmp3TlRUakJoWEFBSE0yaXpRYlJKLUVIa1BiMHlnN3l6aVJXNXZDR2xyU0xua3lWNU1OejhlUThTWF9jYUpzX2plajMwM3lQVlVTb0Fyb2tIRm5oTjFDZjROVHJuUnF4S0lNTVJGbTRTc28wSFVuY3pXU09hNVFwNkpfTkJ6ZEh4TzU5VGtmSTZNdlczMllLMU5Fam1nb0s0VUVnejZTVzZ4LVEwS3lCTGRpaUM1LWhoNXYyR0VtN2ZnNlppaVVJX1ZPbzZDN1MwYVJLS1BMZHAyRWdFY3FHUmNZMlNXNHU5LVhjQWVMXzdJemZOS3Jsa1ZVTDMwb1E1enFPStIBrgJBVV95cUxQVXA3aGcxdndGQUpwbGRqazdFZUxhajBVc3hYeFFIeTVvUUgwUTZqUG40Zl8xMFU5YzRJOEZLSmRkVDg0d2pSUUVSN0ZJVXpFbUZyU3VZLVNOYnB5X1NmdXhTWFUyWDdIQ1RlN19mWjZCVU1qUWNZTjJXRjR6Sjc3R3JId1NiMWlmRm5PSkZmUndqTjRzUlZmN0dlN0R2QzB3NktnV0h4eDMtUVg2bzRMVEprVjFMUWlhX3lIVk1iSHpBajFkOVZ5cm1fRG1mVUFIRWNkQy1xcVVJTzYzRkpydGNRNzRYN3Q5Um94RzZnbE1PT3p6b2piT3lxYVQ3QUFadlp0YWo0ZGFLRGxvZlVmcC0xZ0RlcTZiUWFEMVpHMlhMa1FJNk5ySGVjV3k2QQ?oc=5",
+          "sourceDate": "Fri, 19 Jun 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -4462,7 +5123,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 572
+      "latencyMs": 624
     },
     {
       "id": "K6",
@@ -4499,7 +5160,7 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxOUF9zbDc1aWdrU293U1dIa1JzUlZTT19uR0dEQWRNUUNhUl9na1VoSlIwSzVNYjRGNkhNYnN3azktb3dHcUlia0dac2xyUE9BcUl0alJRR0hJeVY4ekE2OWN5NU1RdTR5YXhKZXpPUzBNZDh1S3ZWRjk5VjFwOVF4bVliT1FGZVZzZGxsV1VXZ1V1ajRWZ2tBRkpNT1JUVTQ2ZjkwUmJuUGQ2bzV0bzYzVXFmT3IyWmdYanZDVXVBZFppcUdjeUZWbU95a0hrYWlZeUxNdncyX3VCQUNVTGx6YWxvNXZUZTk2TjZN?oc=5",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi6wFBVV95cUxOUF9zbDc1aWdrU293U1dIa1JzUlZTT19uR0dEQWRNUUNhUl9na1VoSlIwSzVNYjRGNkhNYnN3azktb3dHcUlia0dac2xyUE9BcUl0alJRR0hJeVY4ekE2OWN5NU1RdTR5YXhKZXpPUzBNZDh1S3ZWRjk5VjFwOVF4bVliT1FGZVZzZGxsV1VXZ1V1ajRWZ2tBRkpNT1JUVTQ2ZjkwUmJuUGQ2bzV0bzYzVXFmT3IyWmdYanZDVXVBZFppcUdjeUZWbU95a0hrYWlZeUxNdncyX3VCQUNVTGx6YWxvNXZUZTk2TjZN0gHwAUFVX3lxTE1xM2hUY0ZucU5CbExmX0h4V1hJUFRQUXNBcXRBbHBxeXJDSHpSVk5PWlcySlBBNnU0Q2MxTmhBeWRCMEVCeXl1UTBiaTIyX1A4aVFDU3JjeU16YjlQM01UTV9tQTVrZHYwYkJiU0tBSVNYcEpYN2ZsWEk3RExBeU9RcXdkOGRpZjh2QlFZXzRTYnYxbEdwaHdjdmR4UVpwNTlnNW1acWs3Ri1fZ0hadlJsc1pnOVJVMW55MUVvdVNYdnJTVWk5WXpTS0N4dXdHU2FfR0FXX0xkd19haUdiYkJydmptUEhZTXRkaUQwMDhpSA?oc=5",
           "sourceDate": "Sat, 14 Feb 2026 08:00:00 GMT",
           "confidence": "retrieved"
         },
@@ -4563,13 +5224,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 521
+      "latencyMs": 555
     },
     {
       "id": "K7",
       "category": "nse_universe",
       "query": "What changed in Angel One?",
-      "headline": "Angel One Limited: what's driving the fall",
+      "headline": "Angel One Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -4666,7 +5327,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 571
+      "latencyMs": 595
     },
     {
       "id": "K8",
@@ -4705,7 +5366,7 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi7gFBVV95cUxOMVJqWGF3VHNWbWZyeWtfTGdXS0xUOGFJZmR4R0ViSThBRDNVRlpkU1k5SHloM3NqSE9VckViSENZQ1hGaktKNmw4NV91YU5xaHFxOG9zOGJvcklDWWd6UkRvVzUyVjU1d0hVNmZzZk9rQVQwY3ZpV3BwM2ttbC1UZjczUnFUMTE3R0F1MFY0LUlZSVkyRHlQVHp6SUxhczhaVXhNT1dxWDQ3YjBncFpqSkJoUlR6Wnl4SmtVbXZOdnR2MjVOWUNBemhWeHl1OHBEdWo3T0JsUkpWTFlCdGlwcldNWEZOMVVjRWd3SHdR?oc=5",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi4wFBVV95cUxQMVlvcTJXOHJ5QmVUc01oSzg3N2x4aWJYZEVTbDRmZE1sTUNuLUx4TVpaTm1WaTRhdlo4NUkyT0pwQmhLaEVLVVBtWEU1cmFjNFNPU3g3eXBtdjdPZjZmQl9JZ09CUzlwelNMdE9OZldSNXVIdDhaM3JaTG1ZQVBlZEN6Q3RDTlJKOVE5Zl9SbXZHX1htcmNUWEtYa0JESUpXM2pNVTZmUlN1OUlTQTktS1g5bHU3c21BV0VGNENZWFVLWXFRM3BHMVpicXdLdEx0cTFsVGJmT3ZYOEh0QVJCSDVacw?oc=5",
           "sourceDate": "Fri, 03 Jul 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
@@ -4718,8 +5379,7 @@
         {
           "item": "investorPresentation",
           "label": "Latest investor presentation",
-          "status": "missing",
-          "limitation": "No investor presentation found from current sources."
+          "status": "found"
         },
         {
           "item": "annualReport",
@@ -4768,13 +5428,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 481
+      "latencyMs": 518
     },
     {
       "id": "K9",
       "category": "nse_universe",
       "query": "Explain BSE Ltd",
-      "headline": "BSE Limited: what's driving the fall",
+      "headline": "BSE Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -4805,8 +5465,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQN2FJaG04eWJkVXQ2Y21EMFJrNExXZjJSdlRtZmY5UkMwNEx1elVPSVJ2alVwN21KbzlyS1ptRlJ4T3haVTdNMFp3XzdkUld6a1JRVGljaURlc243Q0s3bkN2M29pNW1OWHJoSzk0Y0daTzZoaHhWdkt0SmpIS1VqQUdJZ1MyUDJVajBDbW5LQkVTUUtLa2RDbmQ3QTAwc3VzZVh3Q1ROMjdiZ1BXWE9CUWI1dml3VF8tSUpHdGJGOXc5MEEwVTZHRXIwTdIB0AFBVV95cUxOVjJvY3IzWmtyWDFIb0pfZFRrTXVRMmlPYmdocF8wb0hNcnNXRDJaSHRmTXhHZS1GMWlqLXkxZW1HcDd1eHdKWVZDUTlCNS0zZVM4SWwxUm5Yb1dCV0xDd3dvN08zVlhpRzBmV0pWdGYzRWw4VVpMdWNwQnpySDB1Z1l2SXFyTWxkTy1IUDUyRlFJajVjNEdCNjBnVjFFMzRKMVh5dHRhTnExTlYxODFfV1ZLV2JTYmhycU9uUEw2QUpYQjlfejRLQ0ZvR05GOGl0?oc=5",
-          "sourceDate": "Mon, 19 Jan 2026 08:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMiowFBVV95cUxPdkJHWmI1MHZQX2dQVGZvWng4WFY4blNDYjhXSVVJYS1Lb1pjOHd3RjYtS2J1Wk42STFSaUFSXzRwSnJvekt4WDVUY0dWVjFFMC1LeC1hVlFwOEUtdmtwWk8yZDJPbFFyS005UklmSjBlOUx1alBqX2ZWY0E2dHVZWXB0dHBSdXo5aWx2VWZLWjRoblZCNC1UcDkxVDBpT2JKN1Jr?oc=5",
+          "sourceDate": "Wed, 17 Jun 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -4831,8 +5491,8 @@
           "item": "shareholding",
           "label": "Latest shareholding pattern",
           "status": "found",
-          "latestPeriod": "Thu, 25 Jun 2026 06:42:07 GMT",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi9AFBVV95cUxNbkRjYjRVYjdBbkg3VDYtTFVOcVpuRDNuUjJSdjlZNFUtaWJ5a1A1YWhkc3d6OUF6ekk2OUEya0gybGJONFF5U2pic3U3dXhTV0F6T1pvSURJRUs3eGN3WTJ3ZEMxSFBSaXlwUUtSMTVlcEdIOHFROXpJMXRVb2NaZDFCZWN3cEk0LWtSSDZ4VkVVTzVYMzdyVm9CUW5paHNST3UzMTQ3Zkk2SkU4cVFyN0pwb1dCOTF5aUlTWVl5MHNkZlNaOGZoUGI0MDZXNU5zS1BNa0dsUVVtX0xPT2RBeEhPSmRCT0FMeTU2cU5kbE8wUlRk?oc=5",
+          "latestPeriod": "Wed, 15 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMidkFVX3lxTFBfMWZtbHFmU3JGbWdsYmhMcEJWdXBzRHE3M08xenhpWnozYXRiRnJmUkc3UE9oeEd0emFEOTlYOHZaWkhBRHJ4Yl81aTZjS1Q3Z3V5a1VRaGJnbDZLbjU2OUZFZFJBR1JFQzQ3ajNURno2Z0l0S0E?oc=5",
           "confidence": "retrieved"
         },
         {
@@ -4871,7 +5531,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 743
+      "latencyMs": 860
     },
     {
       "id": "K10",
@@ -4973,13 +5633,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 513
+      "latencyMs": 563
     },
     {
       "id": "K11",
       "category": "nse_universe",
       "query": "Shareholding pattern of Dixon Technologies",
-      "headline": "Dixon Technologies (India) Limited: what's driving the gain",
+      "headline": "Dixon Technologies (India) Limited: what's driving the fall",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -4990,9 +5650,9 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "FY26",
+        "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY26",
-        "metricEvidenceCount": 1,
+        "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -5012,8 +5672,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMijwJBVV95cUxPeFhvNDlHUVE3d19uZUtRTlYyOXEtV1ZFMWJpVF9uUFRmQjdBeVFmdjNTcjUyVjZDUFVZTlVKckFYZWhZMGxwazhWcDNhRkJtOWpaU1hnNWJRNXc3YkRGbmh1UkZuMGdJUVdhdEZsekpEWC1ESkhCdF91ckZ5TzJobzJ4VUN2dXNVc3MybjVLeE9zLWlSbVdHM0xiem9EZFEtSnNUbDRSZVJDQVNhakZKUWthb25PanZqQ2tFYjZZN1Z2UTFBUFd6ak80c1UxOF9QcmR4WnB3QVJxc0paYnZWRjNSMng1ZGx0SW1MTXN2Q0xYWk5lLUMySzRwZUZDM2xvS2RLbzlFdVl3VDlSeE1F0gGUAkFVX3lxTE01NVZPT0JRVl84NDI2MEpiUEJsLUtUS3V5UVlGV2w2eUMtejZLM3R1RGV5eWdneHNOTG9WcVEtekhYdVZYUzZ2Q0dQR3RkdXoteUVVZG1sS1FoNnRGUTlPMF8wYlZOYmpDc3dtaXFfRlowaWJCT1VPdlltRFQycHhVRk9rWG4zZjVvckMybjltb3lFcHhGOEJxRDBsYTFDTG0tb05IdDFNWmpMWk02cDUyUVBxbS13ME5xWnlmWUg3TmFGeU5fS1NXRFhzRndqa1FZTXQ0REhCLWFNS1ZuU1l3ZVZVNDN2eDVCWnpyc25uN0NaRTFONUJWMWZLQm84MXhyNHBiREFCS09DOXdBeUlheFJabQ?oc=5",
-          "sourceDate": "Wed, 10 Jun 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxObTdVRFNPY1Frc1ZQemxMZzJMd2NlZjhCLVo3TTF6dlI2cmkwbXIxdkF2OURoQzRlT1FOeEFuanhEOVk1SktRel9yZ0ZRSlc0eEVYVnB4WnRsMDJxcEp3WHZsVWVLUFNjSFNvb2xSc3cyM3JvNnc5eHVHODZYaGFxUEVYUGsxd3hBSDBFZFpPcDhLRjRzQWR4d2FlaUd6VFNzMWRuNDVXMVhQUTFqYXFlRE9LTUdCdnhZNnA5bHlpTm5yVGpCMGxrSnA1ZzdYWUdVb3FQQjlDSUdaMnFqbkJOMDdaNHRUTUNLZHUyei1GYw?oc=5",
+          "sourceDate": "Wed, 17 Jun 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -5054,7 +5714,8 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "found"
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
         },
         {
           "item": "sectorMacro",
@@ -5075,13 +5736,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 559
+      "latencyMs": 763
     },
     {
       "id": "K12",
       "category": "nse_universe",
       "query": "Why is Kaynes Technology moving?",
-      "headline": "Kaynes Technology India Limited: what's driving the gain",
+      "headline": "Kaynes Technology India Limited: what's driving the fall",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -5094,7 +5755,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 2,
+        "metricEvidenceCount": 4,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -5114,8 +5775,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQSFdlU2l4UjJDNTRxeUQ0aU5LX2lBM09YNkxkUXZ6VVVYaHRtNVdibkFDRjZtMS1NMm9hVEVZN29jQzBibEF4dmFkWnotVnFmamJNQmcyVG53QUV3T3ZEVWJfcVo2eVZsWkF1dVpSVnVsbFhiMzZqR3FvNjJvYjV5TmlNVWZpM2FNcVpNX2pKWE5xSGRNTUFKXzQ3THVHM0hYX0ZYc0x1eE1Nc01yT2pVc1VxTUtTTWtSRFJOckdn?oc=5",
-          "sourceDate": "Mon, 18 May 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxQRXpjMlUzSHNJRzlBcVEtVTFmbndBYkU1OWFkVkhhM1JXR2dyY3FuLVdDS3NtOE10UUxjRjFyMndSQmJuX1N5TU9pazNTakJrNndPd2J5SnZrV3otVXMzbEhIU0FYUF9zUmIwbktlS2pMcE81djUzT2J2VzdDUnZfLXRJTjVaQkVKQ1BNcmw0MU5SUURSWk9BTU9BMWs2d05kSENEcXJMWGpteEdqbkxSUW5EbjliQlVNNFl3MUprMHRuZUxHMlRzYzAxcGM4S29RYVVYYmNCSDNTaTk00gHiAUFVX3lxTFBibVFaZ0VheTg4YkpiN041TXA3VWo3NkJSWVpsTVMtVHFHT0tWRktfVU1YSzlwbDhFU0Z4eXN1RDhfQU1pWEJiR2pJampJWk9Yd1ZqRnNoNHNzdFVpX2hReHFUWG0zU1Y1ZlRSWXRQOVRUeEZDN0VvaWE5Z1RSQTlKWHZ6a3ZNWWtBa0YtVk5BSERBWUYzZnFueU8xdEptYVBvc25heEJYaWNILTdDZE5OTGViTVROZ0EtSm5kREVET1FCcVNQckdXQlVwQWVKa01VQWNFLWFCb1cwRGVpTVZWT3c?oc=5",
+          "sourceDate": "Wed, 20 May 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -5177,13 +5838,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 552
+      "latencyMs": 586
     },
     {
       "id": "K13",
       "category": "nse_universe",
       "query": "Explain Cochin Shipyard",
-      "headline": "Cochin Shipyard Limited: what's driving the fall",
+      "headline": "Cochin Shipyard Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -5278,7 +5939,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 532
+      "latencyMs": 573
     },
     {
       "id": "K14",
@@ -5296,7 +5957,6 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
-        "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
@@ -5381,13 +6041,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 509
+      "latencyMs": 564
     },
     {
       "id": "K15",
       "category": "nse_universe",
       "query": "Why is Newgen Software moving?",
-      "headline": "Newgen Software Technologies Limited: what's driving the fall",
+      "headline": "Newgen Software Technologies Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -5398,8 +6058,8 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q2FY27",
-        "metricEvidenceCount": 4,
+        "latestPeriodFound": "Q4FY26",
+        "metricEvidenceCount": 2,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -5419,8 +6079,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxPeEtIN0FDRjRUSHBoYlY3X0NjSlQxNWdOak5lNU96ZEsxa3hCbnpQZjBYVjNtTVIxTTFvdEVuTUJfMFVQREZHOFNHYi1wdTN0R25HeTBXZnpsNG5YbVBlamdrWWp6RllLVzB5Z0d4c01Hay15UnBnMEhScFl5RWdnVW5IZFltbnpCTmVlckpMM19mOXAyWTVGa2xwTV8tSVhlLU1HOTZPRzFVUVBCTFdnM0JTNXk1dFhZVGhNRkNXRkFUV3NoNkthamdHZzhqaTVJUm5WZTVRbV9mZk5ZcTFTOGNuQUtGOXpz0gHuAUFVX3lxTFBpbWZIOE1VWTJCQ1BnNF8tdGlLU0lNaER3SG9MWTBmaHBrVjhtRkJLYUFhSmZCQ05nVnBTdVN1RzlSMVM3OGJlYzhTRVZVWW02cmcwUV9hYXZ4QUl1VDd0c1k1TXVhT1g3ZnFQNmhVeHplRHJKek5HWHhVUHU0TlNBajZFQWlkdkpzUExrQUxxMGVIWGVDbWpmMnpLYnFZS2dIbEVFbXFNWkpiWjFEN1Z3VjJOUWc2WDRoSE5EZlYwTEhiSnhrMnNtNDlKQzUtSjFTam9iQU1DNFgxWVlxVlg0amNkYmROaEkzTjhfU2c?oc=5",
-          "sourceDate": "Mon, 09 Feb 2026 08:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxQcV9EX0szWklMaUh4Z3pELVRPbmt1TlRrWWhKbWdPakxuSUJyX0lBUS1OZWgtUXZNUGoxVEtXXzZaZTRDVThuMGlEeGFpeGtuQ1VDYmFzUFBoTEN4ZHAwMEttNGZUaTZyczk0S29kc1NiOWVuOHF1RjBNOXRrQkJ1Z3AzZlVJNWpDRS1TS2dCTGtnanFudkRXZWhqWjFsRjRFbHd1dHd6ejd4QVBQcjdhakgwNkVBSzdMeVpVZnNGQ2hwaDFsVlZBSHctWXZBcXRubnpESHNRNHBXUdIB2gFBVV95cUxQcV9EX0szWklMaUh4Z3pELVRPbmt1TlRrWWhKbWdPakxuSUJyX0lBUS1OZWgtUXZNUGoxVEtXXzZaZTRDVThuMGlEeGFpeGtuQ1VDYmFzUFBoTEN4ZHAwMEttNGZUaTZyczk0S29kc1NiOWVuOHF1RjBNOXRrQkJ1Z3AzZlVJNWpDRS1TS2dCTGtnanFudkRXZWhqWjFsRjRFbHd1dHd6ejd4QVBQcjdhakgwNkVBSzdMeVpVZnNGQ2hwaDFsVlZBSHctWXZBcXRubnpESHNRNHBXUQ?oc=5",
+          "sourceDate": "Fri, 10 Jul 2026 09:20:58 GMT",
           "confidence": "retrieved"
         },
         {
@@ -5482,13 +6142,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 517
+      "latencyMs": 535
     },
     {
       "id": "K16",
       "category": "nse_universe",
       "query": "Explain Angel One",
-      "headline": "Angel One Limited: what's driving the fall",
+      "headline": "Angel One Limited: what's driving the gain",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -5583,7 +6243,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 474
+      "latencyMs": 541
     },
     {
       "id": "K17",
@@ -5600,7 +6260,7 @@
         "evidenceDepth": "deep",
         "sourceBudget": 22,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q1FY27",
+        "latestPeriodFound": "FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 1,
         "blockedMetricCount": 0
@@ -5684,7 +6344,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 486
+      "latencyMs": 550
     },
     {
       "id": "K18",
@@ -5786,7 +6446,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 38
+      "latencyMs": 94
     },
     {
       "id": "K19",
@@ -5804,6 +6464,7 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
+        "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
@@ -5888,7 +6549,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 688
+      "latencyMs": 1007
     },
     {
       "id": "K20",
@@ -5927,8 +6588,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxPUm9VMHlvMDdhaGpyT0RRUXRnZnVjcDZaeUFKQmsyTVZTWTNrMy1VbUYtWlkzcExnN2V6UXRkbVhDSlFLbFhnNmNGb0xuR255NkRBeFNMSWRhLXRnUFdFdldjSThILXZJbC1TRTdnaC15bHZkdFFPemxjVmtjcXdyMXQ2X0ZyU2cyRnRFVm1VSFhocndxWjhVQlNtTVB1Q1RoSUF3c09BXzNob1BJb2d5VkNoWFB1eFdBWFVjVy0xNlhnV0ZCVEMwYzlYVktVMU1ZOXl1TFlR0gHWAUFVX3lxTE9Sb1UweW8wN2FoanJPRFFRdGdmdWNwNlp5QUpCazJNVlNZM2szLVVtRi1aWTNwTGc3ZXpRdGRtWENKUUtsWGc2Y0ZvTG5Hbnk2REF4U0xJZGEtdGdQV0V2V2NJOEgtdklsLVNFN2doLXlsdmR0UU96bGNWa2Nxd3IxdDZfRnJTZzJGdEVWbVVIWGhyd3FaOFVCU21NUHVDVGhJQXdzT0FfM2hvUElvZ3lWQ2hYUHV4V0FYVWNXLTE2WGdXRkJUQzBjOVhWS1UxTVk5eXVMWVE?oc=5",
-          "sourceDate": "Mon, 06 Jul 2026 00:14:39 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxPV2pfZnFkekU0eVc4Xzh6dlh5b3ZCOGF0UGFiSDhmeU56RnJ2NVdINGVacW9GU1g2UGZ5Y0w0N0ZDTDBpNWxGVkVlMnNySkVpMmlGY1ZqXzJHLWNrbDE3OWVTZ2c4UG1zLTlKbXhYY2Nwam94TWFKTlR5VU8xQm5rR1dDRjRqVzZYTHBjemNYMzBRTXpmZzNlZGVxcFRDUkNHRDlfRTZxQzhVOXBhWjQxV2RveGFQMlFoM25sTkhXeDBfbGx6UkVISHZVa09fSDFG0gHWAUFVX3lxTE9Sb1UweW8wN2FoanJPRFFRdGdmdWNwNlp5QUpCazJNVlNZM2szLVVtRi1aWTNwTGc3ZXpRdGRtWENKUUtsWGc2Y0ZvTG5Hbnk2REF4U0xJZGEtdGdQV0V2V2NJOEgtdklsLVNFN2doLXlsdmR0UU96bGNWa2Nxd3IxdDZfRnJTZzJGdEVWbVVIWGhyd3FaOFVCU21NUHVDVGhJQXdzT0FfM2hvUElvZ3lWQ2hYUHV4V0FYVWNXLTE2WGdXRkJUQzBjOVhWS1UxTVk5eXVMWVE?oc=5",
+          "sourceDate": "Mon, 06 Jul 2026 00:14:38 GMT",
           "confidence": "retrieved"
         },
         {
@@ -5990,7 +6651,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 477
+      "latencyMs": 473
     },
     {
       "id": "M1",
@@ -6009,7 +6670,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6092,7 +6753,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 451
+      "latencyMs": 596
     },
     {
       "id": "M2",
@@ -6111,7 +6772,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6194,7 +6855,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 41
+      "latencyMs": 56
     },
     {
       "id": "M3",
@@ -6213,7 +6874,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6296,7 +6957,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 612
+      "latencyMs": 514
     },
     {
       "id": "M4",
@@ -6315,7 +6976,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6398,7 +7059,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 35
+      "latencyMs": 46
     },
     {
       "id": "M5",
@@ -6417,7 +7078,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6500,7 +7161,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 58
+      "latencyMs": 59
     },
     {
       "id": "M6",
@@ -6518,8 +7179,8 @@
         "sourceBudget": 12,
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
-        "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 2,
+        "latestAnnualPeriodFound": "FY26",
+        "metricEvidenceCount": 0,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6581,7 +7242,8 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "found"
+          "status": "missing",
+          "limitation": "Latest sourced financial metrics were not available from current sources."
         },
         {
           "item": "sectorMacro",
@@ -6602,7 +7264,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 487
+      "latencyMs": 528
     },
     {
       "id": "M7",
@@ -6619,7 +7281,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "FY27",
+        "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
@@ -6641,8 +7303,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOc0ljbmV0N2NwQkdZdEFWS0E5VzRTN05zRHA0QV9BaE51QnNwemozcDlZT1k1bFc5dzlpSFpnckpvTWN5akV6X2ozTTIwZDlQRTNpMEtITDVLVFQ1dVJqUkF4eWViYXJBRU5NWDc5cEVJTHZwNHdSU1dScS1xSGQ2eHJrdU56MkZBMGJYQTFWZUU1UlpKckpfUFdhVGRWWS1kS0E?oc=5",
-          "sourceDate": "Tue, 21 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxPNW5aZWdCUnIzVjZFU0VIeC1NcThYQzh0c05iWmZmUV9XVFpCZU9WenZnRmZBUF84cXIwMzByWmx2MUlKZEtNYlUtMWY2LVZyQ3pRR2hCczU4Y1dvRXRMaGktSjhhMVZDazF5Vk9fY2l5TGpCYk1VamhsSjE5OUc0b0FmX1BsX2VmM0hNRjFDbG1iTzhZbml4ZmFZZFh2U0doUUE4M09IY3l1YUhOcFVzUWdsZ2R3UVpJZXE3YnVOUUgwd1BjTjFManhtRFNBWi1rWlFZQ0I4b2FqeHZCdUVHUEc4ZGdicDJNb0V1RXMtWHhlN0HSAfgBQVVfeXFMUGV5bGNSZjlUcURjQXF6bUs3OHk0aGVCdjZpOGFuSExLWW9rV1MyWGlIMU1RdmdVQW5LR0pDNEJ1eVp5czFKVWFqcTA2ZVM4OWFqY1YtT080aHd3aVhNZ0VNLWdHUS10b1RnSU9FcTgyNGtXa1laaHREbEZ0NG1NQTlOOGFxQnE0VURxRGhqMHNCWnR2RmZGV3l5VEt4NVVmZ2xxYnNFakxKVFN4TU9YcGNVNmZYQmVSNnVpb0kzU090ay1Bck8yQmtUS2pILUlSMmpFdTdCbEZkZm9Eb3UxSV83Yjh3SnFaVlhvdlJVbllYdnFMMXRIZGg?oc=5",
+          "sourceDate": "Mon, 10 Nov 2025 08:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -6705,7 +7367,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 35
+      "latencyMs": 42
     },
     {
       "id": "M8",
@@ -6724,7 +7386,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6807,7 +7469,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 39
+      "latencyMs": 51
     },
     {
       "id": "N1",
@@ -6826,7 +7488,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6909,7 +7571,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 34
+      "latencyMs": 47
     },
     {
       "id": "N2",
@@ -6926,8 +7588,8 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
-        "metricEvidenceCount": 0,
+        "latestPeriodFound": "Q1FY27",
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -6966,8 +7628,7 @@
         {
           "item": "annualReport",
           "label": "Latest annual report",
-          "status": "missing",
-          "limitation": "No annual report found from current sources."
+          "status": "found"
         },
         {
           "item": "shareholding",
@@ -6989,8 +7650,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -7011,7 +7671,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 45
+      "latencyMs": 54
     },
     {
       "id": "N3",
@@ -7028,7 +7688,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q1FY27",
+        "latestPeriodFound": "FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 1,
         "blockedMetricCount": 0
@@ -7112,7 +7772,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 38
+      "latencyMs": 44
     },
     {
       "id": "N4",
@@ -7151,8 +7811,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi1gFBVV95cUxPUm9VMHlvMDdhaGpyT0RRUXRnZnVjcDZaeUFKQmsyTVZTWTNrMy1VbUYtWlkzcExnN2V6UXRkbVhDSlFLbFhnNmNGb0xuR255NkRBeFNMSWRhLXRnUFdFdldjSThILXZJbC1TRTdnaC15bHZkdFFPemxjVmtjcXdyMXQ2X0ZyU2cyRnRFVm1VSFhocndxWjhVQlNtTVB1Q1RoSUF3c09BXzNob1BJb2d5VkNoWFB1eFdBWFVjVy0xNlhnV0ZCVEMwYzlYVktVMU1ZOXl1TFlR0gHWAUFVX3lxTE9Sb1UweW8wN2FoanJPRFFRdGdmdWNwNlp5QUpCazJNVlNZM2szLVVtRi1aWTNwTGc3ZXpRdGRtWENKUUtsWGc2Y0ZvTG5Hbnk2REF4U0xJZGEtdGdQV0V2V2NJOEgtdklsLVNFN2doLXlsdmR0UU96bGNWa2Nxd3IxdDZfRnJTZzJGdEVWbVVIWGhyd3FaOFVCU21NUHVDVGhJQXdzT0FfM2hvUElvZ3lWQ2hYUHV4V0FYVWNXLTE2WGdXRkJUQzBjOVhWS1UxTVk5eXVMWVE?oc=5",
-          "sourceDate": "Mon, 06 Jul 2026 00:14:39 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi0AFBVV95cUxPV2pfZnFkekU0eVc4Xzh6dlh5b3ZCOGF0UGFiSDhmeU56RnJ2NVdINGVacW9GU1g2UGZ5Y0w0N0ZDTDBpNWxGVkVlMnNySkVpMmlGY1ZqXzJHLWNrbDE3OWVTZ2c4UG1zLTlKbXhYY2Nwam94TWFKTlR5VU8xQm5rR1dDRjRqVzZYTHBjemNYMzBRTXpmZzNlZGVxcFRDUkNHRDlfRTZxQzhVOXBhWjQxV2RveGFQMlFoM25sTkhXeDBfbGx6UkVISHZVa09fSDFG0gHWAUFVX3lxTE9Sb1UweW8wN2FoanJPRFFRdGdmdWNwNlp5QUpCazJNVlNZM2szLVVtRi1aWTNwTGc3ZXpRdGRtWENKUUtsWGc2Y0ZvTG5Hbnk2REF4U0xJZGEtdGdQV0V2V2NJOEgtdklsLVNFN2doLXlsdmR0UU96bGNWa2Nxd3IxdDZfRnJTZzJGdEVWbVVIWGhyd3FaOFVCU21NUHVDVGhJQXdzT0FfM2hvUElvZ3lWQ2hYUHV4V0FYVWNXLTE2WGdXRkJUQzBjOVhWS1UxTVk5eXVMWVE?oc=5",
+          "sourceDate": "Mon, 06 Jul 2026 00:14:38 GMT",
           "confidence": "retrieved"
         },
         {
@@ -7214,7 +7874,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 34
+      "latencyMs": 43
     },
     {
       "id": "N5",
@@ -7231,7 +7891,7 @@
         "evidenceDepth": "standard",
         "sourceBudget": 12,
         "coverageStatus": "partial",
-        "latestPeriodFound": "FY27",
+        "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
@@ -7253,8 +7913,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOc0ljbmV0N2NwQkdZdEFWS0E5VzRTN05zRHA0QV9BaE51QnNwemozcDlZT1k1bFc5dzlpSFpnckpvTWN5akV6X2ozTTIwZDlQRTNpMEtITDVLVFQ1dVJqUkF4eWViYXJBRU5NWDc5cEVJTHZwNHdSU1dScS1xSGQ2eHJrdU56MkZBMGJYQTFWZUU1UlpKckpfUFdhVGRWWS1kS0E?oc=5",
-          "sourceDate": "Tue, 21 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxPNW5aZWdCUnIzVjZFU0VIeC1NcThYQzh0c05iWmZmUV9XVFpCZU9WenZnRmZBUF84cXIwMzByWmx2MUlKZEtNYlUtMWY2LVZyQ3pRR2hCczU4Y1dvRXRMaGktSjhhMVZDazF5Vk9fY2l5TGpCYk1VamhsSjE5OUc0b0FmX1BsX2VmM0hNRjFDbG1iTzhZbml4ZmFZZFh2U0doUUE4M09IY3l1YUhOcFVzUWdsZ2R3UVpJZXE3YnVOUUgwd1BjTjFManhtRFNBWi1rWlFZQ0I4b2FqeHZCdUVHUEc4ZGdicDJNb0V1RXMtWHhlN0HSAfgBQVVfeXFMUGV5bGNSZjlUcURjQXF6bUs3OHk0aGVCdjZpOGFuSExLWW9rV1MyWGlIMU1RdmdVQW5LR0pDNEJ1eVp5czFKVWFqcTA2ZVM4OWFqY1YtT080aHd3aVhNZ0VNLWdHUS10b1RnSU9FcTgyNGtXa1laaHREbEZ0NG1NQTlOOGFxQnE0VURxRGhqMHNCWnR2RmZGV3l5VEt4NVVmZ2xxYnNFakxKVFN4TU9YcGNVNmZYQmVSNnVpb0kzU090ay1Bck8yQmtUS2pILUlSMmpFdTdCbEZkZm9Eb3UxSV83Yjh3SnFaVlhvdlJVbllYdnFMMXRIZGg?oc=5",
+          "sourceDate": "Mon, 10 Nov 2025 08:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -7317,13 +7977,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 34
+      "latencyMs": 41
     },
     {
       "id": "BD9",
       "category": "market_summary",
       "query": "what happened in market today 06-07-26",
-      "headline": "Indian market today: the India read",
+      "headline": "Indian market: 06-07-26 (2026-07-06) recap",
       "evidence": {
         "sourceCount": 10,
         "verifiedSourceCount": 0,
@@ -7340,13 +8000,13 @@
       "type": "current_market_research",
       "refused": false,
       "blocks": 5,
-      "charts": 5,
+      "charts": 3,
       "sources": 10,
-      "limitations": 2,
+      "limitations": 4,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 598
+      "latencyMs": 570
     },
     {
       "id": "G6",
@@ -7366,7 +8026,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 8
+      "latencyMs": 21
     },
     {
       "id": "CF0",
@@ -7387,13 +8047,13 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 29
     },
     {
       "id": "CF1",
       "category": "conversation_followup",
       "query": "give me a bullet point summary",
-      "headline": "Bullet summary: Indian market today",
+      "headline": "Bullet summary: Indian market",
       "score": 100,
       "pass": true,
       "threshold": 80,
@@ -7404,11 +8064,11 @@
       "blocks": 0,
       "charts": 0,
       "sources": 10,
-      "limitations": 2,
+      "limitations": 4,
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 17
+      "latencyMs": 30
     },
     {
       "id": "CF2",
@@ -7429,7 +8089,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 19
     },
     {
       "id": "CF3",
@@ -7450,7 +8110,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 16
+      "latencyMs": 31
     },
     {
       "id": "CF4",
@@ -7471,7 +8131,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 23
     },
     {
       "id": "CF5",
@@ -7523,7 +8183,8 @@
         {
           "item": "investorPresentation",
           "label": "Latest investor presentation",
-          "status": "found"
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
         },
         {
           "item": "annualReport",
@@ -7576,7 +8237,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 43
+      "latencyMs": 60
     },
     {
       "id": "CF6",
@@ -7597,7 +8258,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 12
+      "latencyMs": 28
     },
     {
       "id": "CF7",
@@ -7627,7 +8288,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 46
+      "latencyMs": 67
     },
     {
       "id": "CF8",
@@ -7648,7 +8309,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 32
     },
     {
       "id": "CF9",
@@ -7669,7 +8330,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 14
+      "latencyMs": 29
     },
     {
       "id": "O1",
@@ -7688,7 +8349,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 3,
+        "metricEvidenceCount": 7,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -7771,7 +8432,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 471
+      "latencyMs": 761
     },
     {
       "id": "O2",
@@ -7788,7 +8449,7 @@
         "evidenceDepth": "deep",
         "sourceBudget": 22,
         "coverageStatus": "partial",
-        "latestPeriodFound": "FY27",
+        "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
         "metricEvidenceCount": 0,
         "blockedMetricCount": 0
@@ -7810,8 +8471,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMiogFBVV95cUxOc0ljbmV0N2NwQkdZdEFWS0E5VzRTN05zRHA0QV9BaE51QnNwemozcDlZT1k1bFc5dzlpSFpnckpvTWN5akV6X2ozTTIwZDlQRTNpMEtITDVLVFQ1dVJqUkF4eWViYXJBRU5NWDc5cEVJTHZwNHdSU1dScS1xSGQ2eHJrdU56MkZBMGJYQTFWZUU1UlpKckpfUFdhVGRWWS1kS0E?oc=5",
-          "sourceDate": "Tue, 21 Apr 2026 07:00:00 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi8wFBVV95cUxPNW5aZWdCUnIzVjZFU0VIeC1NcThYQzh0c05iWmZmUV9XVFpCZU9WenZnRmZBUF84cXIwMzByWmx2MUlKZEtNYlUtMWY2LVZyQ3pRR2hCczU4Y1dvRXRMaGktSjhhMVZDazF5Vk9fY2l5TGpCYk1VamhsSjE5OUc0b0FmX1BsX2VmM0hNRjFDbG1iTzhZbml4ZmFZZFh2U0doUUE4M09IY3l1YUhOcFVzUWdsZ2R3UVpJZXE3YnVOUUgwd1BjTjFManhtRFNBWi1rWlFZQ0I4b2FqeHZCdUVHUEc4ZGdicDJNb0V1RXMtWHhlN0HSAfgBQVVfeXFMUGV5bGNSZjlUcURjQXF6bUs3OHk0aGVCdjZpOGFuSExLWW9rV1MyWGlIMU1RdmdVQW5LR0pDNEJ1eVp5czFKVWFqcTA2ZVM4OWFqY1YtT080aHd3aVhNZ0VNLWdHUS10b1RnSU9FcTgyNGtXa1laaHREbEZ0NG1NQTlOOGFxQnE0VURxRGhqMHNCWnR2RmZGV3l5VEt4NVVmZ2xxYnNFakxKVFN4TU9YcGNVNmZYQmVSNnVpb0kzU090ay1Bck8yQmtUS2pILUlSMmpFdTdCbEZkZm9Eb3UxSV83Yjh3SnFaVlhvdlJVbllYdnFMMXRIZGg?oc=5",
+          "sourceDate": "Mon, 10 Nov 2025 08:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -7874,7 +8535,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 350
+      "latencyMs": 481
     },
     {
       "id": "O3",
@@ -7893,7 +8554,7 @@
         "coverageStatus": "partial",
         "latestPeriodFound": "Q1FY27",
         "latestAnnualPeriodFound": "FY27",
-        "metricEvidenceCount": 1,
+        "metricEvidenceCount": 3,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -7913,8 +8574,8 @@
           "item": "announcement",
           "label": "Latest exchange/company announcement",
           "status": "found",
-          "sourceUrl": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxOWXo4MFpDb0xGNjZFMmJXck5vOGNYczFpNVNZWURiZTdJQjBqbWNxOFNpbjVsVFkwMm11cENETVJCZGN3b05tLWo3REx3b0hETHFzU2trVm5md3ZnVTVKd2ZGLTdCaEhYVmpTdmFiemx1TU9ZVmNnNXoxdFd1bV9uQVFyTUFBXzQxVDhfTjU2Ri1pMkxlLXBWSjBJaHZUYXVSNmltel80Q210a2JBTFVDOGNrV0JReGhTcExmSndmVHF1MGVreWg5M0c5eVZ1RjY1VnFFUEVUOExnVkU?oc=5",
-          "sourceDate": "Wed, 01 Jul 2026 04:16:14 GMT",
+          "sourceUrl": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxPUjVSLXRhVmMtOVVKdUpJNUFib2VhcXhSR01JUV9rbk5JWlktMXY1bDA1RDRTUWhkeFBZRmxvcng3aUlmTTdsQXJ6aVVMdVNKZlV5TWJsQjB6ckJkUEFCRVFSNV9iMUtvaUZPVjZwOWZjbFI3SXNzSm1mS1dpTWM0ZktkMEVKYVdHZGpCVjIweThZZThiQlNTd21MZmRmLTBxdWdFdUpSZFI1aU9HaUI0ejZ0RG1nX0xfMVhZSG9tN3plQXZQZEJsSDhsMVIxOTBSeGFxatIB2gFBVV95cUxPUTBpRjM0MlFGNEVHQllIRjk1VlREWUt2MXEyWjU0YjJKQXNPdzAyOUJ6ejJxVGNJSUNxZFpyMkF6eFNhUFNwZFdWei1RZ2dvMmg3cllxTHBzMXAxWWl3b25TQ3ZmX1JfMzI0N2pSamdsU0ExWHhmNVYzMG9pY016VWE1WTZOZlhleUp6enFNQS1YVUM2MnBHcVNQVmV0dVp6dWVDQ2stWTF4UmRJcGl2Sm1tVVdtc1lrSHFuNlpNUkxlcTVjSDh6SnFyYXBjSVFhN05sS0swN2pCdw?oc=5",
+          "sourceDate": "Sat, 06 Jun 2026 07:00:00 GMT",
           "confidence": "retrieved"
         },
         {
@@ -7976,7 +8637,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 714
+      "latencyMs": 973
     },
     {
       "id": "O4",
@@ -8028,7 +8689,8 @@
         {
           "item": "investorPresentation",
           "label": "Latest investor presentation",
-          "status": "found"
+          "status": "missing",
+          "limitation": "No investor presentation found from current sources."
         },
         {
           "item": "annualReport",
@@ -8078,7 +8740,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 443
+      "latencyMs": 541
     },
     {
       "id": "O5",
@@ -8095,8 +8757,8 @@
         "evidenceDepth": "deep",
         "sourceBudget": 22,
         "coverageStatus": "partial",
-        "latestPeriodFound": "Q4FY26",
-        "metricEvidenceCount": 0,
+        "latestPeriodFound": "Q1FY27",
+        "metricEvidenceCount": 1,
         "blockedMetricCount": 0
       },
       "latestDataChecklist": [
@@ -8135,8 +8797,7 @@
         {
           "item": "annualReport",
           "label": "Latest annual report",
-          "status": "missing",
-          "limitation": "No annual report found from current sources."
+          "status": "found"
         },
         {
           "item": "shareholding",
@@ -8158,8 +8819,7 @@
         {
           "item": "financialMetrics",
           "label": "Latest financial metrics",
-          "status": "missing",
-          "limitation": "Latest sourced financial metrics were not available from current sources."
+          "status": "found"
         },
         {
           "item": "sectorMacro",
@@ -8180,7 +8840,7 @@
       "leak": [],
       "sourceRiskTerm": [],
       "freshness": [],
-      "latencyMs": 427
+      "latencyMs": 630
     }
   ]
 }

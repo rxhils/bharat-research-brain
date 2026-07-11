@@ -58,7 +58,7 @@ const MAX_BULLETS = 10;
 
 const ANSWER_TYPES = new Set<AnswerType>([
   "greeting", "basic_concept", "market_mechanism", "current_market_research",
-  "stock_comparison", "single_stock_research", "macro_sector_impact", "unsafe_advice",
+  "stock_comparison", "single_stock_research", "stock_leaderboard", "macro_sector_impact", "unsafe_advice",
   "out_of_scope", "unsupported_live_data", "deep_research_report", "comparison_research_report",
 ]);
 
@@ -66,7 +66,7 @@ const ANSWER_TYPES = new Set<AnswerType>([
 // scope cards are not "previous answers" for transformation purposes.
 const SUBSTANTIVE_TYPES = new Set<AnswerType>([
   "basic_concept", "market_mechanism", "current_market_research", "stock_comparison",
-  "single_stock_research", "macro_sector_impact", "deep_research_report", "comparison_research_report",
+  "single_stock_research", "stock_leaderboard", "macro_sector_impact", "deep_research_report", "comparison_research_report",
 ]);
 
 function str(v: unknown, cap = MAX_STR): string | undefined {

@@ -20,6 +20,8 @@ export type FollowUpType =
   | "entity_followup"
   | "time_followup"
   | "clarification"
+  | "explain_leaderboard"
+  | "sector_movers_followup"
   | "none";
 
 export type RequestedFormat = "bullets" | "table" | "chart" | "short" | "detailed" | "simple" | "source_list";
@@ -45,6 +47,12 @@ const SUMMARIZE_RE = /\bbullet[- ]?points?\b|\bbullet[- ]?point summary\b|\bsumm
 const FORMAT_RE = /\b(make|show|put|format|turn|convert|give me)\b.*\b(a |as a |into a |in a )?(table|checklist|list)\b|\bside[- ]by[- ]side\b|\bnumbers? only\b|\bas a table\b|\bin a table\b|\bin (a )?tabular (form|format)\b|\bmake (it|this|that) (simpler|easier|simple)\b|\bsimplify (it|this|that)?\b|\bexplain (it |this |that )?(simply|like i'?m (new|five|5)|in simple (terms|words|language))\b|\beli5\b/;
 
 const EXPAND_RE = /\b(explain|tell me) more\b|\bgo deeper\b|\bexpand (on )?(this|that|it)?\b|\b(more|extra|full|deeper) detail(s)?\b|\bwhy exactly\b|\bexplain the mechanism\b|\bbreak (it|this|that) down\b|\belaborate\b|\bin (more )?depth\b|\bwhat are the (key |main )?risks?\b|\bkey risks?\b/;
+
+// "Why did these move?" after a leaderboard answer - explain the PREVIOUS rows, never re-rank.
+const EXPLAIN_LB_RE = /\bwhy (did|do|are|were) (these|those|they)\b|\bwhy did these\b|\bexplain (these|those|the (top )?(gainers?|losers?|movers?))\b|\bwhat(?:'s| is) driving these\b|\bwhy are these (stocks? )?(up|down|moving|falling|rising)\b/;
+
+// "Which stocks drove it / the move?" after a market/sector answer - rewrite to a leaderboard.
+const DROVE_RE = /\bwhich [^.?!]{0,20}stocks?\b[^.?!]{0,30}\b(drove|led|pulled|pushed|caused|behind)\b|\bwhich stocks? moved\b|\bwho drove the (move|rally|fall)\b/;
 
 // Subjectless peer-comparison ask ("compare with closest peer") - the peer of the PREVIOUS answer.
 const PEER_RE = /\bcompare\b.*\b(peers?|competitors?|rivals?)\b|\bclosest peer\b|\bvs (its )?peers?\b/;
@@ -86,7 +94,20 @@ export function looksLikeBareFollowUp(query: string): boolean {
   if (!original || isAdviceRequest(original) || isExplicitlyOutOfScope(original)) return false;
   const n = normalizeForClassification(original);
   if (hasOwnSubject(n, original)) return false;
-  return SOURCE_RE.test(n) || CHART_RE.test(n) || SUMMARIZE_RE.test(n) || FORMAT_RE.test(n) || EXPAND_RE.test(n) || CLARIFY_RE.test(n);
+  return SOURCE_RE.test(n) || CHART_RE.test(n) || SUMMARIZE_RE.test(n) || FORMAT_RE.test(n) || EXPAND_RE.test(n) || CLARIFY_RE.test(n) || EXPLAIN_LB_RE.test(n);
+}
+
+// User correcting a prior index/market answer to ask for INDIVIDUAL stocks instead of indices:
+// "im talking about individual stocks", "not indices", "I mean companies", "actual shares",
+// "not the market, the stocks". Tested against the RAW query (the normalizer collapses
+// "individual stocks" -> "stocks", which would lose the correction signal).
+const CORRECTION_RE = /\b(individual (stocks?|equit\w+|companies|shares?)|not (the )?indic\w*|not nifty|not sensex|not the market,?\s*(the )?stocks?|actual (stocks?|shares?|companies)|i(?:'m| am)?\s*(?:talking about|mean|meant|asked for|said|want)\s+(?:individual\s+)?(?:stocks?|companies|shares?|equit\w+)|give me (?:actual|individual|real)\s+(?:stocks?|shares?|companies)|listed companies|stocks?,? not (?:the )?(?:index|indices|nifty|sensex|market))\b/i;
+
+/** True when the message corrects a previous index/market answer toward individual stocks. */
+export function isMoversCorrection(query: string): boolean {
+  const original = (query || "").trim();
+  if (!original || isAdviceRequest(original) || isExplicitlyOutOfScope(original)) return false;
+  return CORRECTION_RE.test(original.toLowerCase());
 }
 
 /**
@@ -108,6 +129,15 @@ export function detectFollowUpIntent(query: string, state: MavenConversationStat
   const subject = hasOwnSubject(n, original);
   const short = n.split(/\s+/).length <= 12;
   const fmt = requestedFormatOf(n);
+
+  // Leaderboard-aware follow-ups may carry their own subject words ("which bank stocks drove
+  // Bank Nifty?"), so they are checked BEFORE the no-subject transformation gate.
+  if (EXPLAIN_LB_RE.test(n) && state.lastAnswerType === "stock_leaderboard") {
+    return { isFollowUp: true, followUpType: "explain_leaderboard", confidence: "high", referencesPreviousAnswer: true };
+  }
+  if (DROVE_RE.test(n)) {
+    return { isFollowUp: true, followUpType: "sector_movers_followup", confidence: short ? "high" : "medium", referencesPreviousAnswer: true };
+  }
 
   // Pure transformations of the previous answer: only when the query does NOT introduce its own
   // market subject ("summarise fridays markets" must stay a fresh market-summary question).

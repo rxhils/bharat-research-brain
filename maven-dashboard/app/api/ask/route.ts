@@ -10,8 +10,9 @@ import { scoreAnswer } from "@/lib/maven/answerQualityScorer";
 import { detectReportMode } from "@/lib/maven/reportModeDetector";
 import { generateDeepResearchReport } from "@/lib/maven/deepResearchReportGenerator";
 import { buildConversationState, findTurnWith } from "@/lib/maven/conversationState";
-import { detectFollowUpIntent, looksLikeBareFollowUp } from "@/lib/maven/followUpIntentDetector";
-import { rewriteContextualQuery } from "@/lib/maven/contextualQueryRewriter";
+import { detectFollowUpIntent, looksLikeBareFollowUp, isMoversCorrection } from "@/lib/maven/followUpIntentDetector";
+import { rewriteContextualQuery, rewriteMoversCorrection } from "@/lib/maven/contextualQueryRewriter";
+import { explainLeaderboard } from "@/lib/maven/leaderboardExplainer";
 import { routeAnswerMode, isTransformationMode } from "@/lib/maven/answerModeRouter";
 import {
   transformToBulletSummary, transformToShortAnswer, transformToTable,
@@ -199,9 +200,32 @@ export async function POST(req: Request) {
   const lastTurnType = convo.turns[convo.turns.length - 1]?.answerType;
   if (lastTurnType === "unsafe_advice" && looksLikeBareFollowUp(query)) return NextResponse.json(REFUSAL);
 
+  // Correction: "im talking about individual stocks" / "not indices" right after a market/index
+  // answer. Rewrite to an individual-stock leaderboard and re-route so Maven never re-answers with
+  // the index card. The rewritten query re-enters routeAnswerType, so advice/scope still refuse.
+  if (convo.lastAnswer && isMoversCorrection(query)) {
+    const rewritten = rewriteMoversCorrection(query, convo);
+    const routed = routeAnswerType(rewritten);
+    if (routed.answerType !== "unsafe_advice" && routed.answerType !== "out_of_scope" && routed.answerType !== "greeting") {
+      const answer = await research(rewritten, routed.answerType, routed.disclaimerLevel);
+      return NextResponse.json(enforceFollowUpChips(answer));
+    }
+  }
+
   // Conversation intelligence: is this a follow-up on the previous Maven answer?
   const followUp = detectFollowUpIntent(query, convo);
   if (followUp.isFollowUp && followUp.confidence !== "low" && convo.lastAnswer) {
+    // "Why did these move?" after a leaderboard: explain the PREVIOUS rows with retrieved
+    // context - never re-run a fresh leaderboard that could reshuffle the names being asked about.
+    if (followUp.followUpType === "explain_leaderboard") {
+      const anchor = findTurnWith(convo, "charts") ?? convo.lastAnswer;
+      const explained = await explainLeaderboard(anchor, "standard");
+      if (explained) {
+        if (transformedAnswerAssertsAdvice(explained)) return NextResponse.json(REFUSAL);
+        return NextResponse.json(enforceFollowUpChips(explained));
+      }
+      // previous turn carried no usable rows -> fall through to the normal paths below
+    }
     const mode = routeAnswerMode(query, followUp);
     if (isTransformationMode(mode)) {
       // Pure presentation change of the previous answer: no refetch, no new facts possible.

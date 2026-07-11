@@ -1,0 +1,2506 @@
+{
+ "generatedAt": "2026-07-10T15:32:20.662Z",
+ "source": "https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv",
+ "constituents": [
+  {
+   "s": "360ONE",
+   "n": "360 ONE WAM Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "3MINDIA",
+   "n": "3M India Ltd.",
+   "industry": "Diversified"
+  },
+  {
+   "s": "ABB",
+   "n": "ABB India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ACC",
+   "n": "ACC Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "ACMESOLAR",
+   "n": "ACME Solar Holdings Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "AIAENG",
+   "n": "AIA Engineering Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "APLAPOLLO",
+   "n": "APL Apollo Tubes Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "AUBANK",
+   "n": "AU Small Finance Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "AWL",
+   "n": "AWL Agri Business Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "AADHARHFC",
+   "n": "Aadhar Housing Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "AARTIIND",
+   "n": "Aarti Industries Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "AAVAS",
+   "n": "Aavas Financiers Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ABBOTINDIA",
+   "n": "Abbott India Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ACE",
+   "n": "Action Construction Equipment Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ACUTAAS",
+   "n": "Acutaas Chemicals Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ADANIENSOL",
+   "n": "Adani Energy Solutions Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "ADANIENT",
+   "n": "Adani Enterprises Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "ADANIGREEN",
+   "n": "Adani Green Energy Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "ADANIPORTS",
+   "n": "Adani Ports and Special Economic Zone Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "ADANIPOWER",
+   "n": "Adani Power Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "ATGL",
+   "n": "Adani Total Gas Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "ABCAPITAL",
+   "n": "Aditya Birla Capital Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ABFRL",
+   "n": "Aditya Birla Fashion and Retail Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "ABLBL",
+   "n": "Aditya Birla Lifestyle Brands Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "ABREL",
+   "n": "Aditya Birla Real Estate Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "ABSLAMC",
+   "n": "Aditya Birla Sun Life AMC Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CPPLUS",
+   "n": "Aditya Infotech Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "AEGISLOG",
+   "n": "Aegis Logistics Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "AEGISVOPAK",
+   "n": "Aegis Vopak Terminals Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "AFCONS",
+   "n": "Afcons Infrastructure Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "AFFLE",
+   "n": "Affle 3i Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "AJANTPHARM",
+   "n": "Ajanta Pharmaceuticals Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ALKEM",
+   "n": "Alkem Laboratories Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ABDL",
+   "n": "Allied Blenders and Distillers Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "ARE&M",
+   "n": "Amara Raja Energy & Mobility Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "AMBER",
+   "n": "Amber Enterprises India Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "AMBUJACEM",
+   "n": "Ambuja Cements Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "ANANDRATHI",
+   "n": "Anand Rathi Wealth Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ANANTRAJ",
+   "n": "Anant Raj Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "ANGELONE",
+   "n": "Angel One Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ANTHEM",
+   "n": "Anthem Biosciences Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ANURAS",
+   "n": "Anupam Rasayan India Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "APARINDS",
+   "n": "Apar Industries Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "APOLLOHOSP",
+   "n": "Apollo Hospitals Enterprise Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "APOLLOTYRE",
+   "n": "Apollo Tyres Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "APTUS",
+   "n": "Aptus Value Housing Finance India Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ASAHIINDIA",
+   "n": "Asahi India Glass Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "ASHOKLEY",
+   "n": "Ashok Leyland Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ASIANPAINT",
+   "n": "Asian Paints Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "ASTERDM",
+   "n": "Aster DM Healthcare Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ASTRAL",
+   "n": "Astral Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ATHERENERG",
+   "n": "Ather Energy Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "ATUL",
+   "n": "Atul Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "AUROPHARMA",
+   "n": "Aurobindo Pharma Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "AIIL",
+   "n": "Authum Investment & Infrastructure Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "DMART",
+   "n": "Avenue Supermarts Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "AXISBANK",
+   "n": "Axis Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BEML",
+   "n": "BEML Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "BLS",
+   "n": "BLS International Services Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "BSE",
+   "n": "BSE Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BAJAJ-AUTO",
+   "n": "Bajaj Auto Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "BAJFINANCE",
+   "n": "Bajaj Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BAJAJFINSV",
+   "n": "Bajaj Finserv Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BAJAJHLDNG",
+   "n": "Bajaj Holdings & Investment Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BAJAJHFL",
+   "n": "Bajaj Housing Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BALKRISIND",
+   "n": "Balkrishna Industries Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "BALRAMCHIN",
+   "n": "Balrampur Chini Mills Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "BANDHANBNK",
+   "n": "Bandhan Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BANKBARODA",
+   "n": "Bank of Baroda",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BANKINDIA",
+   "n": "Bank of India",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "MAHABANK",
+   "n": "Bank of Maharashtra",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BATAINDIA",
+   "n": "Bata India Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "BAYERCROP",
+   "n": "Bayer Cropscience Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "BELRISE",
+   "n": "Belrise Industries Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "BERGEPAINT",
+   "n": "Berger Paints India Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "BDL",
+   "n": "Bharat Dynamics Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "BEL",
+   "n": "Bharat Electronics Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "BHARATFORG",
+   "n": "Bharat Forge Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "BHEL",
+   "n": "Bharat Heavy Electricals Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "BPCL",
+   "n": "Bharat Petroleum Corporation Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "BHARTIARTL",
+   "n": "Bharti Airtel Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "BHARTIHEXA",
+   "n": "Bharti Hexacom Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "BIKAJI",
+   "n": "Bikaji Foods International Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "GROWW",
+   "n": "Billionbrains Garage Ventures Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "BIOCON",
+   "n": "Biocon Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "BSOFT",
+   "n": "Birlasoft Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "BLUEDART",
+   "n": "Blue Dart Express Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "BLUEJET",
+   "n": "Blue Jet Healthcare Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "BLUESTARCO",
+   "n": "Blue Star Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "BBTC",
+   "n": "Bombay Burmah Trading Corporation Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "BOSCHLTD",
+   "n": "Bosch Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "FIRSTCRY",
+   "n": "Brainbees Solutions Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "BRIGADE",
+   "n": "Brigade Enterprises Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "BRITANNIA",
+   "n": "Britannia Industries Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "MAPMYINDIA",
+   "n": "C.E. Info Systems Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "CCL",
+   "n": "CCL Products (I) Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "CESC",
+   "n": "CESC Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "CGPOWER",
+   "n": "CG Power and Industrial Solutions Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "CIEINDIA",
+   "n": "CIE Automotive India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "CRISIL",
+   "n": "CRISIL Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CANFINHOME",
+   "n": "Can Fin Homes Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CANBK",
+   "n": "Canara Bank",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CANHLIFE",
+   "n": "Canara HSBC Life Insurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CAPLIPOINT",
+   "n": "Caplin Point Laboratories Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "CGCL",
+   "n": "Capri Global Capital Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CARBORUNIV",
+   "n": "Carborundum Universal Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "CARTRADE",
+   "n": "Cartrade Tech Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "CASTROLIND",
+   "n": "Castrol India Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "CEATLTD",
+   "n": "Ceat Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "CEMPRO",
+   "n": "Cemindia Projects Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "CENTRALBK",
+   "n": "Central Bank of India",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CDSL",
+   "n": "Central Depository Services (India) Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CHALET",
+   "n": "Chalet Hotels Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "CHAMBLFERT",
+   "n": "Chambal Fertilizers & Chemicals Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "CHENNPETRO",
+   "n": "Chennai Petroleum Corporation Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "CHOICEIN",
+   "n": "Choice International Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CHOLAHLDNG",
+   "n": "Cholamandalam Financial Holdings Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CHOLAFIN",
+   "n": "Cholamandalam Investment and Finance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CIPLA",
+   "n": "Cipla Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "CUB",
+   "n": "City Union Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CLEAN",
+   "n": "Clean Science and Technology Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "COALINDIA",
+   "n": "Coal India Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "COCHINSHIP",
+   "n": "Cochin Shipyard Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "COFORGE",
+   "n": "Coforge Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "COHANCE",
+   "n": "Cohance Lifesciences Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "COLPAL",
+   "n": "Colgate Palmolive (India) Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "CAMS",
+   "n": "Computer Age Management Services Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CONCORDBIO",
+   "n": "Concord Biotech Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "CONCOR",
+   "n": "Container Corporation of India Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "COROMANDEL",
+   "n": "Coromandel International Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "CRAFTSMAN",
+   "n": "Craftsman Automation Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "CREDITACC",
+   "n": "CreditAccess Grameen Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "CROMPTON",
+   "n": "Crompton Greaves Consumer Electricals Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "CUMMINSIND",
+   "n": "Cummins India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "CYIENT",
+   "n": "Cyient Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "DCMSHRIRAM",
+   "n": "DCM Shriram Ltd.",
+   "industry": "Diversified"
+  },
+  {
+   "s": "DLF",
+   "n": "DLF Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "DOMS",
+   "n": "DOMS Industries Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "DABUR",
+   "n": "Dabur India Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "DALBHARAT",
+   "n": "Dalmia Bharat Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "DATAPATTNS",
+   "n": "Data Patterns (India) Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "DEEPAKFERT",
+   "n": "Deepak Fertilisers & Petrochemicals Corp. Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "DEEPAKNTR",
+   "n": "Deepak Nitrite Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "DELHIVERY",
+   "n": "Delhivery Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "DEVYANI",
+   "n": "Devyani International Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "DIVISLAB",
+   "n": "Divi's Laboratories Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "DIXON",
+   "n": "Dixon Technologies (India) Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "LALPATHLAB",
+   "n": "Dr. Lal Path Labs Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "DRREDDY",
+   "n": "Dr. Reddy's Laboratories Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "EIDPARRY",
+   "n": "E.I.D. Parry (India) Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "EIHOTEL",
+   "n": "EIH Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "EICHERMOT",
+   "n": "Eicher Motors Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "ELECON",
+   "n": "Elecon Engineering Co. Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ELGIEQUIP",
+   "n": "Elgi Equipments Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "EMAMILTD",
+   "n": "Emami Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "EMCURE",
+   "n": "Emcure Pharmaceuticals Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "EMMVEE",
+   "n": "Emmvee Photovoltaic Power Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ENDURANCE",
+   "n": "Endurance Technologies Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "ENGINERSIN",
+   "n": "Engineers India Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "ERIS",
+   "n": "Eris Lifesciences Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ESCORTS",
+   "n": "Escorts Kubota Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ETERNAL",
+   "n": "Eternal Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "EXIDEIND",
+   "n": "Exide Industries Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "NYKAA",
+   "n": "FSN E-Commerce Ventures Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "FEDERALBNK",
+   "n": "Federal Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "FACT",
+   "n": "Fertilisers and Chemicals Travancore Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "FINCABLES",
+   "n": "Finolex Cables Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "FSL",
+   "n": "Firstsource Solutions Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "FIVESTAR",
+   "n": "Five-Star Business Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "FORCEMOT",
+   "n": "Force Motors Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "FORTIS",
+   "n": "Fortis Healthcare Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "GAIL",
+   "n": "GAIL (India) Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "GVT&D",
+   "n": "GE Vernova T&D India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "GMRAIRPORT",
+   "n": "GMR Airports Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "GABRIEL",
+   "n": "Gabriel India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "GALLANTT",
+   "n": "Gallantt Ispat Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "GRSE",
+   "n": "Garden Reach Shipbuilders & Engineers Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "GICRE",
+   "n": "General Insurance Corporation of India",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "GILLETTE",
+   "n": "Gillette India Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "GLAND",
+   "n": "Gland Pharma Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "GLAXO",
+   "n": "Glaxosmithkline Pharmaceuticals Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "GLENMARK",
+   "n": "Glenmark Pharmaceuticals Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "MEDANTA",
+   "n": "Global Health Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "GODIGIT",
+   "n": "Go Digit General Insurance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "GPIL",
+   "n": "Godawari Power & Ispat Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "GODFRYPHLP",
+   "n": "Godfrey Phillips India Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "GODREJCP",
+   "n": "Godrej Consumer Products Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "GODREJIND",
+   "n": "Godrej Industries Ltd.",
+   "industry": "Diversified"
+  },
+  {
+   "s": "GODREJPROP",
+   "n": "Godrej Properties Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "GRANULES",
+   "n": "Granules India Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "GRAPHITE",
+   "n": "Graphite India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "GRASIM",
+   "n": "Grasim Industries Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "GRAVITA",
+   "n": "Gravita India Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "GESHIP",
+   "n": "Great Eastern Shipping Co. Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "FLUOROCHEM",
+   "n": "Gujarat Fluorochemicals Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "GMDCLTD",
+   "n": "Gujarat Mineral Development Corporation Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "HEG",
+   "n": "H.E.G. Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "HBLENGINE",
+   "n": "HBL Engineering Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "HCLTECH",
+   "n": "HCL Technologies Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "HDBFS",
+   "n": "HDB Financial Services Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "HDFCAMC",
+   "n": "HDFC Asset Management Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "HDFCBANK",
+   "n": "HDFC Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "HDFCLIFE",
+   "n": "HDFC Life Insurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "HFCL",
+   "n": "HFCL Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "HAVELLS",
+   "n": "Havells India Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "HEROMOTOCO",
+   "n": "Hero MotoCorp Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "HEXT",
+   "n": "Hexaware Technologies Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "HSCL",
+   "n": "Himadri Speciality Chemical Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "HINDALCO",
+   "n": "Hindalco Industries Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "HAL",
+   "n": "Hindustan Aeronautics Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "HINDCOPPER",
+   "n": "Hindustan Copper Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "HINDPETRO",
+   "n": "Hindustan Petroleum Corporation Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "HINDUNILVR",
+   "n": "Hindustan Unilever Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "HINDZINC",
+   "n": "Hindustan Zinc Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "POWERINDIA",
+   "n": "Hitachi Energy India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "HOMEFIRST",
+   "n": "Home First Finance Company India Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "HONASA",
+   "n": "Honasa Consumer Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "HONAUT",
+   "n": "Honeywell Automation India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "HUDCO",
+   "n": "Housing & Urban Development Corporation Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "HYUNDAI",
+   "n": "Hyundai Motor India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "ICICIBANK",
+   "n": "ICICI Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ICICIGI",
+   "n": "ICICI Lombard General Insurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ICICIAMC",
+   "n": "ICICI Prudential Asset Management Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ICICIPRULI",
+   "n": "ICICI Prudential Life Insurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IDBI",
+   "n": "IDBI Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IDFCFIRSTB",
+   "n": "IDFC First Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IFCI",
+   "n": "IFCI Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IIFL",
+   "n": "IIFL Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IRB",
+   "n": "IRB Infrastructure Developers Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "IRCON",
+   "n": "IRCON International Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "ITCHOTELS",
+   "n": "ITC Hotels Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "ITC",
+   "n": "ITC Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "ITI",
+   "n": "ITI Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "INDGN",
+   "n": "Indegene Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "INDIACEM",
+   "n": "India Cements Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "INDIAMART",
+   "n": "Indiamart Intermesh Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "INDIANB",
+   "n": "Indian Bank",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IEX",
+   "n": "Indian Energy Exchange Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "INDHOTEL",
+   "n": "Indian Hotels Co. Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "IOC",
+   "n": "Indian Oil Corporation Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "IOB",
+   "n": "Indian Overseas Bank",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IRCTC",
+   "n": "Indian Railway Catering And Tourism Corporation Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "IRFC",
+   "n": "Indian Railway Finance Corporation Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IREDA",
+   "n": "Indian Renewable Energy Development Agency Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "IGL",
+   "n": "Indraprastha Gas Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "INDUSTOWER",
+   "n": "Indus Towers Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "INDUSINDBK",
+   "n": "IndusInd Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "NAUKRI",
+   "n": "Info Edge (India) Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "INFY",
+   "n": "Infosys Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "INOXWIND",
+   "n": "Inox Wind Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "INTELLECT",
+   "n": "Intellect Design Arena Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "INDIGO",
+   "n": "InterGlobe Aviation Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "IGIL",
+   "n": "International Gemological Institute Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "IKS",
+   "n": "Inventurus Knowledge Solutions Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "IPCALAB",
+   "n": "Ipca Laboratories Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "JBCHEPHARM",
+   "n": "J.B. Chemicals & Pharmaceuticals Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "JKCEMENT",
+   "n": "J.K. Cement Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "JBMA",
+   "n": "JBM Auto Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "JKTYRE",
+   "n": "JK Tyre & Industries Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "JMFINANCIL",
+   "n": "JM Financial Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "JSWCEMENT",
+   "n": "JSW Cement Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "JSWDULUX",
+   "n": "JSW Dulux Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "JSWENERGY",
+   "n": "JSW Energy Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "JSWINFRA",
+   "n": "JSW Infrastructure Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "JSWSTEEL",
+   "n": "JSW Steel Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "JAINREC",
+   "n": "Jain Resource Recycling Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "JPPOWER",
+   "n": "Jaiprakash Power Ventures Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "J&KBANK",
+   "n": "Jammu & Kashmir Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "JINDALSAW",
+   "n": "Jindal Saw Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "JSL",
+   "n": "Jindal Stainless Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "JINDALSTEL",
+   "n": "Jindal Steel Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "JIOFIN",
+   "n": "Jio Financial Services Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "JUBLFOOD",
+   "n": "Jubilant Foodworks Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "JUBLINGREA",
+   "n": "Jubilant Ingrevia Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "JUBLPHARMA",
+   "n": "Jubilant Pharmova Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "JWL",
+   "n": "Jupiter Wagons Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "JYOTICNC",
+   "n": "Jyoti CNC Automation Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "KPRMILL",
+   "n": "K.P.R. Mill Ltd.",
+   "industry": "Textiles"
+  },
+  {
+   "s": "KEI",
+   "n": "KEI Industries Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "KPITTECH",
+   "n": "KPIT Technologies Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "KAJARIACER",
+   "n": "Kajaria Ceramics Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "KPIL",
+   "n": "Kalpataru Projects International Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "KALYANKJIL",
+   "n": "Kalyan Jewellers India Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "KARURVYSYA",
+   "n": "Karur Vysya Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "KAYNES",
+   "n": "Kaynes Technology India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "KEC",
+   "n": "Kec International Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "KFINTECH",
+   "n": "Kfin Technologies Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "KIRLOSENG",
+   "n": "Kirloskar Oil Eng Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "KOTAKBANK",
+   "n": "Kotak Mahindra Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "KIMS",
+   "n": "Krishna Institute of Medical Sciences Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "LTF",
+   "n": "L&T Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "LTTS",
+   "n": "L&T Technology Services Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "LGEINDIA",
+   "n": "LG Electronics India Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "LICHSGFIN",
+   "n": "LIC Housing Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "LTFOODS",
+   "n": "LT Foods Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "LTM",
+   "n": "LTM Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "LT",
+   "n": "Larsen & Toubro Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "LATENTVIEW",
+   "n": "Latent View Analytics Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "LAURUSLABS",
+   "n": "Laurus Labs Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "THELEELA",
+   "n": "Leela Palaces Hotels & Resorts Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "LEMONTREE",
+   "n": "Lemon Tree Hotels Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "LENSKART",
+   "n": "Lenskart Solutions Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "LICI",
+   "n": "Life Insurance Corporation of India",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "LINDEINDIA",
+   "n": "Linde India Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "LLOYDSME",
+   "n": "Lloyds Metals And Energy Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "LODHA",
+   "n": "Lodha Developers Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "LUPIN",
+   "n": "Lupin Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "MMTC",
+   "n": "MMTC Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "MRF",
+   "n": "MRF Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "MGL",
+   "n": "Mahanagar Gas Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "M&MFIN",
+   "n": "Mahindra & Mahindra Financial Services Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "M&M",
+   "n": "Mahindra & Mahindra Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "MANAPPURAM",
+   "n": "Manappuram Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "MRPL",
+   "n": "Mangalore Refinery & Petrochemicals Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "MANKIND",
+   "n": "Mankind Pharma Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "MARICO",
+   "n": "Marico Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "MARUTI",
+   "n": "Maruti Suzuki India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "MFSL",
+   "n": "Max Financial Services Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "MAXHEALTH",
+   "n": "Max Healthcare Institute Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "MAZDOCK",
+   "n": "Mazagoan Dock Shipbuilders Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "MEESHO",
+   "n": "Meesho Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "MINDACORP",
+   "n": "Minda Corporation Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "MSUMI",
+   "n": "Motherson Sumi Wiring India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "MOTILALOFS",
+   "n": "Motilal Oswal Financial Services Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "MPHASIS",
+   "n": "MphasiS Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "MCX",
+   "n": "Multi Commodity Exchange of India Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "MUTHOOTFIN",
+   "n": "Muthoot Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "NATCOPHARM",
+   "n": "NATCO Pharma Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "NBCC",
+   "n": "NBCC (India) Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "NCC",
+   "n": "NCC Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "NHPC",
+   "n": "NHPC Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "NLCINDIA",
+   "n": "NLC India Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "NMDC",
+   "n": "NMDC Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "NSLNISP",
+   "n": "NMDC Steel Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "NTPCGREEN",
+   "n": "NTPC Green Energy Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "NTPC",
+   "n": "NTPC Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "NH",
+   "n": "Narayana Hrudayalaya Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "NATIONALUM",
+   "n": "National Aluminium Co. Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "NAVA",
+   "n": "Nava Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "NAVINFLUOR",
+   "n": "Navin Fluorine International Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "NESTLEIND",
+   "n": "Nestle India Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "NETWEB",
+   "n": "Netweb Technologies India Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "NEULANDLAB",
+   "n": "Neuland Laboratories Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "NEWGEN",
+   "n": "Newgen Software Technologies Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "NAM-INDIA",
+   "n": "Nippon Life India Asset Management Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "NIVABUPA",
+   "n": "Niva Bupa Health Insurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "NUVAMA",
+   "n": "Nuvama Wealth Management Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "NUVOCO",
+   "n": "Nuvoco Vistas Corporation Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "OBEROIRLTY",
+   "n": "Oberoi Realty Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "ONGC",
+   "n": "Oil & Natural Gas Corporation Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "OIL",
+   "n": "Oil India Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "OLAELEC",
+   "n": "Ola Electric Mobility Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "OLECTRA",
+   "n": "Olectra Greentech Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "PAYTM",
+   "n": "One 97 Communications Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ONESOURCE",
+   "n": "Onesource Specialty Pharma Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "OFSS",
+   "n": "Oracle Financial Services Software Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "POLICYBZR",
+   "n": "PB Fintech Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "PCBL",
+   "n": "PCBL Chemical Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "PGEL",
+   "n": "PG Electroplast Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "PIIND",
+   "n": "PI Industries Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "PNBHOUSING",
+   "n": "PNB Housing Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "PTCIL",
+   "n": "PTC Industries Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "PVRINOX",
+   "n": "PVR INOX Ltd.",
+   "industry": "Media Entertainment & Publication"
+  },
+  {
+   "s": "PAGEIND",
+   "n": "Page Industries Ltd.",
+   "industry": "Textiles"
+  },
+  {
+   "s": "PARADEEP",
+   "n": "Paradeep Phosphates Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "PATANJALI",
+   "n": "Patanjali Foods Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "PERSISTENT",
+   "n": "Persistent Systems Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "PETRONET",
+   "n": "Petronet LNG Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "PFIZER",
+   "n": "Pfizer Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "PHOENIXLTD",
+   "n": "Phoenix Mills Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "PWL",
+   "n": "Physicswallah Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "PIDILITIND",
+   "n": "Pidilite Industries Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "PINELABS",
+   "n": "Pine Labs Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "PIRAMALFIN",
+   "n": "Piramal Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "PPLPHARMA",
+   "n": "Piramal Pharma Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "POLYMED",
+   "n": "Poly Medicure Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "POLYCAB",
+   "n": "Polycab India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "POONAWALLA",
+   "n": "Poonawalla Fincorp Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "PFC",
+   "n": "Power Finance Corporation Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "POWERGRID",
+   "n": "Power Grid Corporation of India Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "PREMIERENE",
+   "n": "Premier Energies Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "PRESTIGE",
+   "n": "Prestige Estates Projects Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "PNB",
+   "n": "Punjab National Bank",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "RRKABEL",
+   "n": "R R Kabel Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "RBLBANK",
+   "n": "RBL Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "RECLTD",
+   "n": "REC Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "RHIM",
+   "n": "RHI MAGNESITA INDIA LTD.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "RITES",
+   "n": "RITES Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "RADICO",
+   "n": "Radico Khaitan Ltd",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "RVNL",
+   "n": "Rail Vikas Nigam Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "RAILTEL",
+   "n": "Railtel Corporation Of India Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "RAINBOW",
+   "n": "Rainbow Childrens Medicare Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "RKFORGE",
+   "n": "Ramkrishna Forgings Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "REDINGTON",
+   "n": "Redington Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "RELIANCE",
+   "n": "Reliance Industries Ltd.",
+   "industry": "Oil Gas & Consumable Fuels"
+  },
+  {
+   "s": "RPOWER",
+   "n": "Reliance Power Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "SBFC",
+   "n": "SBFC Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "SBICARD",
+   "n": "SBI Cards and Payment Services Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "SBILIFE",
+   "n": "SBI Life Insurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "SJVN",
+   "n": "SJVN Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "SRF",
+   "n": "SRF Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "SAGILITY",
+   "n": "Sagility Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "SAILIFE",
+   "n": "Sai Life Sciences Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "SAMMAANCAP",
+   "n": "Sammaan Capital Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "MOTHERSON",
+   "n": "Samvardhana Motherson International Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "SAPPHIRE",
+   "n": "Sapphire Foods India Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "SARDAEN",
+   "n": "Sarda Energy and Minerals Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "SAREGAMA",
+   "n": "Saregama India Ltd",
+   "industry": "Media Entertainment & Publication"
+  },
+  {
+   "s": "SCHAEFFLER",
+   "n": "Schaeffler India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "SCHNEIDER",
+   "n": "Schneider Electric Infrastructure Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "SCI",
+   "n": "Shipping Corporation of India Ltd.",
+   "industry": "Services"
+  },
+  {
+   "s": "SHREECEM",
+   "n": "Shree Cement Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "SHRIRAMFIN",
+   "n": "Shriram Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "SHYAMMETL",
+   "n": "Shyam Metalics and Energy Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ENRIN",
+   "n": "Siemens Energy India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "SIEMENS",
+   "n": "Siemens Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "SIGNATURE",
+   "n": "Signatureglobal (India) Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "SOBHA",
+   "n": "Sobha Ltd.",
+   "industry": "Realty"
+  },
+  {
+   "s": "SOLARINDS",
+   "n": "Solar Industries India Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "SONACOMS",
+   "n": "Sona BLW Precision Forgings Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "SONATSOFTW",
+   "n": "Sonata Software Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "STARHEALTH",
+   "n": "Star Health and Allied Insurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "SBIN",
+   "n": "State Bank of India",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "SAIL",
+   "n": "Steel Authority of India Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "SUMICHEM",
+   "n": "Sumitomo Chemical India Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "SUNPHARMA",
+   "n": "Sun Pharmaceutical Industries Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "SUNTV",
+   "n": "Sun TV Network Ltd.",
+   "industry": "Media Entertainment & Publication"
+  },
+  {
+   "s": "SUNDARMFIN",
+   "n": "Sundaram Finance Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "SUPREMEIND",
+   "n": "Supreme Industries Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "SPLPETRO",
+   "n": "Supreme Petrochem Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "SUZLON",
+   "n": "Suzlon Energy Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "SWANCORP",
+   "n": "Swan Corp Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "SWIGGY",
+   "n": "Swiggy Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "SYNGENE",
+   "n": "Syngene International Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "SYRMA",
+   "n": "Syrma SGS Technology Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TBOTEK",
+   "n": "TBO Tek Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "TVSMOTOR",
+   "n": "TVS Motor Company Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "TATACAP",
+   "n": "Tata Capital Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "TATACHEM",
+   "n": "Tata Chemicals Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "TATACOMM",
+   "n": "Tata Communications Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "TCS",
+   "n": "Tata Consultancy Services Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "TATACONSUM",
+   "n": "Tata Consumer Products Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "TATAELXSI",
+   "n": "Tata Elxsi Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "TATAINVEST",
+   "n": "Tata Investment Corporation Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "TMCV",
+   "n": "Tata Motors Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TMPV",
+   "n": "Tata Motors Passenger Vehicles Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "TATAPOWER",
+   "n": "Tata Power Co. Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "TATASTEEL",
+   "n": "Tata Steel Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "TATATECH",
+   "n": "Tata Technologies Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "TTML",
+   "n": "Tata Teleservices (Maharashtra) Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "TECHM",
+   "n": "Tech Mahindra Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "TECHNOE",
+   "n": "Techno Electric & Engineering Company Ltd.",
+   "industry": "Construction"
+  },
+  {
+   "s": "TEGA",
+   "n": "Tega Industries Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TEJASNET",
+   "n": "Tejas Networks Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "TENNIND",
+   "n": "Tenneco Clean Air India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "NIACL",
+   "n": "The New India Assurance Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "RAMCOCEM",
+   "n": "The Ramco Cements Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "THERMAX",
+   "n": "Thermax Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TIMKEN",
+   "n": "Timken India Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TITAGARH",
+   "n": "Titagarh Rail Systems Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TITAN",
+   "n": "Titan Company Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "TORNTPHARM",
+   "n": "Torrent Pharmaceuticals Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "TORNTPOWER",
+   "n": "Torrent Power Ltd.",
+   "industry": "Power"
+  },
+  {
+   "s": "TARIL",
+   "n": "Transformers And Rectifiers (India) Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TRAVELFOOD",
+   "n": "Travel Food Services Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "TRENT",
+   "n": "Trent Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "TRIDENT",
+   "n": "Trident Ltd.",
+   "industry": "Textiles"
+  },
+  {
+   "s": "TRITURBINE",
+   "n": "Triveni Turbine Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "TIINDIA",
+   "n": "Tube Investments of India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "UCOBANK",
+   "n": "UCO Bank",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "UNOMINDA",
+   "n": "UNO Minda Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "UPL",
+   "n": "UPL Ltd.",
+   "industry": "Chemicals"
+  },
+  {
+   "s": "UTIAMC",
+   "n": "UTI Asset Management Company Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ULTRACEMCO",
+   "n": "UltraTech Cement Ltd.",
+   "industry": "Construction Materials"
+  },
+  {
+   "s": "UNIONBANK",
+   "n": "Union Bank of India",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "UBL",
+   "n": "United Breweries Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "UNITDSPR",
+   "n": "United Spirits Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "URBANCO",
+   "n": "Urban Company Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "USHAMART",
+   "n": "Usha Martin Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "VTL",
+   "n": "Vardhman Textiles Ltd.",
+   "industry": "Textiles"
+  },
+  {
+   "s": "VBL",
+   "n": "Varun Beverages Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "VEDL",
+   "n": "Vedanta Ltd.",
+   "industry": "Metals & Mining"
+  },
+  {
+   "s": "VIJAYA",
+   "n": "Vijaya Diagnostic Centre Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "VMM",
+   "n": "Vishal Mega Mart Ltd.",
+   "industry": "Consumer Services"
+  },
+  {
+   "s": "IDEA",
+   "n": "Vodafone Idea Ltd.",
+   "industry": "Telecommunication"
+  },
+  {
+   "s": "VOLTAS",
+   "n": "Voltas Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "WAAREEENER",
+   "n": "Waaree Energies Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "WELCORP",
+   "n": "Welspun Corp Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "WELSPUNLIV",
+   "n": "Welspun Living Ltd.",
+   "industry": "Textiles"
+  },
+  {
+   "s": "WHIRLPOOL",
+   "n": "Whirlpool of India Ltd.",
+   "industry": "Consumer Durables"
+  },
+  {
+   "s": "WIPRO",
+   "n": "Wipro Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "WOCKPHARMA",
+   "n": "Wockhardt Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "YESBANK",
+   "n": "Yes Bank Ltd.",
+   "industry": "Financial Services"
+  },
+  {
+   "s": "ZFCVINDIA",
+   "n": "ZF Commercial Vehicle Control Systems India Ltd.",
+   "industry": "Automobile and Auto Components"
+  },
+  {
+   "s": "ZEEL",
+   "n": "Zee Entertainment Enterprises Ltd.",
+   "industry": "Media Entertainment & Publication"
+  },
+  {
+   "s": "ZENTEC",
+   "n": "Zen Technologies Ltd.",
+   "industry": "Capital Goods"
+  },
+  {
+   "s": "ZENSARTECH",
+   "n": "Zensar Technolgies Ltd.",
+   "industry": "Information Technology"
+  },
+  {
+   "s": "ZYDUSLIFE",
+   "n": "Zydus Lifesciences Ltd.",
+   "industry": "Healthcare"
+  },
+  {
+   "s": "ZYDUSWELL",
+   "n": "Zydus Wellness Ltd.",
+   "industry": "Fast Moving Consumer Goods"
+  },
+  {
+   "s": "ECLERX",
+   "n": "eClerx Services Ltd.",
+   "industry": "Services"
+  }
+ ]
+}

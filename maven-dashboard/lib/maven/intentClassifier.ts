@@ -15,6 +15,9 @@ export function classifyIntent(query: string): Intent {
   if (resolveStock(query)) return "single_stock";
 
   const n = normalizeForClassification(query);
+  // Individual-stock leaderboard (top gainers/losers/most active) - must precede the market/index
+  // heuristics so a stock-mover ask plans stock-mover data, not the index/sector snapshot.
+  if (/\b(top|biggest|best|highest)\b[^.?!]{0,40}\b(gainers?|losers?|movers?|active|volume|stocks?|shares?)\b|\b(gainers?|losers?)\b[^.?!]{0,20}\b(today|now|this week|currently)\b|\bmost active\b|\bhighest volume\b|\bwhich stocks?\b[^.?!]{0,30}\b(moved?|gain|los|up|down|most|drove|led|pull|push|caused|behind)\b|\bwhich [^.?!]{0,20}stocks?\b[^.?!]{0,40}\b(drove|led|pulled|pushed|moved|caused)\b/.test(n)) return "top_stock_movers";
   if (/summari|market summary|today'?s? market|market wrap|how (is|was|did) the market|market today|wrap up/.test(n)) return "market_summary";
   if (/(nifty|sensex|bank ?nifty|midcap|smallcap|index)\b/.test(n) && /(mov|up|down|fall|rise|gain|drop|today|why|lead|rally)/.test(n)) return "index_movement";
   if (/(cpi|wpi|\biip\b|\bpmi\b|\bgdp\b|\bfed\b|monsoon|fiscal|current account|inflation|deficit)/.test(n)) return "macro_impact";

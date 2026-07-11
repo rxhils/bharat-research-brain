@@ -4,7 +4,7 @@ import { parseAllFiscalTokens, getLatestCompletedIndianFiscalYear } from "./repo
 import { extractCompanyMetrics, crossVerifyMetrics } from "./companyMetricExtractor";
 import { getFreshCompanyFacts, saveCompanyFacts } from "./companyFactStore";
 import { buildLatestDataChecklist } from "./latestDataChecklist";
-import { getIndexPerformance, getSectorPerformance, getStockPrice, getCrudePrice, getUSDINR, getGSecYield, getFIIDIIFlows, getIndiaMacroSnapshot, getCompanySnapshot, getCompanyAnnouncements, getLatestResultContext, getShareholdingContext } from "./dataTools";
+import { getIndexPerformance, getSectorPerformance, getStockPrice, getCrudePrice, getUSDINR, getGSecYield, getFIIDIIFlows, getIndiaMacroSnapshot, getCompanySnapshot, getCompanyAnnouncements, getLatestResultContext, getShareholdingContext, getTopStockMovers, parseMoverParams } from "./dataTools";
 import { searchSources } from "./sourceSearch";
 import { CALENDAR_LIMITATION } from "./marketCalendar";
 import { lookupKnowledge } from "./indiaMarketKnowledge";
@@ -50,6 +50,7 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   if (need.has("fiidii")) jobs.push(getFIIDIIFlows(histDate ? { date: histDate } : undefined).then((d) => { md.fiiDiiFlows = d; }));
   if (need.has("macro")) jobs.push(getIndiaMacroSnapshot().then((d) => { md.macroSnapshot = d; }));
   if ((need.has("stock") || need.has("stocks")) && syms.length) jobs.push(Promise.all(syms.map((s) => getStockPrice(s))).then((d) => { md.stocks = d; }));
+  if (need.has("stock_movers")) jobs.push(getTopStockMovers(parseMoverParams(query)).then((d) => { md.stockMovers = d; }));
   if (need.has("snapshots") && syms.length) jobs.push(Promise.all(syms.map((s) => getCompanySnapshot(s, nameOf(s)))).then((d) => { md.stockSnapshots = d; }));
   if (need.has("announcements") && syms.length) jobs.push(Promise.all(syms.map((s) => getCompanyAnnouncements(s, nameOf(s)))).then((d) => { md.announcements = d; }));
   if (singleStock && syms[0]) {
@@ -69,6 +70,16 @@ export async function buildContextPack(query: string, plan: ResearchPlan, answer
   for (const q of md.indices ?? []) if (q.price != null) facts.push(`${q.label} at ${q.price.toFixed(2)} (${pct(q.changePct)}${dayWord}). [source: NSE/BSE via Yahoo Finance]`);
   if (md.sectors?.length) { const t = md.sectors[0], b = md.sectors[md.sectors.length - 1]; facts.push(`Top sector ${t.name} (${pct(t.changePct)}); weakest ${b.name} (${pct(b.changePct)}). [source: NSE via Yahoo Finance]`); }
   for (const q of md.stocks ?? []) if (q.price != null) facts.push(`${q.label} at ${q.price.toFixed(2)} (${pct(q.changePct)} today). [source: Yahoo Finance]`);
+  if (md.stockMovers) {
+    const sm = md.stockMovers;
+    const dirLabel = sm.direction === "losers" ? "losers" : sm.direction === "most_active" ? "most active" : "gainers";
+    if (sm.movers.length) {
+      const t = sm.movers[0];
+      facts.push(`Top individual-stock ${dirLabel} today: ${t.companyName} (${t.symbol})${t.changePct != null ? ` ${pct(t.changePct)}` : ""}${t.price != null ? ` at ${t.price.toFixed(2)}` : ""}. [source: ${sm.source}]`);
+      facts.push(`Individual NSE/BSE ${dirLabel} leaderboard: ${sm.movers.length} rows (top ${sm.limit}, universe ${sm.universe}). [source: ${sm.source}]`);
+    }
+    if (sm.limitation) limitations.push(sm.limitation);
+  }
   if (md.crude?.price != null) facts.push(`Brent crude at ${md.crude.price.toFixed(2)} (${pct(md.crude.changePct)}). [source: Yahoo Finance]`);
   if (md.usdinr?.price != null) facts.push(`USD/INR at ${md.usdinr.price.toFixed(2)} (${pct(md.usdinr.changePct)}). [source: Yahoo Finance]`);
   if (md.gsecYield?.yield10Y != null) facts.push(`10Y G-Sec yield ~${md.gsecYield.yield10Y}% (latest available). [source: ${md.gsecYield.source}]`);

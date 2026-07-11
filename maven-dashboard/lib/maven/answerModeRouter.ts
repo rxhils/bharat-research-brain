@@ -32,9 +32,11 @@ export function routeAnswerMode(query: string, intent: FollowUpIntent): MavenAns
     case "source_followup": return "source_list";
     case "chart_followup": return "chart_first";
     case "expand_previous": return "deep_explanation";
+    case "explain_leaderboard": return "deep_explanation"; // handled with previous rows in route.ts
     case "clarification": return "clarification_answer";
     case "entity_followup":
     case "time_followup":
+    case "sector_movers_followup": // research-backed rewrite -> fresh leaderboard
       return "standard_card";
     default:
       return "standard_card";
