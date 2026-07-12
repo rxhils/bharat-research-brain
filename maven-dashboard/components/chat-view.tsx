@@ -10,11 +10,15 @@ import type { MavenAskResponse } from "@/lib/maven-types";
 import { useMavenAuth } from "./auth/useMavenAuth";
 
 const SUGGESTIONS = [
-  { t: "Summarize today's Indian market", k: "Market wrap" },
-  { t: "Why are banks leading today?", k: "Sector leadership" },
-  { t: "What sectors benefit from softer crude?", k: "Macro knock-on" },
-  { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison" },
+  { t: "Summarize today's Indian market", k: "Market wrap", d: "Indices, breadth, and the sectors that drove the session." },
+  { t: "Why are banks leading today?", k: "Sector leadership", d: "What's moving the leaders — flows, results, or rates." },
+  { t: "What sectors benefit from softer crude?", k: "Macro knock-on", d: "Traces the mechanism from crude to the sector winners." },
+  { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison", d: "Valuation, growth, and quality side by side." },
 ];
+
+// Entry animation plays once per page load; client-side remounts (e.g. "New
+// chat" re-keys ChatView) skip it so navigation never replays the sequence.
+let entryPlayed = false;
 const MODELS = [
   { id: "maven-v1", name: "Maven V1", tag: "Beta", desc: "Fast India-market context", live: true },
   { id: "maven-pro", name: "Maven Pro", tag: "Deep Research", desc: "Deeper source pack and document extraction", live: false },
@@ -229,7 +233,9 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
   return (
     <div className={"relative mx-auto flex max-w-[960px] flex-col" + (empty ? "" : " min-h-[58dvh]")}>
       <AuroraBg />
-      {empty ? <Hero onPick={send} /> : (
+      {empty ? (
+        <Hero onPick={send} composer={<Composer input={input} setInput={setInput} send={send} empty model={model} setModel={setModel} />} />
+      ) : (
         <div className="scroll-touch flex-1 space-y-7 pb-6">
           {msgs.map((m, mi) => (m.role === "user" ? (
             <div key={m.id} ref={m.id === lastUserId.current ? turnRef : undefined} className="scroll-mt-24">
@@ -248,7 +254,7 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
           <div style={{ minHeight: "42dvh" }} aria-hidden />
         </div>
       )}
-      <Composer input={input} setInput={setInput} send={send} empty={empty} model={model} setModel={setModel} />
+      {!empty && <Composer input={input} setInput={setInput} send={send} empty={false} model={model} setModel={setModel} />}
     </div>
   );
 }
@@ -299,35 +305,63 @@ function GuestLimitCard({ onSignIn }: { onSignIn: () => Promise<void> }) {
   );
 }
 
-function Hero({ onPick }: { onPick: (q: string) => void }) {
+function Hero({ onPick, composer }: { onPick: (q: string) => void; composer: React.ReactNode }) {
   const reduce = useReducedMotionSafe();
-  const up = { hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } };
+  // Mobile shows two starter cards; "More ways to explore" reveals the rest.
+  const [showAll, setShowAll] = useState(false);
+  const [entered] = useState(() => entryPlayed);
+  useEffect(() => {
+    entryPlayed = true;
+  }, []);
+  const skip = reduce || entered;
+  const up = { hide: skip ? { opacity: 1 } : { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } } };
   return (
-    <motion.div className="flex flex-col items-center justify-center py-6 text-center sm:py-10" initial="hide" animate="show"
-      variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.1 } } }}>
-      <motion.div variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1, transition: { duration: 0.8, ease: EASE } } }}>
-        <Core />
+    <motion.div className="flex flex-col items-center justify-center py-4 text-center sm:py-8" initial="hide" animate="show"
+      variants={{ hide: {}, show: { transition: { staggerChildren: skip ? 0 : 0.08 } } }}>
+      {/* the ring is ambient now — smaller, quieter, not the center of the page */}
+      <motion.div variants={{ hide: skip ? { opacity: 0.9 } : { opacity: 0, scale: 0.9 }, show: { opacity: 0.9, scale: 1, transition: { duration: 0.7, ease: EASE } } }}>
+        <Core size={64} />
       </motion.div>
-      <motion.h2 variants={up} className="mt-6 text-balance font-serif text-[2rem] leading-[1.1] text-ink sm:text-5xl">
-        Understand the <span className="italic text-emerald">Indian market</span>.
+      <motion.div variants={up} className="mt-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-dim">
+        <span className="h-1 w-1 rounded-full bg-emerald/80" aria-hidden />
+        Maven Research &middot; India Markets
+      </motion.div>
+      <motion.h2 variants={up} className="mt-3 text-balance font-serif text-[1.9rem] leading-[1.12] text-ink sm:text-[2.75rem]">
+        Understand what moved&mdash;<span className="italic text-emerald">and why.</span>
       </motion.h2>
       <motion.p variants={up} className="mt-3 max-w-lg px-2 text-sm leading-relaxed text-ink/60">
-        Ask about stocks, sectors, flows, RBI policy, crude, rupee, or macro &mdash; Maven explains the mechanism.
+        Stocks, sectors, flows, RBI policy, crude, rupee &mdash; Maven explains the mechanism behind the move.
       </motion.p>
-      <motion.div className="mt-9 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.15 } } }}>
-        {SUGGESTIONS.map((s) => <SuggestionCard key={s.t} s={s} onPick={onPick} />)}
+      {/* the composer is the page's anchor: directly beneath the headline, not parked at the bottom */}
+      <motion.div variants={up} className="w-full max-w-2xl">
+        {composer}
       </motion.div>
+      <motion.div className="mt-5 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2"
+        variants={{ hide: {}, show: { transition: { staggerChildren: skip ? 0 : 0.07, delayChildren: skip ? 0 : 0.1 } } }}>
+        {SUGGESTIONS.map((s, i) => (
+          <div key={s.t} className={i >= 2 && !showAll ? "hidden sm:block" : undefined}>
+            <SuggestionCard s={s} onPick={onPick} />
+          </div>
+        ))}
+      </motion.div>
+      {!showAll && (
+        <motion.button variants={up} type="button" onClick={() => setShowAll(true)}
+          className={"mt-3 py-2 text-xs font-medium text-dim transition-colors duration-150 hover:text-emerald sm:hidden " + PRESS}>
+          More ways to explore &rarr;
+        </motion.button>
+      )}
     </motion.div>
   );
 }
 
-function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q: string) => void }) {
+function SuggestionCard({ s, onPick }: { s: { t: string; k: string; d: string }; onPick: (q: string) => void }) {
   const reduce = useReducedMotionSafe();
-  // Calm, editorial hover: border warms to emerald and the surface lightens - no tilt, no scale.
+  // Calm, editorial hover: a 3px lift, border warms to emerald, surface lightens - no tilt.
   return (
     <motion.button onClick={() => onPick(s.t)} {...pressTap(reduce)}
+      whileHover={reduce ? undefined : { y: -3 }}
       variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}
-      className="group relative overflow-hidden rounded-2xl border border-hairline bg-panel/45 p-4 text-left backdrop-blur-md transition-colors duration-300 hover:border-emerald/35 hover:bg-panel/65 focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+      className="group relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-panel/45 p-4 text-left backdrop-blur-md transition-colors duration-300 hover:border-emerald/35 hover:bg-panel/65 focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
       <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald/0 via-emerald to-emerald/0 transition-transform duration-500 group-hover:scale-x-100" aria-hidden />
       <span className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald/0 blur-2xl transition-colors duration-500 group-hover:bg-emerald/10" aria-hidden />
       <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-dim">
@@ -337,6 +371,7 @@ function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q
         <span className="text-[0.95rem] leading-snug text-ink">{s.t}</span>
         <span className="mt-0.5 shrink-0 text-emerald opacity-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
       </div>
+      <p className="mt-1.5 text-xs leading-relaxed text-muted">{s.d}</p>
     </motion.button>
   );
 }
@@ -649,6 +684,7 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
   input: string; setInput: (s: string) => void; send: (q: string) => void; empty: boolean; model: string; setModel: (id: string) => void;
 }) {
   const reduce = useReducedMotionSafe();
+  const [focused, setFocused] = useState(false);
   // Row is placed ABOVE the input on the conversation view (opens up over messages) and BELOW the
   // input on the empty state (opens down into the blank space, clear of the prompt cards).
   const selectorRow = (
@@ -660,16 +696,26 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
     </div>
   );
   return (
-    <div className={(empty ? "mt-8 sm:mt-10 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
+    <div className={(empty ? "mt-7 " : "sticky bottom-0 mt-6 bg-gradient-to-t from-bg via-bg/95 to-transparent ") + "relative z-10 pt-3"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
+      {/* Focus dims the page around the composer (desktop) — the task becomes the
+          only bright thing on screen. pointer-events: none, so nothing is blocked. */}
+      <AnimatePresence>
+        {focused && (
+          <motion.div className="pointer-events-none fixed inset-0 z-[-1] hidden bg-black/35 sm:block" aria-hidden
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE }} />
+        )}
+      </AnimatePresence>
       {!empty && <div className="mb-2.5">{selectorRow}</div>}
-      <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-shadow duration-300 focus-within:from-emerald/60 focus-within:shadow-[0_0_34px_-10px_rgba(52,211,153,0.55)]">
-        <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2 rounded-2xl bg-panel/80 p-2 backdrop-blur-md">
-          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={1} placeholder="Ask Maven about Nifty, sectors, flows, macro, or Indian stocks&hellip;"
+      <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-shadow duration-300 focus-within:from-emerald/60 focus-within:shadow-[0_0_44px_-10px_rgba(52,211,153,0.6)]">
+        <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2 rounded-2xl bg-panel/80 p-2.5 backdrop-blur-md">
+          <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={1}
+            placeholder={focused ? "e.g. Why did IT slip today?" : "Ask Maven about Indian markets…"}
             aria-label="Ask Maven a question"
+            onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-            className="max-h-36 flex-1 resize-none bg-transparent px-2.5 py-2 text-base leading-relaxed text-ink outline-none placeholder:text-dim sm:text-sm" />
+            className="max-h-36 flex-1 resize-none bg-transparent px-2.5 py-3 text-base leading-relaxed text-ink outline-none placeholder:text-dim sm:text-sm" />
           <motion.button type="submit" whileTap={!reduce && input.trim() ? { scale: 0.92 } : undefined} aria-label="Ask Maven" disabled={!input.trim()}
-            className={"grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-[background-color,color,box-shadow,opacity] duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/70 " + (input.trim()
+            className={"grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-[background-color,color,box-shadow,opacity] duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/70 sm:h-10 sm:w-10 " + (input.trim()
               ? "bg-gradient-to-br from-emerald to-emerald-deep text-bg shadow-[0_8px_24px_-8px_rgba(52,211,153,0.85)] hover:opacity-90"
               : "cursor-not-allowed bg-white/[0.06] text-dim")}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14M13 6l6 6-6 6" /></svg>
