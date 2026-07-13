@@ -1,5 +1,4 @@
 "use client";
-import { Fragment } from "react";
 import { motion } from "framer-motion";
 import { EASE, useReducedMotionSafe } from "./motion";
 import type { Msg } from "./chat-view";
@@ -17,15 +16,6 @@ function relativeTime(ms: number): string {
   return day === 1 ? "yesterday" : `${day}d ago`;
 }
 
-/** History reads as a library, not a flat list: Today / This week / Earlier. */
-function groupLabel(ms: number): string {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  if (ms >= startOfDay) return "Today";
-  if (ms >= startOfDay - 6 * 86_400_000) return "This week";
-  return "Earlier";
-}
-
 export function ChatSidebar({ conversations, activeId, onSelect, onNew, onDelete }: {
   conversations: Conversation[]; activeId: string;
   onSelect: (id: string) => void; onNew: () => void; onDelete: (id: string) => void;
@@ -40,30 +30,19 @@ export function ChatSidebar({ conversations, activeId, onSelect, onNew, onDelete
         New chat
       </button>
 
-      <div className="mb-1.5 px-1 text-[10px] uppercase tracking-wider text-dim">Your research library</div>
+      <div className="mb-1.5 px-1 text-[10px] uppercase tracking-wider text-dim">History</div>
       {/* One container fade on mount - NO per-row stagger (would read as slop on a nav list). */}
       <motion.div
         initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35, ease: EASE }}
         className="scroll-touch min-h-0 flex-1 space-y-1 overflow-y-auto pr-0.5">
         {conversations.length === 0 && (
-          <div className="rounded-xl border border-dashed border-hairline px-3 py-4">
-            <div className="flex items-center gap-2 text-xs font-medium text-muted">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden><path d="M7 4h10a1 1 0 0 1 1 1v15l-6-3.3L6 20V5a1 1 0 0 1 1-1z" /></svg>
-              Nothing saved yet
-            </div>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-dim">Chats appear here after your first question.</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-dim">Each thread keeps its sources and charts.</p>
-          </div>
+          <div className="px-1 py-3 text-xs leading-relaxed text-dim">Your past conversations will appear here.</div>
         )}
-        {[...conversations].sort((a, b) => b.updatedAt - a.updatedAt).map((c, i, sorted) => {
+        {conversations.map((c) => {
           const active = c.id === activeId;
-          const label = groupLabel(c.updatedAt);
-          const showLabel = i === 0 || groupLabel(sorted[i - 1].updatedAt) !== label;
           return (
-            <Fragment key={c.id}>
-              {showLabel && <div className="px-1 pb-1 pt-2.5 text-[10px] uppercase tracking-wider text-dim/70 first:pt-0.5">{label}</div>}
-              <div
-                className={"group relative overflow-hidden rounded-lg border px-2.5 py-2 text-left transition-colors focus-within:border-emerald/40 " + (active
+            <div key={c.id}
+              className={"group relative overflow-hidden rounded-lg border px-2.5 py-2 text-left transition-colors focus-within:border-emerald/40 " + (active
                 ? "border-emerald/25 bg-emerald/[0.06]"
                 : "border-transparent hover:border-hairline hover:bg-white/[0.03]")}>
               {/* Restrained active indicator: a single emerald hairline rule on the left edge. */}
@@ -78,8 +57,7 @@ export function ChatSidebar({ conversations, activeId, onSelect, onNew, onDelete
                 className="absolute right-1 top-1 rounded-md p-1.5 text-dim opacity-0 transition-[opacity,color] hover:text-rose focus-visible:opacity-100 focus-visible:text-rose focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60 group-hover:opacity-100">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18M6 6l12 12" /></svg>
               </button>
-              </div>
-            </Fragment>
+            </div>
           );
         })}
       </motion.div>
