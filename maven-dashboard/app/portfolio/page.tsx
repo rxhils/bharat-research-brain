@@ -101,14 +101,14 @@ export default async function Portfolio() {
     <div className="space-y-5">
       <div>
         <div className="text-[11px] uppercase tracking-wider text-dim">Paper portfolios</div>
-        <h1 className="mt-1 font-serif text-2xl text-ink">Two live books, two engines.</h1>
+        <h1 className="mt-1 font-serif text-2xl text-ink">Three live books, three engines.</h1>
         <p className="mt-1 text-sm text-muted">
           Enhanced F+ trades vol-adjusted momentum; Defensive trades low-volatility with sooner, harder
-          de-risking. Both ₹10L paper, side by side.
+          de-risking; Concentrated runs a top-10 high-conviction book. All three ₹10L paper, side by side.
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
         {panels.map((panel) => <PortfolioPanel key={panel.name} {...panel} />)}
       </div>
 

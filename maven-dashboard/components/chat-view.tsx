@@ -100,32 +100,40 @@ function MavenMark({ size = 26, draw = false }: { size?: number; draw?: boolean 
   );
 }
 
-function Core({ size = 96 }: { size?: number }) {
-  // The mark, immediately legible — no draw-in, no spinner rings. One living
-  // detail carries the meaning: a thin market line traces itself across the
-  // disc below the logo, holds, fades, and loops. brand-motion keeps it alive
-  // even under the OS reduced-motion flag (it's small and contained).
+function Core({ size = 128 }: { size?: number }) {
+  const ringMask = "radial-gradient(circle, transparent 66%, #000 68%, #000 74%, transparent 76%)";
+  // A brand medallion: the mark large and immediately legible, lit by two calm
+  // motions — a light sheen sweeping across the emblem (like light over metal)
+  // and a thin emerald arc orbiting the rim. brand-motion keeps both alive even
+  // under the OS reduced-motion flag (small, contained, slow).
   return (
     <div className="brand-motion relative grid place-items-center" style={{ width: size, height: size }}>
-      <span className="absolute inset-0 rounded-full bg-emerald/20 blur-2xl animate-gate-glow2" aria-hidden />
-      <span className="relative grid place-items-center overflow-hidden rounded-full border border-emerald/25" style={{ width: size, height: size, background: "radial-gradient(circle at 50% 30%, #161a1e, #0a0b0e)" }}>
-        <span className="-translate-y-1">
-          <MavenMark size={Math.round(size * 0.44)} />
-        </span>
-        <svg viewBox="0 0 96 28" width={Math.round(size * 0.7)} className="absolute bottom-[16%] left-1/2 -translate-x-1/2" aria-hidden>
-          <defs>
-            <linearGradient id="coreTraceLine" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stopColor="rgba(52,211,153,0.12)" />
-              <stop offset="1" stopColor="#34d399" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M2 22 L18 16 L32 19 L48 9 L62 13 L78 5 L94 8"
-            fill="none" stroke="url(#coreTraceLine)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-            className="animate-core-trace"
-            style={{ strokeDasharray: 150, strokeDashoffset: 150, filter: "drop-shadow(0 0 4px rgba(52,211,153,0.55))" }}
-          />
-        </svg>
+      {/* breathing glow */}
+      <span className="absolute inset-0 rounded-full bg-emerald/25 blur-2xl animate-gate-glow2" aria-hidden />
+      {/* orbiting rim arc — one thin highlight, not a loader ring */}
+      <span
+        className="absolute rounded-full animate-[gateSpin_10s_linear_infinite]"
+        aria-hidden
+        style={{
+          width: size, height: size,
+          background: "conic-gradient(from 0deg, transparent 0deg, transparent 290deg, rgba(52,211,153,0.9) 330deg, transparent 360deg)",
+          maskImage: ringMask, WebkitMaskImage: ringMask,
+          filter: "drop-shadow(0 0 6px rgba(52,211,153,0.45))",
+        }}
+      />
+      {/* the medallion */}
+      <span
+        className="relative grid place-items-center overflow-hidden rounded-full border border-emerald/30"
+        style={{
+          width: Math.round(size * 0.86), height: Math.round(size * 0.86),
+          background: "radial-gradient(circle at 50% 28%, #1a1f24, #0a0b0e)",
+          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 44px -18px rgba(0,0,0,0.9), 0 0 34px -12px rgba(52,211,153,0.35)",
+        }}
+      >
+        <MavenMark size={Math.round(size * 0.52)} />
+        {/* light sheen sweeping across the emblem */}
+        <span className="pointer-events-none absolute inset-y-0 left-0 w-1/2 -skew-x-12 animate-[gateSweep_5.5s_ease-in-out_infinite]" aria-hidden
+          style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent)" }} />
       </span>
     </div>
   );
@@ -311,18 +319,17 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
   const reduce = useReducedMotionSafe();
   const up = { hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } };
   return (
-    <motion.div className="flex flex-col items-center justify-center py-6 text-center sm:py-10" initial="hide" animate="show"
+    <motion.div className="flex flex-col items-center justify-center py-3 text-center sm:py-5" initial="hide" animate="show"
       variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.1 } } }}>
       <motion.div variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1, transition: { duration: 0.8, ease: EASE } } }}>
         <Core />
       </motion.div>
-      <motion.h2 variants={up} className="mt-6 text-balance font-serif text-[2rem] leading-[1.1] text-ink sm:text-5xl">
+      <motion.h2 variants={up} className="mt-4 text-balance font-serif text-[2rem] leading-[1.1] text-ink sm:text-5xl">
         Understand the <span className="italic text-emerald">Indian market</span>.
       </motion.h2>
-      <motion.p variants={up} className="mt-3 max-w-lg px-2 text-sm leading-relaxed text-ink/60">
-        Ask about stocks, sectors, flows, RBI policy, crude, rupee, or macro &mdash; Maven explains the mechanism.
-      </motion.p>
-      <motion.div className="mt-9 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.15 } } }}>
+      {/* Tight vertical rhythm so the whole empty state fits one screen — the
+          old support line under the headline is gone by design. */}
+      <motion.div className="mt-6 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.15 } } }}>
         {SUGGESTIONS.map((s) => <SuggestionCard key={s.t} s={s} onPick={onPick} />)}
       </motion.div>
     </motion.div>
@@ -668,7 +675,7 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
     </div>
   );
   return (
-    <div className={(empty ? "mt-8 sm:mt-10 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-4"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
+    <div className={(empty ? "mt-5 " : "sticky bottom-0 mt-6 ") + "z-10 bg-gradient-to-t from-bg via-bg/95 to-transparent pt-3"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
       {!empty && <div className="mb-2.5">{selectorRow}</div>}
       <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-shadow duration-300 focus-within:from-emerald/60 focus-within:shadow-[0_0_34px_-10px_rgba(52,211,153,0.55)]">
         <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2 rounded-2xl bg-panel/80 p-2 backdrop-blur-md">
