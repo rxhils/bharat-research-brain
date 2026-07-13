@@ -101,23 +101,31 @@ function MavenMark({ size = 26, draw = false }: { size?: number; draw?: boolean 
 }
 
 function Core({ size = 96 }: { size?: number }) {
-  const reduce = useReducedMotionSafe();
-  const ringMask = "radial-gradient(circle, transparent 55%, #000 57%, #000 70%, transparent 73%)";
-  const ringMask2 = "radial-gradient(circle, transparent 72%, #000 74%, #000 82%, transparent 84%)";
+  // The mark, immediately legible — no draw-in, no spinner rings. One living
+  // detail carries the meaning: a thin market line traces itself across the
+  // disc below the logo, holds, fades, and loops. brand-motion keeps it alive
+  // even under the OS reduced-motion flag (it's small and contained).
   return (
-    <div className="relative grid place-items-center" style={{ width: size, height: size }}>
-      {/* One calm opacity-only breathe on the glow — the two counter-rotating rings carry the life;
-          the old scale pulse + orbiting dot made four simultaneous loops (audit: reduce simultaneity). */}
-      <motion.span className="absolute inset-0 rounded-full bg-emerald/20 blur-2xl" aria-hidden
-        animate={reduce ? undefined : { opacity: [0.45, 0.7, 0.45] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }} />
-      <motion.span className="absolute rounded-full" aria-hidden
-        style={{ width: size, height: size, background: "conic-gradient(from 0deg, rgba(52,211,153,0), rgba(52,211,153,0.85), rgba(201,169,97,0.45), rgba(52,211,153,0))", maskImage: ringMask, WebkitMaskImage: ringMask }}
-        animate={reduce ? undefined : { rotate: 360 }} transition={{ duration: 16, repeat: Infinity, ease: "linear" }} />
-      <motion.span className="absolute rounded-full" aria-hidden
-        style={{ width: size, height: size, background: "conic-gradient(from 180deg, rgba(201,169,97,0), rgba(52,211,153,0.4), rgba(201,169,97,0))", maskImage: ringMask2, WebkitMaskImage: ringMask2 }}
-        animate={reduce ? undefined : { rotate: -360 }} transition={{ duration: 24, repeat: Infinity, ease: "linear" }} />
-      <span className="relative grid place-items-center rounded-full border border-emerald/25" style={{ width: size * 0.56, height: size * 0.56, background: "radial-gradient(circle at 50% 32%, #15191d, #0a0b0e)" }}>
-        <MavenMark size={Math.round(size * 0.32)} draw />
+    <div className="brand-motion relative grid place-items-center" style={{ width: size, height: size }}>
+      <span className="absolute inset-0 rounded-full bg-emerald/20 blur-2xl animate-gate-glow2" aria-hidden />
+      <span className="relative grid place-items-center overflow-hidden rounded-full border border-emerald/25" style={{ width: size, height: size, background: "radial-gradient(circle at 50% 30%, #161a1e, #0a0b0e)" }}>
+        <span className="-translate-y-1">
+          <MavenMark size={Math.round(size * 0.44)} />
+        </span>
+        <svg viewBox="0 0 96 28" width={Math.round(size * 0.7)} className="absolute bottom-[16%] left-1/2 -translate-x-1/2" aria-hidden>
+          <defs>
+            <linearGradient id="coreTraceLine" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="rgba(52,211,153,0.12)" />
+              <stop offset="1" stopColor="#34d399" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M2 22 L18 16 L32 19 L48 9 L62 13 L78 5 L94 8"
+            fill="none" stroke="url(#coreTraceLine)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            className="animate-core-trace"
+            style={{ strokeDasharray: 150, strokeDashoffset: 150, filter: "drop-shadow(0 0 4px rgba(52,211,153,0.55))" }}
+          />
+        </svg>
       </span>
     </div>
   );

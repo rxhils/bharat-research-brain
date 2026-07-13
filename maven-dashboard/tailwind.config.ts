@@ -83,6 +83,15 @@ const config: Config = {
           "0%": { backgroundPosition: "-180% 0" },
           "100%": { backgroundPosition: "180% 0" },
         },
+        // Chat hero core: a market line draws across the disc, holds, fades, loops.
+        coreTrace: {
+          "0%": { strokeDashoffset: "150", opacity: "0" },
+          "10%": { opacity: "1" },
+          "55%": { strokeDashoffset: "0", opacity: "1" },
+          "75%": { strokeDashoffset: "0", opacity: "1" },
+          "90%": { strokeDashoffset: "0", opacity: "0" },
+          "100%": { strokeDashoffset: "150", opacity: "0" },
+        },
       },
       animation: {
         fadeUp: "fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both",
@@ -102,6 +111,7 @@ const config: Config = {
         "gate-blink": "gateBlink 1.1s step-end infinite",
         "gate-spin": "gateSpin .75s linear infinite",
         "gate-shimmer": "gateShimmer 4.5s linear infinite",
+        "core-trace": "coreTrace 5s ease-in-out infinite",
       },
     },
   },
