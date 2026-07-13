@@ -70,6 +70,9 @@ export interface MavenAuth {
   hasAccess: boolean;
   /** Google account email of the live Supabase session; null in mock/guest mode. */
   userEmail: string | null;
+  /** Google display name / profile photo from the session's user metadata. */
+  userName: string | null;
+  userAvatarUrl: string | null;
   mode: "supabase" | "mock";
   /** Guest messages sent today (resets at midnight, local time). */
   guestMessagesUsed: number;
@@ -97,7 +100,20 @@ export function useMavenAuth(): MavenAuth {
   const [isSignedIn, setSignedIn] = useState(false);
   const [isGuest, setGuest] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userAvatarUrl, setUserAvatarUrl] = useState<string | null>(null);
   const [guestUsed, setGuestUsed] = useState(0);
+
+  // Google puts the profile on user_metadata (full_name / name, avatar_url /
+  // picture) — harvest defensively since the exact keys vary by provider.
+  const applySessionUser = (user: { email?: string; user_metadata?: Record<string, unknown> } | null | undefined) => {
+    setUserEmail(user?.email ?? null);
+    const meta = (user?.user_metadata ?? {}) as Record<string, unknown>;
+    const name = meta.full_name ?? meta.name;
+    const avatar = meta.avatar_url ?? meta.picture;
+    setUserName(typeof name === "string" && name ? name : null);
+    setUserAvatarUrl(typeof avatar === "string" && avatar ? avatar : null);
+  };
 
   useEffect(() => {
     let active = true;
@@ -146,7 +162,7 @@ export function useMavenAuth(): MavenAuth {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!active) return;
       setSignedIn(!!session?.user);
-      setUserEmail(session?.user?.email ?? null);
+      applySessionUser(session?.user);
       markReady();
     });
     supabase.auth
@@ -154,7 +170,7 @@ export function useMavenAuth(): MavenAuth {
       .then(({ data }) => {
         if (!active) return;
         setSignedIn(!!data.session?.user);
-        setUserEmail(data.session?.user?.email ?? null);
+        applySessionUser(data.session?.user);
         markReady();
       })
       .catch(() => markReady());
@@ -256,6 +272,8 @@ export function useMavenAuth(): MavenAuth {
     }
     setSignedIn(false);
     setUserEmail(null);
+    setUserName(null);
+    setUserAvatarUrl(null);
     notifyAuthChange();
   }, [mode]);
 
@@ -265,6 +283,8 @@ export function useMavenAuth(): MavenAuth {
     isGuest,
     hasAccess: isSignedIn || isGuest,
     userEmail,
+    userName,
+    userAvatarUrl,
     mode,
     guestMessagesUsed: guestUsed,
     guestMessagesRemaining: Math.max(0, GUEST_DAILY_LIMIT - guestUsed),

@@ -14,8 +14,10 @@ export function AccountChip() {
   const reduce = useReducedMotionSafe();
   if (!auth.ready || !auth.hasAccess) return null;
 
-  const label = auth.userEmail ?? (auth.isGuest ? "Guest session" : "Signed in");
-  const initial = (auth.userEmail?.[0] ?? "G").toUpperCase();
+  // The account, not a generic state: email first (it's the identity users
+  // recognize), then Google display name, then the guest/mock fallbacks.
+  const label = auth.userEmail ?? auth.userName ?? (auth.isGuest ? "Guest session" : "Signed in");
+  const initial = (auth.userName?.[0] ?? auth.userEmail?.[0] ?? "G").toUpperCase();
 
   return (
     <motion.div
@@ -24,20 +26,28 @@ export function AccountChip() {
       transition={{ duration: 0.5, ease: EASE }}
       className="brand-motion group flex shrink-0 items-center gap-2 rounded-full border border-hairline bg-panel/40 p-1.5 backdrop-blur-sm transition-[border-color,box-shadow] duration-300 hover:border-emerald/25 hover:shadow-[0_0_24px_-8px_rgba(52,211,153,0.35)]"
     >
-      {/* gradient avatar: account initial + live pulse */}
-      <span
-        className="relative grid h-6 w-6 shrink-0 place-items-center rounded-full font-sans text-[10px] font-bold"
-        style={{ background: "linear-gradient(140deg,#34d399,#10b981)", color: "#06251b", boxShadow: "0 0 14px -4px rgba(52,211,153,0.55)" }}
-        aria-hidden
-      >
-        {initial}
+      {/* Google profile photo when available; gradient initial otherwise */}
+      <span className="relative h-6 w-6 shrink-0" aria-hidden>
+        {auth.userAvatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element -- tiny remote avatar; next/image would require a remote-domain config change
+          <img src={auth.userAvatarUrl} alt="" referrerPolicy="no-referrer"
+            className="h-6 w-6 rounded-full object-cover ring-1 ring-emerald/40" />
+        ) : (
+          <span
+            className="grid h-6 w-6 place-items-center rounded-full font-sans text-[10px] font-bold"
+            style={{ background: "linear-gradient(140deg,#34d399,#10b981)", color: "#06251b", boxShadow: "0 0 14px -4px rgba(52,211,153,0.55)" }}
+          >
+            {initial}
+          </span>
+        )}
         <span className="absolute -right-px -top-px flex h-1.5 w-1.5">
           <span className="absolute inline-flex h-full w-full rounded-full bg-emerald opacity-70 animate-ping" />
           <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald ring-2 ring-bg" />
         </span>
       </span>
 
-      <span className="max-w-[180px] truncate font-sans text-xs text-muted transition-colors duration-300 group-hover:text-ink" title={label}>
+      <span className="max-w-[200px] truncate font-sans text-xs text-muted transition-colors duration-300 group-hover:text-ink"
+        title={auth.userName ? `${auth.userName} · ${auth.userEmail ?? ""}` : label}>
         {label}
       </span>
 
