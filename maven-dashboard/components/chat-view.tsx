@@ -9,12 +9,11 @@ import { MavenReportCard } from "./maven-report";
 import type { MavenAskResponse } from "@/lib/maven-types";
 import { useMavenAuth } from "./auth/useMavenAuth";
 
-// Plain-text starter prompts — labels stay short; each maps to a real query.
-const PROMPTS = [
-  { label: "Today's market", q: "Summarize today's Indian market" },
-  { label: "Why is a sector moving?", q: "Why are banks leading today?" },
-  { label: "Compare two companies", q: "Compare HDFC Bank and ICICI Bank" },
-  { label: "Explain a macro event", q: "What sectors benefit from softer crude?" },
+const SUGGESTIONS = [
+  { t: "Summarize today's Indian market", k: "Market wrap", d: "Indices, breadth, and the sectors that drove the session." },
+  { t: "Why are banks leading today?", k: "Sector leadership", d: "What's moving the leaders — flows, results, or rates." },
+  { t: "What sectors benefit from softer crude?", k: "Macro knock-on", d: "Traces the mechanism from crude to the sector winners." },
+  { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison", d: "Valuation, growth, and quality side by side." },
 ];
 
 // Entry animation plays once per page load; client-side remounts (e.g. "New
@@ -140,6 +139,7 @@ function Avatar({ thinking = false }: { thinking?: boolean }) {
 }
 
 function AuroraBg() {
+  const reduce = useReducedMotionSafe();
   // Two blobs on phones (battery/thermal - each is a large blurred GPU layer); three on desktop.
   const [small, setSmall] = useState(false);
   useEffect(() => {
@@ -153,10 +153,10 @@ function AuroraBg() {
   const fade = "radial-gradient(ellipse 75% 60% at 50% 35%, #000 25%, transparent 78%)";
   return (
     <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden" aria-hidden>
-      {/* Static washes — the drifting loops made the empty page feel busy; the
-          page should feel stable, calm, and fast. */}
-      <div className="absolute left-[10%] top-[8%] h-[24rem] w-[24rem] rounded-full bg-emerald/[0.09] blur-[120px] sm:h-[32rem] sm:w-[32rem]" />
-      <div className="absolute right-[2%] top-[20%] h-[22rem] w-[22rem] rounded-full bg-emerald-deep/[0.08] blur-[120px] sm:h-[28rem] sm:w-[28rem]" />
+      <motion.div className="absolute left-[10%] top-[8%] h-[24rem] w-[24rem] rounded-full bg-emerald/[0.11] blur-[120px] sm:h-[32rem] sm:w-[32rem]"
+        animate={reduce ? undefined : { x: [0, 60, -20, 0], y: [0, 40, 80, 0], scale: [1, 1.15, 1] }} transition={{ duration: 16, repeat: Infinity, ease: "easeInOut" }} />
+      <motion.div className="absolute right-[2%] top-[20%] h-[22rem] w-[22rem] rounded-full bg-emerald-deep/[0.10] blur-[120px] sm:h-[28rem] sm:w-[28rem]"
+        animate={reduce ? undefined : { x: [0, -50, 20, 0], y: [0, 60, -30, 0], scale: [1, 1.22, 1] }} transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 1 }} />
       {!small && (
         /* Static gold tint: keeps the composition's warmth without a third drifting loop
            (compliance pass: thin the empty-state loop density). */
@@ -307,40 +307,72 @@ function GuestLimitCard({ onSignIn }: { onSignIn: () => Promise<void> }) {
 
 function Hero({ onPick, composer }: { onPick: (q: string) => void; composer: React.ReactNode }) {
   const reduce = useReducedMotionSafe();
-  // Mobile shows two prompts; "More topics" reveals the rest.
+  // Mobile shows two starter cards; "More ways to explore" reveals the rest.
   const [showAll, setShowAll] = useState(false);
   const [entered] = useState(() => entryPlayed);
   useEffect(() => {
     entryPlayed = true;
   }, []);
-  // One quiet fade for the whole state — no ring, no stagger, no all-caps
-  // labels. The empty space is the visual luxury; the composer is the product.
+  const skip = reduce || entered;
+  const up = { hide: skip ? { opacity: 1 } : { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } } };
   return (
-    <motion.div className="flex flex-col items-center justify-center py-10 text-center sm:py-16"
-      initial={reduce || entered ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: EASE }}>
-      <h1 className="text-balance font-sans text-2xl font-medium tracking-tight text-ink/95 sm:text-[1.75rem]">
-        What would you like to understand?
-      </h1>
-      <p className="mt-2.5 max-w-md px-2 text-sm leading-relaxed text-muted">
-        Ask Maven about a company, sector, macro event, or today&rsquo;s market.
-      </p>
-      <div className="w-full max-w-2xl">{composer}</div>
-      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 px-2">
-        {PROMPTS.map((p, i) => (
-          <button key={p.label} type="button" onClick={() => onPick(p.q)}
-            className={"border-b border-transparent pb-0.5 text-sm text-muted transition-colors duration-150 hover:border-emerald hover:text-ink focus-visible:border-emerald focus-visible:text-ink focus-visible:outline-none " + (i >= 2 && !showAll ? "hidden sm:inline-block" : "")}>
-            {p.label}
-          </button>
+    <motion.div className="flex flex-col items-center justify-center py-4 text-center sm:py-8" initial="hide" animate="show"
+      variants={{ hide: {}, show: { transition: { staggerChildren: skip ? 0 : 0.08 } } }}>
+      {/* the ring is ambient now — smaller, quieter, not the center of the page */}
+      <motion.div variants={{ hide: skip ? { opacity: 0.9 } : { opacity: 0, scale: 0.9 }, show: { opacity: 0.9, scale: 1, transition: { duration: 0.7, ease: EASE } } }}>
+        <Core size={64} />
+      </motion.div>
+      <motion.div variants={up} className="mt-5 flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-dim">
+        <span className="h-1 w-1 rounded-full bg-emerald/80" aria-hidden />
+        Maven Research &middot; India Markets
+      </motion.div>
+      <motion.h2 variants={up} className="mt-3 text-balance font-serif text-[1.9rem] leading-[1.12] text-ink sm:text-[2.75rem]">
+        Understand what moved&mdash;<span className="italic text-emerald">and why.</span>
+      </motion.h2>
+      <motion.p variants={up} className="mt-3 max-w-lg px-2 text-sm leading-relaxed text-ink/60">
+        Stocks, sectors, flows, RBI policy, crude, rupee &mdash; Maven explains the mechanism behind the move.
+      </motion.p>
+      {/* the composer is the page's anchor: directly beneath the headline, not parked at the bottom */}
+      <motion.div variants={up} className="w-full max-w-2xl">
+        {composer}
+      </motion.div>
+      <motion.div className="mt-5 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2"
+        variants={{ hide: {}, show: { transition: { staggerChildren: skip ? 0 : 0.07, delayChildren: skip ? 0 : 0.1 } } }}>
+        {SUGGESTIONS.map((s, i) => (
+          <div key={s.t} className={i >= 2 && !showAll ? "hidden sm:block" : undefined}>
+            <SuggestionCard s={s} onPick={onPick} />
+          </div>
         ))}
-        {!showAll && (
-          <button type="button" onClick={() => setShowAll(true)}
-            className="border-b border-transparent pb-0.5 text-sm text-dim transition-colors duration-150 hover:text-ink sm:hidden">
-            More topics
-          </button>
-        )}
-      </div>
-      <div className="mt-10 text-[11px] tracking-wide text-dim">Sources shown &middot; Freshness labelled</div>
+      </motion.div>
+      {!showAll && (
+        <motion.button variants={up} type="button" onClick={() => setShowAll(true)}
+          className={"mt-3 py-2 text-xs font-medium text-dim transition-colors duration-150 hover:text-emerald sm:hidden " + PRESS}>
+          More ways to explore &rarr;
+        </motion.button>
+      )}
     </motion.div>
+  );
+}
+
+function SuggestionCard({ s, onPick }: { s: { t: string; k: string; d: string }; onPick: (q: string) => void }) {
+  const reduce = useReducedMotionSafe();
+  // Calm, editorial hover: a 3px lift, border warms to emerald, surface lightens - no tilt.
+  return (
+    <motion.button onClick={() => onPick(s.t)} {...pressTap(reduce)}
+      whileHover={reduce ? undefined : { y: -3 }}
+      variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}
+      className="group relative h-full w-full overflow-hidden rounded-2xl border border-hairline bg-panel/45 p-4 text-left backdrop-blur-md transition-colors duration-300 hover:border-emerald/35 hover:bg-panel/65 focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+      <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald/0 via-emerald to-emerald/0 transition-transform duration-500 group-hover:scale-x-100" aria-hidden />
+      <span className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald/0 blur-2xl transition-colors duration-500 group-hover:bg-emerald/10" aria-hidden />
+      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-dim">
+        <span className="h-1 w-1 rounded-full bg-emerald/80" />{s.k}
+      </div>
+      <div className="mt-2 flex items-start justify-between gap-3">
+        <span className="text-[0.95rem] leading-snug text-ink">{s.t}</span>
+        <span className="mt-0.5 shrink-0 text-emerald opacity-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
+      </div>
+      <p className="mt-1.5 text-xs leading-relaxed text-muted">{s.d}</p>
+    </motion.button>
   );
 }
 
@@ -652,8 +684,9 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
   input: string; setInput: (s: string) => void; send: (q: string) => void; empty: boolean; model: string; setModel: (id: string) => void;
 }) {
   const reduce = useReducedMotionSafe();
-  // Model selector + market label live with the conversation view only — the
-  // empty state stays a single clean field.
+  const [focused, setFocused] = useState(false);
+  // Row is placed ABOVE the input on the conversation view (opens up over messages) and BELOW the
+  // input on the empty state (opens down into the blank space, clear of the prompt cards).
   const selectorRow = (
     <div className="flex items-center justify-between px-1">
       <ModelSelector model={model} setModel={setModel} direction={empty ? "down" : "up"} />
@@ -664,13 +697,21 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
   );
   return (
     <div className={(empty ? "mt-7 " : "sticky bottom-0 mt-6 bg-gradient-to-t from-bg via-bg/95 to-transparent ") + "relative z-10 pt-3"} style={{ paddingBottom: "max(0.6rem, env(safe-area-inset-bottom))" }}>
+      {/* Focus dims the page around the composer (desktop) — the task becomes the
+          only bright thing on screen. pointer-events: none, so nothing is blocked. */}
+      <AnimatePresence>
+        {focused && (
+          <motion.div className="pointer-events-none fixed inset-0 z-[-1] hidden bg-black/35 sm:block" aria-hidden
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.25, ease: EASE }} />
+        )}
+      </AnimatePresence>
       {!empty && <div className="mb-2.5">{selectorRow}</div>}
-      {/* Neutral surface at rest; the emerald edge + halo appear only on focus. */}
-      <div className="rounded-2xl bg-gradient-to-b from-white/[0.09] via-white/[0.05] to-transparent p-px transition-shadow duration-300 focus-within:from-emerald/50 focus-within:shadow-[0_0_38px_-12px_rgba(52,211,153,0.5)]">
+      <div className="rounded-2xl bg-gradient-to-b from-emerald/30 via-white/[0.06] to-transparent p-px transition-shadow duration-300 focus-within:from-emerald/60 focus-within:shadow-[0_0_44px_-10px_rgba(52,211,153,0.6)]">
         <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="flex items-end gap-2 rounded-2xl bg-panel/80 p-2.5 backdrop-blur-md">
           <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={1}
-            placeholder="Ask Maven about Indian markets…"
+            placeholder={focused ? "e.g. Why did IT slip today?" : "Ask Maven about Indian markets…"}
             aria-label="Ask Maven a question"
+            onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
             className="max-h-36 flex-1 resize-none bg-transparent px-2.5 py-3 text-base leading-relaxed text-ink outline-none placeholder:text-dim sm:text-sm" />
           <motion.button type="submit" whileTap={!reduce && input.trim() ? { scale: 0.92 } : undefined} aria-label="Ask Maven" disabled={!input.trim()}
@@ -681,11 +722,10 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
           </motion.button>
         </form>
       </div>
-      {!empty && (
-        <div className="px-1 pb-1 pt-2 text-[10px] leading-relaxed text-dim">
-          Maven gives educational market context for Indian markets - mechanisms, not investment advice.
-        </div>
-      )}
+      {empty && <div className="mt-2.5">{selectorRow}</div>}
+      <div className="px-1 pb-1 pt-2 text-[10px] leading-relaxed text-dim">
+        Maven gives educational market context for Indian markets - mechanisms, not investment advice.
+      </div>
     </div>
   );
 }

@@ -101,12 +101,9 @@ export function ChatShell() {
 
   return (
     <div className="flex items-start gap-6">
-      {/* The library earns its place: no rail at all until history exists. */}
-      {conversations.length > 0 && (
-        <aside className="sticky top-20 hidden h-[calc(100dvh-6rem)] w-60 shrink-0 lg:block">
-          <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} />
-        </aside>
-      )}
+      <aside className="sticky top-20 hidden h-[calc(100dvh-6rem)] w-60 shrink-0 lg:block">
+        <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} />
+      </aside>
 
       <AnimatePresence>
         {drawerOpen && (
@@ -125,7 +122,6 @@ export function ChatShell() {
       </AnimatePresence>
 
       <div className="min-w-0 flex-1">
-        {conversations.length > 0 && (
         <div className="mb-3 lg:hidden">
           <button ref={historyBtnRef} type="button" onClick={() => setDrawerOpen(true)} aria-haspopup="dialog" aria-expanded={drawerOpen}
             className={`inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white/[0.03] px-3 py-1.5 text-xs text-muted motion-safe:transition-[color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] hover:border-emerald/40 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60`}>
@@ -133,7 +129,6 @@ export function ChatShell() {
             History
           </button>
         </div>
-        )}
         <ChatView key={activeId} initialMessages={active?.messages} onMessagesChange={handleMessagesChange} />
       </div>
     </div>
