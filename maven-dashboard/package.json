@@ -18,7 +18,8 @@
     "train:maven": "node scripts/run-training-questions.mjs",
     "train:maven:log": "node scripts/run-training-questions.mjs --log-failures",
     "eval:movers": "node scripts/test-stock-movers.mjs",
-    "eval:conversation": "node scripts/test-conversation-intelligence.mjs"
+    "eval:conversation": "node scripts/test-conversation-intelligence.mjs",
+    "eval:guard": "node scripts/test-api-guard.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.0",

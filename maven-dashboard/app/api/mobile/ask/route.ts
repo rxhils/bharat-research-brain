@@ -1,58 +1,83 @@
 import { NextResponse } from "next/server";
 import { answerQuestion, MAX_QUERY_CHARS } from "@/lib/maven/answerQuestion";
+import { checkMobileGuard, type GuardFail } from "@/lib/maven/apiGuard";
+import { apiLog, newRequestId } from "@/lib/maven/apiLog";
 
 export const dynamic = "force-dynamic";
 
-// Mobile-safe wrapper over the SAME Maven brain as /api/ask (lib/maven/answerQuestion.ts).
-// It adds no answer logic - it only: parses the request, rate-limits, calls answerQuestion(),
-// wraps the result in a versioned envelope, and returns clean errors (never backend/provider text).
+// Mobile wrapper over the SAME Maven brain as /api/ask (lib/maven/answerQuestion.ts).
+// Adds NO answer logic. Contract:
+//   success: { schemaVersion: 1, answer: <MavenAnswer> }
+//   failure: { schemaVersion: 1, error: { code, message, retryAfterSeconds? } }
+//   codes:   INVALID_REQUEST | UNAUTHENTICATED | FORBIDDEN | RATE_LIMITED | SERVICE_UNAVAILABLE | INTERNAL_ERROR
+// Every response carries X-Request-Id; 429s carry Retry-After. Identity is a verified Supabase
+// access token (Authorization: Bearer) - client-supplied ids are never trusted. Durable shared
+// rate limits are REQUIRED in production (fail-closed 503 when unconfigured). No provider/model/
+// stack detail ever reaches the client; logging is structured and token/body-free (apiLog).
 
-// --- simple in-memory rate limit (PLACEHOLDER) -----------------------------------------------
-// Blunts abuse from a single client. NOTE: an in-memory Map resets on serverless cold start and
-// is not shared across instances - swap for a durable store (Upstash/Supabase) keyed by the
-// verified user id before real production load. Kept intentionally minimal for v1.
-const RATE_LIMIT = 40; // requests per window
-const RATE_WINDOW_MS = 60 * 60_000; // 1 hour
-const hits = new Map<string, { count: number; windowStart: number }>();
+const ROUTE = "/api/mobile/ask";
+const MAX_CONTEXT_TURNS = 10;        // sanitizer uses the last 3; reject absurd payloads early
+const MAX_BODY_CHARS = 262_144;      // 256 KB raw JSON cap
 
-function rateLimited(id: string): boolean {
-  const now = Date.now();
-  const rec = hits.get(id);
-  if (!rec || now - rec.windowStart > RATE_WINDOW_MS) {
-    hits.set(id, { count: 1, windowStart: now });
-    return false;
-  }
-  rec.count += 1;
-  return rec.count > RATE_LIMIT;
-}
-
-// Identity for rate-limiting. Once auth lands this becomes the verified user id; until then it is
-// a best-effort client IP from proxy headers. userId is deliberately NOT read from the body - a
-// client could spoof it to bypass the limit or impersonate another user.
-function clientId(req: Request): string {
-  const fwd = req.headers.get("x-forwarded-for") ?? "";
-  return fwd.split(",")[0].trim() || req.headers.get("x-real-ip") || "anon";
+function fail(requestId: string, status: number, code: string, message: string, retryAfterSeconds?: number) {
+  const headers: Record<string, string> = { "X-Request-Id": requestId };
+  if (retryAfterSeconds != null) headers["Retry-After"] = String(retryAfterSeconds);
+  return NextResponse.json(
+    { schemaVersion: 1, error: { code, message, ...(retryAfterSeconds != null ? { retryAfterSeconds } : {}) } },
+    { status, headers },
+  );
 }
 
 export async function POST(req: Request) {
+  const requestId = newRequestId();
+  const t0 = Date.now();
+  apiLog({ evt: "request_start", requestId, route: ROUTE });
+
   try {
-    // TODO(auth): verify a Google ID token from the Authorization header and derive userId from it
-    //   const userId = await verifyGoogleIdToken(req.headers.get("authorization"));
-    //   if (!userId) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    //   ...then rate-limit + persist history by that verified userId. NEVER trust body.userId.
-    const id = clientId(req);
-    if (rateLimited(id)) {
-      return NextResponse.json({ error: "rate limit exceeded, please try again later" }, { status: 429 });
+    // ---- strict body validation (INVALID_REQUEST on any malformed input) ----
+    const raw = await req.text().catch(() => "");
+    if (!raw || raw.length > MAX_BODY_CHARS) {
+      apiLog({ evt: "error", requestId, route: ROUTE, errorCategory: "invalid_request" });
+      return fail(requestId, 400, "INVALID_REQUEST", "Request body is missing or too large.");
+    }
+    let body: any;
+    try { body = JSON.parse(raw); } catch {
+      apiLog({ evt: "error", requestId, route: ROUTE, errorCategory: "invalid_request" });
+      return fail(requestId, 400, "INVALID_REQUEST", "Request body must be valid JSON.");
+    }
+    const query = typeof body?.query === "string" ? body.query.trim() : "";
+    if (!query || query.length > MAX_QUERY_CHARS) {
+      apiLog({ evt: "error", requestId, route: ROUTE, errorCategory: "invalid_request" });
+      return fail(requestId, 400, "INVALID_REQUEST", `query is required (max ${MAX_QUERY_CHARS} characters).`);
+    }
+    const ctx = body?.conversationContext;
+    if (ctx != null) {
+      const turns = (ctx as any)?.turns;
+      if (typeof ctx !== "object" || (turns != null && (!Array.isArray(turns) || turns.length > MAX_CONTEXT_TURNS))) {
+        apiLog({ evt: "error", requestId, route: ROUTE, errorCategory: "invalid_request" });
+        return fail(requestId, 400, "INVALID_REQUEST", "conversationContext is malformed.");
+      }
     }
 
-    const body = await req.json().catch(() => ({}));
-    const query = typeof body?.query === "string" ? body.query.slice(0, MAX_QUERY_CHARS) : "";
-    if (!query.trim()) return NextResponse.json({ error: "query is required" }, { status: 400 });
+    // ---- identity + durable quotas (fail-closed in production without a durable limiter) ----
+    const guard = await checkMobileGuard(req, requestId, query);
+    if (!guard.ok) {
+      const g = guard as GuardFail;
+      const cat = g.code === "RATE_LIMITED" ? "rate_limited" : g.code === "UNAUTHENTICATED" ? "unauthenticated" : "service_unavailable";
+      apiLog({ evt: "error", requestId, route: ROUTE, errorCategory: cat as any });
+      return fail(requestId, g.status, g.code, g.message, g.retryAfterSeconds);
+    }
 
-    const answer = await answerQuestion(query, body?.conversationContext);
-    return NextResponse.json({ schemaVersion: 1, answer });
+    // ---- same brain, unchanged semantics ----
+    try {
+      const answer = await answerQuestion(query, ctx);
+      apiLog({ evt: "complete", requestId, route: ROUTE, authenticated: true, answerType: (answer as any)?.type, latencyMs: Date.now() - t0 });
+      return NextResponse.json({ schemaVersion: 1, answer }, { headers: { "X-Request-Id": requestId } });
+    } finally {
+      if (guard.release) await guard.release(); // free the deep-research concurrency slot
+    }
   } catch {
-    // Never surface backend/provider/model/stack errors to the mobile client.
-    return NextResponse.json({ error: "temporarily unavailable" }, { status: 503 });
+    apiLog({ evt: "error", requestId, route: ROUTE, errorCategory: "internal", latencyMs: Date.now() - t0 });
+    return fail(requestId, 500, "INTERNAL_ERROR", "Something went wrong. Please try again.");
   }
 }

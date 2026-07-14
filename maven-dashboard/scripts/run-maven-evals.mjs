@@ -4,10 +4,15 @@ import { scoreCase, scoreFollowUpCase } from "./evals/eval-scorer.mjs";
 
 const BASE = process.env.MAVEN_EVAL_URL || "http://localhost:3000/api/ask";
 
+// Rate-limit bypass for prod eval runs (apiGuard honors this header only when the server's
+// MAVEN_EVAL_TOKEN env matches). Locally the guard is off by default, so this is a no-op.
+const HEADERS = { "Content-Type": "application/json" };
+if (process.env.MAVEN_EVAL_TOKEN) HEADERS["x-maven-eval-token"] = process.env.MAVEN_EVAL_TOKEN;
+
 async function ask(query, conversationContext) {
   const t0 = Date.now();
   const body = conversationContext ? { query, conversationContext } : { query };
-  const r = await fetch(BASE, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const r = await fetch(BASE, { method: "POST", headers: HEADERS, body: JSON.stringify(body) });
   return { j: await r.json(), ms: Date.now() - t0 };
 }
 

@@ -8,11 +8,21 @@
 import { NextResponse } from "next/server";
 import { classifyFailure } from "@/lib/maven/learningFailureClassifier";
 import { logLearningEvent } from "@/lib/maven/learningStore";
+import { checkApiGuard } from "@/lib/maven/apiGuard";
 
 export const runtime = "nodejs"; // learningStore uses node:fs
 
 export async function POST(req: Request) {
   try {
+    // Public POST endpoint -> burst-guard it like the ask routes (Phase 2).
+    const guard = await checkApiGuard(req, "/api/feedback");
+    if (!guard.ok) {
+      return NextResponse.json(
+        { error: guard.message, ...(guard.retryAfterSeconds != null ? { retryAfterSeconds: guard.retryAfterSeconds } : {}) },
+        { status: guard.status },
+      );
+    }
+
     const body: any = await req.json().catch(() => ({}));
     const query = typeof body?.query === "string" ? body.query.trim() : "";
     if (!query) return NextResponse.json({ error: "query is required" }, { status: 400 });

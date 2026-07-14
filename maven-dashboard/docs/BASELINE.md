@@ -95,6 +95,7 @@ Prod smoke after deploy: `npm run eval:maven:prod` (or the §8 curl checks).
 | Data | `DATABASE_URL` | |
 | Supabase (client auth) | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Unset = mock/open mode |
 | Eval/tooling | `MAVEN_EVAL_URL` (alias `MAVEN_URL`) | test targets only |
+| API guard (Phase 2) | `RATE_LIMIT_ENABLED` ("1"/"0"; default on-Vercel-only), `API_BURST_PER_MIN` (default 30), `API_DAILY_CAP` (default 150/user/route/day), `QUOTA_MODE` ("soft" default / "strict"), `MOBILE_REQUIRE_AUTH` ("1" once the iOS app sends Supabase tokens), `MAVEN_EVAL_TOKEN` (rate-limit bypass for eval runs) | see `lib/maven/apiGuard.ts` header |
 
 ## 7. ⏰ Urgent operator actions & known gaps (ranked)
 
@@ -102,12 +103,16 @@ Prod smoke after deploy: `npm run eval:maven:prod` (or the §8 curl checks).
    alias, flagged to sunset **2026-07-24** (11 days from this snapshot). Set the env var to a
    pinned model ID per DeepSeek's current docs. 10-minute action; without it, prose generation
    silently degrades to the deterministic fallback when the alias dies.
-2. **API is open server-side (denial-of-wallet).** The Google/Supabase auth shipped recently is
-   client-side gating only; **zero commits have touched `app/api/` or `middleware.ts` since
-   `6edc259`**. `/api/ask` has no auth or rate limit; `/api/mobile/ask` has only an in-memory
-   placeholder (resets per cold start, not shared across instances). → Roadmap §2 (durable
-   auth + quota) is the next build. Coordinate ownership first: another session owns the
-   client-auth work.
+2. **API guard shipped (Phase 2) — needs two operator steps to be fully durable.**
+   `lib/maven/apiGuard.ts` now fronts `/api/ask`, `/api/mobile/ask` and `/api/feedback`:
+   Supabase JWT/cookie identity (body `userId` never trusted), in-memory burst limits, and a
+   durable per-user daily cap via `usage_events` under the caller's own JWT. Operator steps:
+   (a) confirm `supabase/migrations/0001_chat_schema.sql` is applied to the live project
+   (Supabase Studio → SQL editor → run it; idempotent), then set `QUOTA_MODE=strict`;
+   (b) set `MAVEN_EVAL_TOKEN` in Vercel so prod eval runs bypass rate limits.
+   Flip `MOBILE_REQUIRE_AUTH=1` only after the iOS app sends Supabase access tokens.
+   Remaining gap: anonymous (guest/IP) limits are burst-only and per-instance — a durable
+   IP-level store (Upstash) is the future upgrade if guest abuse appears.
 3. **`/api/feedback` is live but its store is broken on Vercel.** The learning loop merged to
    `master`, but it writes local JSON (`data/maven-learning/`) — read-only FS on Vercel, so
    prod feedback fails with a clean 500 and nothing persists. Fix = Supabase-backed store
