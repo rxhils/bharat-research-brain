@@ -8,3 +8,5 @@ next-env.d.ts
 
 # Maven Self-Learning Improvement Loop - local event store (may contain user queries; never commit)
 /data/maven-learning/
+.vercel
+.env*

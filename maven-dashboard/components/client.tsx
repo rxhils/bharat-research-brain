@@ -45,52 +45,81 @@ const NAV_PRESS =
 
 export function Nav() {
   const path = usePathname();
-  const tab = (href: string, label: string) => {
+  const reduce = useReducedMotionSafe();
+  // Elevation on scroll: the bar starts translucent and gains body + shadow
+  // once the page moves, so it reads as a floating instrument panel.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const tab = (href: string, label: string, dot = false) => {
     const active = path === href;
     return (
       <Link
         href={href}
-        className={`whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
-          active ? "bg-emerald/10 text-emerald" : "text-muted hover:text-ink"
+        className={`relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
+          active ? "text-emerald" : "text-muted hover:text-ink"
         }`}
       >
-        {label}
+        {/* the active pill GLIDES between tabs (shared layoutId) */}
+        {active && (
+          <motion.span
+            layoutId="nav-active-pill"
+            className="absolute inset-0 rounded-lg bg-emerald/10 ring-1 ring-inset ring-emerald/20"
+            transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+            aria-hidden
+          />
+        )}
+        {dot && <span className="relative z-10 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald shadow-[0_0_6px_rgba(52,211,153,0.8)]" aria-hidden />}
+        <span className="relative z-10">{label}</span>
       </Link>
     );
   };
+
   return (
     /* pt clears the iPhone notch / Dynamic Island (safe-area var from globals.css) */
-    <nav className="sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between gap-2 border-b border-hairline bg-bg/85 px-5 pb-4 pt-[calc(1rem+var(--sat))] backdrop-blur-md sm:-mx-8 sm:px-8">
-      <Link href="/" className={`flex shrink-0 items-center gap-2.5 ${PRESS}`}>
-        <Logo size={28} />
-        <span className="hidden text-sm tracking-[0.2em] text-muted sm:inline">MAVEN</span>
+    <nav
+      className={`sticky top-0 z-30 -mx-5 mb-2 flex items-center justify-between gap-2 px-5 pb-4 pt-[calc(1rem+var(--sat))] backdrop-blur-xl transition-[background-color,box-shadow] duration-300 sm:-mx-8 sm:px-8 ${
+        scrolled ? "bg-bg/95 shadow-[0_20px_44px_-26px_rgba(0,0,0,0.95)]" : "bg-bg/70"
+      }`}
+    >
+      {/* gradient hairline — emerald breathes through the bar's bottom edge */}
+      <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(52,211,153,0.35) 25%, rgba(52,211,153,0.35) 75%, transparent)" }} />
+      <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/[0.04]" />
+
+      <Link href="/" className={`group relative flex shrink-0 items-center gap-2.5 ${PRESS}`}>
+        <span className="relative">
+          <span aria-hidden className="absolute -inset-1.5 rounded-xl bg-emerald/25 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100" />
+          <span className="relative"><Logo size={28} /></span>
+        </span>
+        <span className="hidden text-sm tracking-[0.2em] text-muted transition-colors duration-300 group-hover:text-ink sm:inline">MAVEN</span>
       </Link>
+
       <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-        <div className="scroll-touch flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-hairline bg-panel/50 p-1 [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
-          <Link
-            href="/chat"
-            className={`flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
-              path === "/chat" ? "bg-emerald/10 text-emerald" : "text-muted hover:text-ink"
-            }`}
-          >
-            {/* static dot — a looping ping in the highest-frequency surface is slop */}
-            <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald" aria-hidden />
-            Chat
-          </Link>
+        <div className="scroll-touch flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-hairline bg-panel/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
+          {tab("/chat", "Chat", true)}
           {tab("/", "How it works")}
+          {tab("/portfolio-mode", "Modes")}
           {tab("/portfolio", "Portfolio")}
+          {tab("/broker", "Broker")}
           {tab("/trades", "Trades")}
           {tab("/strategies", "Strategies")}
         </div>
         <Link
           href="/backtest"
-          className={`shrink-0 whitespace-nowrap rounded-lg border px-2.5 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
+          className={`group relative shrink-0 overflow-hidden whitespace-nowrap rounded-lg border px-2.5 py-1 text-[11px] transition-[color,border-color,box-shadow] ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
             path === "/backtest"
               ? "border-emerald/50 bg-emerald/15 text-emerald"
-              : "border-emerald/30 text-emerald hover:bg-emerald/10"
+              : "border-emerald/30 text-emerald hover:border-emerald/50 hover:bg-emerald/10 hover:shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]"
           }`}
         >
-          ★ Backtest
+          {/* light sweep across the CTA on hover */}
+          <span aria-hidden className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/3 -skew-x-12 bg-white/10 transition-transform duration-500 ease-out group-hover:translate-x-[420%]" />
+          <span className="relative"><span className="text-gold-soft">★</span> Backtest</span>
         </Link>
       </div>
     </nav>
