@@ -1,6 +1,6 @@
 "use client";
 
-// Strategies overview — TWO live, fully-backtested portfolios (Quant, Defensive)
+// Strategies overview — the live, fully-backtested portfolios (see the LIVE array)
 // with their EXACT validated figures, and the rest shown as "coming soon — in
 // validation" with NO numbers. Static content only; no DB. Numbers must match the
 // validated figures verbatim — nothing invented, nothing rounded differently.
@@ -82,6 +82,11 @@ const LIVE: Live[] = [
     period: "2021–26",
   },
 ];
+
+// Spelled-out count derived from LIVE so the subheadline can never drift from
+// the number of cards actually rendered.
+const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"] as const;
+const LIVE_COUNT_WORD = COUNT_WORDS[LIVE.length] ?? String(LIVE.length);
 
 const SOON: { name: string; style: string }[] = [
   { name: "Growth", style: "Higher-upside names with faster compounding potential." },
@@ -173,7 +178,7 @@ export default function StrategiesPage() {
       <header className="pb-2">
         <p className="text-[0.6rem] font-semibold uppercase tracking-label text-gold">AI Portfolios</p>
         <h1 className="mt-4 font-serif text-[clamp(2rem,5vw,3.2rem)] font-light leading-[1.02] tracking-[-0.02em] text-ink">Models, ranked.</h1>
-        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">Two strategies are live and fully backtested. The rest are in validation — no numbers until they&apos;ve earned them.</p>
+        <p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">{LIVE_COUNT_WORD} {LIVE.length === 1 ? "strategy is" : "strategies are"} live and fully backtested. The rest are in validation — no numbers until they&apos;ve earned them.</p>
       </header>
 
       <section className="mt-10">

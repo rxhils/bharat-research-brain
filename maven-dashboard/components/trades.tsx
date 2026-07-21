@@ -105,15 +105,15 @@ function TradeRow({ t }: { t: Trade }) {
             className="overflow-hidden"
           >
             <div className="space-y-3 border-t border-hairline px-3 pb-3 pt-3">
-              {/* WHY F+ bought */}
+              {/* entry rationale */}
               <div className="rounded-lg border border-emerald/20 bg-emerald/[0.05] p-3">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald">Why it was bought</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-emerald">Entry thesis</div>
                 <p className="mt-1 text-xs leading-relaxed text-muted">{t.whyEntry}</p>
               </div>
-              {/* WHY F+ sold */}
+              {/* exit rationale */}
               {t.whyExit && (
                 <div className="rounded-lg border border-rose/20 bg-rose/[0.05] p-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-rose">Why it was sold</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-rose">Exit trigger</div>
                   <p className="mt-1 text-xs leading-relaxed text-muted">{t.whyExit}</p>
                 </div>
               )}

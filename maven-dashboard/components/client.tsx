@@ -193,7 +193,7 @@ function useChartDrawOnce() {
   return firstPass && !reduce;
 }
 
-export function EquityChart({ data }: { data: EquityPoint[] }) {
+export function EquityChart({ data, seriesName = "Enhanced F+", accent = "#34d399" }: { data: EquityPoint[]; seriesName?: string; accent?: string }) {
   const draw = useChartDrawOnce();
   return (
     <ChartReveal delay={0.1}>
@@ -204,7 +204,7 @@ export function EquityChart({ data }: { data: EquityPoint[] }) {
           <YAxis tick={{ fill: "#5a616a", fontSize: 11 }} tickFormatter={(v) => inrCompact(v)} width={56} axisLine={false} tickLine={false} domain={["dataMin", "dataMax"]} />
           <Tooltip content={<ChartTip />} />
           <Line type="monotone" dataKey="nifty500" name="Nifty 500 TRI" stroke="#5a616a" strokeWidth={1.5} dot={false} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
-          <Line type="monotone" dataKey="fplus" name="Enhanced F+" stroke="#34d399" strokeWidth={2} dot={false} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
+          <Line type="monotone" dataKey="fplus" name={seriesName} stroke={accent} strokeWidth={2} dot={false} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
         </LineChart>
       </ResponsiveContainer>
     </ChartReveal>

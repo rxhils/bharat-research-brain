@@ -63,7 +63,7 @@ function PortfolioPanel({ name, acct, curve, exposure, stats, holdings }: Panel)
       </Card>
 
       <Card title="Equity curve" sub={`${dn} vs Nifty 500 TRI`} delay={60}>
-        <EquityChart data={curve} />
+        <EquityChart data={curve} seriesName={dn} accent={isDefensive ? "#94a3b8" : name === "Concentrated" ? "#c9a961" : "#34d399"} />
       </Card>
 
       <Card title="Exposure" sub="cash sleeve" delay={100}>
