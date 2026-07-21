@@ -3,12 +3,17 @@
 // Left-hand auth panel of the Maven Google gate: brand mark, welcome copy, the
 // Google sign-in button (idle → signing → done state machine, driven by props),
 // privacy microcopy, and an optional guest escape. Also renders a compact quote
-// block that only appears on mobile (where the right visual panel is hidden).
+// block that only appears on mobile (where the right visual panel is hidden) —
+// placed BELOW the action zone so the CTA lands in the first viewport on phones.
+//
+// Motion: no decorative loops. The idle CTA leans toward the cursor (magnetic,
+// pointer-fine only — implemented locally because the shared MagneticButton
+// doesn't forward the focus ref this dialog needs). The loading spinner and the
+// done-state progress sweep are functional and kept.
 
-import { motion, type Variants } from "framer-motion";
-import { type RefObject } from "react";
+import { motion, useMotionValue, useSpring, type Variants } from "framer-motion";
+import { useEffect, useState, type PointerEvent, type RefObject } from "react";
 import { EASE } from "../motion";
-import { GateFilm } from "./GateFilm";
 
 export type SignInStatus = "idle" | "signing" | "done";
 
@@ -16,6 +21,15 @@ const rise: Variants = {
   hidden: { opacity: 0, y: 16 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } },
 };
+
+/** Static emerald gradient text (no shimmer loop — stillness is the signal). */
+const GRADIENT_TEXT = {
+  background: "linear-gradient(100deg,#34d399,#7ce7bd,#10b981)",
+  WebkitBackgroundClip: "text",
+  backgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  color: "transparent",
+} as const;
 
 function BrandMark() {
   return (
@@ -50,6 +64,10 @@ function GoogleGlyph({ mono }: { mono: boolean }) {
   );
 }
 
+function clampOffset(v: number, limit: number) {
+  return Math.max(-limit, Math.min(limit, v));
+}
+
 export function GoogleSignInCard({
   reduce,
   status,
@@ -73,6 +91,31 @@ export function GoogleSignInCard({
   googleMark?: "color" | "mono";
   primaryRef?: RefObject<HTMLButtonElement>;
 }) {
+  // Magnetic CTA (interaction-triggered, so OS reduced-motion is honored
+  // naturally: no pointer, no motion). Pointer-fine gate keeps touch inert.
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const sx = useSpring(mx, { stiffness: 400, damping: 28 });
+  const sy = useSpring(my, { stiffness: 400, damping: 28 });
+  const [finePointer, setFinePointer] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: fine)");
+    setFinePointer(mq.matches);
+    const on = (e: MediaQueryListEvent) => setFinePointer(e.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const onCtaPointerMove = (e: PointerEvent<HTMLButtonElement>) => {
+    if (!finePointer) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    mx.set(clampOffset((e.clientX - (r.left + r.width / 2)) * 0.12, 6));
+    my.set(clampOffset((e.clientY - (r.top + r.height / 2)) * 0.12, 6));
+  };
+  const onCtaPointerLeave = () => {
+    mx.set(0);
+    my.set(0);
+  };
+
   return (
     <motion.section
       className="relative flex min-w-0 flex-[1_1_auto] flex-col justify-center p-[clamp(26px,7vw,38px)] min-[880px]:flex-[1_1_45%] min-[880px]:p-[clamp(38px,3.4vw,56px)]"
@@ -81,62 +124,47 @@ export function GoogleSignInCard({
       initial={reduce ? false : "hidden"}
       animate="show"
     >
-      {/* brand lockup */}
+      {/* brand lockup — the tagline is gold use #2 (the only other gold on the page) */}
       <motion.div variants={rise} className="flex items-center gap-3">
         <BrandMark />
         <span className="flex flex-col gap-[3px]">
           <span className="font-sans text-[18px] font-semibold leading-none tracking-[0.005em] text-ink">Maven</span>
-          <span className="font-sans text-[9.5px] font-medium uppercase leading-none tracking-[0.17em] text-dim">India Market Intelligence</span>
+          <span className="font-sans text-[9.5px] font-medium uppercase leading-none tracking-[0.17em] text-[#c9a961]/80">India Market Intelligence</span>
         </span>
       </motion.div>
 
-      {/* eyebrow with sweeping underline */}
+      {/* eyebrow — static emerald tick, mono technical label (no sweep loop) */}
       <motion.div variants={rise} className="flex items-center gap-2.5">
-        <span className="relative h-0.5 w-[34px] shrink-0 overflow-hidden rounded-sm bg-emerald/20">
-          <span className="absolute inset-0 motion-safe:animate-gate-sweep" style={{ background: "linear-gradient(90deg, transparent, #34d399, transparent)" }} />
-        </span>
-        <span className="font-sans text-[10.5px] font-semibold uppercase leading-none tracking-[0.2em] text-muted">Secure Google Sign-In</span>
+        <span className="h-0.5 w-[34px] shrink-0 rounded-sm bg-emerald/40" />
+        <span className="font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.2em] text-muted">Secure Google Sign-In</span>
       </motion.div>
 
       {/* headline + subheadline */}
-      <motion.h1 variants={rise} id={headingId} className="m-0 font-serif text-[clamp(30px,4.2vw,45px)] font-normal leading-[1.06] tracking-[-0.01em] text-ink">
+      <motion.h1 variants={rise} id={headingId} className="m-0 font-serif font-normal leading-[1.02] tracking-[-0.02em] text-ink" style={{ fontSize: "clamp(2rem, 1rem + 3.5vw, 3rem)" }}>
         Welcome to <em className="font-serif italic text-ink">Maven</em>
       </motion.h1>
-      <motion.p variants={rise} className="m-0 max-w-[40ch] font-sans text-[clamp(14px,1.35vw,15.5px)] leading-[1.6] text-muted">
+      <motion.p variants={rise} className="m-0 max-w-[40ch] font-sans text-[15px] leading-[1.6] text-muted">
         Your India market research workspace, saved securely to your account.
       </motion.p>
 
-      {/* mobile-only compact quote (right panel is hidden under 880px) */}
-      <motion.div variants={rise} className="flex flex-col gap-3 rounded-2xl border border-white/[0.06] p-[14px] min-[880px]:hidden" style={{ background: "linear-gradient(160deg, rgba(16,19,22,0.7), rgba(9,11,13,0.5))" }}>
-        {/* the product film — same /intro.mp4, already cached from the intro */}
-        <GateFilm className="rounded-xl border border-white/[0.06]" />
-        <p className="m-0 font-serif text-[19px] font-normal italic leading-[1.35] text-ink">
-          Ask better questions.{" "}
-          <span className="font-serif italic motion-safe:animate-[gateShimmer_8s_linear_infinite]" style={{ background: "linear-gradient(100deg,#34d399,#7ce7bd,#10b981)", backgroundSize: "200% 100%", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent", color: "transparent" }}>Build better conviction.</span>
-        </p>
-        <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-[9px] border border-white/[0.07] bg-white/[0.03] px-2.5 py-1.5 font-sans text-[11px] font-medium text-muted">Saved chats</span>
-          <span className="rounded-[9px] border border-white/[0.07] bg-white/[0.03] px-2.5 py-1.5 font-sans text-[11px] font-medium text-muted">Personal research</span>
-          <span className="rounded-[9px] border border-emerald/25 bg-emerald/[0.07] px-2.5 py-1.5 font-sans text-[11px] font-medium text-emerald/90">Google-secured</span>
-        </div>
-      </motion.div>
-
-      {/* action zone */}
+      {/* action zone — first in DOM after the copy so the CTA is in the first
+          mobile viewport (the compact quote block renders below it) */}
       <motion.div variants={rise} className="flex flex-col gap-3.5">
         {status === "idle" && (
-          <button
+          <motion.button
             ref={primaryRef}
             type="button"
             onClick={onSignIn}
+            onPointerMove={onCtaPointerMove}
+            onPointerLeave={onCtaPointerLeave}
+            whileTap={{ scale: 0.97 }}
             aria-label="Continue with Google"
-            className="relative flex min-h-[54px] w-full items-center justify-center gap-3 overflow-hidden rounded-[14px] border border-white/[0.11] px-5 font-sans text-[15px] font-medium text-ink transition-[transform,border-color,box-shadow] duration-200 hover:border-emerald/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60 motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0"
-            style={{ background: "linear-gradient(180deg, rgba(30,34,38,0.92), rgba(16,19,22,0.96))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 28px -14px rgba(0,0,0,0.85)" }}
+            className="relative flex min-h-[54px] w-full items-center justify-center gap-3 overflow-hidden rounded-[14px] border border-white/[0.11] px-5 font-sans text-[15px] font-medium text-ink transition-[border-color,box-shadow] duration-200 hover:border-emerald/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60"
+            style={{ x: sx, y: sy, background: "linear-gradient(180deg, rgba(30,34,38,0.92), rgba(16,19,22,0.96))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 28px -14px rgba(0,0,0,0.85)" }}
           >
-            {/* slow light sweep across the CTA — the one moving highlight on the left panel */}
-            <span aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-1/2 -skew-x-12 motion-safe:animate-[gateSweep_6s_ease-in-out_infinite]" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.055), transparent)" }} />
             <GoogleGlyph mono={googleMark === "mono"} />
             <span>Continue with Google</span>
-          </button>
+          </motion.button>
         )}
 
         {status === "signing" && (
@@ -196,6 +224,16 @@ export function GoogleSignInCard({
             Continue as guest →
           </button>
         )}
+      </motion.div>
+
+      {/* mobile-only compact quote (right panel is hidden under 880px) — no
+          film here: video below a CTA on a login is weight without persuasion */}
+      <motion.div variants={rise} className="flex flex-col gap-2.5 rounded-2xl border border-white/[0.06] p-[14px] min-[880px]:hidden" style={{ background: "linear-gradient(160deg, rgba(16,19,22,0.7), rgba(9,11,13,0.5))" }}>
+        <p className="m-0 font-serif text-[18px] font-normal italic leading-[1.35] text-ink">
+          Ask better questions.{" "}
+          <span className="font-serif italic" style={GRADIENT_TEXT}>Build better conviction.</span>
+        </p>
+        <p className="m-0 font-mono text-[10.5px] font-medium tracking-[0.06em] text-dim">Saved chats &nbsp;·&nbsp; Personal research &nbsp;·&nbsp; Google-secured</p>
       </motion.div>
     </motion.section>
   );
