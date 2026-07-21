@@ -5,9 +5,9 @@
 // validation" with NO numbers. Static content only; no DB. Numbers must match the
 // validated figures verbatim — nothing invented, nothing rounded differently.
 
-import { animate, motion, useInView } from "framer-motion";
-import { EASE, EASE_SOFT, useReducedMotionSafe } from "@/components/motion";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { motion } from "framer-motion";
+import { CountUp, EASE, useReducedMotionSafe } from "@/components/motion";
+import { type ReactNode } from "react";
 
 function Reveal({ children, y = 16, delay = 0 }: { children: ReactNode; y?: number; delay?: number }) {
   const reduce = useReducedMotionSafe();
@@ -21,24 +21,6 @@ function Reveal({ children, y = 16, delay = 0 }: { children: ReactNode; y?: numb
       {children}
     </motion.div>
   );
-}
-
-/** Smooth count-up to a fixed target. Starts at 0 on the server and the first
- *  client render (so hydration matches), then animates once scrolled into view. */
-function CountUp({ to, prefix = "", suffix = "", decimals = 2, duration = 1.4 }: {
-  to: number; prefix?: string; suffix?: string; decimals?: number; duration?: number;
-}) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-10% 0px" });
-  const reduce = useReducedMotionSafe();
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    if (reduce) { setV(to); return; }
-    const c = animate(0, to, { duration, ease: EASE_SOFT, onUpdate: setV });
-    return () => c.stop();
-  }, [inView, to, duration, reduce]);
-  return <span ref={ref} className="tnum">{prefix}{v.toFixed(decimals)}{suffix}</span>;
 }
 
 type Stat = { label: string; value: number; prefix?: string; suffix?: string; decimals?: number; tone?: "emerald" | "amber"; note?: string };

@@ -40,14 +40,6 @@ const config: Config = {
           "0%,100%": { opacity: "1" },
           "50%": { opacity: "0.35" },
         },
-        spinSlow: {
-          "0%": { transform: "rotate(0deg)" },
-          "100%": { transform: "rotate(360deg)" },
-        },
-        spinReverse: {
-          "0%": { transform: "rotate(360deg)" },
-          "100%": { transform: "rotate(0deg)" },
-        },
         floatY: {
           "0%,100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-10px)" },
@@ -70,10 +62,6 @@ const config: Config = {
           "100%": { transform: "translateX(260%)" },
         },
         gateDraw: { to: { strokeDashoffset: "0" } },
-        gateSpark: {
-          "0%,100%": { opacity: "0.5", transform: "scale(0.82)" },
-          "50%": { opacity: "1", transform: "scale(1.15)" },
-        },
         gateBlink: {
           "0%,100%": { opacity: "1" },
           "50%": { opacity: "0.15" },
@@ -96,8 +84,6 @@ const config: Config = {
       animation: {
         fadeUp: "fadeUp 0.5s cubic-bezier(0.22,1,0.36,1) both",
         pulseDot: "pulseDot 1.4s ease-in-out infinite",
-        spinSlow: "spinSlow 34s linear infinite",
-        spinReverse: "spinReverse 48s linear infinite",
         floatY: "floatY 7s ease-in-out infinite",
         // ticker: content is duplicated once so -50% loops seamlessly
         marquee: "marquee 38s linear infinite",
@@ -107,7 +93,6 @@ const config: Config = {
         "gate-glow2": "gateGlow2 11s ease-in-out infinite",
         "gate-sweep": "gateSweep 2.6s ease-in-out infinite",
         "gate-draw": "gateDraw 2.4s ease-out .5s forwards",
-        "gate-spark": "gateSpark 1.8s ease-in-out infinite",
         "gate-blink": "gateBlink 1.1s step-end infinite",
         "gate-spin": "gateSpin .75s linear infinite",
         "gate-shimmer": "gateShimmer 4.5s linear infinite",

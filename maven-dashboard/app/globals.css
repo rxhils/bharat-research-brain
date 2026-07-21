@@ -59,6 +59,76 @@ body {
   body { background-attachment: scroll; }
 }
 
+/* Noise overlay — 2% opacity feTurbulence grain (inline SVG data-URI) that
+   kills gradient banding on dark glass surfaces. Apply to an absolutely-
+   positioned child of a relative parent (GlassPanel renders it when
+   noise={true}); pointer-events off so it never eats clicks. */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* BorderBeam — a short emerald arc that orbits a card's 1px border (conic
+   gradient rotated via a registered @property angle; masked so only the
+   padding-ring shows). Apply .border-beam to a rounded, position:relative-safe
+   card. Decorative loop: it deliberately does NOT use .brand-motion, so the
+   global reduced-motion damp below freezes it under the OS flag. */
+@property --beam-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes border-beam {
+  to { --beam-angle: 360deg; }
+}
+.border-beam {
+  position: relative;
+}
+.border-beam::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg 300deg,
+    rgba(52, 211, 153, 0.05) 320deg,
+    rgba(52, 211, 153, 0.9) 350deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: border-beam 7s linear infinite;
+  pointer-events: none;
+}
+
+/* DrawdownScrub 3D stage — per-plane depth as CSS vars so the phone breakpoint
+   can collapse z-depths without JS. Back plane scales up slightly to counter
+   the perspective shrink at translateZ(-80px). */
+.dd-stage {
+  --dd-z-back: -80px;
+  --dd-s-back: 1.07;
+  --dd-z-mid: 0px;
+  --dd-z-front: 50px;
+  --dd-z-chip: 80px;
+}
+@media (max-width: 640px) {
+  .dd-stage {
+    --dd-z-back: 0px;
+    --dd-s-back: 1;
+    --dd-z-mid: 20px;
+    --dd-z-front: 40px;
+    --dd-z-chip: 40px;
+  }
+}
+
 /* Honour reduced-motion globally: damp every animation/transition — except
    .brand-motion subtrees: small, contained, operator-requested brand animations
    (ticker marquee, the auth gate's product mockup). Everything else settles
