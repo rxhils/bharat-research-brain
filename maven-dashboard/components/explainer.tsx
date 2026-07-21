@@ -120,20 +120,20 @@ const REJECTED = [
 
 // ───────────────────────────── primitives ─────────────────────────────
 
-const GRAD_GOLD: React.CSSProperties = {
+export const GRAD_GOLD: React.CSSProperties = {
   backgroundImage: "linear-gradient(180deg,#e3cb8f 0%,#c9a961 60%,#9c8348 100%)",
   WebkitBackgroundClip: "text",
   backgroundClip: "text",
   color: "transparent",
 };
-const GRAD_EMERALD: React.CSSProperties = {
+export const GRAD_EMERALD: React.CSSProperties = {
   backgroundImage: "linear-gradient(180deg,#6ee7b7 0%,#34d399 100%)",
   WebkitBackgroundClip: "text",
   backgroundClip: "text",
   color: "transparent",
 };
 
-function Reveal({ children, delay = 0, y = 22, className = "" }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
+export function Reveal({ children, delay = 0, y = 22, className = "" }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
   const reduce = useReducedMotionSafe();
   return (
     <motion.div
