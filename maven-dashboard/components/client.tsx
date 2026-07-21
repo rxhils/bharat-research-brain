@@ -292,7 +292,10 @@ export function ExposureGauge({ state }: { state: ExposureState }) {
 // Holdings table (sortable)
 // ---------------------------------------------------------------------------
 type SortKey = "weightPct" | "pnlPct" | "ticker";
-export function HoldingsTable({ rows }: { rows: Holding[] }) {
+// `compact` = responsive variant for narrow containers: Name/Sector/Entry only
+// appear from lg: up and the table drops its forced min-width, so it never
+// creates a 640px scroll trap inside a narrow column or a 375px viewport.
+export function HoldingsTable({ rows, compact = false }: { rows: Holding[]; compact?: boolean }) {
   const [key, setKey] = useState<SortKey>("weightPct");
   const [dir, setDir] = useState<1 | -1>(-1);
   const sorted = useMemo(() => {
@@ -329,16 +332,18 @@ export function HoldingsTable({ rows }: { rows: Holding[] }) {
       </th>
     );
   };
+  // In compact mode the secondary columns only render from lg: up.
+  const opt = compact ? "hidden lg:table-cell" : "";
   return (
     <div className="scroll-touch overflow-x-auto">
-      <table className="w-full min-w-[640px] border-collapse">
+      <table className={`w-full border-collapse ${compact ? "min-w-0" : "min-w-[640px]"}`}>
         <thead>
           <tr className="border-b border-hairline text-left">
             {head("ticker", "Ticker")}
-            <th className="py-2 text-xs font-medium text-dim">Name</th>
-            <th className="py-2 text-xs font-medium text-dim">Sector</th>
+            <th className={`py-2 text-xs font-medium text-dim ${opt}`}>Name</th>
+            <th className={`py-2 text-xs font-medium text-dim ${opt}`}>Sector</th>
             {head("weightPct", "Weight", "text-right")}
-            <th className="py-2 text-right text-xs font-medium text-dim">Entry</th>
+            <th className={`py-2 text-right text-xs font-medium text-dim ${opt}`}>Entry</th>
             <th className="py-2 text-right text-xs font-medium text-dim">Current</th>
             {head("pnlPct", "P&L", "text-right")}
           </tr>
@@ -351,10 +356,10 @@ export function HoldingsTable({ rows }: { rows: Holding[] }) {
               className={`border-b border-hairline/60 transition-colors hover:bg-white/[.02] ${r.isCash ? "text-muted" : "text-ink"}`}
             >
               <td className="py-2.5 font-mono text-sm">{r.ticker}</td>
-              <td className="py-2.5 text-sm text-muted">{r.name}</td>
-              <td className="py-2.5 text-xs text-dim">{r.sector}</td>
+              <td className={`py-2.5 text-sm text-muted ${opt}`}>{r.name}</td>
+              <td className={`py-2.5 text-xs text-dim ${opt}`}>{r.sector}</td>
               <td className="py-2.5 text-right font-mono text-sm">{plain(r.weightPct, 1)}%</td>
-              <td className="py-2.5 text-right font-mono text-sm text-muted">{r.isCash ? "-" : plain(r.entryPrice)}</td>
+              <td className={`py-2.5 text-right font-mono text-sm text-muted ${opt}`}>{r.isCash ? "-" : plain(r.entryPrice)}</td>
               <td className="py-2.5 text-right font-mono text-sm text-muted">{r.isCash ? "-" : plain(r.currentPrice)}</td>
               <td className={`py-2.5 text-right font-mono text-sm ${r.isCash ? "text-dim" : signClass(r.pnlPct)}`}>{r.isCash ? "-" : pct(r.pnlPct)}</td>
             </tr>

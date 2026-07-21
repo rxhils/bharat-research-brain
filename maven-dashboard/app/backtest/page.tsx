@@ -12,6 +12,12 @@
  *   - 2017–2020 stress era (incl. the COVID crash) — protected capital, beat 2/4
  * Backtested results, NOT a live track record. Data is inlined on purpose: the engine
  * is frozen, it does not swap to a DB query.
+ *
+ * Wave-2 redesign — "The Evidence Room": editorial hero + count-up band, the
+ * full-period equity/underwater curve, and the "Crash, Scrubbed" scrollytelling
+ * sequence (app/backtest/covid-scrub.tsx) replacing the static COVID list.
+ * Gold appears exactly twice on this page: the hero's "The proof." and the
+ * scrub's gap band — gold = the risk story, nowhere else.
  */
 
 import { useEffect, useState } from "react";
@@ -27,7 +33,11 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { ChartReveal, useReducedMotionSafe } from "@/components/motion";
+import { ScrollProgress } from "@/components/scroll-progress";
+import { ChartReveal, Reveal, SectionEyebrow, useReducedMotionSafe } from "@/components/motion";
+import { CovidScrub } from "./covid-scrub";
+import { EquityCurve } from "./equity-curve";
+import { StatTicker } from "./stat-ticker";
 
 // Recharts replays its draw on every re-render; allow one bar-grow pass on mount
 // (600ms) then hard-disable, and skip it entirely under reduced motion. Mirrors
@@ -91,13 +101,6 @@ const STRESS_DD = [
   { name: "Enhanced F+", dd: 15.08, accent: EMERALD },
 ];
 
-const COVID_TRACE = [
-  { date: "2020-02-11", exp: 100, note: "Fully invested — pre-crash" },
-  { date: "2020-03-04", exp: 50, note: "Regime risk-off — first cut" },
-  { date: "2020-03-12", exp: 25, note: "Deep risk-off — exposure floor" },
-  { date: "2020-06-03", exp: 50, note: "Recovery — stepping back in" },
-];
-
 const CAVEATS = [
   ["Backtested, not live", "Every figure on this page is a simulation over historical prices. It is NOT a live track record. The forward paper account is the only out-of-sample evidence — see the Portfolio and Brain pages."],
   ["No lookahead", "Every decision at date D uses only data dated ≤ D. The regime cut exposure during/before the COVID drop, never after — no hindsight leakage."],
@@ -109,26 +112,37 @@ const CAVEATS = [
 
 /* ============================ presentational bits ============================ */
 
+/** House glass-hairline panel: gradient p-px wrapper (brighter top edge = the
+ *  /broker card recipe), inner top highlight, radius 20. No backdrop-filter —
+ *  the blur budget is spent on the hero band and the page stays cheap. */
 function Panel({ title, sub, children }: { title?: string; sub?: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl border border-hairline bg-panel/50 p-5 sm:p-6">
-      {title && (
-        <header className="mb-4">
-          <h2 className="text-sm font-semibold tracking-tight text-ink">{title}</h2>
-          {sub && <p className="mt-1 text-xs leading-relaxed text-muted">{sub}</p>}
-        </header>
-      )}
-      {children}
+    <section className="rounded-[20px] bg-gradient-to-b from-white/[0.12] to-white/[0.03] p-px">
+      <div className="rounded-[19px] bg-panel/95 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.07)] sm:p-6">
+        {title && (
+          <header className="mb-4">
+            <h3 className="text-sm font-semibold tracking-tight text-ink">{title}</h3>
+            {sub && <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted">{sub}</p>}
+          </header>
+        )}
+        {children}
+      </div>
     </section>
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: string }) {
+/** Editorial chapter head — mono eyebrow, serif display, one-line standfirst. */
+function EraHead({ eyebrow, title, standfirst }: { eyebrow: string; title: string; standfirst: string }) {
   return (
-    <div className="rounded-xl border border-hairline bg-bg/40 px-4 py-3">
-      <div className="text-[11px] uppercase tracking-wide text-muted">{label}</div>
-      <div className={`mt-1 font-mono text-xl font-semibold ${tone ?? "text-ink"}`}>{value}</div>
-    </div>
+    <Reveal>
+      <div className="border-t border-hairline pt-8">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">{eyebrow}</p>
+        <h2 className="mt-2 font-serif text-[clamp(1.75rem,1rem+2.5vw,3rem)] leading-[1.05] tracking-[-0.01em] text-ink">
+          {title}
+        </h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">{standfirst}</p>
+      </div>
+    </Reveal>
   );
 }
 
@@ -212,7 +226,15 @@ function WFTable({ rows }: { rows: typeof E1_WF }) {
               <td className="py-2 pr-3 text-amber">{r.dd.toFixed(2)}%</td>
               <td className="py-2 pr-3 text-muted">{r.trades}</td>
               <td className={`py-2 pr-3 ${sign(r.idx)}`}>{pc(r.idx)}</td>
-              <td className={`py-2 pr-3 ${sign(r.alpha)}`}>{pc(r.alpha)}</td>
+              <td className="py-2 pr-3">
+                <span
+                  className={`rounded-md px-1.5 py-0.5 text-xs ${
+                    r.alpha > 0 ? "bg-emerald/10 text-emerald" : "bg-rose/10 text-rose"
+                  }`}
+                >
+                  {pc(r.alpha)}
+                </span>
+              </td>
               <td className="py-2 pr-0">
                 {r.beat ? (
                   <span className="rounded-md bg-emerald/15 px-1.5 py-0.5 text-xs text-emerald">✓</span>
@@ -247,8 +269,11 @@ function CapTable({ rows }: { rows: typeof E1_CAP }) {
           {rows.map((r) => {
             const hi = r.accent === EMERALD;
             return (
-              <tr key={r.name} className={`border-b border-hairline/60 ${hi ? "bg-emerald/[0.04]" : ""}`}>
-                <td className={`py-2 pr-3 font-sans text-xs ${hi ? "font-semibold text-emerald" : "text-ink"}`}>{r.name}</td>
+              <tr
+                key={r.name}
+                className={`border-b border-hairline/60 ${hi ? "bg-emerald/[0.04] shadow-[inset_2px_0_0_0_rgba(52,211,153,0.55)]" : ""}`}
+              >
+                <td className={`py-2 pl-2 pr-3 font-sans text-xs ${hi ? "font-semibold text-emerald" : "text-ink"}`}>{r.name}</td>
                 <td className={`py-2 pr-3 ${hi ? "text-emerald" : "text-ink"}`}>{inr(r.final)}</td>
                 <td className={`py-2 pr-3 ${sign(r.ret)}`}>{pc(r.ret)}</td>
                 <td className="py-2 pr-3 text-amber">{r.dd.toFixed(2)}%</td>
@@ -267,10 +292,18 @@ function CapTable({ rows }: { rows: typeof E1_CAP }) {
 
 export default function BacktestPage() {
   return (
-    <div className="space-y-6 pt-6">
-      {/* hero */}
-      <header className="space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
+    <div className="space-y-10 pt-8">
+      <ScrollProgress />
+
+      {/* hero — editorial scale; the radial glow is the light source, no cards */}
+      <header className="relative space-y-6">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -top-16 left-1/2 h-[380px] w-full max-w-[760px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(52,211,153,0.07),transparent_65%)]"
+        >
+          <div className="noise-overlay" />
+        </div>
+        <div className="relative flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-emerald/30 bg-emerald/10 px-2.5 py-1 text-[11px] font-medium text-emerald">
             Backtested — not a live track record
           </span>
@@ -278,135 +311,153 @@ export default function BacktestPage() {
             frozen Enhanced F+ · commit 6ced078
           </span>
         </div>
-        {/* serif h1 matches the house headline voice (portfolio/strategies pages) */}
-        <h1 className="text-balance font-serif text-2xl text-ink sm:text-3xl">
-          Enhanced F+ Backtest — the proof
+        <h1 className="relative max-w-4xl text-balance font-serif text-[clamp(2.25rem,1rem+4.5vw,5rem)] leading-[1.02] tracking-[-0.02em] text-ink">
+          Half the drawdown. <em className="italic text-gold-soft">The proof.</em>
         </h1>
-        <p className="max-w-2xl text-sm leading-relaxed text-muted">
+        <p className="relative max-w-3xl text-base leading-relaxed text-muted">
           The engine running the paper account, tested two ways: across the 2021–2026 bull run and
           through the 2017–2020 stress era (the COVID crash). No-lookahead walk-forward plus a
           ₹10,00,000 capital simulation against the Nifty 500 Total-Return Index. F+ classic is shown
           alongside as the locked fallback.
         </p>
+        <div className="relative">
+          <StatTicker />
+        </div>
       </header>
 
-      {/* verdict */}
-      <Panel
-        title="The headline"
-        sub="Enhanced F+ beat the Nifty 500 over 2021–26 at lower drawdown, and fell only ~14% through the COVID window versus the market's ~38%. Backtested results — the durable claim is the return-vs-drawdown edge, not the absolute percentage."
-      >
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="2021–26 return" value="+129.97%" tone="text-emerald" />
-          <Stat label="vs Nifty 500 TRI" value="+82.17%" tone="text-muted" />
-          <Stat label="Max drawdown" value="14.05%" tone="text-emerald" />
-          <Stat label="vs Nifty 500 DD" value="18.59%" tone="text-muted" />
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Stat label="COVID-window DD" value="13.88%" tone="text-emerald" />
-          <Stat label="vs market crash" value="~38%" tone="text-muted" />
-          <Stat label="Bull windows beaten" value="4 / 4" tone="text-emerald" />
-          <Stat label="2021–26 Sharpe" value="0.95" tone="text-emerald" />
-        </div>
-      </Panel>
+      {/* the missing artifact — full-period equity curve + underwater ribbon */}
+      <section className="space-y-4">
+        <Reveal>
+          <div>
+            <SectionEyebrow number="01">The full period</SectionEyebrow>
+            <h2 className="mt-2 font-serif text-[clamp(1.75rem,1rem+2.5vw,3rem)] leading-[1.05] tracking-[-0.01em] text-ink">
+              Five years, one curve
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+              ₹10,00,000 through the 2021–2026 simulation — the equity path on top, the drawdown it
+              cost underneath. Backtested results; the durable claim is the return-vs-drawdown edge,
+              not the absolute percentage.
+            </p>
+          </div>
+        </Reveal>
+        <Panel>
+          <EquityCurve />
+        </Panel>
+      </section>
 
       {/* ERA 1 — shown first: the 2021–2026 bull run */}
-      <div className="flex items-center gap-3 pt-2">
-        <div className="h-px flex-1 bg-hairline" />
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
-          Era 1 · 2021–2026 bull run
-        </span>
-        <div className="h-px flex-1 bg-hairline" />
-      </div>
+      <EraHead
+        eyebrow="Era 1 · 2021–2026"
+        title="The bull run"
+        standfirst="Four overlapping walk-forward windows across the up-cycle — Enhanced F+ beat the index in every one."
+      />
 
-      <Panel
-        title="Walk-forward — beat the index 4 / 4"
-        sub="Every window cleared the Nifty 500 TRI on return, with positive alpha and a Sharpe above 1.0 in three of four windows. Backtested, no-lookahead."
-      >
-        <WFTable rows={E2_WF} />
-        <div className="mt-5">
-          <WindowReturns rows={E2_WF} />
-        </div>
-      </Panel>
+      <Reveal>
+        <Panel
+          title="Walk-forward — beat the index 4 / 4"
+          sub="Every window cleared the Nifty 500 TRI on return, with positive alpha and a Sharpe above 1.0 in three of four windows. Backtested, no-lookahead."
+        >
+          <WFTable rows={E2_WF} />
+          <div className="mt-5">
+            <WindowReturns rows={E2_WF} />
+          </div>
+        </Panel>
+      </Reveal>
 
-      <Panel
-        title="₹10,00,000 simulated — 2021-06-01 → 2026-05-26"
-        sub="Enhanced F+ grew ₹10L to ₹22.99L (+129.97%) versus the index's ₹18.22L (+82.17%) — and did it at lower drawdown (14.05% vs 18.59%). F+ classic, the fallback, effectively matched the index. Backtested simulation, not real money."
-      >
-        <CapTable rows={E2_CAP} />
-      </Panel>
+      <Reveal>
+        <Panel
+          title="₹10,00,000 simulated — 2021-06-01 → 2026-05-26"
+          sub="Enhanced F+ grew ₹10L to ₹22.99L (+129.97%) versus the index's ₹18.22L (+82.17%) — and did it at lower drawdown (14.05% vs 18.59%). F+ classic, the fallback, effectively matched the index. Backtested simulation, not real money."
+        >
+          <CapTable rows={E2_CAP} />
+        </Panel>
+      </Reveal>
 
       {/* ERA 2 — shown second: the 2017–2020 stress test */}
-      <div className="flex items-center gap-3 pt-2">
-        <div className="h-px flex-1 bg-hairline" />
-        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted">
-          Era 2 · 2017–2020 stress test
-        </span>
-        <div className="h-px flex-1 bg-hairline" />
-      </div>
+      <EraHead
+        eyebrow="Era 2 · 2017–2020"
+        title="The stress test"
+        standfirst="The era that includes the COVID crash — where the risk machinery earned its keep."
+      />
 
-      <Panel
-        title="Walk-forward — 4 overlapping windows, beat the index 2 / 4"
-        sub="The market itself was brutal here: every window includes or borders the COVID crash. Enhanced F+ trailed the index in the two calm early windows but protected capital through the crash — beating the index in the COVID window (W3) and the recovery (W4), with far lower drawdown throughout."
-      >
-        <WFTable rows={E1_WF} />
-        <div className="mt-5">
-          <WindowReturns rows={E1_WF} />
-        </div>
-      </Panel>
+      <Reveal>
+        <Panel
+          title="Walk-forward — 4 overlapping windows, beat the index 2 / 4"
+          sub="The market itself was brutal here: every window includes or borders the COVID crash. Enhanced F+ trailed the index in the two calm early windows but protected capital through the crash — beating the index in the COVID window (W3) and the recovery (W4), with far lower drawdown throughout."
+        >
+          <WFTable rows={E1_WF} />
+          <div className="mt-5">
+            <WindowReturns rows={E1_WF} />
+          </div>
+        </Panel>
+      </Reveal>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <Reveal>
         <Panel
           title="Drawdown — half the pain"
           sub="Full 2017–2020 stress era. Lower is better. Enhanced F+ took 15.08% max drawdown vs F+ classic's 23.27% and the Nifty 500's 38.52%."
         >
           <DrawdownBars />
         </Panel>
+      </Reveal>
 
+      {/* signature moment — "The Crash, Scrubbed" */}
+      <section className="space-y-4">
+        <Reveal>
+          <div>
+            <SectionEyebrow number="02">The crash, scrubbed</SectionEyebrow>
+            <h2 className="mt-2 font-serif text-[clamp(1.75rem,1rem+2.5vw,3rem)] leading-[1.05] tracking-[-0.01em] text-ink">
+              Watch the de-risk happen
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+              Graded cash (100 / 50 / 25%) cut exposure live, before the bottom — no hindsight.
+              Enhanced F+ fell only −13.88% peak-to-trough through the COVID window versus the
+              market&apos;s ~−38%.
+            </p>
+          </div>
+        </Reveal>
+        <CovidScrub />
+      </section>
+
+      <Reveal>
         <Panel
-          title="The COVID de-risk, step by step"
-          sub="Graded cash (100 / 50 / 25%) cut exposure live, before the bottom — no hindsight. Enhanced F+ fell only −13.88% peak-to-trough through the COVID window versus the market's ~−38%."
+          title="₹10,00,000 simulated — 2017-01-16 → 2020-12-31"
+          sub="Through the stress era Enhanced F+ ended ahead of both the index and F+ classic, while taking the least drawdown of the three. Backtested simulation, not real money."
         >
-          <ol className="relative space-y-3 border-l border-hairline pl-5">
-            {COVID_TRACE.map((s) => (
-              <li key={s.date} className="relative">
-                <span
-                  className="absolute -left-[26px] top-1.5 h-2.5 w-2.5 rounded-full ring-2 ring-bg"
-                  style={{ background: s.exp >= 100 ? SLATE : s.exp <= 25 ? ROSE : AMBER }}
-                />
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-xs text-muted">{s.date}</span>
-                  <span className="font-mono text-sm font-semibold text-ink">{s.exp}% invested</span>
-                </div>
-                <p className="text-xs text-muted">{s.note}</p>
-              </li>
-            ))}
-          </ol>
+          <CapTable rows={E1_CAP} />
         </Panel>
-      </div>
+      </Reveal>
 
-      <Panel
-        title="₹10,00,000 simulated — 2017-01-16 → 2020-12-31"
-        sub="Through the stress era Enhanced F+ ended ahead of both the index and F+ classic, while taking the least drawdown of the three. Backtested simulation, not real money."
-      >
-        <CapTable rows={E1_CAP} />
-      </Panel>
-
-      {/* methodology */}
-      <Panel
-        title="Methodology & honest caveats"
-        sub="What this backtest does and does not claim. Read this before trusting any number above."
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          {CAVEATS.map(([h, b]) => (
-            <div key={h} className="rounded-xl border border-hairline bg-bg/40 p-4">
-              <div className="text-xs font-semibold text-ink">{h}</div>
-              <p className="mt-1 text-xs leading-relaxed text-muted">{b}</p>
-            </div>
+      {/* methodology — the credibility engine, editorial footnotes */}
+      <section className="border-t border-hairline pt-8">
+        <Reveal>
+          <div>
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+              Methodology &amp; honest caveats
+            </p>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+              What this backtest does and does not claim. Read this before trusting any number above.
+            </p>
+          </div>
+        </Reveal>
+        <div className="mt-6 grid gap-x-10 gap-y-6 sm:grid-cols-2">
+          {CAVEATS.map(([h, b], i) => (
+            <Reveal key={h} delay={i * 0.05}>
+              <div className="flex gap-4">
+                <span className="pt-0.5 font-mono text-[11px] font-semibold text-dim">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3 className="text-xs font-semibold text-ink">{h}</h3>
+                  <p className="mt-1 text-xs leading-relaxed text-muted">{b}</p>
+                </div>
+              </div>
+            </Reveal>
           ))}
         </div>
-      </Panel>
+      </section>
 
-      <p className="px-1 text-xs leading-relaxed text-muted">
+      <p className="px-1 pb-4 text-xs leading-relaxed text-muted">
         For personal research and educational purposes only. Not investment advice. Paper-traded /
         simulated results, not real money. Past simulated performance does not predict future
         results. The operator has not paid for advice and Claude is not registered as an investment

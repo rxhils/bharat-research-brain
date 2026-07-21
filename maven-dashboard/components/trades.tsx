@@ -2,35 +2,225 @@
 
 // Trades page — every trade the frozen F+ engine has taken (open + closed), each with
 // a day-to-day price sparkline (is the stock going up or down) and the plain-English
-// reason F+ entered / exited. All real data from paper_position + prices_eod_adjusted.
+// entry thesis / exit trigger. All real data from paper_position + prices_eod_adjusted.
+//
+// Wave-2 redesign ("The Tape"): the page hero carries a count-up scoreboard plus an
+// aggregate paper-P&L path that draws itself in (TapePath below); row sparklines get
+// the same PathDraw treatment with a gradient area fill and a pulsing endpoint dot on
+// open positions; the expanded panel gains a real full-width price chart (TradeChart)
+// with a dashed entry line and entry/exit markers. Kit gap note: PathDraw can't take
+// vector-effect / preserveAspectRatio="none", so TapePath and TradeChart build their
+// own motion.path locally (same pathLength pattern, .brand-motion wrapped).
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { Trade } from "@/lib/types";
-import { EASE, Reveal, useReducedMotionSafe } from "./motion";
+import { EASE, EASE_SOFT, LayoutPill, PathDraw, Reveal, SectionEyebrow, useReducedMotionSafe } from "./motion";
 
 const pc = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
 const rs = (n: number) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
 const sign = (n: number) => (n > 0 ? "text-emerald" : n < 0 ? "text-rose" : "text-muted");
 
-function Sparkline({ pts, up }: { pts: number[]; up: boolean }) {
-  if (pts.length < 2) return <span className="text-[10px] text-dim">no path</span>;
-  const w = 130, h = 34, min = Math.min(...pts), max = Math.max(...pts);
+const EMERALD = "#34d399";
+const ROSE = "#fb7185";
+
+/* ------------------------------------------------------------------ */
+/* The Tape — aggregate paper-P&L path for the hero scoreboard.        */
+/* Points are computed server-side in app/trades/page.tsx from the     */
+/* real trade series; this only draws them. Renders nothing when there */
+/* is not enough data (honest omission, never a decorative fake line). */
+/* ------------------------------------------------------------------ */
+export function TapePath({ pts, className = "" }: { pts: number[]; className?: string }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  if (pts.length < 2) return null;
+  const min = Math.min(...pts), max = Math.max(...pts);
   const rng = max - min || 1;
-  const d = pts
-    .map((p, i) => {
-      const x = (i / (pts.length - 1)) * w;
-      const y = h - ((p - min) / rng) * (h - 4) - 2;
-      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(" ");
-  const color = up ? "#34d399" : "#fb7185";
+  // x mapped to 1..99, y to 6..36 (viewBox 0 0 100 40) so the stroke + endpoint
+  // dot never clip against the glass panel's overflow-hidden.
+  const X = (i: number) => 1 + (i / (pts.length - 1)) * 98;
+  const Y = (v: number) => 36 - ((v - min) / rng) * 30;
+  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${X(i).toFixed(2)},${Y(p).toFixed(2)}`).join(" ");
+  const areaD = `${d} L99,40 L1,40 Z`;
+  const lastY = Y(pts[pts.length - 1]);
+  return (
+    <div className={`brand-motion relative ${className}`} aria-hidden>
+      <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="block h-16 w-full">
+        <defs>
+          <linearGradient id={`tape-area-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={EMERALD} stopOpacity="0.2" />
+            <stop offset="100%" stopColor={EMERALD} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <motion.path
+          d={areaD}
+          fill={`url(#tape-area-${uid})`}
+          stroke="none"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-10% 0px" }}
+          transition={{ duration: 0.8, delay: 0.9, ease: EASE_SOFT }}
+        />
+        <motion.path
+          d={d}
+          fill="none"
+          stroke={EMERALD}
+          strokeWidth={1.5}
+          vectorEffect="non-scaling-stroke"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          whileInView={{ pathLength: 1 }}
+          viewport={{ once: true, margin: "-10% 0px" }}
+          transition={{ duration: 1.4, delay: 0.2, ease: EASE }}
+        />
+      </svg>
+      {/* endpoint dot at the latest aggregate reading */}
+      <motion.span
+        className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald"
+        style={{ left: "99%", top: `${(lastY / 40) * 100}%` }}
+        initial={{ opacity: 0, scale: 0 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "-10% 0px" }}
+        transition={{ duration: 0.35, delay: 1.6, ease: EASE_SOFT }}
+      />
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Row sparkline — PathDraw draw-in + gradient area fill + endpoint    */
+/* dot; open positions get a pulsing ring (.brand-motion exempts it    */
+/* from the OS reduced-motion damp — it is a live-position signal).    */
+/* ------------------------------------------------------------------ */
+function Sparkline({ pts, up, live }: { pts: number[]; up: boolean; live: boolean }) {
+  if (pts.length < 2) return <span className="text-[10px] text-dim">no path</span>;
+  const w = 150, h = 34, min = Math.min(...pts), max = Math.max(...pts);
+  const rng = max - min || 1;
+  const xy = pts.map((p, i) => ({
+    x: 3 + (i / (pts.length - 1)) * (w - 6),
+    y: h - ((p - min) / rng) * (h - 8) - 4,
+  }));
+  const d = xy.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const areaD = `${d} L${(w - 3).toFixed(1)},${h} L3,${h} Z`;
+  const last = xy[xy.length - 1];
+  const color = up ? EMERALD : ROSE;
   return (
     // decorative: the trend is stated by the adjacent signed % text
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden>
-      <path d={d} fill="none" stroke={color} strokeWidth="1.5"
-        strokeLinejoin="round" strokeLinecap="round" />
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden className="shrink-0">
+      <PathDraw
+        d={d}
+        stroke={color}
+        strokeWidth={1.5}
+        duration={0.8}
+        areaD={areaD}
+        areaFill={up ? "rgba(52,211,153,0.14)" : "rgba(251,113,133,0.12)"}
+        dot={{ cx: last.x, cy: last.y, r: 2.5, fill: color }}
+      />
+      {live && (
+        <circle
+          className="brand-motion animate-ping"
+          cx={last.x}
+          cy={last.y}
+          r={3}
+          fill={color}
+          opacity={0.5}
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        />
+      )}
     </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* TradeChart — the full price path inside the expanded panel: drawn   */
+/* line + gradient area (preserveAspectRatio="none" svg with           */
+/* non-scaling strokes), dashed hairline at the entry price, gold-soft */
+/* entry marker and emerald/rose exit-or-latest marker, min/max ₹      */
+/* ticks. Mounts inside the accordion, so it animates on mount.        */
+/* ------------------------------------------------------------------ */
+function TradeChart({ t }: { t: Trade }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
+  const pts = t.series.map((p) => p.close);
+  if (pts.length < 2) return null;
+  const min = Math.min(...pts, t.entryPrice);
+  const max = Math.max(...pts, t.entryPrice);
+  const rng = max - min || 1;
+  // percent-space geometry: x 2..98, y 8..92 so the markers never clip.
+  const X = (i: number) => 2 + (i / (pts.length - 1)) * 96;
+  const Y = (v: number) => 92 - ((v - min) / rng) * 84;
+  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${X(i).toFixed(2)},${Y(p).toFixed(2)}`).join(" ");
+  const areaD = `${d} L98,100 L2,100 Z`;
+  const entryY = Y(t.entryPrice);
+  const lastY = Y(pts[pts.length - 1]);
+  const up = t.pnlPct >= 0;
+  const color = up ? EMERALD : ROSE;
+  const live = t.status === "open";
+  return (
+    <div className="brand-motion relative h-[140px] w-full" aria-hidden>
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+        <defs>
+          <linearGradient id={`tc-area-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+            <stop offset="100%" stopColor={color} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <motion.path
+          d={areaD}
+          fill={`url(#tc-area-${uid})`}
+          stroke="none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.7, delay: 0.5, ease: EASE_SOFT }}
+        />
+        {/* dashed hairline at the entry price */}
+        <line
+          x1="0" x2="100" y1={entryY} y2={entryY}
+          stroke="rgba(255,255,255,0.25)" strokeWidth={1}
+          strokeDasharray="4 4" vectorEffect="non-scaling-stroke"
+        />
+        <motion.path
+          d={d}
+          fill="none"
+          stroke={color}
+          strokeWidth={1.75}
+          vectorEffect="non-scaling-stroke"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: 1 }}
+          transition={{ duration: 0.9, ease: EASE }}
+        />
+      </svg>
+      {/* entry marker — gold-soft dot at the first point of the real series */}
+      <span
+        className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-soft"
+        style={{ left: "2%", top: `${Y(pts[0])}%` }}
+      />
+      {/* exit-or-latest marker */}
+      <motion.span
+        className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+        style={{ left: "98%", top: `${lastY}%`, backgroundColor: color }}
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: 0.9, ease: EASE_SOFT }}
+      />
+      {live && (
+        <span
+          className="brand-motion absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full"
+          style={{ left: "98%", top: `${lastY}%`, backgroundColor: color, opacity: 0.4 }}
+        />
+      )}
+      {/* entry label pinned to the dashed line */}
+      <span
+        className="absolute right-1 -translate-y-full pb-0.5 font-mono text-[10px] uppercase tracking-wide text-gold-soft"
+        style={{ top: `${entryY}%` }}
+      >
+        entry {rs(t.entryPrice)} · {t.entryDate}
+      </span>
+      {/* min / max ₹ ticks */}
+      <span className="absolute left-1 top-0 font-mono text-[10px] tnum text-dim">{rs(max)}</span>
+      <span className="absolute bottom-0 left-1 font-mono text-[10px] tnum text-dim">{rs(min)}</span>
+    </div>
   );
 }
 
@@ -78,7 +268,7 @@ function TradeRow({ t }: { t: Trade }) {
         </div>
         {/* sparkline (day-to-day) */}
         <div className="flex items-center gap-2">
-          <Sparkline pts={closes} up={up} />
+          <Sparkline pts={closes} up={up} live={t.status === "open"} />
           <span className={`font-mono text-xs tnum ${sign(t.trendPct)}`}>{pc(t.trendPct)}</span>
         </div>
         {/* entry -> current */}
@@ -117,6 +307,8 @@ function TradeRow({ t }: { t: Trade }) {
                   <p className="mt-1 text-xs leading-relaxed text-muted">{t.whyExit}</p>
                 </div>
               )}
+              {/* the actual price path — real EOD adjusted close, entry → exit/latest */}
+              <TradeChart t={t} />
               {/* details */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Field label="Entry" value={`${rs(t.entryPrice)}`} />
@@ -143,6 +335,9 @@ function TradeRow({ t }: { t: Trade }) {
 
 export function TradesView({ trades, engineLabel = "Enhanced F+" }: { trades: Trade[]; engineLabel?: string }) {
   const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
+  // unique per instance: two engine sections render side by side and layoutId is
+  // global, so a shared id would animate the pill across sections.
+  const pillId = useId();
   if (!trades.length) {
     return (
       <div className="rounded-xl border border-hairline bg-bg/40 p-6 text-center text-sm text-muted">
@@ -152,26 +347,38 @@ export function TradesView({ trades, engineLabel = "Enhanced F+" }: { trades: Tr
   }
   const openN = trades.filter((t) => t.status === "open").length;
   const closedN = trades.length - openN;
+  const closed = trades.filter((t) => t.status === "closed");
+  const closedAvg = closed.length ? closed.reduce((s, t) => s + t.pnlPct, 0) / closed.length : null;
   const shown = trades.filter((t) => filter === "all" || t.status === filter);
   const tab = (key: "all" | "open" | "closed", label: string) => (
     <button
       type="button"
       onClick={() => setFilter(key)}
       aria-pressed={filter === key}
-      className={`rounded-lg px-3 py-1 text-xs motion-safe:transition-[color,background-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] ${
-        filter === key ? "bg-emerald/15 text-emerald" : "text-muted hover:text-ink"}`}
+      className={`relative rounded-lg px-3 py-1 text-xs motion-safe:transition-[color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97] ${
+        filter === key ? "text-emerald" : "text-muted hover:text-ink"}`}
     >
-      {label}
+      {filter === key && (
+        <LayoutPill layoutId={`trades-filter-${pillId}`} className="absolute inset-0 rounded-lg bg-emerald/15" />
+      )}
+      <span className="relative">{label}</span>
     </button>
   );
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-xs text-muted">
-          {trades.length} trades · <span className="text-emerald">{openN} open</span> ·{" "}
-          {closedN} closed. Tap a trade for the price path + why {engineLabel} took it.
-        </p>
+        <div>
+          <SectionEyebrow>{engineLabel}</SectionEyebrow>
+          <p className="mt-1 text-xs text-muted">
+            {trades.length} trades · <span className="text-emerald">{openN} open</span> ·{" "}
+            {closedN} closed
+            {closedAvg !== null && (
+              <> · closed avg <span className={`font-mono tnum ${sign(closedAvg)}`}>{pc(closedAvg)}</span></>
+            )}
+            . Tap a trade for the price path and the entry/exit logic.
+          </p>
+        </div>
         <div className="flex items-center gap-1 rounded-lg border border-hairline bg-panel/50 p-1">
           {tab("all", "All")}
           {tab("open", "Open")}
