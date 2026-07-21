@@ -103,7 +103,8 @@ export function Nav() {
         <div className="scroll-touch flex min-w-0 items-center gap-0.5 overflow-x-auto rounded-xl border border-hairline bg-panel/50 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] [scrollbar-width:none] sm:gap-1 [&::-webkit-scrollbar]:hidden">
           {tab("/chat", "Chat", true)}
           {tab("/", "How it works")}
-          {tab("/portfolio-mode", "Modes")}
+          {/* Modes (/portfolio-mode) hidden from nav while the page is rebuilt on
+              localhost — restore this tab when the operator approves relaunch */}
           {tab("/portfolio", "Portfolio")}
           {tab("/broker", "Broker")}
           {tab("/trades", "Trades")}

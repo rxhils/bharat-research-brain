@@ -1,9 +1,32 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getAccount, getEquityCurve, getHoldings, getLivePortfolios } from "@/lib/data";
 import { Card, EquityChart, HoldingsTable } from "@/components/client";
 import { GRAD_EMERALD, GRAD_GOLD, Reveal } from "@/components/explainer";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Portfolio Mode & Broker Connection Explained",
+  description:
+    "Understand how Maven's multi-style portfolio engine works, what live vs backtested vs illustrative numbers mean, and how read-only broker connection will work.",
+  alternates: {
+    canonical: "https://www.trymaven.in/portfolio-mode",
+  },
+  // page is hidden from nav + sitemap while it's rebuilt; keep crawlers out too
+  robots: { index: false, follow: false },
+  openGraph: {
+    title: "Portfolio Mode & Broker Connection Explained",
+    description:
+      "Understand how Maven's multi-style portfolio engine works, what live vs backtested vs illustrative numbers mean, and how read-only broker connection will work.",
+    url: "https://www.trymaven.in/portfolio-mode",
+  },
+  twitter: {
+    title: "Portfolio Mode & Broker Connection Explained",
+    description:
+      "Understand how Maven's multi-style portfolio engine works, what live vs backtested vs illustrative numbers mean, and how read-only broker connection will work.",
+  },
+};
 
 // "Quant" is shown as its strategy name on the public site (matches app/portfolio/page.tsx).
 const displayName = (n: string) => (n === "Quant" ? "Enhanced F+" : n);

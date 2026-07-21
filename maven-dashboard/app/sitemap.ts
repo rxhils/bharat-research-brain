@@ -9,10 +9,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/chat", priority: 0.9, freq: "daily" },
     { path: "/broker", priority: 0.8, freq: "weekly" },
     { path: "/portfolio", priority: 0.8, freq: "daily" },
-    { path: "/portfolio-mode", priority: 0.7, freq: "weekly" },
     { path: "/trades", priority: 0.6, freq: "daily" },
     { path: "/strategies", priority: 0.6, freq: "weekly" },
     { path: "/backtest", priority: 0.6, freq: "weekly" },
+    { path: "/brain", priority: 0.6, freq: "weekly" },
   ];
   // pinned per release — bump when page content meaningfully changes (a
   // rolling `new Date()` would fake freshness on every request)
