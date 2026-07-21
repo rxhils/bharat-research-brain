@@ -3,9 +3,11 @@ import { Explainer } from "@/components/explainer";
 import { LandingAuthFlow } from "@/components/auth/landing-auth-flow";
 
 export const metadata: Metadata = {
-  title: "Maven — How It Works",
+  // absolute: bypasses the layout's "%s | Maven" template so the front door
+  // carries the exact brand title from the SEO plan.
+  title: { absolute: "Maven — AI Research for Indian Markets | TryMaven" },
   description:
-    "Index-like returns at roughly half the drawdown — F+ survived covid at -27% while the market fell -38%. Risk management is the edge. Research tool, paper-traded, not advice.",
+    "Index-like returns at roughly half the drawdown — Enhanced F+ survived covid at -13.88% while the market fell ~-38%. Risk management is the edge. Research tool, paper-traded, not advice.",
 };
 
 // "How it works" is the landing page. The live paper portfolio lives at /portfolio.

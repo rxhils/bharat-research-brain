@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { type ReactNode } from "react";
 import { Hanken_Grotesk, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
+import "lenis/dist/lenis.css";
 import { SiteChrome } from "@/components/site-chrome";
+import { SmoothScroll } from "@/components/smooth-scroll";
 
 const sans = Hanken_Grotesk({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono", display: "swap" });
@@ -44,6 +46,7 @@ export const metadata: Metadata = {
     title: "Maven — AI Research for Indian Markets",
     description: "Ask better questions about NSE/BSE. Research, not investment advice.",
   },
+  icons: { icon: "/icon.svg" },
   manifest: "/manifest.json",
   appleWebApp: { capable: true, title: "Maven", statusBarStyle: "black-translucent" },
 };
@@ -85,7 +88,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" className={`${sans.variable} ${mono.variable} ${serif.variable}`}>
       <body className="min-h-screen">
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-        <SiteChrome>{children}</SiteChrome>
+        <SmoothScroll>
+          <SiteChrome>{children}</SiteChrome>
+        </SmoothScroll>
       </body>
     </html>
   );
