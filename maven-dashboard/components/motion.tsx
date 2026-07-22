@@ -84,21 +84,25 @@ export function ChartReveal({ children, delay = 0, className }: {
 }
 
 /** Smooth count-up to a fixed target, formatted Intl `en-IN` (lakh/crore
- *  grouping). Starts at 0 on the server + first client render (hydration-safe),
- *  then animates once scrolled into view. Driven by useMotionValue + animate()
- *  so it plays even when the OS prefers-reduced-motion flag is on (numbers are
- *  a signature moment, not a decorative loop). */
+ *  grouping). Renders the FINAL formatted value on the server + first client
+ *  render (hydration-safe — crawlers, no-JS, and the LCP frame always see the
+ *  real figure, never a 0 placeholder). On first in-view (post-hydration) the
+ *  motion value snaps to 0 and animates up to the target. Driven by
+ *  useMotionValue + animate() so it plays even when the OS
+ *  prefers-reduced-motion flag is on (numbers are a signature moment, not a
+ *  decorative loop). */
 export function CountUp({ to, prefix = "", suffix = "", decimals = 2, duration = 1.3, className }: {
   to: number; prefix?: string; suffix?: string; decimals?: number; duration?: number; className?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: "-10% 0px" });
-  const mv = useMotionValue(0);
+  const mv = useMotionValue(to);
   const [text, setText] = useState(() =>
-    new Intl.NumberFormat("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(0));
+    new Intl.NumberFormat("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(to));
   useEffect(() => {
     if (!inView) return;
     const fmt = new Intl.NumberFormat("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    mv.set(0);
     const c = animate(mv, to, { duration, ease: EASE_SOFT, onUpdate: (v) => setText(fmt.format(v)) });
     return () => c.stop();
   }, [inView, to, duration, decimals, mv]);
@@ -263,14 +267,16 @@ export function LayoutPill({ layoutId = "layout-pill", className, children }: {
 }
 
 /** Section eyebrow: mono caps 11px, wide tracking. Optional numbered variant
- *  ("01 — LABEL") and gold/emerald tone. */
+ *  with ONE canonical delimiter grammar — mono number, space, em-dash, space,
+ *  label ("01 — LABEL"). Callers pass the bare number ("01") and bare label;
+ *  never embed the dash themselves. Gold/emerald tone. */
 export function SectionEyebrow({ children, number, tone = "emerald", className }: {
   children: ReactNode; number?: string; tone?: "emerald" | "gold"; className?: string;
 }) {
   const toneCls = tone === "gold" ? "text-gold-soft" : "text-emerald";
   return (
     <p className={`font-mono text-[11px] font-semibold uppercase tracking-[0.16em] ${toneCls}${className ? ` ${className}` : ""}`}>
-      {number && <span className="text-dim">{number} — </span>}
+      {number && <span className="text-dim">{number}{" — "}</span>}
       {children}
     </p>
   );
