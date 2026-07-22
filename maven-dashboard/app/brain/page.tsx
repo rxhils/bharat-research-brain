@@ -1,8 +1,22 @@
+import type { Metadata } from "next";
 import { getABReadout, getEquityCurve } from "@/lib/data";
 import { ABChart, Card } from "@/components/client";
 import { AgentExplainer } from "@/components/agents";
 
 export const dynamic = "force-dynamic";
+
+const title = "How the Research System Works: Agents & Evidence";
+const description =
+  "Explore the data sources, research agents, validation layers, evidence controls, update cadence, and system limitations behind Maven's research system.";
+const url = "https://www.trymaven.in/brain";
+
+export const metadata: Metadata = {
+  title,
+  description,
+  alternates: { canonical: url },
+  openGraph: { title, description, url },
+  twitter: { title, description },
+};
 
 export default async function Brain() {
   const [curve, readout] = await Promise.all([getEquityCurve(), getABReadout()]);

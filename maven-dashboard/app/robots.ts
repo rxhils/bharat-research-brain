@@ -7,8 +7,8 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        // auth callback is a machine endpoint; nothing to index there
-        disallow: ["/auth/"],
+        // auth callback and login are private, no search value
+        disallow: ["/auth/", "/login"],
       },
     ],
     sitemap: "https://www.trymaven.in/sitemap.xml",

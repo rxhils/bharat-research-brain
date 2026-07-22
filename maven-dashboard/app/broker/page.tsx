@@ -5,9 +5,21 @@ import { BrokerHero } from "@/components/broker/broker-hero";
 import { BrokerJourney } from "@/components/broker/broker-journey";
 
 export const metadata: Metadata = {
-  title: "Broker — Maven",
+  title: "Connect a Broker — Read-Only, No Trading Access",
   description:
-    "Connect your broker read-only. Maven sees your holdings, never trades.",
+    "Connect Zerodha or HDFC Sky to Maven read-only — Groww, Upstox, and more brokers coming soon. Holdings sync with AES-encrypted tokens; Maven never trades.",
+  alternates: { canonical: "https://www.trymaven.in/broker" },
+  openGraph: {
+    title: "Connect a Broker — Read-Only, No Trading Access",
+    description:
+      "Connect Zerodha or HDFC Sky to Maven read-only — Groww, Upstox, and more brokers coming soon. Holdings sync with AES-encrypted tokens; Maven never trades.",
+    url: "https://www.trymaven.in/broker",
+  },
+  twitter: {
+    title: "Connect a Broker — Read-Only, No Trading Access",
+    description:
+      "Connect Zerodha or HDFC Sky to Maven read-only — Groww, Upstox, and more brokers coming soon. Holdings sync with AES-encrypted tokens; Maven never trades.",
+  },
 };
 
 export default function BrokerPage() {

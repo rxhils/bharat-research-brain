@@ -29,7 +29,6 @@ export const metadata: Metadata = {
     "Maven", "TryMaven", "try maven", "Maven India", "Indian stock market AI",
     "NSE research", "BSE research", "India market research", "portfolio research India",
   ],
-  alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
@@ -38,10 +37,10 @@ export const metadata: Metadata = {
     title: "Maven — AI Research for Indian Markets",
     description:
       "Ask better questions about NSE/BSE. Portfolio styles, read-only broker sync, paper-traded research. Not investment advice.",
-    images: [{ url: "/app/broker-screen.png", width: 1320, height: 2868, alt: "The Maven app" }],
+    images: [{ url: "/og-default.png", width: 1200, height: 630, alt: "Maven — Beats the market. Half the fall." }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     site: "@trymavenai",
     title: "Maven — AI Research for Indian Markets",
     description: "Ask better questions about NSE/BSE. Research, not investment advice.",

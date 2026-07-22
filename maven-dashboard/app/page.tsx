@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: { absolute: "Maven — AI Research for Indian Markets | TryMaven" },
   description:
     "Index-like returns at roughly half the drawdown — Enhanced F+ survived covid at -13.88% while the market fell ~-38%. Risk management is the edge. Research tool, paper-traded, not advice.",
+  alternates: {
+    canonical: "https://www.trymaven.in/",
+  },
 };
 
 // "How it works" is the landing page. The live paper portfolio lives at /portfolio.
