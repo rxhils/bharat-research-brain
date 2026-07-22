@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, animate, useMotionValue } from "framer-motion";
 import { EASE, PRESS, pressTap, useReducedMotionSafe } from "./motion";
+import { GlassPanel } from "./glass-panel";
 import { MavenChartRenderer, MechanismStepper } from "./maven-charts";
 import { MavenEvidenceSummaryCard, MavenLatestDataChecklist } from "./maven-evidence";
 import { MavenSourcePanel } from "./maven-source-panel";
@@ -86,35 +87,56 @@ function findQueryForAnswer(msgs: Msg[], answerIndex: number): string {
 const REPORT_HINT = /\b(full research report|full report|deep research|deep dive|deeply|in detail|full view|detailed analysis|investment thesis|business breakdown|risks? in detail|complete report|research note|institutional[- ]?style report)\b/i;
 
 function MavenMark({ size = 26, draw = false }: { size?: number; draw?: boolean }) {
-  const reduce = useReducedMotionSafe();
-  const a = draw && !reduce;
+  // "Medallion Ignition" — the signature draw is driven by raw motion values +
+  // animate() (never variants), so the OS reduced-motion flag cannot suppress it.
+  // Only fired with draw=true inside Core's .brand-motion wrapper (the sanctioned
+  // brand moment); every other MavenMark instance stays static. Runs once per mount.
+  const p1 = useMotionValue(draw ? 0 : 1);
+  const p2 = useMotionValue(draw ? 0 : 1);
+  const dot = useMotionValue(draw ? 0 : 1);
+  useEffect(() => {
+    if (!draw) return;
+    const a1 = animate(p1, 1, { duration: 0.9, ease: EASE });
+    const a2 = animate(p2, 1, { duration: 0.8, delay: 0.45, ease: EASE });
+    const a3 = animate(dot, 1, { duration: 0.4, delay: 1.05, ease: EASE });
+    return () => { a1.stop(); a2.stop(); a3.stop(); };
+  }, [draw]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <svg width={size} height={size} viewBox="0 0 100 100" fill="none" role="img" aria-label="Maven">
+      {/* opacity rides the SAME motion value as the drawn stroke — never a parallel formula */}
       <motion.path d="M15 77 L30 29 L44 59 L55 34" stroke="#f4f4f1" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round"
-        initial={a ? { pathLength: 0, opacity: 0 } : false} animate={a ? { pathLength: 1, opacity: 1 } : undefined} transition={{ duration: 0.9, ease: EASE }} />
+        style={{ pathLength: p1, opacity: p1 }} />
       <motion.path d="M59 37 L71 67 L89 19" stroke="#34d399" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round"
-        initial={a ? { pathLength: 0, opacity: 0 } : false} animate={a ? { pathLength: 1, opacity: 1 } : undefined} transition={{ duration: 0.8, delay: 0.45, ease: EASE }} />
-      <motion.circle cx="89" cy="17" r="8" fill="#34d399"
-        initial={a ? { scale: 0, opacity: 0 } : false} animate={a ? { scale: 1, opacity: 1 } : undefined} transition={{ duration: 0.4, delay: 1.05, ease: EASE }} />
+        style={{ pathLength: p2, opacity: p2 }} />
+      <motion.circle cx="89" cy="17" r="8" fill="#34d399" style={{ scale: dot, opacity: dot }} />
     </svg>
   );
 }
 
 function Core({ size = 128 }: { size?: number }) {
   const ringMask = "radial-gradient(circle, transparent 66%, #000 68%, #000 74%, transparent 76%)";
-  // A brand medallion: the mark large and immediately legible, lit by two calm
-  // motions — a light sheen sweeping across the emblem (like light over metal)
-  // and a thin emerald arc orbiting the rim. brand-motion keeps both alive even
-  // under the OS reduced-motion flag (small, contained, slow).
+  // "Medallion Ignition": on mount the mark draws itself stroke-by-stroke
+  // (MavenMark draw, motion-value driven so it plays under OS reduced-motion),
+  // then — only after the dot pops (~1.1s) — the ambience fades in: the light
+  // sheen and the thin emerald arc orbiting the rim. Ignition first, ambience
+  // second. brand-motion keeps it alive under the OS reduced-motion flag.
+  // ChatShell remounts ChatView per conversation (key={activeId}), so the
+  // ignition naturally re-signs each new chat.
+  const amb = useMotionValue(0);
+  useEffect(() => {
+    const a = animate(amb, 1, { duration: 0.5, delay: 1.1, ease: EASE });
+    return () => a.stop();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <div className="brand-motion relative grid place-items-center" style={{ width: size, height: size }}>
       {/* breathing glow */}
       <span className="absolute inset-0 rounded-full bg-emerald/25 blur-2xl animate-gate-glow2" aria-hidden />
-      {/* orbiting rim arc — one thin highlight, not a loader ring */}
-      <span
+      {/* orbiting rim arc — one thin highlight, not a loader ring; held dark until ignition completes */}
+      <motion.span
         className="absolute rounded-full animate-[gateSpin_10s_linear_infinite]"
         aria-hidden
         style={{
+          opacity: amb,
           width: size, height: size,
           background: "conic-gradient(from 0deg, transparent 0deg, transparent 290deg, rgba(52,211,153,0.9) 330deg, transparent 360deg)",
           maskImage: ringMask, WebkitMaskImage: ringMask,
@@ -130,10 +152,10 @@ function Core({ size = 128 }: { size?: number }) {
           boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 18px 44px -18px rgba(0,0,0,0.9), 0 0 34px -12px rgba(52,211,153,0.35)",
         }}
       >
-        <MavenMark size={Math.round(size * 0.52)} />
-        {/* light sheen sweeping across the emblem */}
-        <span className="pointer-events-none absolute inset-y-0 left-0 w-1/2 -skew-x-12 animate-[gateSweep_5.5s_ease-in-out_infinite]" aria-hidden
-          style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent)" }} />
+        <MavenMark size={Math.round(size * 0.52)} draw />
+        {/* light sheen sweeping across the emblem — waits for the ignition */}
+        <motion.span className="pointer-events-none absolute inset-y-0 left-0 w-1/2 -skew-x-12 animate-[gateSweep_5.5s_ease-in-out_infinite]" aria-hidden
+          style={{ opacity: amb, background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.09), transparent)" }} />
       </span>
     </div>
   );
@@ -175,14 +197,8 @@ function AuroraBg() {
         <div className="absolute bottom-[2%] left-[28%] h-[20rem] w-[20rem] rounded-full bg-gold/[0.06] blur-[120px] sm:h-[24rem] sm:w-[24rem]" />
       )}
       <div className="absolute inset-0" style={{ backgroundImage: grid, backgroundSize: "34px 34px", maskImage: fade, WebkitMaskImage: fade }} />
-    </div>
-  );
-}
-
-function GlassPanel({ children, className = "", tlSharp = false }: { children: React.ReactNode; className?: string; tlSharp?: boolean }) {
-  return (
-    <div className={"rounded-2xl bg-gradient-to-b from-emerald/25 via-white/[0.06] to-transparent p-px " + (tlSharp ? "rounded-tl-md " : "") + className}>
-      <div className={"h-full rounded-2xl bg-panel/45 backdrop-blur-xl " + (tlSharp ? "rounded-tl-md" : "")}>{children}</div>
+      {/* 2% feTurbulence noise kills banding on the blurred aurora gradients — ~0KB JS */}
+      <div className="noise-overlay" aria-hidden />
     </div>
   );
 }
@@ -275,7 +291,7 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
 function GuestLimitCard({ onSignIn }: { onSignIn: () => Promise<void> }) {
   const [pending, setPending] = useState(false);
   return (
-    <GlassPanel className="p-5 sm:p-6">
+    <GlassPanel glow="emerald" innerClassName="p-5 sm:p-6">
       <div className="flex flex-col items-start gap-3">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-emerald/25 bg-emerald/[0.08]" aria-hidden>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -324,7 +340,7 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
       <motion.div variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, scale: 0.8 }, show: { opacity: 1, scale: 1, transition: { duration: 0.8, ease: EASE } } }}>
         <Core />
       </motion.div>
-      <motion.h2 variants={up} className="mt-4 text-balance font-serif text-[2rem] leading-[1.1] text-ink sm:text-5xl">
+      <motion.h2 variants={up} className="mt-4 text-balance font-serif text-[clamp(2rem,1rem+3.5vw,3.5rem)] leading-[1.05] tracking-[-0.02em] text-ink">
         Understand the <span className="italic text-emerald">Indian market</span>.
       </motion.h2>
       {/* Tight vertical rhythm so the whole empty state fits one screen — the
@@ -342,10 +358,12 @@ function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q
   return (
     <motion.button onClick={() => onPick(s.t)} {...pressTap(reduce)}
       variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}
-      className="group relative overflow-hidden rounded-2xl border border-hairline bg-panel/45 p-4 text-left backdrop-blur-md transition-colors duration-300 hover:border-emerald/35 hover:bg-panel/65 focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+      className="group relative overflow-hidden rounded-2xl border border-hairline bg-white/[0.04] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md backdrop-saturate-150 transition-colors duration-300 hover:border-emerald/35 hover:bg-white/[0.07] focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
       <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald/0 via-emerald to-emerald/0 transition-transform duration-500 group-hover:scale-x-100" aria-hidden />
       <span className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald/0 blur-2xl transition-colors duration-500 group-hover:bg-emerald/10" aria-hidden />
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-dim">
+      {/* mono tnum kicker — copy-only by design: no data source exists in this page's
+          props, and the house rule is honest omission over invented numbers. */}
+      <div className="tnum flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-dim">
         <span className="h-1 w-1 rounded-full bg-emerald/80" />{s.k}
       </div>
       <div className="mt-2 flex items-start justify-between gap-3">
@@ -379,7 +397,7 @@ function ReasoningLoader({ reportMode }: { reportMode?: boolean } = {}) {
     return () => clearInterval(t);
   }, [reduce]);
   return (
-    <GlassPanel tlSharp className="inline-block">
+    <GlassPanel glow="emerald" className="inline-block rounded-tl-md">
       {/* role=status = polite live region: screen readers hear the working state, not just silence */}
       <div className="flex items-center gap-3 px-4 py-3" role="status">
         <div className="flex h-5 items-end gap-1" aria-hidden>
@@ -458,8 +476,8 @@ function AnswerCard({ a, query, onFollow }: { a: MavenAskResponse; query?: strin
   const dataCharts = allCharts.filter((c) => !FLOW.includes((c.type || "").toLowerCase()));
   return (
     <motion.div initial={reduce ? { opacity: 1 } : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.55, ease: EASE }}>
-      <GlassPanel tlSharp>
-        <div className="relative overflow-hidden rounded-2xl rounded-tl-md p-5 sm:p-7">
+      <GlassPanel glow="emerald" className="rounded-tl-md">
+        <div className="relative overflow-hidden rounded-[inherit] p-5 sm:p-7">
           {!reduce && (
             <motion.span className="pointer-events-none absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" aria-hidden initial={{ x: "-130%" }} animate={{ x: "230%" }} transition={{ duration: 1.1, ease: EASE, delay: 0.15 }} />
           )}
@@ -508,8 +526,8 @@ function AnswerCard({ a, query, onFollow }: { a: MavenAskResponse; query?: strin
               {keyData.map((d, i) => (
                 <div key={i} className="rounded-xl border border-hairline bg-white/[0.02] p-3.5">
                   <div className="text-[10px] uppercase tracking-wider text-dim">{d.label}</div>
-                  <div className="mt-1.5 tnum text-xl text-ink">{d.value}</div>
-                  {d.change && <div className={"mt-0.5 tnum text-xs " + (d.change.trim().startsWith("-") ? "text-rose" : "text-emerald")}>{d.change}</div>}
+                  <div className="tnum mt-1.5 font-mono text-xl text-ink">{d.value}</div>
+                  {d.change && <div className={"tnum mt-0.5 font-mono text-xs " + (d.change.trim().startsWith("-") ? "text-rose" : "text-emerald")}>{d.change}</div>}
                 </div>
               ))}
             </div>

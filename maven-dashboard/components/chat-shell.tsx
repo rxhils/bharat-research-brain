@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { EASE, useReducedMotionSafe } from "./motion";
 import { ChatView, type Msg } from "./chat-view";
 import { ChatSidebar, type Conversation } from "./chat-sidebar";
+import { GlassPanel } from "./glass-panel";
 
 const STORAGE_KEY = "maven_chat_history";
 const MAX_CONVERSATIONS = 20;
@@ -102,7 +103,11 @@ export function ChatShell() {
   return (
     <div className="flex items-start gap-6">
       <aside className="sticky top-20 hidden h-[calc(100dvh-6rem)] w-60 shrink-0 lg:block">
-        <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} />
+        {/* House glass treatment: gradient p-px hairline + blurred/saturated surface + 2% noise —
+            gives the flat history rail the same depth language as the answer cards. */}
+        <GlassPanel glow="none" noise className="h-full" innerClassName="h-full p-3">
+          <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} />
+        </GlassPanel>
       </aside>
 
       <AnimatePresence>

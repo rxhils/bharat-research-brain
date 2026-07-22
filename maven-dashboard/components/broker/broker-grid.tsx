@@ -1,13 +1,15 @@
 "use client";
 
 // Supported brokers — real marks on white tiles, glass cards, live shimmer.
-// Live cards carry an emerald edge + pulsing status; coming-soon cards sit
-// slightly dimmed with their logos in grayscale until hovered.
+// Live cards carry an emerald edge + pulsing status + a pointer-tracked
+// radial spotlight; coming-soon cards sit slightly dimmed with their logos
+// in grayscale until hovered. A 2% noise overlay kills gradient banding and
+// a short emerald thread draws in at the top — the hero hands off here.
 
 import Image from "next/image";
 import type React from "react";
-import { motion } from "framer-motion";
-import { EASE, useReducedMotionSafe } from "../motion";
+import { motion, useMotionTemplate, useMotionValue } from "framer-motion";
+import { EASE, PathDraw, useReducedMotionSafe } from "../motion";
 
 const GRAD_GOLD: React.CSSProperties = {
   background: "linear-gradient(180deg,#e3cb8f,#c9a961 60%,#9c8348)",
@@ -34,6 +36,11 @@ const BROKERS: Broker[] = [
 
 function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean }) {
   const live = b.status === "live";
+  // Hover spotlight (live cards): pointer coords → motion values → radial
+  // gradient template. Motion values never re-render; opacity gates on hover.
+  const mx = useMotionValue(-200);
+  const my = useMotionValue(-200);
+  const spotlight = useMotionTemplate`radial-gradient(200px circle at ${mx}px ${my}px, rgba(52,211,153,0.12), transparent 70%)`;
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, y: 18 }}
@@ -41,6 +48,15 @@ function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean })
       viewport={{ once: true, margin: "-8% 0px" }}
       transition={{ duration: 0.55, delay: reduce ? 0 : (i % 3) * 0.08, ease: EASE }}
       whileHover={reduce ? undefined : { y: -5 }}
+      onPointerMove={
+        live
+          ? (e) => {
+              const r = e.currentTarget.getBoundingClientRect();
+              mx.set(e.clientX - r.left);
+              my.set(e.clientY - r.top);
+            }
+          : undefined
+      }
       className={
         "group relative rounded-2xl p-px transition-shadow duration-300 " +
         (live
@@ -51,7 +67,14 @@ function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean })
       {live && (
         <span aria-hidden className="brand-motion absolute inset-x-6 top-0 z-10 h-px animate-gate-shimmer opacity-80" style={{ background: "linear-gradient(90deg, transparent, rgba(52,211,153,0.7), transparent)", backgroundSize: "50% 100%", backgroundRepeat: "no-repeat" }} />
       )}
-      <div className="relative flex h-full items-center gap-4 rounded-2xl bg-panel/60 p-5 backdrop-blur-md">
+      <div className="relative flex h-full items-center gap-4 overflow-hidden rounded-2xl bg-panel/60 p-5 backdrop-blur-md backdrop-saturate-[1.7]">
+        {live && (
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            style={{ background: spotlight }}
+          />
+        )}
         <span className={"grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white shadow-[0_8px_22px_-10px_rgba(0,0,0,0.8)] transition-transform duration-300 group-hover:scale-105 " + (live ? "ring-1 ring-emerald/40" : "")}>
           <Image
             src={b.img}
@@ -65,6 +88,11 @@ function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean })
         <div className="min-w-0 flex-1">
           <div className="truncate text-[0.95rem] font-semibold text-ink">{b.name}</div>
           <div className="mt-0.5 truncate text-xs text-muted">{b.desc}</div>
+          {live && (
+            <div className="tnum mt-1.5 truncate font-mono text-[11px] tracking-wide text-dim">
+              Holdings · avg price · daily token refresh
+            </div>
+          )}
         </div>
         {live ? (
           <span className="flex shrink-0 items-center gap-1.5 rounded-full border border-emerald/30 bg-emerald/[0.08] px-2.5 py-1">
@@ -87,18 +115,24 @@ function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean })
 export function BrokerGrid() {
   const reduce = useReducedMotionSafe();
   return (
-    <section>
+    <section className="relative">
+      {/* 2% SVG-noise overlay — kills banding on the glass gradients */}
+      <div aria-hidden className="noise-overlay" />
       <motion.div
         initial={reduce ? false : { opacity: 0, y: 14 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-8% 0px" }}
         transition={{ duration: 0.6, ease: EASE }}
       >
+        {/* the emerald thread arrives from the hero */}
+        <svg width="2" height="32" viewBox="0 0 2 32" className="mb-4 overflow-visible" aria-hidden>
+          <PathDraw d="M1 0 V32" stroke="rgba(52,211,153,0.5)" strokeWidth={2} duration={0.7} />
+        </svg>
         <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-soft">
           <span className="h-px w-9 bg-gold-soft/40" />
           Supported brokers
         </div>
-        <h2 className="mt-3 font-serif text-3xl leading-tight text-ink sm:text-4xl">
+        <h2 className="mt-3 font-serif text-[clamp(1.75rem,1.2rem+2.4vw,2.9rem)] leading-tight text-ink">
           Yours is probably <em className="italic" style={GRAD_GOLD}>here.</em>
         </h2>
         <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">

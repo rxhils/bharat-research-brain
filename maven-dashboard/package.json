@@ -22,6 +22,7 @@
     "eval:guard": "node scripts/test-api-guard.mjs"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.18.0",
     "@supabase/ssr": "^0.12.0",
     "@supabase/supabase-js": "^2.110.0",
     "@types/pg": "^8.20.0",
@@ -31,12 +32,14 @@
     "pg": "^8.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "recharts": "^2.12.7"
+    "recharts": "^2.12.7",
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/three": "^0.169.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
