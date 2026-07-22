@@ -8,7 +8,7 @@ import { GlassPanel } from "@/components/glass-panel";
 import { ScrollProgress } from "@/components/scroll-progress";
 import { CountUp, Reveal, SectionEyebrow } from "@/components/motion";
 import { PipelineDiagram } from "@/components/portfolio-mode/pipeline-diagram";
-import { StyleGrid, type StyleTier } from "@/components/portfolio-mode/style-grid";
+import { StyleGrid, type StyleItem, type StyleTier } from "@/components/portfolio-mode/style-grid";
 import type { EquityPoint, Holding, PaperAccount } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -69,7 +69,7 @@ const CHASSIS_SPECS = [
 
 function StatusTag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex shrink-0 items-center rounded-full border border-dashed border-gold/30 px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-gold-soft">
+    <span className="inline-flex shrink-0 items-center rounded-full border border-dashed border-border px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-dim">
       {children}
     </span>
   );
@@ -105,9 +105,23 @@ export default async function PortfolioModePage() {
     : null;
   const accent =
     example?.name === "Defensive" ? "#94a3b8" : example?.name === "Concentrated" ? "#c9a961" : "#34d399";
+  // Truthful status per style, sourced only from real props / verbatim figures:
+  // - Quant (Enhanced F+): the live paper book — dated from acct.inceptionDate
+  //   (falls back to its backtested status if the DB is offline).
+  // - Defensive: has verbatim backtested figures on /strategies + /backtest.
+  // - everything else: not live, no per-style figures yet → Planned.
+  const statusFor = (rawName: string): StyleItem["status"] => {
+    if (rawName === "Quant") {
+      return inceptionLabel
+        ? { label: `Live paper — since ${inceptionLabel}`, tone: "live" }
+        : { label: "Backtested 2021–26", tone: "backtested" };
+    }
+    if (rawName === "Defensive") return { label: "Backtested 2021–26", tone: "backtested" };
+    return { label: "Planned", tone: "planned" };
+  };
   const tiers: StyleTier[] = STYLE_TIERS.map((t) => ({
     ...t,
-    items: t.items.map((s) => ({ ...s, name: displayName(s.name) })),
+    items: t.items.map((s) => ({ ...s, status: statusFor(s.name), name: displayName(s.name) })),
   }));
 
   return (
@@ -184,8 +198,16 @@ export default async function PortfolioModePage() {
                       <HoldingsTable rows={holdings} compact />
                     </div>
                   </div>
-                  <Link href="/portfolio" className="mt-5 inline-block text-xs text-emerald hover:underline">
-                    See every live book in full &rarr;
+                  <Link
+                    href="/portfolio"
+                    className="group mt-5 inline-flex items-center gap-1.5 text-xs text-emerald focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60"
+                  >
+                    <span className="border-b border-emerald/0 pb-px transition-colors duration-300 group-hover:border-emerald/60">
+                      See every live book in full
+                    </span>
+                    <span aria-hidden className="motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:translate-x-0.5">
+                      &rarr;
+                    </span>
                   </Link>
                 </>
               ) : (
@@ -268,33 +290,39 @@ export default async function PortfolioModePage() {
           questions, and it&apos;s worth knowing which is which.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl2 border border-border bg-white/[0.03] p-4">
-            <div className="flex items-baseline justify-between gap-2">
-              <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald">
+          {/* Backtested — neutral/slate accent; the historical simulation. */}
+          <div className="rounded-xl2 bg-gradient-to-b from-white/[0.14] via-white/[0.05] to-transparent p-px">
+            <div className="flex h-full flex-col rounded-[inherit] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
+              <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
                 Backtested
               </div>
-              <span className="tnum font-mono text-[11px] text-dim">2021–26</span>
+              <div className="mt-1.5 font-mono text-lg tnum text-ink">2021–26</div>
+              <p className="mt-2 text-xs leading-relaxed text-muted">
+                A historical simulation over 2021–26, shown on Strategies. Not a live track record.
+              </p>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-muted">
-              A historical simulation over 2021–26, shown on Strategies. Not a live track record.
-            </p>
           </div>
-          <div className="rounded-xl2 border border-border bg-white/[0.03] p-4">
-            <div className="flex items-baseline justify-between gap-2">
+          {/* Live paper-trade — emerald accent; the real, forward-tracked book. */}
+          <div className="rounded-xl2 bg-gradient-to-b from-emerald/30 via-white/[0.05] to-transparent p-px">
+            <div className="flex h-full flex-col rounded-[inherit] bg-white/[0.03] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]">
               <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald">
                 Live paper-trade
               </div>
-              {inceptionLabel && <span className="tnum font-mono text-[11px] text-dim">since {inceptionLabel}</span>}
+              <div className="mt-1.5 font-mono text-lg tnum text-emerald">
+                {inceptionLabel ? `since ${inceptionLabel}` : "forward-tracked"}
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-muted">
+                Real, forward-tracked on real NSE prices, updated on a real schedule. No real money
+                at risk. Shown on Portfolio.
+              </p>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-muted">
-              Real, forward-tracked on real NSE prices, updated on a real schedule. No real money
-              at risk. Shown on Portfolio.
-            </p>
           </div>
-          <div className="rounded-xl2 border border-dashed border-border bg-white/[0.02] p-4">
-            <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          {/* Illustrative — dashed dim; deliberately no anchor figure (no data). */}
+          <div className="flex h-full flex-col rounded-xl2 border border-dashed border-border bg-white/[0.02] p-4">
+            <div className="font-mono text-[11px] font-semibold uppercase tracking-[0.14em] text-dim">
               Illustrative
             </div>
+            <div className="mt-1.5 font-mono text-lg tnum text-dim">demo only</div>
             <p className="mt-2 text-xs leading-relaxed text-muted">
               Demo figures used to preview a style before it has a real track record. Always
               marked illustrative wherever shown.
@@ -318,17 +346,25 @@ export default async function PortfolioModePage() {
       <div>
         <StyleGrid tiers={tiers} />
         <Reveal delay={0.1}>
-          <Link href="/strategies" className="mt-4 inline-block text-xs text-emerald hover:underline">
-            See backtested figures for every strategy &rarr;
+          <Link
+            href="/strategies"
+            className="group mt-4 inline-flex items-center gap-1.5 text-xs text-emerald focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60"
+          >
+            <span className="border-b border-emerald/0 pb-px transition-colors duration-300 group-hover:border-emerald/60">
+              See backtested figures for every strategy
+            </span>
+            <span aria-hidden className="motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:translate-x-0.5">
+              &rarr;
+            </span>
           </Link>
         </Reveal>
       </div>
 
       {/* ── Chapter two · Broker connection ────────────────────────────── */}
-      <div aria-hidden className="h-px bg-gradient-to-r from-transparent via-gold/25 to-transparent" />
+      <div aria-hidden className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
       <Reveal>
-        <SectionEyebrow tone="gold">Chapter two — the planned layer</SectionEyebrow>
+        <SectionEyebrow>Chapter two — the planned layer</SectionEyebrow>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <h2
             className="font-serif text-[clamp(1.75rem,1rem+2.5vw,3rem)] leading-[1.05] tracking-[-0.015em]"
@@ -348,7 +384,7 @@ export default async function PortfolioModePage() {
       <Reveal delay={0.05}>
         <GlassPanel glow="gold" noise>
           <div className="p-6 sm:p-7">
-            <SectionEyebrow tone="gold">Design principle</SectionEyebrow>
+            <SectionEyebrow>Design principle</SectionEyebrow>
             <p className="mt-3 font-serif text-xl leading-snug text-ink sm:text-2xl">
               Read-only. No trading.
             </p>

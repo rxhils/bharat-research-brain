@@ -26,8 +26,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -55,14 +53,15 @@ function useBarDrawOnce() {
 /* ---------- palette ---------- */
 const EMERALD = "#34d399";
 const SLATE = "#64748b";
-const AMBER = "#fbbf24";
-const ROSE = "#fb7185";
 
 /* ---------- tiny self-contained formatters ---------- */
 const pc = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
 const inr = (n: number) =>
   "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
 const sign = (n: number) => (n > 0 ? "text-emerald" : n < 0 ? "text-rose" : "text-muted");
+/* drawdown is a risk number, not a directional loss — quiet slate by default,
+ * house rose only when the pain is genuinely deep (≥20%). Retires amber. */
+const ddTone = (n: number) => (n >= 20 ? "text-rose" : "text-muted");
 
 /* ---------- data: ERA 2021–2026 (bull run, beat index 4/4) ---------- */
 /* per-window Enhanced F+: ret / maxDD / Sharpe / trades vs Nifty 500 TRI */
@@ -153,24 +152,64 @@ const tipStyle = {
   fontSize: 12,
 };
 
-/* grouped Enhanced F+ vs index return per walk-forward window */
-function WindowReturns({ rows }: { rows: typeof E1_WF }) {
-  const draw = useBarDrawOnce();
-  const data = rows.map((r) => ({ w: r.w, "Enhanced F+": r.ret, "Nifty 500": r.idx }));
+/* Per-window alpha strip: index (slate) and Enhanced F+ (emerald) plotted on a
+ * shared return scale, joined by a connector colored by the sign of alpha. Adds
+ * the index-vs-strategy gap reading the table can't show, and breaks the
+ * table→bars→table→bars rhythm between the two eras. */
+function AlphaStrip({ rows }: { rows: typeof E1_WF }) {
+  const vals = rows.flatMap((r) => [r.ret, r.idx]);
+  const lo = Math.min(...vals);
+  const hi = Math.max(...vals);
+  const span = hi - lo || 1;
+  // map a return to 6..94% of the track (padding keeps end dots off the edge)
+  const x = (v: number) => 6 + ((v - lo) / span) * 88;
   return (
     <ChartReveal delay={0.1}>
-      <ResponsiveContainer width="100%" height={240}>
-        <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-          <XAxis dataKey="w" tick={{ fill: SLATE, fontSize: 12 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: SLATE, fontSize: 11 }} axisLine={false} tickLine={false} unit="%" />
-          <Tooltip contentStyle={tipStyle} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
-          <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          <Bar dataKey="Enhanced F+" fill={EMERALD} radius={[3, 3, 0, 0]} maxBarSize={26} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
-          <Bar dataKey="Nifty 500" fill={SLATE} radius={[3, 3, 0, 0]} maxBarSize={26} isAnimationActive={draw} animationDuration={600} animationEasing="ease-out" />
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="mt-5 space-y-2.5">
+        <div className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-wide text-dim">
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full" style={{ background: SLATE }} />
+            Nifty 500
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald" />
+            Enhanced F+
+          </span>
+          <span className="ml-auto normal-case tracking-normal">alpha</span>
+        </div>
+        {rows.map((r) => {
+          const xi = x(r.idx);
+          const xf = x(r.ret);
+          const up = r.alpha >= 0;
+          return (
+            <div key={r.w} className="grid grid-cols-[3rem_1fr_4.25rem] items-center gap-3">
+              <span className="font-mono text-[11px] text-muted">{r.w}</span>
+              <div className="relative h-5">
+                <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-white/[0.06]" />
+                <div
+                  className="absolute top-1/2 h-0.5 -translate-y-1/2 rounded-full"
+                  style={{
+                    left: `${Math.min(xi, xf)}%`,
+                    width: `${Math.abs(xf - xi)}%`,
+                    background: up ? "rgba(52,211,153,0.55)" : "rgba(251,113,133,0.55)",
+                  }}
+                />
+                <span
+                  className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+                  style={{ left: `${xi}%`, borderColor: SLATE, background: "#0a0b0d" }}
+                />
+                <span
+                  className="absolute top-1/2 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-emerald"
+                  style={{ left: `${xf}%`, background: "#0a0b0d" }}
+                />
+              </div>
+              <span className={`tnum text-right font-mono text-[11px] ${up ? "text-emerald" : "text-rose"}`}>
+                {pc(r.alpha)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </ChartReveal>
   );
 }
@@ -205,37 +244,37 @@ function WFTable({ rows }: { rows: typeof E1_WF }) {
         <thead className="text-[11px] uppercase tracking-wide text-muted">
           <tr className="border-b border-hairline">
             <th className="py-2 pr-3 font-medium">Window</th>
-            <th className="py-2 pr-3 font-medium">Enhanced F+ return</th>
-            <th className="py-2 pr-3 font-medium">Sharpe</th>
-            <th className="py-2 pr-3 font-medium">Max DD</th>
-            <th className="py-2 pr-3 font-medium">Trades</th>
-            <th className="py-2 pr-3 font-medium">Nifty 500</th>
-            <th className="py-2 pr-3 font-medium">Alpha</th>
-            <th className="py-2 pr-0 font-medium">Beat?</th>
+            <th className="py-2 pr-3 text-right font-medium">Enhanced F+ return</th>
+            <th className="py-2 pr-3 text-right font-medium">Sharpe</th>
+            <th className="py-2 pr-3 text-right font-medium">Max DD</th>
+            <th className="py-2 pr-3 text-right font-medium">Trades</th>
+            <th className="py-2 pr-3 text-right font-medium">Nifty 500</th>
+            <th className="py-2 pr-3 text-right font-medium">Alpha</th>
+            <th className="py-2 pr-0 text-right font-medium">Beat?</th>
           </tr>
         </thead>
         <tbody className="font-mono">
           {rows.map((r) => (
-            <tr key={r.w} className="border-b border-hairline/60">
+            <tr key={r.w} className="border-b border-hairline/60 transition-colors hover:bg-white/[0.02]">
               <td className="py-2 pr-3 font-sans text-xs text-ink">
                 <span className="font-semibold">{r.w}</span>{" "}
                 <span className="text-muted">{r.period}</span>
               </td>
-              <td className={`py-2 pr-3 ${sign(r.ret)}`}>{pc(r.ret)}</td>
-              <td className={`py-2 pr-3 ${sign(r.sharpe)}`}>{r.sharpe.toFixed(2)}</td>
-              <td className="py-2 pr-3 text-amber">{r.dd.toFixed(2)}%</td>
-              <td className="py-2 pr-3 text-muted">{r.trades}</td>
-              <td className={`py-2 pr-3 ${sign(r.idx)}`}>{pc(r.idx)}</td>
-              <td className="py-2 pr-3">
+              <td className={`tnum py-2 pr-3 text-right ${sign(r.ret)}`}>{pc(r.ret)}</td>
+              <td className={`tnum py-2 pr-3 text-right ${sign(r.sharpe)}`}>{r.sharpe.toFixed(2)}</td>
+              <td className={`tnum py-2 pr-3 text-right ${ddTone(r.dd)}`}>{r.dd.toFixed(2)}%</td>
+              <td className="tnum py-2 pr-3 text-right text-muted">{r.trades}</td>
+              <td className={`tnum py-2 pr-3 text-right ${sign(r.idx)}`}>{pc(r.idx)}</td>
+              <td className="py-2 pr-3 text-right">
                 <span
-                  className={`rounded-md px-1.5 py-0.5 text-xs ${
+                  className={`tnum rounded-md px-1.5 py-0.5 text-xs ${
                     r.alpha > 0 ? "bg-emerald/10 text-emerald" : "bg-rose/10 text-rose"
                   }`}
                 >
                   {pc(r.alpha)}
                 </span>
               </td>
-              <td className="py-2 pr-0">
+              <td className="py-2 pr-0 text-right">
                 {r.beat ? (
                   <span className="rounded-md bg-emerald/15 px-1.5 py-0.5 text-xs text-emerald">✓</span>
                 ) : (
@@ -258,11 +297,11 @@ function CapTable({ rows }: { rows: typeof E1_CAP }) {
         <thead className="text-[11px] uppercase tracking-wide text-muted">
           <tr className="border-b border-hairline">
             <th className="py-2 pr-3 font-medium">Strategy</th>
-            <th className="py-2 pr-3 font-medium">₹10L grew to</th>
-            <th className="py-2 pr-3 font-medium">Return</th>
-            <th className="py-2 pr-3 font-medium">Max DD</th>
-            <th className="py-2 pr-3 font-medium">Sharpe</th>
-            <th className="py-2 pr-0 font-medium">Trades</th>
+            <th className="py-2 pr-3 text-right font-medium">₹10L grew to</th>
+            <th className="py-2 pr-3 text-right font-medium">Return</th>
+            <th className="py-2 pr-3 text-right font-medium">Max DD</th>
+            <th className="py-2 pr-3 text-right font-medium">Sharpe</th>
+            <th className="py-2 pr-0 text-right font-medium">Trades</th>
           </tr>
         </thead>
         <tbody className="font-mono">
@@ -271,14 +310,14 @@ function CapTable({ rows }: { rows: typeof E1_CAP }) {
             return (
               <tr
                 key={r.name}
-                className={`border-b border-hairline/60 ${hi ? "bg-emerald/[0.04] shadow-[inset_2px_0_0_0_rgba(52,211,153,0.55)]" : ""}`}
+                className={`border-b border-hairline/60 transition-colors hover:bg-white/[0.02] ${hi ? "bg-emerald/[0.04] shadow-[inset_2px_0_0_0_rgba(52,211,153,0.55)]" : ""}`}
               >
                 <td className={`py-2 pl-2 pr-3 font-sans text-xs ${hi ? "font-semibold text-emerald" : "text-ink"}`}>{r.name}</td>
-                <td className={`py-2 pr-3 ${hi ? "text-emerald" : "text-ink"}`}>{inr(r.final)}</td>
-                <td className={`py-2 pr-3 ${sign(r.ret)}`}>{pc(r.ret)}</td>
-                <td className="py-2 pr-3 text-amber">{r.dd.toFixed(2)}%</td>
-                <td className="py-2 pr-3 text-muted">{r.sharpe === null ? "—" : r.sharpe.toFixed(2)}</td>
-                <td className="py-2 pr-0 text-muted">{r.trades ?? "—"}</td>
+                <td className={`tnum py-2 pr-3 text-right ${hi ? "text-emerald" : "text-ink"}`}>{inr(r.final)}</td>
+                <td className={`tnum py-2 pr-3 text-right ${sign(r.ret)}`}>{pc(r.ret)}</td>
+                <td className={`tnum py-2 pr-3 text-right ${ddTone(r.dd)}`}>{r.dd.toFixed(2)}%</td>
+                <td className="tnum py-2 pr-3 text-right text-muted">{r.sharpe === null ? "—" : r.sharpe.toFixed(2)}</td>
+                <td className="tnum py-2 pr-0 text-right text-muted">{r.trades ?? "—"}</td>
               </tr>
             );
           })}
@@ -358,9 +397,7 @@ export default function BacktestPage() {
           sub="Every window cleared the Nifty 500 TRI on return, with positive alpha and a Sharpe above 1.0 in three of four windows. Backtested, no-lookahead."
         >
           <WFTable rows={E2_WF} />
-          <div className="mt-5">
-            <WindowReturns rows={E2_WF} />
-          </div>
+          <AlphaStrip rows={E2_WF} />
         </Panel>
       </Reveal>
 
@@ -386,9 +423,7 @@ export default function BacktestPage() {
           sub="The market itself was brutal here: every window includes or borders the COVID crash. Enhanced F+ trailed the index in the two calm early windows but protected capital through the crash — beating the index in the COVID window (W3) and the recovery (W4), with far lower drawdown throughout."
         >
           <WFTable rows={E1_WF} />
-          <div className="mt-5">
-            <WindowReturns rows={E1_WF} />
-          </div>
+          <AlphaStrip rows={E1_WF} />
         </Panel>
       </Reveal>
 

@@ -78,9 +78,9 @@ export function GateFilm({ className }: { className?: string }) {
             </svg>
           </span>
           <span className="font-sans text-[10px] font-semibold uppercase leading-none tracking-[0.18em] text-dim">Maven · in motion</span>
-          <span className="relative h-0.5 w-10 overflow-hidden rounded-sm bg-emerald/15">
-            <span className="absolute inset-0 motion-safe:animate-gate-sweep" style={{ background: "linear-gradient(90deg, transparent, #34d399, transparent)" }} />
-          </span>
+          {/* static hairline — the looping gate-sweep shimmer was retired (the
+              cover only shows until real frames render, so it needs no motion) */}
+          <span className="h-0.5 w-10 rounded-sm bg-emerald/25" />
         </div>
       </div>
     </div>

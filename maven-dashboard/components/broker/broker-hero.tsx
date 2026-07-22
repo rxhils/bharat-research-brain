@@ -15,7 +15,7 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useRef, type RefObject } from "react";
-import { EASE, useReducedMotionSafe, useScrollScrub } from "../motion";
+import { EASE, PathDraw, useReducedMotionSafe, useScrollScrub } from "../motion";
 import { MagneticCTA } from "./magnetic-cta";
 
 // WebGL particle field — the site's ONLY canvas, lazily chunked and self-gated
@@ -132,7 +132,7 @@ function Constellation({ reduce, scrollTarget }: { reduce: boolean; scrollTarget
             <circle cx={C} cy={C} r={210} fill="none" stroke="rgba(52,211,153,0.16)" strokeWidth="1" strokeDasharray="2 9" />
           </motion.g>
           <motion.g style={{ originX: "50%", originY: "50%" }} animate={reduce ? undefined : { rotate: -360 }} transition={{ duration: 130, repeat: Infinity, ease: "linear" }}>
-            <circle cx={C} cy={C} r={150} fill="none" stroke="rgba(201,169,97,0.13)" strokeWidth="1" strokeDasharray="2 11" />
+            <circle cx={C} cy={C} r={150} fill="none" stroke="rgba(148,163,178,0.12)" strokeWidth="1" strokeDasharray="2 11" />
           </motion.g>
 
           {/* inward-flowing beams: the dash pattern advances tile → center only */}
@@ -219,6 +219,84 @@ function Constellation({ reduce, scrollTarget }: { reduce: boolean; scrollTarget
   );
 }
 
+// Mobile signature (<lg): a flat, static-SVG version of the orrery — one ring,
+// six broker tiles, inward beams that draw in once, and the Maven medallion at
+// center. No WebGL, no 3D, no idle spin; the beams are a one-shot PathDraw
+// entrance (plays under OS reduced-motion), so nothing loops decoratively.
+function MobileConstellation({ reduce }: { reduce: boolean }) {
+  const S = 300;
+  const CC = 150;
+  const R = 116;
+  const mpos = (i: number) => {
+    const a = ((-90 + i * 60) * Math.PI) / 180;
+    return { x: CC + R * Math.cos(a), y: CC + R * Math.sin(a) };
+  };
+  return (
+    <div className="relative mx-auto aspect-square w-[300px] max-w-full" aria-hidden>
+      <svg viewBox={`0 0 ${S} ${S}`} className="absolute inset-0 h-full w-full overflow-visible">
+        <defs>
+          <radialGradient id="mc-aurora" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="rgba(52,211,153,0.16)" />
+            <stop offset="55%" stopColor="rgba(52,211,153,0.04)" />
+            <stop offset="75%" stopColor="transparent" />
+          </radialGradient>
+        </defs>
+        <circle cx={CC} cy={CC} r={138} fill="url(#mc-aurora)" />
+        <circle cx={CC} cy={CC} r={R} fill="none" stroke="rgba(52,211,153,0.16)" strokeWidth="1" strokeDasharray="2 9" />
+        {NODES.map((n, i) => {
+          const p = mpos(i);
+          const dx = CC - p.x;
+          const dy = CC - p.y;
+          const len = Math.hypot(dx, dy);
+          const ux = dx / len;
+          const uy = dy / len;
+          return (
+            <PathDraw
+              key={n.name}
+              d={`M${p.x + ux * 26} ${p.y + uy * 26} L${CC - ux * 46} ${CC - uy * 46}`}
+              stroke={n.live ? "rgba(52,211,153,0.55)" : "rgba(148,163,178,0.28)"}
+              strokeWidth={n.live ? 1.6 : 1.1}
+              duration={0.7}
+              delay={reduce ? 0 : 0.4 + i * 0.08}
+            />
+          );
+        })}
+      </svg>
+
+      {NODES.map((n, i) => {
+        const p = mpos(i);
+        return (
+          <span
+            key={n.name}
+            className={"absolute grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-xl bg-white shadow-[0_8px_22px_-10px_rgba(0,0,0,0.8)] " + (n.live ? "ring-2 ring-emerald/60" : "ring-1 ring-white/15 opacity-90")}
+            style={{ left: `${(p.x / S) * 100}%`, top: `${(p.y / S) * 100}%` }}
+          >
+            <Image src={n.img} alt={n.name} width={28} height={28} className="rounded object-contain" unoptimized />
+            {n.live && <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-emerald ring-2 ring-bg" />}
+          </span>
+        );
+      })}
+
+      {/* medallion — data flows in, never out */}
+      <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+        <span className="relative grid place-items-center">
+          <span className="absolute h-24 w-24 rounded-full bg-emerald/20 blur-2xl" />
+          <span
+            className="relative grid h-20 w-20 place-items-center rounded-full border border-emerald/30"
+            style={{ background: "radial-gradient(circle at 50% 28%, #1a1f24, #0a0b0e)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.07), 0 18px 44px -18px rgba(0,0,0,0.95)" }}
+          >
+            <MavenMark size={38} />
+          </span>
+        </span>
+        <span className="flex items-center gap-1.5 rounded-full border border-emerald/30 bg-bg/80 px-2.5 py-1 backdrop-blur">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinejoin="round"><path d="M12 3l7 3v5.5c0 4.2-2.9 7.4-7 8.5-4.1-1.1-7-4.3-7-8.5V6l7-3z" /><path d="M9 12l2 2 4-4" strokeLinecap="round" /></svg>
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald">Read-only</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function BrokerHero() {
   const reduce = useReducedMotionSafe();
   const heroRef = useRef<HTMLElement>(null);
@@ -228,9 +306,9 @@ export function BrokerHero() {
     <section ref={heroRef} className="relative overflow-hidden pt-10 sm:pt-14">
       <div className="grid items-center gap-10 lg:grid-cols-[1.02fr_1fr]">
         <motion.div initial="hide" animate="show" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.09 } } }}>
-          <motion.div variants={up} className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-soft">
+          <motion.div variants={up} className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-dim">
             <span className="font-mono text-dim">04</span>
-            <span className="h-px w-9 bg-gold-soft/40" />
+            <span className="h-px w-9 bg-white/15" />
             Broker · Layer 4
           </motion.div>
           <motion.h1 variants={up} className="mt-4 font-serif text-[clamp(2.5rem,1.6rem+4.5vw,4.4rem)] leading-[1.02] tracking-[-0.02em] text-ink">
@@ -257,47 +335,17 @@ export function BrokerHero() {
               Live now: Zerodha · HDFC Sky
             </span>
           </motion.div>
-          <motion.p variants={up} className="mt-5 text-xs leading-relaxed text-dim">
-            Read-only. Maven can see your holdings — never trade or move funds.
-          </motion.p>
         </motion.div>
 
         <Constellation reduce={reduce} scrollTarget={heroRef} />
 
-        {/* mobile: read-only shield pill over a horizontal logo marquee
-            (duplicated track, linear x loop, edge fades). The loop is
-            decorative, so it parks as a static strip under reduced motion. */}
+        {/* mobile (<lg): a lightweight STATIC-SVG orbital — the same idea as the
+            desktop signature without any 3D/WebGL. Six broker tiles on one ring
+            around the Maven medallion, with inward beams that PathDraw in (the
+            read-only "data flows in" metaphor). No idle spin: the beams are a
+            one-shot signature entrance, so this plays under OS reduced-motion. */}
         <div className="lg:hidden">
-          <div className="mx-auto mb-4 flex w-fit items-center gap-1.5 rounded-full border border-emerald/30 bg-bg/80 px-3 py-1.5 backdrop-blur">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#34d399" strokeWidth="2" strokeLinejoin="round" aria-hidden><path d="M12 3l7 3v5.5c0 4.2-2.9 7.4-7 8.5-4.1-1.1-7-4.3-7-8.5V6l7-3z" /><path d="M9 12l2 2 4-4" strokeLinecap="round" /></svg>
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-emerald">Read-only</span>
-          </div>
-          {/* under reduced motion the loop parks, so the strip must scroll —
-              and the duplicate track (only needed for the seamless loop) is
-              dropped so every broker stays reachable */}
-          <div
-            className={`relative ${reduce ? "scroll-touch overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" : "overflow-hidden"}`}
-            style={reduce ? undefined : {
-              maskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
-              WebkitMaskImage: "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
-            }}
-          >
-            <motion.div
-              className="flex w-max items-center gap-3 pr-3"
-              animate={reduce ? undefined : { x: ["0%", "-50%"] }}
-              transition={reduce ? undefined : { duration: 26, repeat: Infinity, ease: "linear" }}
-            >
-              {(reduce ? NODES : [...NODES, ...NODES]).map((n, i) => (
-                <span
-                  key={`${n.name}-${i}`}
-                  className={"grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white " + (n.live ? "ring-2 ring-emerald/60" : "ring-1 ring-white/15 opacity-85")}
-                  aria-hidden={i >= NODES.length}
-                >
-                  <Image src={n.img} alt={i >= NODES.length ? "" : n.name} width={28} height={28} className="rounded object-contain" unoptimized />
-                </span>
-              ))}
-            </motion.div>
-          </div>
+          <MobileConstellation reduce={reduce} />
         </div>
       </div>
     </section>

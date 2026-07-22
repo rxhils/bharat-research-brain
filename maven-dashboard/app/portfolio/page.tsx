@@ -105,26 +105,31 @@ export default async function Portfolio() {
             </div>
 
             {panels.length > 0 && (
-              <div className="grid grid-cols-2 gap-x-8 gap-y-5 sm:grid-cols-3 lg:grid-cols-1 lg:gap-y-6 lg:border-l lg:border-hairline lg:pl-8">
-                <HeroStat label="Combined equity" hint={`across ${panels.length} paper books`}>
-                  <CountUp to={combinedEquity} prefix="₹" decimals={0} />
-                </HeroStat>
-                <HeroStat label="Combined return">
-                  <CountUp
-                    to={combinedReturnPct}
-                    prefix={combinedReturnPct >= 0 ? "+" : ""}
-                    suffix="%"
-                    decimals={2}
-                  />
-                </HeroStat>
-                <HeroStat label="Blended alpha" hint="capital-weighted, vs Nifty 500 TRI">
-                  <CountUp
-                    to={blendedAlphaPct}
-                    prefix={blendedAlphaPct >= 0 ? "+" : ""}
-                    suffix="%"
-                    decimals={2}
-                  />
-                </HeroStat>
+              // glass hairline band: the combined figures are the hero's most
+              // important numbers, so they get the gradient p-px + inset top
+              // highlight treatment (no backdrop-filter — stays in blur budget).
+              <div className="rounded-2xl bg-gradient-to-b from-white/[0.14] via-white/[0.05] to-transparent p-px shadow-[0_0_34px_-14px_rgba(52,211,153,0.3)]">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-5 rounded-[calc(1rem-1px)] bg-white/[0.03] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] sm:grid-cols-3 lg:grid-cols-1 lg:gap-y-6 lg:p-6">
+                  <HeroStat label="Combined equity" hint={`across ${panels.length} paper books`}>
+                    <CountUp to={combinedEquity} prefix="₹" decimals={0} />
+                  </HeroStat>
+                  <HeroStat label="Combined return">
+                    <CountUp
+                      to={combinedReturnPct}
+                      prefix={combinedReturnPct >= 0 ? "+" : ""}
+                      suffix="%"
+                      decimals={2}
+                    />
+                  </HeroStat>
+                  <HeroStat label="Blended alpha" hint="capital-weighted, vs Nifty 500 TRI">
+                    <CountUp
+                      to={blendedAlphaPct}
+                      prefix={blendedAlphaPct >= 0 ? "+" : ""}
+                      suffix="%"
+                      decimals={2}
+                    />
+                  </HeroStat>
+                </div>
               </div>
             )}
           </div>

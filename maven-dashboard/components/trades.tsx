@@ -12,8 +12,8 @@
 // vector-effect / preserveAspectRatio="none", so TapePath and TradeChart build their
 // own motion.path locally (same pathLength pattern, .brand-motion wrapped).
 
-import { AnimatePresence, motion } from "framer-motion";
-import { useId, useState } from "react";
+import { AnimatePresence, motion, useMotionTemplate, useMotionValue } from "framer-motion";
+import { useEffect, useId, useState, type PointerEvent } from "react";
 import type { Trade } from "@/lib/types";
 import { EASE, EASE_SOFT, LayoutPill, PathDraw, Reveal, SectionEyebrow, useReducedMotionSafe } from "./motion";
 
@@ -30,7 +30,15 @@ const ROSE = "#fb7185";
 /* real trade series; this only draws them. Renders nothing when there */
 /* is not enough data (honest omission, never a decorative fake line). */
 /* ------------------------------------------------------------------ */
-export function TapePath({ pts, className = "" }: { pts: number[]; className?: string }) {
+export function TapePath({
+  pts,
+  className = "",
+  caption = "mean % move from entry · all trades",
+}: {
+  pts: number[];
+  className?: string;
+  caption?: string;
+}) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   if (pts.length < 2) return null;
   const min = Math.min(...pts), max = Math.max(...pts);
@@ -41,48 +49,83 @@ export function TapePath({ pts, className = "" }: { pts: number[]; className?: s
   const Y = (v: number) => 36 - ((v - min) / rng) * 30;
   const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${X(i).toFixed(2)},${Y(p).toFixed(2)}`).join(" ");
   const areaD = `${d} L99,40 L1,40 Z`;
-  const lastY = Y(pts[pts.length - 1]);
+  const start = pts[0];
+  const end = pts[pts.length - 1];
+  const maxI = pts.indexOf(max);
+  const lastY = Y(end);
+  const topPct = (v: number) => `${(Y(v) / 40) * 100}%`;
+  const fmt = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(1)}%`;
   return (
-    <div className={`brand-motion relative ${className}`} aria-hidden>
-      <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="block h-16 w-full">
-        <defs>
-          <linearGradient id={`tape-area-${uid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={EMERALD} stopOpacity="0.2" />
-            <stop offset="100%" stopColor={EMERALD} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <motion.path
-          d={areaD}
-          fill={`url(#tape-area-${uid})`}
-          stroke="none"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
+    <div className={`brand-motion ${className}`}>
+      <div className="relative">
+        <svg viewBox="0 0 100 40" preserveAspectRatio="none" className="block h-24 w-full" aria-hidden>
+          <defs>
+            <linearGradient id={`tape-area-${uid}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={EMERALD} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={EMERALD} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <motion.path
+            d={areaD}
+            fill={`url(#tape-area-${uid})`}
+            stroke="none"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true, margin: "-10% 0px" }}
+            transition={{ duration: 0.8, delay: 0.9, ease: EASE_SOFT }}
+          />
+          <motion.path
+            d={d}
+            fill="none"
+            stroke={EMERALD}
+            strokeWidth={1.5}
+            vectorEffect="non-scaling-stroke"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            initial={{ pathLength: 0 }}
+            whileInView={{ pathLength: 1 }}
+            viewport={{ once: true, margin: "-10% 0px" }}
+            transition={{ duration: 1.4, delay: 0.2, ease: EASE }}
+          />
+        </svg>
+        {/* gold-soft marker on the peak reading — the page's 2nd sanctioned gold use */}
+        <motion.span
+          aria-hidden
+          className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-soft"
+          style={{ left: `${X(maxI)}%`, top: topPct(max) }}
+          initial={{ opacity: 0, scale: 0 }}
+          whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-10% 0px" }}
-          transition={{ duration: 0.8, delay: 0.9, ease: EASE_SOFT }}
+          transition={{ duration: 0.35, delay: 1.7, ease: EASE_SOFT }}
         />
-        <motion.path
-          d={d}
-          fill="none"
-          stroke={EMERALD}
-          strokeWidth={1.5}
-          vectorEffect="non-scaling-stroke"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
+        <span
+          className="absolute -translate-x-1/2 translate-y-2 whitespace-nowrap font-mono text-[9px] tnum text-gold-soft"
+          style={{ left: `${X(maxI)}%`, top: topPct(max) }}
+        >
+          peak {fmt(max)}
+        </span>
+        {/* latest endpoint dot */}
+        <motion.span
+          aria-hidden
+          className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald"
+          style={{ left: "99%", top: `${(lastY / 40) * 100}%` }}
+          initial={{ opacity: 0, scale: 0 }}
+          whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, margin: "-10% 0px" }}
-          transition={{ duration: 1.4, delay: 0.2, ease: EASE }}
+          transition={{ duration: 0.35, delay: 1.6, ease: EASE_SOFT }}
         />
-      </svg>
-      {/* endpoint dot at the latest aggregate reading */}
-      <motion.span
-        className="absolute h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-emerald"
-        style={{ left: "99%", top: `${(lastY / 40) * 100}%` }}
-        initial={{ opacity: 0, scale: 0 }}
-        whileInView={{ opacity: 1, scale: 1 }}
-        viewport={{ once: true, margin: "-10% 0px" }}
-        transition={{ duration: 0.35, delay: 1.6, ease: EASE_SOFT }}
-      />
+        {/* start / latest values pinned at the path ends (tnum mono) */}
+        <span className="absolute left-0 -translate-y-1/2 font-mono text-[10px] tnum text-dim" style={{ top: topPct(start) }}>
+          {fmt(start)}
+        </span>
+        <span className="absolute right-0 -translate-y-[150%] font-mono text-[10px] tnum text-emerald" style={{ top: topPct(end) }}>
+          {fmt(end)}
+        </span>
+      </div>
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.12em] text-dim">
+        <span>{caption}</span>
+        <span>start {fmt(start)} → latest {fmt(end)}</span>
+      </div>
     </div>
   );
 }
@@ -118,7 +161,7 @@ function Sparkline({ pts, up, live }: { pts: number[]; up: boolean; live: boolea
       />
       {live && (
         <circle
-          className="brand-motion animate-ping"
+          className="motion-safe:animate-ping"
           cx={last.x}
           cy={last.y}
           r={3}
@@ -191,9 +234,10 @@ function TradeChart({ t }: { t: Trade }) {
           transition={{ duration: 0.9, ease: EASE }}
         />
       </svg>
-      {/* entry marker — gold-soft dot at the first point of the real series */}
+      {/* entry marker — muted dot (reference, not an accent); gold is reserved
+          for the single Tape peak so the page keeps to gold-max-2 */}
       <span
-        className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold-soft"
+        className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/60"
         style={{ left: "2%", top: `${Y(pts[0])}%` }}
       />
       {/* exit-or-latest marker */}
@@ -205,21 +249,28 @@ function TradeChart({ t }: { t: Trade }) {
         transition={{ duration: 0.3, delay: 0.9, ease: EASE_SOFT }}
       />
       {live && (
+        // decorative pulse — freezes under OS reduced-motion (motion-safe), not .brand-motion
         <span
-          className="brand-motion absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 animate-ping rounded-full"
+          className="absolute h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full motion-safe:animate-ping"
           style={{ left: "98%", top: `${lastY}%`, backgroundColor: color, opacity: 0.4 }}
         />
       )}
-      {/* entry label pinned to the dashed line */}
+      {/* entry label pinned to the dashed line — flips BELOW the line when the
+          entry sits near the top, so -translate-y-full never clips the container. */}
       <span
-        className="absolute right-1 -translate-y-full pb-0.5 font-mono text-[10px] uppercase tracking-wide text-gold-soft"
+        className={`absolute right-1 font-mono text-[10px] uppercase tracking-wide text-muted ${
+          entryY < 14 ? "pt-0.5" : "-translate-y-full pb-0.5"
+        }`}
         style={{ top: `${entryY}%` }}
       >
         entry {rs(t.entryPrice)} · {t.entryDate}
       </span>
-      {/* min / max ₹ ticks */}
-      <span className="absolute left-1 top-0 font-mono text-[10px] tnum text-dim">{rs(max)}</span>
-      <span className="absolute bottom-0 left-1 font-mono text-[10px] tnum text-dim">{rs(min)}</span>
+      {/* price hi / lo ticks — top corners (y-axis anchors) */}
+      <span className="absolute left-1 top-0.5 font-mono text-[10px] tnum text-dim">H {rs(max)}</span>
+      <span className="absolute right-1 top-0.5 font-mono text-[10px] tnum text-dim">L {rs(min)}</span>
+      {/* first / last trading-day ticks — bottom corners (x-axis anchors) */}
+      <span className="absolute bottom-0.5 left-1 font-mono text-[10px] tnum text-dim">{t.series[0].date}</span>
+      <span className="absolute bottom-0.5 right-1 font-mono text-[10px] tnum text-dim">{t.series[t.series.length - 1].date}</span>
     </div>
   );
 }
@@ -244,14 +295,44 @@ function TradeRow({ t }: { t: Trade }) {
   const closes = t.series.map((p) => p.close);
   const up = t.trendPct >= 0;
   const value = t.shares * t.currentPrice;
+  // Desktop-only pointer-tracked spotlight: a radial gradient that follows the
+  // cursor across the row (transform/opacity-free, background-position only).
+  // Off under coarse pointers and OS reduced-motion — decorative, not signal.
+  const mx = useMotionValue(-200);
+  const my = useMotionValue(-200);
+  const spotlight = useMotionTemplate`radial-gradient(150px circle at ${mx}px ${my}px, rgba(52,211,153,0.08), transparent 72%)`;
+  const [fine, setFine] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: fine)");
+    setFine(mq.matches);
+    const on = (e: MediaQueryListEvent) => setFine(e.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const showSpotlight = fine && !reduce;
+  const onMove = (e: PointerEvent<HTMLButtonElement>) => {
+    if (!showSpotlight) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    mx.set(e.clientX - r.left);
+    my.set(e.clientY - r.top);
+  };
   return (
     <div className="overflow-hidden rounded-xl border border-hairline bg-bg/40">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
+        onPointerMove={onMove}
         aria-expanded={open}
-        className={`flex w-full flex-wrap items-center gap-x-4 gap-y-2 p-3 text-left hover:bg-panel/50 ${ROW_PRESS}`}
+        className={`group relative block w-full p-3 text-left hover:bg-panel/50 ${ROW_PRESS}`}
       >
+        {showSpotlight && (
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-0 rounded-xl opacity-0 group-hover:opacity-100 motion-safe:transition-opacity motion-safe:duration-200"
+            style={{ background: spotlight }}
+          />
+        )}
+        <div className="relative z-10 flex flex-wrap items-center gap-x-4 gap-y-2">
         {/* name */}
         <div className="min-w-[150px] flex-1">
           <div className="flex items-center gap-2">
@@ -279,6 +360,7 @@ function TradeRow({ t }: { t: Trade }) {
         {/* pnl */}
         <div className={`w-20 text-right font-mono text-sm font-semibold tnum ${sign(t.pnlPct)}`}>
           {pc(t.pnlPct)}
+        </div>
         </div>
       </button>
 
@@ -333,6 +415,53 @@ function TradeRow({ t }: { t: Trade }) {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* EngineJumpNav — slim sticky nav under the hero: one mono pill per    */
+/* engine section, the shared-layoutId pill gliding to the section in   */
+/* view (IntersectionObserver scrollspy). Breaks the 60-row scroll.     */
+/* ------------------------------------------------------------------ */
+export function EngineJumpNav({ items }: { items: { id: string; label: string }[] }) {
+  const pillId = useId();
+  const [active, setActive] = useState(items[0]?.id ?? "");
+  useEffect(() => {
+    const els = items
+      .map((it) => document.getElementById(it.id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (els.length === 0) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActive(visible[0].target.id);
+      },
+      { rootMargin: "-40% 0px -50% 0px", threshold: 0 },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, [items]);
+  if (items.length < 2) return null;
+  return (
+    <nav className="sticky top-2 z-20 flex flex-wrap gap-1 rounded-xl border border-hairline bg-bg/90 p-1">
+      {items.map((it) => (
+        <a
+          key={it.id}
+          href={`#${it.id}`}
+          onClick={() => setActive(it.id)}
+          aria-current={active === it.id ? "true" : undefined}
+          className={`relative rounded-lg px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] motion-safe:transition-colors ${
+            active === it.id ? "text-emerald" : "text-muted hover:text-ink"}`}
+        >
+          {active === it.id && (
+            <LayoutPill layoutId={`engine-nav-${pillId}`} className="absolute inset-0 rounded-lg bg-emerald/15" />
+          )}
+          <span className="relative">{it.label}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}
+
 export function TradesView({ trades, engineLabel = "Enhanced F+" }: { trades: Trade[]; engineLabel?: string }) {
   const [filter, setFilter] = useState<"all" | "open" | "closed">("all");
   // unique per instance: two engine sections render side by side and layoutId is
@@ -367,22 +496,25 @@ export function TradesView({ trades, engineLabel = "Enhanced F+" }: { trades: Tr
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <SectionEyebrow>{engineLabel}</SectionEyebrow>
-          <p className="mt-1 text-xs text-muted">
-            {trades.length} trades · <span className="text-emerald">{openN} open</span> ·{" "}
-            {closedN} closed
-            {closedAvg !== null && (
-              <> · closed avg <span className={`font-mono tnum ${sign(closedAvg)}`}>{pc(closedAvg)}</span></>
-            )}
-            . Tap a trade for the price path and the entry/exit logic.
-          </p>
+          <p className="mt-1 text-xs text-muted">Tap a trade for the price path and the entry/exit logic.</p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-hairline bg-panel/50 p-1">
-          {tab("all", "All")}
-          {tab("open", "Open")}
-          {tab("closed", "Closed")}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {/* right-aligned mini-stat block — the per-engine scoreboard echo (plan step 8) */}
+          <div className="text-right font-mono text-[11px] tnum text-dim">
+            <span className="text-ink">{trades.length}</span> trades ·{" "}
+            <span className="text-emerald">{openN} open</span> · {closedN} closed
+            {closedAvg !== null && (
+              <> · avg <span className={sign(closedAvg)}>{pc(closedAvg)}</span></>
+            )}
+          </div>
+          <div className="flex items-center gap-1 rounded-lg border border-hairline bg-panel/50 p-1">
+            {tab("all", "All")}
+            {tab("open", "Open")}
+            {tab("closed", "Closed")}
+          </div>
         </div>
       </div>
       <div className="space-y-2">

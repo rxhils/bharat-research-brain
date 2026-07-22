@@ -17,7 +17,7 @@
 // Static fallback: if JS never hydrates, the dim base rail + nodes at their
 // resting opacity remain fully readable.
 
-import { motion, useTransform, type MotionValue } from "framer-motion";
+import { motion, useTransform, type MotionStyle, type MotionValue } from "framer-motion";
 import { useId, useRef } from "react";
 
 import { PathDraw, useScrollScrub } from "@/components/motion";
@@ -78,17 +78,21 @@ function StageNode({ scrub, index, total, num, name, body }: {
   );
 }
 
-/** Annotated branch card — the two clocks and the hard stop. */
-function BranchCard({ kicker, title, body, tone = "emerald", loop = false }: {
+/** Annotated branch card — the two clocks and the hard stop. Its opacity is
+ *  driven by the SAME scrub MotionValue as the rail (passed in as `style`), so
+ *  the fork reveals in lockstep with the beam — no parallel timer. */
+function BranchCard({ kicker, title, body, tone = "emerald", loop = false, style }: {
   kicker: string;
   title: string;
   body: string;
   tone?: "emerald" | "rose";
   loop?: boolean;
+  style?: MotionStyle;
 }) {
   const rose = tone === "rose";
   return (
-    <div
+    <motion.div
+      style={style}
       className={`rounded-xl2 border p-4 ${
         rose ? "border-rose/25 bg-rose/[0.04]" : "border-border bg-white/[0.03]"
       }`}
@@ -115,15 +119,25 @@ function BranchCard({ kicker, title, body, tone = "emerald", loop = false }: {
         )}
       </div>
       <p className="mt-1.5 text-xs leading-relaxed text-muted">{body}</p>
-    </div>
+    </motion.div>
   );
 }
 
 export function PipelineDiagram() {
   const ref = useRef<HTMLDivElement>(null);
-  const scrub = useScrollScrub(ref, ["start 0.85", "end 0.55"]);
+  // Offset reserves the final ~15% of the scrub range for the fork reveal.
+  const scrub = useScrollScrub(ref, ["start 0.85", "end 0.35"]);
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const gradId = `pipe-beam-${uid}`;
+  const forkGradId = `pipe-fork-${uid}`;
+
+  // Fork geometry + branch cards all read the SAME scrub value — the beam draws
+  // and each card fades up across the last 15% of the scroll range, staggered.
+  const forkDraw = useTransform(scrub, [0.8, 1], [0, 1]);
+  const forkDot = useTransform(scrub, [0.95, 1], [0, 1]);
+  const card0 = useTransform(scrub, [0.85, 0.9], [0.4, 1]);
+  const card1 = useTransform(scrub, [0.9, 0.95], [0.4, 1]);
+  const card2 = useTransform(scrub, [0.95, 1], [0.4, 1]);
 
   return (
     <div ref={ref} className="relative mt-6">
@@ -160,15 +174,27 @@ export function PipelineDiagram() {
 
       {/* ── Fork: two clocks + the hard stop ──────────────────────────── */}
       <div className="grid grid-cols-[2.5rem_1fr] gap-x-3 sm:grid-cols-[3rem_1fr] sm:gap-x-5">
-        <div className="relative" aria-hidden>
-          {/* Beam exits the rail toward the branch cards. */}
+        <div className="brand-motion relative" aria-hidden>
+          {/* Beam exits the rail toward the branch cards — its pathLength is the
+              SAME scrub value that drives the rail, not a separate duration. */}
           <svg className="absolute left-0 top-0 h-12 w-full" viewBox="0 0 40 48" fill="none">
-            <PathDraw
+            <defs>
+              <linearGradient id={forkGradId} gradientUnits="userSpaceOnUse" x1="20" y1="0" x2="38" y2="40">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#34d399" />
+              </linearGradient>
+            </defs>
+            <path d="M20 0 C20 18 22 30 38 40" stroke="rgba(255,255,255,0.08)" strokeWidth={2} />
+            <motion.path
               d="M20 0 C20 18 22 30 38 40"
-              gradient={{ from: "#10b981", to: "#34d399" }}
+              stroke={`url(#${forkGradId})`}
               strokeWidth={2}
-              duration={1}
-              dot={{ cx: 38, cy: 40, r: 2.5 }}
+              strokeLinecap="round"
+              style={{ pathLength: forkDraw }}
+            />
+            <motion.circle
+              cx={38} cy={40} r={2.5} fill="#34d399"
+              style={{ opacity: forkDot, scale: forkDot, transformBox: "fill-box", transformOrigin: "center" }}
             />
           </svg>
         </div>
@@ -178,17 +204,20 @@ export function PipelineDiagram() {
           </p>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <BranchCard
+              style={{ opacity: card0 }}
               kicker="Clock A — quarterly"
               title="Full re-pick"
               loop
               body="The whole pipeline runs again from the top — universe, gate, rank, weights — every quarter."
             />
             <BranchCard
+              style={{ opacity: card1 }}
               kicker="Clock B — weekly"
               title="De-risk check"
               body="A weekly check in between scales exposure down if the market's own trend breaks."
             />
             <BranchCard
+              style={{ opacity: card2 }}
               kicker="Hard rule — any day"
               title="−15% cut"
               tone="rose"

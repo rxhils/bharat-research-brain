@@ -17,6 +17,7 @@ import { useEffect, useState, type PointerEvent } from "react";
 import { EASE, EASE_SOFT, PathDraw } from "../motion";
 import { GlassPanel } from "../glass-panel";
 import { GateFilm } from "./GateFilm";
+import { EQUITY_SERIES } from "@/app/backtest/data/equity-series";
 
 const rise: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -36,40 +37,66 @@ function MiniMark() {
 }
 
 // ---------------------------------------------------------------------------
-// The Draft Study — the page's single signature moment. An illustrative
-// (clearly labeled) index-style line draws itself once via the shared PathDraw
-// primitive; a gold annotation dot (gold use #1 of 2 on the page) and a mono
-// callout settle in after the draw. Never loops, never replays.
+// The Draft Study — the page's single signature moment. The line is DERIVED
+// from the frozen backtest equity export (EQUITY_SERIES, the same ₹10L →
+// ₹22.99L / +129.97% Enhanced F+ path shown on /backtest): downsampled to ~31
+// points and mapped into the viewBox at module load, so it is verbatim data,
+// not a hand-drawn prop. A gold terminal dot (gold use #1 of 2 on the page)
+// plus a mono callout of the actual +129.97% figure settle in exactly when the
+// draw completes (delay chained to the draw params, not a magic number).
+// Never loops, never replays.
 // ---------------------------------------------------------------------------
 
-const STUDY_D =
-  "M8 118 L34 104 L58 112 L82 88 L106 96 L128 70 L150 92 L174 100 L198 78 L224 62 L252 70 L278 44 L306 34";
-const STUDY_AREA = `${STUDY_D} L306 150 L8 150 Z`;
+const STUDY_DUR = 1.6;
+const STUDY_DELAY = 0.5;
+
+/** Build the study path from the real Enhanced F+ equity series (verbatim
+ *  anchors; the monthly shape between them is the committed interpolation). */
+const STUDY = (() => {
+  const W = 320, H = 150, padL = 10, padR = 46, padT = 20, padB = 30;
+  const pts = EQUITY_SERIES.filter((_, i) => i % 2 === 0);
+  const last = EQUITY_SERIES[EQUITY_SERIES.length - 1];
+  if (pts[pts.length - 1] !== last) pts.push(last);
+  const vals = pts.map((p) => p.fplus);
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const xy = pts.map((p, i) => {
+    const x = padL + (i / (pts.length - 1)) * (W - padL - padR);
+    const y = padT + (1 - (p.fplus - lo) / span) * (H - padT - padB);
+    return [Math.round(x * 10) / 10, Math.round(y * 10) / 10] as const;
+  });
+  const d = xy.map(([x, y], i) => (i === 0 ? `M${x} ${y}` : `L${x} ${y}`)).join(" ");
+  const end = xy[xy.length - 1];
+  return { d, area: `${d} L${end[0]} ${H} L${xy[0][0]} ${H} Z`, end };
+})();
 
 function DraftStudy() {
   return (
     <div className="brand-motion">
       <svg viewBox="0 0 320 150" className="block w-full" aria-hidden>
         {/* dim baseline beneath the study line */}
-        <path d="M8 122 L306 96" stroke="rgba(255,255,255,0.10)" strokeWidth={1.5} fill="none" strokeDasharray="1 5" strokeLinecap="round" />
+        <path d="M10 128 L274 110" stroke="rgba(255,255,255,0.10)" strokeWidth={1.5} fill="none" strokeDasharray="1 5" strokeLinecap="round" />
         <PathDraw
-          d={STUDY_D}
+          d={STUDY.d}
           stroke="#34d399"
           strokeWidth={2}
-          duration={1.8}
-          delay={0.5}
-          areaD={STUDY_AREA}
+          duration={STUDY_DUR}
+          delay={STUDY_DELAY}
+          areaD={STUDY.area}
           areaFill="rgba(52,211,153,0.07)"
-          dot={{ cx: 306, cy: 34, r: 4, fill: "#c9a961" }}
+          dot={{ cx: STUDY.end[0], cy: STUDY.end[1], r: 4, fill: "#c9a961" }}
         />
-        {/* mono callout, settles in after the draw completes */}
-        <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: 2.5, ease: EASE_SOFT }}>
-          <text x={298} y={22} textAnchor="end" fontSize={9} letterSpacing="0.06em" fill="rgba(214,211,205,0.72)" style={{ fontFamily: "var(--font-mono, ui-monospace, monospace)" }}>
-            drawdown study · F+ model
+        {/* callouts — settle in exactly when the draw completes (chained to the
+            draw params, so they never mis-fire regardless of duration) */}
+        <motion.g initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: STUDY_DELAY + STUDY_DUR, ease: EASE_SOFT }}>
+          <text x={10} y={14} textAnchor="start" fontSize={9} letterSpacing="0.06em" fill="rgba(214,211,205,0.72)" style={{ fontFamily: "var(--font-mono, ui-monospace, monospace)" }}>
+            equity study · F+ model
+          </text>
+          <text x={STUDY.end[0] - 7} y={STUDY.end[1] - 6} textAnchor="end" fontSize={10} fill="#34d399" style={{ fontFamily: "var(--font-mono, ui-monospace, monospace)", fontVariantNumeric: "tabular-nums" }}>
+            +129.97%
           </text>
         </motion.g>
       </svg>
-      <p className="m-0 mt-2 font-mono text-[9.5px] tracking-[0.08em] text-dim">Illustrative research view — not live data</p>
+      <p className="m-0 mt-2 font-mono text-[9.5px] tracking-[0.08em] text-dim">Enhanced F+ backtest, 2021–26 · not a live track record</p>
     </div>
   );
 }
@@ -142,8 +169,8 @@ export function AuthQuotePanel({ reduce }: { reduce: boolean }) {
           <span className="font-mono text-[10px] font-semibold uppercase leading-none tracking-[0.18em] text-dim">Maven · Workspace</span>
         </div>
         <div className="flex items-center gap-2 rounded-full border border-emerald/25 bg-emerald/[0.06] px-2.5 py-[5px]">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald shadow-[0_0_8px_#34d399]" />
-          <span className="font-mono text-[9.5px] font-semibold uppercase leading-none tracking-[0.12em] text-emerald/90">Live · NSE / BSE</span>
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald/70" />
+          <span className="font-mono text-[9.5px] font-semibold uppercase leading-none tracking-[0.12em] text-emerald/90">NSE / BSE coverage</span>
         </div>
       </motion.div>
 
@@ -175,13 +202,13 @@ export function AuthQuotePanel({ reduce }: { reduce: boolean }) {
               <ManifestRow k="Mode" v="paper-traded · read-only" />
             </div>
             <p className="m-0 mt-2.5 font-sans text-[10px] leading-snug text-dim">Backtested simulation, not a live track record.</p>
+            {/* product film folded in as a quiet bottom strip — one composed
+                artifact instead of three stacked objects (no hover chrome) */}
+            <div className="-mx-[18px] -mb-[18px] mt-3 overflow-hidden border-t border-white/[0.06]">
+              <GateFilm />
+            </div>
           </GlassPanel>
         </motion.div>
-      </motion.div>
-
-      {/* the product film — demoted to a small quiet tile (no chrome, no hover) */}
-      <motion.div variants={rise} className="relative z-[2] max-w-[300px]">
-        <GateFilm className="rounded-xl border border-white/[0.06]" />
       </motion.div>
     </motion.section>
   );

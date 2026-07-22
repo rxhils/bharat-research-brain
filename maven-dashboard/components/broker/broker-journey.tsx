@@ -9,21 +9,14 @@
 
 import Image from "next/image";
 import { motion, useMotionValueEvent, useTransform, type MotionValue } from "framer-motion";
-import { useRef, useState, type CSSProperties } from "react";
+import { useRef, useState } from "react";
 import { EASE, LayoutPill, PathDraw, useReducedMotionSafe, useScrollScrub } from "../motion";
 import { MagneticCTA } from "./magnetic-cta";
-
-const GRAD_GOLD: CSSProperties = {
-  background: "linear-gradient(180deg,#e3cb8f,#c9a961 60%,#9c8348)",
-  WebkitBackgroundClip: "text",
-  backgroundClip: "text",
-  color: "transparent",
-};
 
 const STEPS = [
   { n: "01", t: "Market mode", d: "Regime, sectors, why a stock moved.", icon: "M3 17l5-6 4 4 6-8" },
   { n: "02", t: "Portfolio styles", d: "Disciplined model books to measure against.", icon: "M4 6h16M4 12h10M4 18h14" },
-  { n: "03", t: "Connect read-only", d: "Log in on your broker's page — Maven never sees your password.", icon: "M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5z" },
+  { n: "03", t: "Connect read-only", d: "Maven hands you to your broker's own OAuth screen; approving returns a scoped access token.", icon: "M7 11V8a5 5 0 0 1 10 0v3M5 11h14v9H5z" },
   { n: "04", t: "Your holdings, graded", d: "Today's P&L, results due, concentration — computed from YOUR positions.", icon: "M9 12l2 2 4-5M12 3l7 3v5.5c0 4.2-2.9 7.4-7 8.5-4.1-1.1-7-4.3-7-8.5V6l7-3z" },
 ];
 
@@ -88,8 +81,8 @@ function PhoneMockup({ reduce }: { reduce: boolean }) {
   const scale = useTransform(progress, [0, 0.45], [0.92, 1]);
   return (
     <div ref={ref} className="relative mx-auto w-[280px] sm:w-[300px]" style={{ perspective: 1200 }} aria-hidden>
-      {/* split glow: emerald + gold, the app's two accents */}
-      <div className="absolute -inset-10 rounded-full" style={{ background: "radial-gradient(60% 55% at 30% 40%, rgba(52,211,153,0.16), transparent 70%), radial-gradient(50% 45% at 75% 70%, rgba(201,169,97,0.12), transparent 70%)", filter: "blur(10px)" }} />
+      {/* emerald glow behind the device */}
+      <div className="absolute -inset-10 rounded-full" style={{ background: "radial-gradient(60% 55% at 30% 40%, rgba(52,211,153,0.16), transparent 70%), radial-gradient(50% 45% at 75% 70%, rgba(52,211,153,0.08), transparent 70%)", filter: "blur(10px)" }} />
       <motion.div className="brand-motion" style={{ rotateX, scale, transformStyle: "preserve-3d" }}>
         <motion.div
           className={reduce ? "relative" : "brand-motion relative animate-floatY"}
@@ -150,8 +143,8 @@ export function BrokerJourney() {
           <svg width="2" height="32" viewBox="0 0 2 32" className="mb-4 overflow-visible" aria-hidden>
             <PathDraw d="M1 0 V32" stroke="rgba(52,211,153,0.5)" strokeWidth={2} duration={0.7} />
           </svg>
-          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-soft">
-            <span className="h-px w-9 bg-gold-soft/40" />
+          <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-dim">
+            <span className="h-px w-9 bg-white/15" />
             How it pays off
           </div>
           <h2 className="mt-3 font-serif text-[clamp(1.75rem,1.2rem+2.4vw,2.9rem)] leading-tight text-ink">
@@ -188,12 +181,12 @@ export function BrokerJourney() {
       <section className="grid items-center gap-12 lg:grid-cols-2">
         <div>
           <motion.div initial={reduce ? false : { opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-8% 0px" }} transition={{ duration: 0.6, ease: EASE }}>
-            <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-soft">
-              <span className="h-px w-9 bg-gold-soft/40" />
+            <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-dim">
+              <span className="h-px w-9 bg-white/15" />
               After you connect
             </div>
             <h2 className="mt-3 font-serif text-[clamp(1.75rem,1.2rem+2.4vw,2.9rem)] leading-tight text-ink">
-              Three quiet things happen <em className="italic" style={GRAD_GOLD}>the moment you link.</em>
+              Three quiet things happen <em className="italic text-emerald">the moment you link.</em>
             </h2>
           </motion.div>
           <div ref={outcomesRef} className="mt-8 space-y-6">
@@ -243,11 +236,7 @@ export function BrokerJourney() {
           <h2 className="max-w-2xl font-serif text-[clamp(1.5rem,1.1rem+1.6vw,2.1rem)] leading-snug text-ink">
             Read-only. Maven can see your holdings — <em className="italic text-emerald">never trade or move funds.</em>
           </h2>
-          <div className="mt-5 space-y-1.5 text-sm text-muted">
-            <p>Your broker password is typed on your broker&rsquo;s page — never ours.</p>
-            <p className="text-xs text-dim">SEBI mandates daily token expiry — reconnecting is one tap in the app.</p>
-          </div>
-          <p className="mt-4 font-mono text-[11px] uppercase tracking-[0.16em] text-dim">
+          <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.16em] text-dim">
             Tokens AES-encrypted · SEBI-mandated daily expiry
           </p>
         </motion.div>
@@ -259,7 +248,7 @@ export function BrokerJourney() {
           viewport={{ once: true, margin: "-8% 0px" }}
           transition={{ duration: 0.6, ease: EASE }}
         >
-          <h2 className="font-serif text-[clamp(1.75rem,1.2rem+2.4vw,2.9rem)] leading-tight text-ink">
+          <h2 className="font-serif text-[clamp(2rem,1.4rem+3vw,3.4rem)] leading-tight text-ink">
             Ask Maven about <em className="italic text-emerald">your</em> portfolio.
           </h2>
           <MagneticCTA

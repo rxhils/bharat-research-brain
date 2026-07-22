@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   ComposedChart,
   Line,
+  ReferenceDot,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -53,7 +54,7 @@ export function EquityCurve() {
     <div>
       <ChartReveal delay={0.05}>
         <ResponsiveContainer width="100%" height={300}>
-          <ComposedChart data={EQUITY_SERIES} margin={{ top: 8, right: 8, left: 4, bottom: 0 }} syncId="equity">
+          <ComposedChart data={EQUITY_SERIES} margin={{ top: 8, right: 54, left: 4, bottom: 0 }} syncId="equity">
             <defs>
               <linearGradient id="eqfill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={EMERALD} stopOpacity={0.14} />
@@ -97,6 +98,25 @@ export function EquityCurve() {
               animationDuration={900}
               animationEasing="ease-out"
             />
+            {/* editorial end-of-line value labels — the conclusion on the chart */}
+            <ReferenceDot
+              x="May 26"
+              y={2299700}
+              r={3}
+              fill={EMERALD}
+              stroke="none"
+              isFront
+              label={{ value: "₹22.99L", position: "right", fill: EMERALD, fontSize: 11, fontWeight: 600 }}
+            />
+            <ReferenceDot
+              x="May 26"
+              y={1821735}
+              r={3}
+              fill={SLATE}
+              stroke="none"
+              isFront
+              label={{ value: "₹18.22L", position: "right", fill: SLATE, fontSize: 11 }}
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </ChartReveal>
@@ -104,7 +124,7 @@ export function EquityCurve() {
       {/* underwater ribbon — drawdown from running peak, shared x-axis */}
       <ChartReveal delay={0.15}>
         <ResponsiveContainer width="100%" height={110}>
-          <ComposedChart data={EQUITY_SERIES} margin={{ top: 2, right: 8, left: 4, bottom: 0 }} syncId="equity">
+          <ComposedChart data={EQUITY_SERIES} margin={{ top: 2, right: 54, left: 4, bottom: 0 }} syncId="equity">
             <defs>
               <linearGradient id="ddfill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor={ROSE} stopOpacity={0.02} />
@@ -148,6 +168,16 @@ export function EquityCurve() {
               isAnimationActive={draw}
               animationDuration={900}
               animationEasing="ease-out"
+            />
+            {/* mark the worst point — the verbatim −14.05% max drawdown */}
+            <ReferenceDot
+              x="Feb 25"
+              y={-14.05}
+              r={3}
+              fill={ROSE}
+              stroke="none"
+              isFront
+              label={{ value: "−14.05% · worst point", position: "left", fill: ROSE, fontSize: 10 }}
             />
           </ComposedChart>
         </ResponsiveContainer>

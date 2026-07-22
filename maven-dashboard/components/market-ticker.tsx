@@ -1,6 +1,7 @@
 "use client";
 import { Fragment, useEffect, useState } from "react";
 import type { Quote, SectorPerf } from "@/lib/maven/types";
+import { publishMarketSnapshot } from "@/lib/use-market-snapshot";
 
 const POLL_MS = 120_000; // matches getIndexPerformance's tightest TTL
 
@@ -43,8 +44,11 @@ export function MarketTicker() {
       try {
         const r = await fetch("/api/market/ticker", { cache: "no-store" });
         if (!r.ok) { if (alive) setChips((prev) => prev ?? []); return; }
-        const j: { indices?: Quote[]; sectors?: SectorPerf[] } = await r.json();
+        const j: { indices?: Quote[]; sectors?: SectorPerf[]; asOf?: string } = await r.json();
         if (!alive) return;
+        // Single source of truth: share this exact payload with the Hero status line and
+        // suggestion cards so they never fire a second fetch of their own.
+        publishMarketSnapshot({ indices: j.indices ?? [], sectors: j.sectors ?? [], asOf: j.asOf ?? null });
         const idx: Chip[] = (j.indices ?? []).filter((q) => q.changePct != null).map((q) => ({ label: q.label, changePct: q.changePct, kind: "index" as const }));
         const sec = j.sectors ?? [];
         const secChips: Chip[] = [...sec.slice(0, 3), ...sec.slice(-2)].map((s) => ({ label: s.name, changePct: s.changePct, kind: "sector" as const }));

@@ -23,7 +23,7 @@ import { ago, fmtDate, inrCompact, pct, plain, signClass } from "@/lib/format";
 // The Maven mark, baked in as inline SVG (a faithful recreation of the supplied
 // logo: dark squircle, white mountain "M", emerald check "V", emerald dot).
 // Vector → always crisp, no asset file or network request needed.
-function Logo({ size = 30 }: { size?: number }) {
+export function Logo({ size = 30 }: { size?: number }) {
   return (
     <span
       className="grid shrink-0 place-items-center rounded-[30%]"
@@ -43,6 +43,10 @@ function Logo({ size = 30 }: { size?: number }) {
 const NAV_PRESS =
   "motion-safe:transition-[color,background-color,border-color,transform] motion-safe:duration-150 motion-safe:active:scale-[0.97]";
 
+// House focus convention (already used in 20+ deep components) — applied to the
+// primary nav so keyboard users get a visible ring on the most-used surface.
+const NAV_FOCUS = "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60";
+
 export function Nav() {
   const path = usePathname();
   const reduce = useReducedMotionSafe();
@@ -61,7 +65,7 @@ export function Nav() {
     return (
       <Link
         href={href}
-        className={`relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
+        className={`relative flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1 text-[11px] transition-colors ${NAV_PRESS} ${NAV_FOCUS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
           active ? "text-emerald" : "text-muted hover:text-ink"
         }`}
       >
@@ -91,7 +95,7 @@ export function Nav() {
       <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(52,211,153,0.35) 25%, rgba(52,211,153,0.35) 75%, transparent)" }} />
       <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/[0.04]" />
 
-      <Link href="/" className={`group relative flex shrink-0 items-center gap-2.5 ${PRESS}`}>
+      <Link href="/" className={`group relative flex shrink-0 items-center gap-2.5 rounded-lg ${PRESS} ${NAV_FOCUS}`}>
         <span className="relative">
           <span aria-hidden className="absolute -inset-1.5 rounded-xl bg-emerald/25 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-100" />
           <span className="relative"><Logo size={28} /></span>
@@ -112,7 +116,7 @@ export function Nav() {
         </div>
         <Link
           href="/backtest"
-          className={`group relative shrink-0 overflow-hidden whitespace-nowrap rounded-lg border px-2.5 py-1 text-[11px] transition-[color,border-color,box-shadow] ${NAV_PRESS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
+          className={`group relative shrink-0 overflow-hidden whitespace-nowrap rounded-lg border px-2.5 py-1 text-[11px] transition-[color,border-color,box-shadow] ${NAV_PRESS} ${NAV_FOCUS} sm:px-3.5 sm:py-1.5 sm:text-sm ${
             path === "/backtest"
               ? "border-emerald/50 bg-emerald/15 text-emerald"
               : "border-emerald/30 text-emerald hover:border-emerald/50 hover:bg-emerald/10 hover:shadow-[0_0_20px_-6px_rgba(52,211,153,0.5)]"

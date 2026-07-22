@@ -81,7 +81,7 @@ function StepCard({ step, active }: { step: ExposureStep; active: boolean }) {
           {step.exp}%<span className="ml-1 font-sans text-[10px] font-normal text-muted">invested</span>
         </span>
       </div>
-      <p className="mt-0.5 text-[11px] leading-snug text-muted">{step.note}</p>
+      <p className="mt-0.5 hidden text-[11px] leading-snug text-muted sm:block">{step.note}</p>
     </motion.div>
   );
 }
@@ -131,13 +131,19 @@ export function CovidScrub() {
     setActiveSteps(count); // React bails out when unchanged
   });
 
+  // One-time "scroll to scrub" affordance — fades on the first scrub input.
+  const [scrubbed, setScrubbed] = useState(false);
+  useMotionValueEvent(lineProg, "change", (v) => {
+    if (v > 0.02) setScrubbed(true);
+  });
+
   return (
     <div ref={wrapRef} className="relative h-[300vh] [@media(max-width:640px)]:h-[220vh]">
       {/* h-svh tracks mobile toolbars; short viewports top-align + scroll
           internally instead of clipping (explainer DrawdownScrub pattern). */}
       <div className="brand-motion sticky top-0 flex h-screen h-svh items-center [@media(max-height:640px)]:items-start [@media(max-height:640px)]:overflow-y-auto [@media(max-height:640px)]:py-3">
         <div className="w-full rounded-[20px] bg-gradient-to-b from-white/[0.14] to-white/[0.03] p-px">
-          <div className="rounded-[19px] bg-panel/95 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-6">
+          <div className="relative overflow-hidden rounded-[19px] bg-panel/95 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-6">
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-dim">
@@ -248,6 +254,18 @@ export function CovidScrub() {
                   <span>Feb 2020</span>
                   <span>Jun 2020</span>
                 </div>
+
+                {/* one-time scrub affordance — fades after the first scroll input */}
+                <motion.div
+                  aria-hidden
+                  initial={false}
+                  animate={{ opacity: scrubbed ? 0 : 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="pointer-events-none absolute left-1/2 top-2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-hairline bg-panel2/90 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted"
+                >
+                  Scroll to scrub
+                  <span className="motion-safe:animate-bounce">↓</span>
+                </motion.div>
               </div>
 
               {/* exposure-step rail — pops in as the draw front passes each date */}
@@ -262,26 +280,43 @@ export function CovidScrub() {
             <div className="mt-4 grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-hairline bg-bg/50 p-4">
                 <p className="text-[0.56rem] font-semibold uppercase tracking-label text-dim">Market fell</p>
-                <p className="mt-1 font-mono text-2xl text-muted sm:text-3xl">
+                <p className="mt-1 font-mono text-xl text-muted sm:text-3xl">
                   <span ref={marketNumRef} className="tnum">0%</span>
                 </p>
               </div>
               <div className="rounded-xl border border-emerald/30 bg-emerald/[0.06] p-4">
                 <p className="text-[0.56rem] font-semibold uppercase tracking-label text-dim">Enhanced F+ fell</p>
-                <p className="mt-1 font-mono text-2xl text-emerald sm:text-3xl">
+                <p className="mt-1 font-mono text-xl text-emerald sm:text-3xl">
                   <span ref={fplusNumRef} className="tnum">0%</span>
                 </p>
               </div>
             </div>
 
-            <p className="mt-3 text-[11px] leading-relaxed text-dim">
+            {/* full caption on ≥sm; on phones it drops below the sticky frame so
+                the h-svh panel never has to fit it (see mobile block below) */}
+            <p className="mt-3 hidden text-[11px] leading-relaxed text-dim sm:block">
               Scroll to scrub. Exposure steps (100 / 50 / 25 / 50%) and both troughs (−13.88% vs the
               market&apos;s ~−38%) are verbatim from the frozen engine (commit {ENGINE_COMMIT}); the weekly
               line shape between those anchors is illustrative. Backtested, not a live track record.
             </p>
+
+            {/* hairline progress track — emerald fill follows the scrub front */}
+            <motion.div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-0.5 origin-left bg-emerald/60"
+              style={{ scaleX: lineProg }}
+            />
           </div>
         </div>
       </div>
+
+      {/* mobile caption — post-sticky (a sibling of the sticky frame), so the
+          h-svh panel never has to fit it on tall narrow phones */}
+      <p className="px-1 pt-4 text-[11px] leading-relaxed text-dim sm:hidden">
+        Scroll to scrub. Exposure steps (100 / 50 / 25 / 50%) and both troughs (−13.88% vs the
+        market&apos;s ~−38%) are verbatim from the frozen engine (commit {ENGINE_COMMIT}); the weekly
+        line shape between those anchors is illustrative. Backtested, not a live track record.
+      </p>
     </div>
   );
 }

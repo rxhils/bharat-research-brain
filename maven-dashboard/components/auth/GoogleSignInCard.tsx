@@ -13,9 +13,30 @@
 
 import { motion, useMotionValue, useSpring, type Variants } from "framer-motion";
 import { useEffect, useState, type PointerEvent, type RefObject } from "react";
-import { EASE } from "../motion";
+import { EASE, PathDraw } from "../motion";
+import { EQUITY_SERIES } from "@/app/backtest/data/equity-series";
 
 export type SignInStatus = "idle" | "signing" | "done";
+
+/** Compact study path for the mobile quote card — same source as the desktop
+ *  Draft Study (the frozen Enhanced F+ equity export), downsampled harder and
+ *  mapped into a small strip so phones get the page's signature moment too.
+ *  Verbatim data; the between-anchor shape is the committed interpolation. */
+const MOBILE_STUDY_D = (() => {
+  const W = 200, H = 44, padL = 4, padR = 6, padT = 6, padB = 8;
+  const pts = EQUITY_SERIES.filter((_, i) => i % 4 === 0);
+  const last = EQUITY_SERIES[EQUITY_SERIES.length - 1];
+  if (pts[pts.length - 1] !== last) pts.push(last);
+  const vals = pts.map((p) => p.fplus);
+  const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  return pts
+    .map((p, i) => {
+      const x = padL + (i / (pts.length - 1)) * (W - padL - padR);
+      const y = padT + (1 - (p.fplus - lo) / span) * (H - padT - padB);
+      return `${i === 0 ? "M" : "L"}${Math.round(x * 10) / 10} ${Math.round(y * 10) / 10}`;
+    })
+    .join(" ");
+})();
 
 const rise: Variants = {
   hidden: { opacity: 0, y: 16 },
@@ -140,8 +161,8 @@ export function GoogleSignInCard({
       </motion.div>
 
       {/* headline + subheadline */}
-      <motion.h1 variants={rise} id={headingId} className="m-0 font-serif font-normal leading-[1.02] tracking-[-0.02em] text-ink" style={{ fontSize: "clamp(2rem, 1rem + 3.5vw, 3rem)" }}>
-        Welcome to <em className="font-serif italic text-ink">Maven</em>
+      <motion.h1 variants={rise} id={headingId} className="m-0 font-serif font-normal leading-[1.02] tracking-[-0.02em] text-ink" style={{ fontSize: "clamp(2.15rem, 1rem + 3.8vw, 3.6rem)" }}>
+        Your research desk, <em className="font-serif italic text-ink">after hours.</em>
       </motion.h1>
       <motion.p variants={rise} className="m-0 max-w-[40ch] font-sans text-[15px] leading-[1.6] text-muted">
         Your India market research workspace, saved securely to your account.
@@ -151,20 +172,35 @@ export function GoogleSignInCard({
           mobile viewport (the compact quote block renders below it) */}
       <motion.div variants={rise} className="flex flex-col gap-3.5">
         {status === "idle" && (
-          <motion.button
-            ref={primaryRef}
-            type="button"
-            onClick={onSignIn}
-            onPointerMove={onCtaPointerMove}
-            onPointerLeave={onCtaPointerLeave}
-            whileTap={{ scale: 0.97 }}
-            aria-label="Continue with Google"
-            className="relative flex min-h-[54px] w-full items-center justify-center gap-3 overflow-hidden rounded-[14px] border border-white/[0.11] px-5 font-sans text-[15px] font-medium text-ink transition-[border-color,box-shadow] duration-200 hover:border-emerald/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60"
-            style={{ x: sx, y: sy, background: "linear-gradient(180deg, rgba(30,34,38,0.92), rgba(16,19,22,0.96))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 28px -14px rgba(0,0,0,0.85)" }}
-          >
-            <GoogleGlyph mono={googleMark === "mono"} />
-            <span>Continue with Google</span>
-          </motion.button>
+          <div className="group relative">
+            {/* pool of light on the door — a soft emerald bloom behind the CTA
+                makes it the single brightest object on the page; brightens on
+                hover only (interaction-gated, no loop) */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-4 rounded-[22px] opacity-70 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+              style={{ background: "radial-gradient(55% 65% at 50% 45%, rgba(52,211,153,0.18), transparent 72%)" }}
+            />
+            <motion.button
+              ref={primaryRef}
+              type="button"
+              onClick={onSignIn}
+              onPointerMove={onCtaPointerMove}
+              onPointerLeave={onCtaPointerLeave}
+              whileTap={{ scale: 0.97 }}
+              aria-label="Continue with Google"
+              className="relative flex min-h-[54px] w-full items-center justify-center gap-3 overflow-hidden rounded-[14px] border border-white/[0.11] px-5 font-sans text-[15px] font-medium text-ink transition-[border-color,box-shadow] duration-200 group-hover:border-emerald/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald/60"
+              style={{ x: sx, y: sy, background: "linear-gradient(180deg, rgba(30,34,38,0.92), rgba(16,19,22,0.96))", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 10px 28px -14px rgba(0,0,0,0.85)" }}
+            >
+              {/* top-edge hairline that brightens on hover */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald/50 to-transparent opacity-50 transition-opacity duration-200 group-hover:opacity-100"
+              />
+              <GoogleGlyph mono={googleMark === "mono"} />
+              <span>Continue with Google</span>
+            </motion.button>
+          </div>
         )}
 
         {status === "signing" && (
@@ -233,7 +269,12 @@ export function GoogleSignInCard({
           Ask better questions.{" "}
           <span className="font-serif italic" style={GRADIENT_TEXT}>Build better conviction.</span>
         </p>
-        <p className="m-0 font-mono text-[10.5px] font-medium tracking-[0.06em] text-dim">Saved chats &nbsp;·&nbsp; Personal research &nbsp;·&nbsp; Google-secured</p>
+        {/* the page's signature moment on phones: the real F+ equity study draws
+            itself once (plays under OS reduced-motion — brand-motion surface) */}
+        <svg viewBox="0 0 200 44" className="block h-9 w-full" preserveAspectRatio="none" aria-hidden>
+          <PathDraw d={MOBILE_STUDY_D} stroke="#34d399" strokeWidth={1.8} duration={0.9} delay={0.2} />
+        </svg>
+        <p className="m-0 font-mono text-[10.5px] font-medium tracking-[0.06em] text-dim">Enhanced F+ backtest, 2021–26 &nbsp;·&nbsp; not a live track record</p>
       </motion.div>
     </motion.section>
   );

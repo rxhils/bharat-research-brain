@@ -31,7 +31,7 @@ import {
   type MotionValue,
   type Variants,
 } from "framer-motion";
-import { Fragment, useEffect, useId, useRef, useState, type PointerEvent, type ReactNode, type RefObject } from "react";
+import { useEffect, useId, useRef, useState, type PointerEvent, type ReactNode, type RefObject } from "react";
 import { CountUp, EASE, MagneticButton, useReducedMotionSafe, useScrollScrub } from "./motion";
 import { GlassPanel } from "./glass-panel";
 import { ScrollProgress } from "./scroll-progress";
@@ -426,7 +426,7 @@ function Risk({ level }: { level: string }) {
   return <span className={`shrink-0 rounded-full px-1 py-[0.5px] text-[5px] font-semibold ${on ? "bg-emerald/15 text-emerald" : "border border-border text-muted"}`}>{level}</span>;
 }
 
-function PortfolioCard({ c }: { c: PCard }) {
+function PortfolioCard({ c, small = false }: { c: PCard; small?: boolean }) {
   return (
     <div className="rounded-md border border-border bg-panel/50 p-1">
       <div className="flex items-center gap-1">
@@ -438,7 +438,9 @@ function PortfolioCard({ c }: { c: PCard }) {
         <span className="text-[11px] font-bold text-emerald">{c.ret}</span>
         <Risk level={c.risk} />
       </div>
-      <div className="text-[5px] text-muted">α {c.alpha} vs NIFTY · {c.holdings} holdings</div>
+      {/* Illustrative α/holdings line — dropped in the small gallery frames where
+          5px type turns to noise; kept in the full-size mock. */}
+      {!small && <div className="text-[5px] text-muted">α {c.alpha} vs NIFTY · {c.holdings} holdings</div>}
     </div>
   );
 }
@@ -460,7 +462,7 @@ function FeaturedQuant() {
   );
 }
 
-function PortfoliosScreen({ variant }: { variant: string }) {
+function PortfoliosScreen({ variant, small = false }: { variant: string; small?: boolean }) {
   const d = PF_DATA[variant];
   return (
     <div className="absolute inset-0 flex flex-col gap-1.5 overflow-hidden px-2 pb-4 pt-6" style={{ backgroundColor: "#08090b" }}>
@@ -478,7 +480,7 @@ function PortfoliosScreen({ variant }: { variant: string }) {
         <p className="text-[5px] text-muted">{d.sub}</p>
       </div>
       <div className="flex flex-col gap-1">
-        {d.cards.map((c) => <PortfolioCard key={c.name} c={c} />)}
+        {d.cards.map((c) => <PortfolioCard key={c.name} c={c} small={small} />)}
       </div>
     </div>
   );
@@ -663,7 +665,7 @@ function BrokerConnectScreen() {
 
 function BrokerListScreen() {
   const brokers: Brk[] = [
-    { name: "Zerodha", sub: "Connect via Zerodha Kite", color: "#ef4444", connected: true, synced: "6 holdings synced", status: "Connected · Synced 2026-06-11 18:10" },
+    { name: "Zerodha", sub: "Connect via Zerodha Kite", color: "#ef4444", connected: true },
     { name: "Groww", sub: "Connect your Groww account", color: "#00b386" },
     { name: "Upstox", sub: "Connect via Upstox API", color: "#7c3aed" },
     { name: "Angel One", sub: "Connect via Angel One SmartAPI", color: "#2563eb" },
@@ -711,7 +713,7 @@ function mainMock(layer: (typeof LAYERS)[number]): ReactNode {
   return undefined;
 }
 function galleryMock(layer: (typeof LAYERS)[number], cap: string): ReactNode {
-  if (layer.n === 2) return <PortfoliosScreen variant={cap} />;
+  if (layer.n === 2) return <PortfoliosScreen variant={cap} small />;
   if (layer.n === 4) {
     if (cap === "Brokers") return <BrokerListScreen />;
     if (cap === "Sign-in") return <HdfcLoginScreen />;
@@ -723,7 +725,7 @@ function galleryMock(layer: (typeof LAYERS)[number], cap: string): ReactNode {
 function Device({ src, label, small = false, mock }: { src: string; label: string; small?: boolean; mock?: ReactNode }) {
   const [imgOk, setImgOk] = useState(false);
   // Responsive widths — comfortable on phones, full size from sm up.
-  const w = small ? "w-[100px] sm:w-[150px]" : "w-[256px] sm:w-[272px]";
+  const w = small ? "w-[140px] sm:w-[170px]" : "w-[256px] sm:w-[272px]";
   return (
     <div className="relative animate-floatY motion-reduce:animate-none">
       <div className="pointer-events-none absolute -inset-8 -z-10 rounded-[3rem] opacity-70 blur-2xl" style={{ background: "radial-gradient(50% 45% at 50% 40%,rgba(52,211,153,0.20),transparent 70%)" }} />
@@ -833,6 +835,11 @@ function DrawdownScrub() {
   // it is NEVER gated by useReducedMotionSafe (signature plays under OS flag).
   const spring = useScrollScrub(wrapRef, ["start start", "end end"], { stiffness: 120, damping: 24, restDelta: 0.001 });
 
+  // Hydration flag — before it flips, the back plane shows full-strength static
+  // tracks + trough labels and the tiles read the real drawdown figures, so the
+  // signature proof reads for crawlers / JS-off. On mount, JS dims the fallback
+  // and resets the counters to 0 so the scrub counts up as designed.
+  const [mounted, setMounted] = useState(false);
   // ≤640px: the .dd-stage CSS vars collapse plane depth; JS only softens the lean.
   const [narrow, setNarrow] = useState(false);
   useEffect(() => {
@@ -867,6 +874,14 @@ function DrawdownScrub() {
   useMotionValueEvent(fplusProg, "change", (v) => {
     if (fplusNumRef.current) fplusNumRef.current.textContent = v === 0 ? "0%" : `−${(v * 13.88).toFixed(2)}%`;
   });
+
+  // JS present: dim the static fallback and reset the SSR'd figures to 0 so the
+  // scrub counts up from zero. With JS off, tiles keep their real values.
+  useEffect(() => {
+    setMounted(true);
+    if (marketNumRef.current) marketNumRef.current.textContent = "0%";
+    if (fplusNumRef.current) fplusNumRef.current.textContent = "0%";
+  }, []);
 
   // Beat thresholds — chips spring in, the F+ dot lands, and one light sweep
   // fires once past p=0.8. After that, nothing moves: settle/hold to exit.
@@ -916,8 +931,10 @@ function DrawdownScrub() {
                     {[0, -10, -20, -30, -40].map((g) => (
                       <line key={g} x1={padL} x2={W - padR} y1={ys(g)} y2={ys(g)} stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
                     ))}
-                    <path d={smooth(mPts)} fill="none" stroke="rgba(90,97,106,0.30)" strokeWidth={1.5} strokeDasharray="5 5" strokeLinecap="round" />
-                    <path d={smooth(fPts)} fill="none" stroke="rgba(52,211,153,0.22)" strokeWidth={1.5} strokeLinecap="round" />
+                    {/* Full-strength before hydration so the proof is drawn with
+                        JS off; dims to ghost tracks once the scrubbed planes take over. */}
+                    <path d={smooth(mPts)} fill="none" stroke={mounted ? "rgba(90,97,106,0.30)" : "rgba(90,97,106,0.9)"} strokeWidth={mounted ? 1.5 : 2} strokeDasharray="5 5" strokeLinecap="round" />
+                    <path d={smooth(fPts)} fill="none" stroke={mounted ? "rgba(52,211,153,0.22)" : "rgba(52,211,153,0.85)"} strokeWidth={mounted ? 1.5 : 3} strokeLinecap="round" />
                   </svg>
                   {/* HTML axis labels — fixed px so they stay readable at 375px. */}
                   {[0, -10, -20, -30, -40].map((g) => (
@@ -930,6 +947,23 @@ function DrawdownScrub() {
                       {g}%
                     </span>
                   ))}
+                  {/* Server-rendered trough labels — the two figures the scrub proves,
+                      readable with JS off / pre-hydration; the scroll-driven chips on
+                      the front plane replace them once mounted. */}
+                  <span
+                    aria-hidden={mounted}
+                    className={`absolute whitespace-nowrap rounded-full border border-border bg-panel2/90 px-2.5 py-1 font-mono text-[10px] leading-none text-muted transition-opacity duration-500 ${mounted ? "opacity-0" : "opacity-100"}`}
+                    style={{ left: `calc(${TROUGH_X_PCT.toFixed(2)}% + 12px)`, top: `calc(${M_TROUGH_Y_PCT.toFixed(2)}% - 28px)` }}
+                  >
+                    Market −38%
+                  </span>
+                  <span
+                    aria-hidden={mounted}
+                    className={`absolute whitespace-nowrap rounded-full border border-emerald/40 bg-emerald/10 px-2.5 py-1 font-mono text-[10px] leading-none text-emerald transition-opacity duration-500 ${mounted ? "opacity-0" : "opacity-100"}`}
+                    style={{ left: `calc(${TROUGH_X_PCT.toFixed(2)}% - 12px)`, top: `calc(${F_TROUGH_Y_PCT.toFixed(2)}% - 34px)` }}
+                  >
+                    Enhanced F+ −13.88%
+                  </span>
                 </div>
                 {/* Mid plane — gap band, market path, market trough dot. */}
                 <div className="pointer-events-none absolute inset-0" style={{ transform: "translateZ(var(--dd-z-mid))" }}>
@@ -994,11 +1028,11 @@ function DrawdownScrub() {
           <div className="mt-3 grid grid-cols-2 gap-3">
             <div className="rounded-xl border border-border bg-panel2/50 p-4">
               <p className="text-[0.56rem] font-semibold uppercase tracking-label text-dim">Market fell</p>
-              <p className="mt-1 font-mono text-2xl text-muted sm:text-3xl"><span ref={marketNumRef} className="tnum">0%</span></p>
+              <p className="mt-1 font-mono text-2xl text-muted sm:text-3xl"><span ref={marketNumRef} className="tnum">−38%</span></p>
             </div>
             <div className="rounded-xl border border-emerald/30 bg-emerald/[0.06] p-4">
               <p className="text-[0.56rem] font-semibold uppercase tracking-label text-dim">Enhanced F+ fell</p>
-              <p className="mt-1 font-mono text-2xl text-emerald sm:text-3xl"><span ref={fplusNumRef} className="tnum">0%</span></p>
+              <p className="mt-1 font-mono text-2xl text-emerald sm:text-3xl"><span ref={fplusNumRef} className="tnum">−13.88%</span></p>
             </div>
           </div>
           {/* One-shot light sweep — fired once past p=0.8 (motion-value event,
@@ -1224,34 +1258,6 @@ function Layer({ layer, flip }: { layer: (typeof LAYERS)[number]; flip: boolean 
   );
 }
 
-// Decorative gold→emerald connector beam between the four layer blocks — a
-// 1.5px line that draws with scroll (per-section useScroll). Decorative, so it
-// renders as a static faint line under the OS reduced-motion flag (no
-// .brand-motion — only the signature scrub is exempt from the damp).
-function LayerBeam() {
-  const ref = useRef<HTMLDivElement>(null);
-  const reduce = useReducedMotionSafe();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "center center"] });
-  const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
-  const gradId = `layerbeam-${uid}`;
-  return (
-    <div ref={ref} aria-hidden className="flex justify-center">
-      <svg width="4" height="72" viewBox="0 0 4 72" fill="none" className="overflow-visible">
-        <defs>
-          <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#c9a961" />
-            <stop offset="100%" stopColor="#34d399" />
-          </linearGradient>
-        </defs>
-        <path d="M2 0 V72" stroke={`url(#${gradId})`} strokeOpacity="0.12" strokeWidth="1.5" strokeLinecap="round" />
-        {!reduce && (
-          <motion.path d="M2 0 V72" stroke={`url(#${gradId})`} strokeOpacity="0.55" strokeWidth="1.5" strokeLinecap="round" style={{ pathLength: scrollYProgress }} />
-        )}
-      </svg>
-    </div>
-  );
-}
-
 export function Explainer() {
   const reduce = useReducedMotionSafe();
   // Hero headline: clip-path reveals (left→right wipe per line) staggered via
@@ -1285,10 +1291,10 @@ export function Explainer() {
             <motion.span className="block" variants={heroLine}>Beats the market.</motion.span>
             <motion.span className="block italic" style={GRAD_EMERALD} variants={heroLine}>Half the fall.</motion.span>
           </motion.h1>
-          <motion.p initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.6 }} className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
+          <motion.p initial={reduce ? { opacity: 0 } : { opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.3 }} className="mt-7 max-w-lg text-lg leading-relaxed text-muted">
             An AI research engine for Indian equities — built on a strategy validated across two market eras, including covid.
           </motion.p>
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.95 }} className="mt-10">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }} className="mt-10">
             <GlassPanel className="max-w-xl" innerClassName="p-5 sm:p-6">
               <div className="flex flex-wrap items-baseline gap-x-4 gap-y-3 sm:gap-x-7">
                 <span className="flex items-baseline gap-2.5"><CountUp to={129.97} prefix="+" suffix="%" decimals={2} className="font-serif text-4xl text-emerald" /><span className="text-sm text-dim">Enhanced F+ · 2021–26</span></span>
@@ -1297,7 +1303,7 @@ export function Explainer() {
               </div>
               <p className="mt-3 text-xs text-dim">Full-period total return, 2021–2026 — at lower drawdown 14.05% vs 18.59% · Backtested, not a live track record</p>
             </GlassPanel>
-            <motion.div initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 1.2, ease: EASE }}>
+            <motion.div initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.65, ease: EASE }}>
               <MagneticButton
                 type="button"
                 onClick={() => document.getElementById("strategies")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" })}
@@ -1305,9 +1311,9 @@ export function Explainer() {
               >
                 <span>See how every model works</span>
                 <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald/10 text-emerald transition-colors duration-300 group-hover:bg-emerald/20">
-                  {/* Chevron bobs to invite the scroll, but only settles into a hover
-                      nudge otherwise — no infinite loop under reduced motion. */}
-                  <motion.svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden animate={reduce ? { y: 0 } : { y: [0, 3, 0] }} transition={reduce ? { duration: 0 } : { duration: 1.6, repeat: Infinity, ease: "easeInOut" }}><path d="M6 9l6 6 6-6" /></motion.svg>
+                  {/* Chevron nudges down only on hover — no infinite loop, on-system
+                      with the page's "decorative loops freeze" stance. */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="transition-transform duration-300 motion-safe:group-hover:translate-y-0.5"><path d="M6 9l6 6 6-6" /></svg>
                 </span>
               </MagneticButton>
             </motion.div>
@@ -1378,13 +1384,11 @@ export function Explainer() {
         <Reveal delay={0.05}><p className="mt-4 max-w-xl text-lg leading-relaxed text-muted">From reading the market to connecting your account — each layer does one job, and hands off cleanly to the next.</p></Reveal>
         <div className="mt-16 flex flex-col gap-10 sm:gap-12">
           {LAYERS.map((l, i) => (
-            <Fragment key={l.name}>
-              {i > 0 && <LayerBeam />}
-              {/* Layer handles its own entrance cascade + parallax — no Reveal
-                  wrapper (a transformed ancestor would also fight the row's
-                  per-column y MotionValues). */}
-              <Layer layer={l} flip={i % 2 === 1} />
-            </Fragment>
+            // Layer handles its own entrance cascade + parallax — no Reveal
+            // wrapper (a transformed ancestor would also fight the row's
+            // per-column y MotionValues). The inter-layer connector was removed:
+            // as a 72px stub it read as an accidental divider, not a pipeline.
+            <Layer key={l.name} layer={l} flip={i % 2 === 1} />
           ))}
         </div>
         <Reveal>
@@ -1404,7 +1408,7 @@ export function Explainer() {
 
       {/* ── Portfolio strategies ── */}
       <section id="strategies" className="scroll-mt-24 border-t border-hairline py-20 sm:py-28">
-        <p className="text-[0.6rem] font-semibold uppercase tracking-label text-gold">Portfolio strategies</p>
+        <Eyebrow index="03">Portfolio strategies</Eyebrow>
         <Reveal><h2 className="mt-6 max-w-2xl text-balance font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Every model has a different engine.</h2></Reveal>
         <Reveal delay={0.05}><p className="mt-4 max-w-2xl text-lg leading-relaxed text-muted">MAVEN portfolios aren&apos;t just different baskets of stocks. Each one follows a distinct strategy, risk profile, and selection logic — some built for steadier performance, some for stronger upside, some for tighter model discipline.</p></Reveal>
         <Reveal delay={0.1}>
@@ -1427,28 +1431,40 @@ export function Explainer() {
                   <Reveal key={s.name} y={16} delay={i * 0.05}>
                     <div className={`group relative flex h-full flex-col overflow-hidden rounded-xl2 border p-6 transition-[transform,border-color,background-color] duration-300 motion-safe:hover:-translate-y-1 ${s.signature ? "border-beam border-emerald/40 bg-panel/60" : "border-border bg-panel/40 hover:border-emerald/30 hover:bg-panel/60"}`}>
                       {s.signature && <div className="pointer-events-none absolute -right-14 -top-14 h-44 w-44 rounded-full opacity-60 blur-3xl" style={{ background: "radial-gradient(circle,rgba(52,211,153,0.22),transparent 70%)" }} />}
+                      {/* Differentiator glyph — a mono monogram anchor (mirrors the
+                          app's portfolio letter marks) so the eye can scan the grid. */}
                       <div className="relative flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          {s.signature && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 8l4 3 5-7 5 7 4-3-2 11H5z" /></svg>}
-                          <h3 className="font-serif text-xl text-ink">{s.name}</h3>
-                        </div>
+                        <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg border font-mono text-base tnum ${s.signature ? "border-emerald/40 bg-emerald/10 text-emerald" : "border-border bg-panel2/70 text-muted"}`} aria-hidden>{s.name[0]}</span>
                         <span className={`shrink-0 rounded-full border px-2.5 py-0.5 text-[0.55rem] font-semibold uppercase tracking-label ${s.signature ? "border-emerald/40 text-emerald" : "border-border text-dim"}`}>{s.tag}</span>
                       </div>
-                      <p className="relative mt-2 text-sm italic text-emerald/90">{s.oneLine}</p>
-                      <div className="relative mt-4 space-y-3">
-                        <div>
-                          <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">How it works</p>
-                          <p className="mt-1 text-[0.84rem] leading-relaxed text-muted">{s.how}</p>
-                        </div>
-                        <div>
-                          <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">What it looks for</p>
-                          <p className="mt-1 text-[0.84rem] leading-relaxed text-muted">{s.looks}</p>
-                        </div>
+                      <div className="relative mt-3 flex items-center gap-2">
+                        {s.signature && <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 8l4 3 5-7 5 7 4-3-2 11H5z" /></svg>}
+                        <h3 className="font-serif text-xl text-ink">{s.name}</h3>
                       </div>
+                      <p className="relative mt-2 text-sm italic text-emerald/90">{s.oneLine}</p>
                       <div className="relative mt-4 border-t border-hairline pt-3">
                         <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">Best for</p>
                         <p className="mt-1 text-[0.84rem] leading-relaxed text-ink/90">{s.bestFor}</p>
                       </div>
+                      {/* How it works + What it looks for collapse behind a native
+                          disclosure — every word stays verbatim in the DOM (crawler-
+                          readable), scannable by default, expandable on tap/click. */}
+                      <details className="group/disc relative mt-4 border-t border-hairline pt-3">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 text-[0.5rem] font-semibold uppercase tracking-label text-dim transition-colors hover:text-muted [&::-webkit-details-marker]:hidden">
+                          <span>How it works · What it looks for</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="shrink-0 transition-transform duration-300 group-open/disc:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+                        </summary>
+                        <div className="mt-3 space-y-3">
+                          <div>
+                            <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">How it works</p>
+                            <p className="mt-1 text-[0.84rem] leading-relaxed text-muted">{s.how}</p>
+                          </div>
+                          <div>
+                            <p className="text-[0.5rem] font-semibold uppercase tracking-label text-dim">What it looks for</p>
+                            <p className="mt-1 text-[0.84rem] leading-relaxed text-muted">{s.looks}</p>
+                          </div>
+                        </div>
+                      </details>
                     </div>
                   </Reveal>
                 ))}
@@ -1487,7 +1503,7 @@ export function Explainer() {
       {/* ── Validation ── */}
       <section ref={validationRef} className="relative border-t border-hairline py-20 sm:py-28">
         <ValidationRail target={validationRef} />
-        <Eyebrow index="03">Why trust it</Eyebrow>
+        <Eyebrow index="04">Why trust it</Eyebrow>
         <Reveal><h2 className="mt-8 max-w-2xl text-balance font-serif text-[clamp(1.8rem,4vw,3rem)] font-light leading-[1.05] tracking-[-0.015em] text-ink">Validated honestly. <span className="italic" style={GRAD_GOLD}>Negatives documented.</span></h2></Reveal>
         <RevealGroup className="mt-14 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {TIMELINE.map((t, i) => (
@@ -1529,7 +1545,7 @@ export function Explainer() {
 
       {/* ── Live & forward ── */}
       <section className="border-t border-hairline py-20 text-center sm:py-28">
-        <div className="flex justify-center"><Eyebrow index="04">Live &amp; forward</Eyebrow></div>
+        <div className="flex justify-center"><Eyebrow index="05">Live &amp; forward</Eyebrow></div>
         <Reveal><div className="mt-8 flex justify-center"><LivePill>Forward paper-trade · running now</LivePill></div></Reveal>
         <Reveal><h2 className="mx-auto mt-7 max-w-3xl text-balance font-serif text-[clamp(1.9rem,4.4vw,3.2rem)] font-light leading-[1.04] tracking-[-0.015em] text-ink">Now running forward, live, on <span className="italic" style={GRAD_EMERALD}>real NSE prices.</span></h2></Reveal>
         <Reveal delay={0.05}><p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">Real prices daily, decisions recorded at those prices, marked to market, and tracked against the Nifty 500 — an honest, ongoing, public test. No hindsight, no edits.</p></Reveal>

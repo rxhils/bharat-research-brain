@@ -9,24 +9,37 @@
 // fallback): lg viewport, hardwareConcurrency > 4, WebGL context available.
 // The frameloop hard-pauses when the hero leaves view or the tab is hidden.
 
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const COUNT = 800;
+const RIM = 5.6; // disc radius — respawn distance for the inward drift
 const EMERALD = new THREE.Color("#34d399");
 const GOLD = new THREE.Color("#c9a961");
 
-function Particles({ pointer, reduced }: { pointer: React.MutableRefObject<{ x: number; y: number }>; reduced: boolean }) {
+function Particles({ pointer, reduced, running }: {
+  pointer: React.MutableRefObject<{ x: number; y: number }>; reduced: boolean; running: boolean;
+}) {
   const ref = useRef<THREE.Points>(null);
+  // frameloop="demand": we render only when there's something to show. invalidate()
+  // schedules the next frame; the loop self-sustains while drifting and settles to
+  // truly idle once the pointer parallax comes to rest (or under reduced motion).
+  const invalidate = useThree((s) => s.invalidate);
 
-  const { positions, colors } = useMemo(() => {
+  // angle + radius kept alongside positions so the inward drift is a cheap
+  // radius decrement (no per-frame atan2); z stays constant per particle.
+  const { positions, colors, angles, radii } = useMemo(() => {
     const pos = new Float32Array(COUNT * 3);
     const col = new Float32Array(COUNT * 3);
+    const ang = new Float32Array(COUNT);
+    const rad = new Float32Array(COUNT);
     for (let i = 0; i < COUNT; i++) {
       // disc distribution with depth — echoes the orbital rings above it
-      const r = Math.sqrt(Math.random()) * 5.6;
+      const r = Math.sqrt(Math.random()) * RIM;
       const t = Math.random() * Math.PI * 2;
+      ang[i] = t;
+      rad[i] = r;
       pos[i * 3] = Math.cos(t) * r;
       pos[i * 3 + 1] = Math.sin(t) * r * 0.72;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 3.4;
@@ -37,20 +50,56 @@ function Particles({ pointer, reduced }: { pointer: React.MutableRefObject<{ x: 
       col[i * 3 + 1] = c.g * dim;
       col[i * 3 + 2] = c.b * dim;
     }
-    return { positions: pos, colors: col };
+    return { positions: pos, colors: col, angles: ang, radii: rad };
   }, []);
 
-  useFrame((_, dt) => {
+  // kick a frame whenever we (re)enter view so the demand loop restarts
+  useEffect(() => {
+    if (running) invalidate();
+  }, [running, invalidate]);
+
+  // wake the demand loop on pointer input (the parallax target moved); gated by
+  // `running` via a ref so an off-screen hero stays fully idle
+  const runningRef = useRef(running);
+  runningRef.current = running;
+  useEffect(() => {
+    const onMove = () => { if (runningRef.current) invalidate(); };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [invalidate]);
+
+  useFrame(() => {
     const p = ref.current;
     if (!p) return;
-    // clamp dt: after a frameloop="never" pause the first frame carries the
-    // whole paused wall-time and would visibly snap the rotation
-    const d = Math.min(dt, 0.1);
-    // ambient auto-drift is DECORATIVE — frozen under OS reduced-motion; the
+    // inward radial drift is the read-only metaphor at the particle layer — data
+    // flows toward the medallion, never out. DECORATIVE, so frozen under OS
+    // reduced-motion. Time-based motion isn't needed here: a fixed per-frame step
+    // reads as a steady inward current and stays deterministic under demand.
+    if (!reduced) {
+      const arr = p.geometry.attributes.position.array as Float32Array;
+      for (let i = 0; i < COUNT; i++) {
+        let rr = radii[i] - 0.006;
+        if (rr < 0.12) {
+          // respawn at the rim on a fresh angle — a continuous, seamless inflow
+          rr = RIM;
+          angles[i] = Math.random() * Math.PI * 2;
+        }
+        radii[i] = rr;
+        arr[i * 3] = Math.cos(angles[i]) * rr;
+        arr[i * 3 + 1] = Math.sin(angles[i]) * rr * 0.72;
+      }
+      p.geometry.attributes.position.needsUpdate = true;
+    }
     // pointer parallax is input-driven (house .brand-motion treatment) and stays
-    if (!reduced) p.rotation.z += d * 0.015;
-    p.rotation.x += (pointer.current.y * 0.22 - p.rotation.x) * 0.04;
-    p.rotation.y += (pointer.current.x * 0.28 - p.rotation.y) * 0.04;
+    // live even under reduced motion; it eases toward the target each frame
+    const tx = pointer.current.y * 0.22;
+    const ty = pointer.current.x * 0.28;
+    p.rotation.x += (tx - p.rotation.x) * 0.04;
+    p.rotation.y += (ty - p.rotation.y) * 0.04;
+    // keep the loop alive only while there's motion to render, and only in view
+    if (running && (!reduced || Math.abs(tx - p.rotation.x) > 1e-4 || Math.abs(ty - p.rotation.y) > 1e-4)) {
+      invalidate();
+    }
   });
 
   return (
@@ -131,11 +180,11 @@ export default function ConstellationField() {
     <div ref={hostRef} className="pointer-events-none absolute inset-0" aria-hidden>
       <Canvas
         dpr={[1, 1.5]}
-        frameloop={running ? "always" : "never"}
+        frameloop="demand"
         gl={{ antialias: false, alpha: true, powerPreference: "low-power" }}
         camera={{ position: [0, 0, 7], fov: 42 }}
       >
-        <Particles pointer={pointer} reduced={reduced} />
+        <Particles pointer={pointer} reduced={reduced} running={running} />
       </Canvas>
     </div>
   );

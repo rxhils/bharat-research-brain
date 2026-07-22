@@ -106,7 +106,7 @@ export function ChatShell() {
         {/* House glass treatment: gradient p-px hairline + blurred/saturated surface + 2% noise —
             gives the flat history rail the same depth language as the answer cards. */}
         <GlassPanel glow="none" noise className="h-full" innerClassName="h-full p-3">
-          <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} />
+          <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} railId="chat-active-rail-aside" />
         </GlassPanel>
       </aside>
 
@@ -120,7 +120,7 @@ export function ChatShell() {
               transition={{ duration: 0.22, ease: EASE }}
               style={{ paddingLeft: "max(0.75rem, var(--sal))", paddingTop: "max(0.75rem, var(--sat))", paddingBottom: "max(0.75rem, var(--sab))" }}
               className="fixed inset-y-0 left-0 z-40 w-72 max-w-[80vw] border-r border-hairline bg-panel/95 pr-3 backdrop-blur-xl lg:hidden">
-              <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} />
+              <ChatSidebar conversations={conversations} activeId={activeId} onSelect={handleSelect} onNew={handleNew} onDelete={handleDelete} railId="chat-active-rail-drawer" />
             </motion.div>
           </>
         )}

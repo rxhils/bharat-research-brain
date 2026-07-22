@@ -28,10 +28,10 @@ type Broker = {
 const BROKERS: Broker[] = [
   { name: "HDFC Sky", img: "/brokers/hdfcsky.png", desc: "Connect via HDFC Sky", status: "live" },
   { name: "Zerodha", img: "/brokers/zerodha.png", desc: "Connect via Zerodha Kite", status: "live" },
-  { name: "Groww", img: "/brokers/groww.png", desc: "Connect your Groww account", status: "soon" },
-  { name: "Anand Rathi", img: "/brokers/anandrathi.png", desc: "Connect via Anand Rathi", status: "soon" },
-  { name: "Upstox", img: "/brokers/upstox.png", desc: "Connect via Upstox API", status: "soon" },
-  { name: "Angel One", img: "/brokers/angelone.png", desc: "Connect via Angel One", status: "soon" },
+  { name: "Groww", img: "/brokers/groww.png", desc: "", status: "soon" },
+  { name: "Anand Rathi", img: "/brokers/anandrathi.png", desc: "", status: "soon" },
+  { name: "Upstox", img: "/brokers/upstox.png", desc: "", status: "soon" },
+  { name: "Angel One", img: "/brokers/angelone.png", desc: "", status: "soon" },
 ];
 
 function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean }) {
@@ -67,7 +67,7 @@ function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean })
       {live && (
         <span aria-hidden className="brand-motion absolute inset-x-6 top-0 z-10 h-px animate-gate-shimmer opacity-80" style={{ background: "linear-gradient(90deg, transparent, rgba(52,211,153,0.7), transparent)", backgroundSize: "50% 100%", backgroundRepeat: "no-repeat" }} />
       )}
-      <div className="relative flex h-full items-center gap-4 overflow-hidden rounded-2xl bg-panel/60 p-5 backdrop-blur-md backdrop-saturate-[1.7]">
+      <div className={"relative flex h-full items-center gap-4 overflow-hidden rounded-2xl p-5 " + (live ? "bg-panel/60 backdrop-blur-md backdrop-saturate-[1.7]" : "bg-panel")}>
         {live && (
           <motion.div
             aria-hidden
@@ -87,7 +87,7 @@ function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean })
         </span>
         <div className="min-w-0 flex-1">
           <div className="truncate text-[0.95rem] font-semibold text-ink">{b.name}</div>
-          <div className="mt-0.5 truncate text-xs text-muted">{b.desc}</div>
+          {b.desc && <div className="mt-0.5 truncate text-xs text-muted">{b.desc}</div>}
           {live && (
             <div className="tnum mt-1.5 truncate font-mono text-[11px] tracking-wide text-dim">
               Holdings · avg price · daily token refresh
@@ -103,7 +103,7 @@ function BrokerCard({ b, i, reduce }: { b: Broker; i: number; reduce: boolean })
             <span className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-emerald">Live · in the app</span>
           </span>
         ) : (
-          <span className="shrink-0 rounded-full border border-gold-soft/30 bg-gold-soft/[0.06] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-gold-soft/90">
+          <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted">
             Coming soon
           </span>
         )}
@@ -128,8 +128,8 @@ export function BrokerGrid() {
         <svg width="2" height="32" viewBox="0 0 2 32" className="mb-4 overflow-visible" aria-hidden>
           <PathDraw d="M1 0 V32" stroke="rgba(52,211,153,0.5)" strokeWidth={2} duration={0.7} />
         </svg>
-        <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-soft">
-          <span className="h-px w-9 bg-gold-soft/40" />
+        <div className="flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-dim">
+          <span className="h-px w-9 bg-white/15" />
           Supported brokers
         </div>
         <h2 className="mt-3 font-serif text-[clamp(1.75rem,1.2rem+2.4vw,2.9rem)] leading-tight text-ink">
@@ -145,10 +145,6 @@ export function BrokerGrid() {
           <BrokerCard key={b.name} b={b} i={i} reduce={reduce} />
         ))}
       </div>
-
-      <p className="mt-6 text-center text-xs text-dim">
-        Broker connections happen in the Maven app — the site never touches your brokerage.
-      </p>
     </section>
   );
 }

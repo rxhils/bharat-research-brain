@@ -9,12 +9,17 @@ import { MavenSourcePanel } from "./maven-source-panel";
 import { MavenReportCard } from "./maven-report";
 import type { MavenAskResponse } from "@/lib/maven-types";
 import { useMavenAuth } from "./auth/useMavenAuth";
+import { useMarketSnapshot, resolveStat, findIndex, fmtSignedPct, fmtIndexValue, fmtIstTime, type MarketSnapshot } from "@/lib/use-market-snapshot";
 
-const SUGGESTIONS = [
-  { t: "Summarize today's Indian market", k: "Market wrap" },
-  { t: "Why are banks leading today?", k: "Sector leadership" },
-  { t: "What sectors benefit from softer crude?", k: "Macro knock-on" },
-  { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison" },
+// Each suggestion optionally carries a live stat descriptor. The real number is
+// resolved from MarketTicker's shared snapshot at render time (resolveStat) and
+// omitted entirely when that datum isn't present - never an invented figure.
+type Suggestion = { t: string; k: string; stat?: { kind: "index" | "sector"; key: string; label: string } };
+const SUGGESTIONS: Suggestion[] = [
+  { t: "Summarize today's Indian market", k: "Market wrap", stat: { kind: "index", key: "Nifty 50", label: "NIFTY 50" } },
+  { t: "Why are banks leading today?", k: "Sector leadership", stat: { kind: "sector", key: "Banks", label: "BANKS" } },
+  { t: "What sectors benefit from softer crude?", k: "Macro knock-on", stat: { kind: "sector", key: "Energy", label: "ENERGY" } },
+  { t: "Compare HDFC Bank and ICICI Bank", k: "Comparison", stat: { kind: "index", key: "Bank Nifty", label: "BANK NIFTY" } },
 ];
 const MODELS = [
   { id: "maven-v1", name: "Maven V1", tag: "Beta", desc: "Fast India-market context", live: true },
@@ -22,7 +27,7 @@ const MODELS = [
 ] as const;
 const FLOW = ["flow", "flow_chart"];
 
-export type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean; looksLikeReport?: boolean; limitReached?: boolean };
+export type Msg = { id: number; role: "user" | "assistant"; text?: string; answer?: MavenAskResponse; loading?: boolean; looksLikeReport?: boolean; limitReached?: boolean; error?: boolean };
 
 // ---- conversation context for /api/ask (Maven follow-up intelligence) ----
 // The last few exchanges travel with each request so "give me a bullet point summary" can refer
@@ -247,7 +252,7 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
       setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, answer } : x)));
       setTimeout(() => setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false } : x))), 600);
     } catch {
-      setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, text: "Could not reach Maven." } : x)));
+      setMsgs((m) => m.map((x) => (x.id === aid ? { ...x, loading: false, error: true, text: "Could not reach Maven." } : x)));
     }
   }
 
@@ -272,7 +277,23 @@ export function ChatView({ initialMessages, onMessagesChange }: { initialMessage
             <motion.div key={m.id} initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, ease: EASE }} className="flex gap-3">
               <Avatar thinking={!!m.loading} />
               <div className="min-w-0 flex-1">
-                {m.loading ? <ReasoningLoader reportMode={m.looksLikeReport} /> : m.limitReached ? <GuestLimitCard onSignIn={handleGuestSignIn} /> : m.answer ? <AnswerCard a={m.answer} query={findQueryForAnswer(msgs, mi)} onFollow={send} /> : <div className="pt-2 text-sm text-rose">{m.text}</div>}
+                {/* Loader -> answer/error crossfade in one shared container: the loader fades
+                    out and the reveal fades in as a single continuous moment (no hard swap). */}
+                <AnimatePresence mode="wait" initial={false}>
+                  {m.loading ? (
+                    <motion.div key="loader" exit={reduce ? { opacity: 0 } : { opacity: 0, y: -6 }} transition={{ duration: 0.25, ease: EASE }}>
+                      <ReasoningLoader reportMode={m.looksLikeReport} />
+                    </motion.div>
+                  ) : m.limitReached ? (
+                    <div key="limit"><GuestLimitCard onSignIn={handleGuestSignIn} /></div>
+                  ) : m.error ? (
+                    <div key="error"><ConnectionErrorCard query={findQueryForAnswer(msgs, mi)} onRetry={send} /></div>
+                  ) : m.answer ? (
+                    <div key="answer"><AnswerCard a={m.answer} query={findQueryForAnswer(msgs, mi)} onFollow={send} /></div>
+                  ) : (
+                    <div key="text" className="pt-2 text-sm text-rose">{m.text}</div>
+                  )}
+                </AnimatePresence>
               </div>
             </motion.div>
           )))}
@@ -331,9 +352,38 @@ function GuestLimitCard({ onSignIn }: { onSignIn: () => Promise<void> }) {
   );
 }
 
+// Failure state rendered in the same glass language as the rest of the column
+// (matches GuestLimitCard). Retry re-invokes send() with the paired user query.
+function ConnectionErrorCard({ query, onRetry }: { query?: string; onRetry: (q: string) => void }) {
+  return (
+    <GlassPanel glow="none" className="rounded-tl-md" innerClassName="p-4 sm:p-5">
+      <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-dim">
+        <span className="h-1.5 w-1.5 rounded-full bg-rose shadow-[0_0_8px_rgba(244,63,94,0.8)]" aria-hidden />Connection
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-ink/80">Could not reach Maven. The network or service may be briefly unavailable.</p>
+      {query && (
+        <button type="button" onClick={() => onRetry(query)}
+          className={"mt-3 inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white/[0.03] px-3.5 py-1.5 text-xs text-muted hover:border-emerald/45 hover:text-ink focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60 " + PRESS}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
+          Retry
+        </button>
+      )}
+    </GlassPanel>
+  );
+}
+
 function Hero({ onPick }: { onPick: (q: string) => void }) {
   const reduce = useReducedMotionSafe();
+  const snap = useMarketSnapshot();
   const up = { hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: EASE } } };
+  // One honest mono status line under the headline, from MarketTicker's shared snapshot.
+  // Built only from data actually present (Nifty 50 level required) - omitted whole otherwise.
+  const nifty = findIndex(snap, "Nifty 50");
+  const niftyValue = fmtIndexValue(nifty?.price);
+  const heroLine = niftyValue
+    ? ["NIFTY 50", niftyValue, fmtSignedPct(nifty?.changePct), snap?.asOf ? "updated " + fmtIstTime(snap.asOf) + " IST" : null].filter(Boolean).join("  ·  ")
+    : null;
+  const niftyUp = (nifty?.changePct ?? 0) >= 0;
   return (
     <motion.div className="flex flex-col items-center justify-center py-3 text-center sm:py-5" initial="hide" animate="show"
       variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.1 } } }}>
@@ -343,26 +393,30 @@ function Hero({ onPick }: { onPick: (q: string) => void }) {
       <motion.h2 variants={up} className="mt-4 text-balance font-serif text-[clamp(2rem,1rem+3.5vw,3.5rem)] leading-[1.05] tracking-[-0.02em] text-ink">
         Understand the <span className="italic text-emerald">Indian market</span>.
       </motion.h2>
-      {/* Tight vertical rhythm so the whole empty state fits one screen — the
-          old support line under the headline is gone by design. */}
+      {/* Data anchor: the serif headline lands on one live mono line (Fey reference).
+          Honest omission - renders nothing until the snapshot carries a real Nifty level. */}
+      {heroLine && (
+        <motion.div variants={up} className="tnum mt-3 font-mono text-xs text-dim">
+          <span className={niftyUp ? "text-emerald/90" : "text-rose/90"}>&#9679;</span> {heroLine}
+        </motion.div>
+      )}
       <motion.div className="mt-6 grid w-full max-w-2xl grid-cols-1 gap-3.5 sm:grid-cols-2" variants={{ hide: {}, show: { transition: { staggerChildren: reduce ? 0 : 0.08, delayChildren: 0.15 } } }}>
-        {SUGGESTIONS.map((s) => <SuggestionCard key={s.t} s={s} onPick={onPick} />)}
+        {SUGGESTIONS.map((s) => <SuggestionCard key={s.t} s={s} snap={snap} onPick={onPick} />)}
       </motion.div>
     </motion.div>
   );
 }
 
-function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q: string) => void }) {
+function SuggestionCard({ s, snap, onPick }: { s: Suggestion; snap: MarketSnapshot | null; onPick: (q: string) => void }) {
   const reduce = useReducedMotionSafe();
+  const stat = resolveStat(snap, s.stat); // live number or null - never invented
   // Calm, editorial hover: border warms to emerald and the surface lightens - no tilt, no scale.
   return (
     <motion.button onClick={() => onPick(s.t)} {...pressTap(reduce)}
       variants={{ hide: reduce ? { opacity: 1 } : { opacity: 0, y: 14 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } } }}
-      className="group relative overflow-hidden rounded-2xl border border-hairline bg-white/[0.04] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-md backdrop-saturate-150 transition-colors duration-300 hover:border-emerald/35 hover:bg-white/[0.07] focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
+      className="group relative overflow-hidden rounded-2xl border border-hairline bg-white/[0.04] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-colors duration-300 hover:border-emerald/35 hover:bg-white/[0.07] focus-visible:border-emerald/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald/60">
       <span className="absolute inset-x-0 top-0 h-px origin-left scale-x-0 bg-gradient-to-r from-emerald/0 via-emerald to-emerald/0 transition-transform duration-500 group-hover:scale-x-100" aria-hidden />
       <span className="pointer-events-none absolute -right-12 -top-12 h-28 w-28 rounded-full bg-emerald/0 blur-2xl transition-colors duration-500 group-hover:bg-emerald/10" aria-hidden />
-      {/* mono tnum kicker — copy-only by design: no data source exists in this page's
-          props, and the house rule is honest omission over invented numbers. */}
       <div className="tnum flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.18em] text-dim">
         <span className="h-1 w-1 rounded-full bg-emerald/80" />{s.k}
       </div>
@@ -370,6 +424,14 @@ function SuggestionCard({ s, onPick }: { s: { t: string; k: string }; onPick: (q
         <span className="text-[0.95rem] leading-snug text-ink">{s.t}</span>
         <span className="mt-0.5 shrink-0 text-emerald opacity-0 transition-[transform,opacity] duration-300 group-hover:translate-x-0.5 group-hover:opacity-100" aria-hidden>&rarr;</span>
       </div>
+      {/* Live stat, bottom-right. Present only when the shared snapshot carries this datum. */}
+      {stat && (
+        <div className="mt-3 flex justify-end">
+          <span className="tnum font-mono text-xs text-dim">
+            {stat.label} <span className={stat.tone === "emerald" ? "text-emerald" : "text-rose"}>{stat.value}</span>
+          </span>
+        </div>
+      )}
     </motion.button>
   );
 }
@@ -390,12 +452,19 @@ function ReasoningLoader({ reportMode }: { reportMode?: boolean } = {}) {
     ? ["Building company evidence pack", "Checking latest filings and sources", "Validating financial metrics", "Preparing Maven research report"]
     : ["Reading market context", "Checking sector drivers", "Building mechanism chain", "Preparing Maven view"];
   const [i, setI] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
   const reduce = useReducedMotionSafe();
   useEffect(() => {
     if (reduce) return;
     const t = setInterval(() => setI((x) => Math.min(x + 1, steps.length - 1)), 750);
     return () => clearInterval(t);
   }, [reduce]);
+  // Elapsed seconds is a status readout, not decoration - it runs regardless of the
+  // reduced-motion flag so a slow API no longer looks like a frozen terminal.
+  useEffect(() => {
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
   return (
     <GlassPanel glow="emerald" className="inline-block rounded-tl-md">
       {/* role=status = polite live region: screen readers hear the working state, not just silence */}
@@ -412,6 +481,7 @@ function ReasoningLoader({ reportMode }: { reportMode?: boolean } = {}) {
             {steps[i]}&hellip;
           </motion.span>
         </AnimatePresence>
+        {elapsed >= 4 && <span className="tnum ml-1 font-mono text-[11px] text-dim" aria-hidden>{elapsed}s</span>}
       </div>
     </GlassPanel>
   );
@@ -488,7 +558,8 @@ function AnswerCard({ a, query, onFollow }: { a: MavenAskResponse; query?: strin
             <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.26em] text-dim">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(52,211,153,0.9)]" />Maven
             </div>
-            <span className="shrink-0 rounded-md bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-wider text-dim">India markets</span>
+            {/* Informative chip (not a third "India markets"): the answer's type, mono. */}
+            <span className="tnum shrink-0 rounded-md bg-white/5 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider text-dim">{answerType.replace(/_/g, " ")}</span>
           </div>
 
           <h3 className="mt-3 text-balance font-serif text-[1.6rem] leading-snug text-ink sm:text-[1.85rem]">{a.headline}</h3>
@@ -685,11 +756,10 @@ function Composer({ input, setInput, send, empty, model, setModel }: {
   // Row is placed ABOVE the input on the conversation view (opens up over messages) and BELOW the
   // input on the empty state (opens down into the blank space, clear of the prompt cards).
   const selectorRow = (
+    // "India markets" lived here too - removed so the page carries the label exactly once
+    // (the page eyebrow). This row is now just the model selector.
     <div className="flex items-center justify-between px-1">
       <ModelSelector model={model} setModel={setModel} direction={empty ? "down" : "up"} />
-      <span className="hidden items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] text-dim sm:inline-flex">
-        <span className="h-1 w-1 rounded-full bg-emerald/80 shadow-[0_0_6px_rgba(52,211,153,0.75)]" aria-hidden />India markets
-      </span>
     </div>
   );
   return (

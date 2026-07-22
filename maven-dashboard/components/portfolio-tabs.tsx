@@ -117,7 +117,10 @@ export function PortfolioTabs({ books }: { books: BookPanelData[] }) {
                   </span>
                 </div>
               </div>
-              <span className="shrink-0 rounded-md bg-emerald/10 px-2 py-1 text-[10px] text-emerald">
+              <span
+                className="shrink-0 rounded-md px-2 py-1 text-[10px]"
+                style={{ background: `${active.color}1A`, color: active.color }}
+              >
                 {active.acct.engineVersion}
               </span>
             </div>
@@ -127,7 +130,7 @@ export function PortfolioTabs({ books }: { books: BookPanelData[] }) {
                   ? `Paper-traded since ${fmtDate(active.acct.inceptionDate)}`
                   : `Live from ${fmtDate(active.acct.inceptionDate)} — awaiting first session`}
               </span>
-              <span className="rounded-md bg-emerald/10 px-2 py-0.5 text-emerald">
+              <span className="rounded-md px-2 py-0.5" style={{ background: `${active.color}1A`, color: active.color }}>
                 {MANDATE[active.name] ?? "Index-like return, ~half the drawdown"}
               </span>
             </div>
@@ -139,7 +142,7 @@ export function PortfolioTabs({ books }: { books: BookPanelData[] }) {
               <EquityChart data={active.curve} seriesName={active.displayName} accent={active.color} />
             </Card>
             <div className="space-y-4">
-              <Card title="Exposure" sub="cash sleeve">
+              <Card title="Exposure" sub="invested vs cash">
                 <ExposureGauge state={active.exposure} />
               </Card>
               <Card title="Key stats" sub="risk-first" delay={60}>

@@ -5,7 +5,7 @@ import type { Trade } from "@/lib/types";
 import { Card } from "@/components/client";
 import { GlassPanel } from "@/components/glass-panel";
 import { CountUp, SectionEyebrow } from "@/components/motion";
-import { TapePath, TradesView } from "@/components/trades";
+import { EngineJumpNav, TapePath, TradesView } from "@/components/trades";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +24,9 @@ export const metadata: Metadata = {
 
 // "Quant" is shown as its strategy name on the public site.
 const displayName = (n: string) => (n === "Quant" ? "Enhanced F+" : n);
+
+// Stable anchor id per engine section (for the sticky jump-nav).
+const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
 const pc = (n: number) => `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
 const sign = (n: number) => (n > 0 ? "text-emerald" : n < 0 ? "text-rose" : "text-muted");
@@ -118,7 +121,7 @@ export default async function Trades() {
             >
               {winRate !== null ? <CountUp to={winRate} suffix="%" decimals={0} /> : <span className="text-dim">—</span>}
             </Stat>
-            <Stat label="Avg P&L" caption={all.length ? "mean across all trades" : "awaiting data"}>
+            <Stat label="Avg P&L" caption={all.length ? "incl. open (unrealized)" : "awaiting data"}>
               {avgPnl !== null ? (
                 <span className={sign(avgPnl)}>
                   <CountUp to={avgPnl} prefix={avgPnl > 0 ? "+" : ""} suffix="%" decimals={2} />
@@ -127,7 +130,10 @@ export default async function Trades() {
                 <span className="text-dim">—</span>
               )}
             </Stat>
-            <Stat label="Best trade" caption={best ? best.ticker : "awaiting data"}>
+            <Stat
+              label="Best trade"
+              caption={best ? (best.status === "open" ? `${best.ticker} · open (unrealized)` : best.ticker) : "awaiting data"}
+            >
               {best ? (
                 <span className="text-gold-soft">
                   <CountUp to={best.pnlPct} prefix={best.pnlPct > 0 ? "+" : ""} suffix="%" decimals={2} />
@@ -152,20 +158,26 @@ export default async function Trades() {
         </GlassPanel>
       </div>
 
+      {sections.length > 1 && (
+        <EngineJumpNav items={sections.map((s) => ({ id: slug(s.label), label: s.label }))} />
+      )}
+
       {sections.map((s) => (
-        <Card
-          key={s.name}
-          title={`${s.label} trades`}
-          sub={`every position ${s.label} has taken — price path + entry/exit logic`}
-        >
-          <TradesView trades={s.trades} engineLabel={s.label} />
-        </Card>
+        <div key={s.name} id={slug(s.label)} className="scroll-mt-20">
+          <Card
+            title={`${s.label} trades`}
+            sub={`every position ${s.label} has taken — price path + entry/exit logic`}
+          >
+            <TradesView trades={s.trades} engineLabel={s.label} />
+          </Card>
+        </div>
       ))}
 
       <p className="px-1 text-xs text-dim">
         Every trade is a mechanical decision from real end-of-day prices (no discretion) — Enhanced F+
-        scores on vol-adjusted momentum, Defensive on low volatility. The sparkline is the stock&apos;s
-        real adjusted close, entry → today. Research tool, not investment advice.
+        scores on vol-adjusted momentum, Defensive on low volatility, and Concentrated runs the Enhanced F+
+        engine narrowed to its top 10 names. The sparkline is the stock&apos;s real adjusted close, entry →
+        today. Research tool, not investment advice.
       </p>
     </div>
   );
